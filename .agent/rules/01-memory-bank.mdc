@@ -1,0 +1,17 @@
+---
+description: Automatically load context from Memory Bank at the start of a session
+globs:
+---
+
+# Memory Bank Loading Rule
+
+## Trigger
+Applies when a new session starts or user asks for next priorities.
+
+## Actions
+1. Read:
+   - `memory_bank/context.md`
+   - `memory_bank/progress.md`
+   - `memory_bank/decisions.md`
+2. Use context for current focus and constraints.
+3. When new persistent information appears, update relevant memory file.

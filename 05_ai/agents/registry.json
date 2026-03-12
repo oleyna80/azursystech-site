@@ -1,0 +1,63 @@
+{
+  "agents": {
+    "lead_router": {
+      "description": "Classifies and drafts first response for inbound leads.",
+      "model": "gpt-4.1-mini",
+      "temperature": 0.2,
+      "requires_approval": true,
+      "required_fields": [
+        "lead_message",
+        "source",
+        "language"
+      ],
+      "context_files": [
+        "00_strategy/positioning.md",
+        "00_strategy/offer-stack.md",
+        "01_brand/brand-pack.md",
+        "03_leads/lead-taxonomy.md",
+        "03_leads/response-templates.md"
+      ],
+      "system_prompt_file": "05_ai/prompts/lead_router_system.md",
+      "user_prompt_file": "05_ai/prompts/lead_router_user.md",
+      "escalation_keywords": [
+        "legal",
+        "lawsuit",
+        "threat",
+        "security breach",
+        "ransomware",
+        "data loss",
+        "refund",
+        "angry",
+        "complaint",
+        "urgent"
+      ]
+    },
+    "content_writer": {
+      "description": "Generates website and social content drafts in brand voice.",
+      "model": "gpt-4.1-mini",
+      "temperature": 0.4,
+      "requires_approval": true,
+      "required_fields": [
+        "task",
+        "asset_type",
+        "language"
+      ],
+      "context_files": [
+        "00_strategy/positioning.md",
+        "00_strategy/offer-stack.md",
+        "01_brand/brand-pack.md",
+        "01_brand/homepage-copy.md",
+        "04_facebook/facebook-strategy.md"
+      ],
+      "system_prompt_file": "05_ai/prompts/content_writer_system.md",
+      "user_prompt_file": "05_ai/prompts/content_writer_user.md",
+      "escalation_keywords": [
+        "guarantee",
+        "medical",
+        "financial advice",
+        "fake review",
+        "competitor attack"
+      ]
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "task": "Write a homepage hero section for local IT support in Nice.",
+  "asset_type": "homepage_hero",
+  "language": "fr",
+  "audience": "particuliers_et_tpe",
+  "length_target": "80-120 words",
+  "channel": "website",
+  "constraints": [
+    "No hard pricing",
+    "Tone: practical and reassuring",
+    "Must include Nice + alentours"
+  ],
+  "source_points": [
+    "Depannage informatique local",
+    "Intervention a domicile et petite entreprise",
+    "CTA vers formulaire de contact"
+  ]
+}

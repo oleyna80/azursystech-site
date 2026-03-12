@@ -1,0 +1,11 @@
+{
+  "source": "facebook_dm",
+  "language": "fr",
+  "customer_name": "Mme Dupont",
+  "channel_metadata": {
+    "received_at": "2026-03-12T18:30:00+01:00",
+    "city": "Nice"
+  },
+  "lead_message": "Bonjour, mon wifi coupe depuis deux jours et je n'arrive plus a imprimer. Vous pouvez passer demain matin?",
+  "notes": "First contact. No pricing discussed."
+}

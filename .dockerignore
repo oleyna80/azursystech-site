@@ -1,0 +1,41 @@
+# VCS
+.git
+.github
+
+# Local artifacts
+node_modules
+**/node_modules
+.next
+**/.next
+dist
+build
+out
+
+# Env and logs
+.env
+.env.*
+*.log
+
+# Python
+__pycache__
+*.pyc
+
+# Docs and planning artifacts not required for runtime image
+.agent
+docs
+memory_bank
+00_strategy
+01_brand
+02_website
+03_leads
+04_facebook
+05_ai
+06_seo
+07_ops
+assets
+
+# IDE / OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db

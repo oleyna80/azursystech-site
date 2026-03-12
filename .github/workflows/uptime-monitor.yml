@@ -1,0 +1,260 @@
+name: Uptime Monitor
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      alert_test_mode:
+        description: "Force synthetic failure to validate external webhook alert path"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: uptime-monitor
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SITE_BASE_URL: ${{ vars.SITE_BASE_URL }}
+      ALERT_ISSUE_TITLE: "Uptime alert: azursystech.fr"
+    steps:
+      - name: Resolve execution mode
+        id: mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          TEST_MODE="false"
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] && [ "${{ inputs.alert_test_mode }}" = "true" ]; then
+            TEST_MODE="true"
+          fi
+          echo "test_mode=${TEST_MODE}" >> "$GITHUB_OUTPUT"
+          echo "Alert test mode: ${TEST_MODE}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Resolve target URL
+        id: target
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE_URL="${SITE_BASE_URL:-https://azursystech.fr}"
+          BASE_URL="${BASE_URL%/}"
+          echo "base_url=${BASE_URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Probe public endpoints
+        id: probe
+        shell: bash
+        env:
+          BASE_URL: ${{ steps.target.outputs.base_url }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p /tmp/uptime
+          SUMMARY_FILE="/tmp/uptime/summary.md"
+          ENDPOINTS=("/" "/health")
+          FAILURES=0
+
+          {
+            echo "# Uptime Probe Summary"
+            echo
+            echo "- Timestamp (UTC): $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+            echo "- Base URL: ${BASE_URL}"
+            echo "- Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo
+            echo "| Endpoint | HTTP | Result |"
+            echo "|---|---:|---|"
+          } > "${SUMMARY_FILE}"
+
+          for ENDPOINT in "${ENDPOINTS[@]}"; do
+            URL="${BASE_URL}${ENDPOINT}"
+            SAFE_NAME="$(echo "${ENDPOINT}" | sed 's#[^a-zA-Z0-9]#_#g')"
+            HEADERS_FILE="/tmp/uptime/${SAFE_NAME}.headers.txt"
+            BODY_FILE="/tmp/uptime/${SAFE_NAME}.body.txt"
+
+            STATUS="$(curl --silent --show-error --location \
+              --max-time 20 --retry 1 \
+              --output "${BODY_FILE}" \
+              --dump-header "${HEADERS_FILE}" \
+              --write-out "%{http_code}" \
+              "${URL}" || echo "000")"
+
+            if [[ "${STATUS}" =~ ^2[0-9][0-9]$ ]]; then
+              echo "| \`${ENDPOINT}\` | ${STATUS} | ✅ |" >> "${SUMMARY_FILE}"
+              continue
+            fi
+
+            FAILURES=$((FAILURES + 1))
+            echo "| \`${ENDPOINT}\` | ${STATUS} | ❌ |" >> "${SUMMARY_FILE}"
+            {
+              echo
+              echo "## Failure details for ${ENDPOINT}"
+              echo
+              echo "### URL"
+              echo "\`${URL}\`"
+              echo
+              echo "### Response headers"
+              echo '```'
+              tail -n 40 "${HEADERS_FILE}" || true
+              echo '```'
+              echo
+              echo "### Response body (first 400 chars)"
+              echo '```'
+              head -c 400 "${BODY_FILE}" || true
+              echo
+              echo '```'
+            } >> "${SUMMARY_FILE}"
+          done
+
+          echo "summary_file=${SUMMARY_FILE}" >> "$GITHUB_OUTPUT"
+          cat "${SUMMARY_FILE}" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "${FAILURES}" -gt 0 ]; then
+            echo "Uptime probe failed for ${FAILURES} endpoint(s)." >&2
+            exit 1
+          fi
+
+      - name: Force synthetic failure for alert-path validation
+        if: ${{ steps.mode.outputs.test_mode == 'true' }}
+        shell: bash
+        env:
+          SUMMARY_FILE: ${{ steps.probe.outputs.summary_file }}
+        run: |
+          set -euo pipefail
+          {
+            echo
+            echo "## Synthetic failure"
+            echo
+            echo "Alert test mode was enabled via workflow_dispatch input."
+          } >> "${SUMMARY_FILE}"
+          cat "${SUMMARY_FILE}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Synthetic failure triggered for alert-path validation." >&2
+          exit 1
+
+      - name: Create or update uptime alert issue
+        if: ${{ failure() && steps.mode.outputs.test_mode != 'true' }}
+        uses: actions/github-script@v7
+        env:
+          ALERT_ISSUE_TITLE: ${{ env.ALERT_ISSUE_TITLE }}
+          SUMMARY_FILE: ${{ steps.probe.outputs.summary_file }}
+        with:
+          script: |
+            const fs = require("fs");
+
+            const title = process.env.ALERT_ISSUE_TITLE;
+            const summaryFile = process.env.SUMMARY_FILE;
+            const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+            const summary = fs.existsSync(summaryFile)
+              ? fs.readFileSync(summaryFile, "utf8")
+              : "Uptime probe failed before summary file was generated.";
+            const timestamp = new Date().toISOString();
+
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              per_page: 100,
+            });
+
+            const existing = issues.find((issue) => issue.title === title);
+
+            const updateBody = [
+              `Failure observed at ${timestamp}.`,
+              "",
+              `Run: ${runUrl}`,
+              "",
+              summary,
+            ].join("\n");
+
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body: updateBody,
+              });
+              core.info(`Updated existing uptime alert issue #${existing.number}`);
+              return;
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body: updateBody,
+            });
+            core.info("Created new uptime alert issue.");
+
+      - name: Send optional webhook alert
+        if: failure()
+        shell: bash
+        env:
+          ALERT_WEBHOOK: ${{ secrets.UPTIME_ALERT_WEBHOOK }}
+          TEST_MODE: ${{ steps.mode.outputs.test_mode }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ALERT_WEBHOOK:-}" ]; then
+            echo "UPTIME_ALERT_WEBHOOK is not set; skipping external webhook alert."
+            exit 0
+          fi
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          PREFIX="[azursystech]"
+          if [ "${TEST_MODE:-false}" = "true" ]; then
+            PREFIX="[azursystech][TEST]"
+          fi
+          MESSAGE="${PREFIX} Uptime probe failed. Run: ${RUN_URL}"
+          curl --fail --show-error --silent \
+            -X POST \
+            -H "Content-Type: application/json" \
+            --data "{\"text\":\"${MESSAGE}\"}" \
+            "${ALERT_WEBHOOK}"
+
+      - name: Upload probe artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uptime-probe-${{ github.run_id }}
+          path: /tmp/uptime
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Close alert issue on recovery
+        if: ${{ success() && steps.mode.outputs.test_mode != 'true' }}
+        uses: actions/github-script@v7
+        env:
+          ALERT_ISSUE_TITLE: ${{ env.ALERT_ISSUE_TITLE }}
+        with:
+          script: |
+            const title = process.env.ALERT_ISSUE_TITLE;
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              per_page: 100,
+            });
+
+            const existing = issues.find((issue) => issue.title === title);
+            if (!existing) {
+              core.info("No open uptime alert issue found.");
+              return;
+            }
+
+            const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: existing.number,
+              body: `Recovery confirmed. Probe run is green: ${runUrl}`,
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: existing.number,
+              state: "closed",
+            });

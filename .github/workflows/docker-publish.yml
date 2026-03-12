@@ -1,0 +1,87 @@
+name: Docker Publish
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref (branch/tag/SHA) to build"
+        required: true
+        default: "main"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    if: |
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main') ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve build ref and immutable image tag
+        id: meta
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            TARGET_SHA="${{ github.event.workflow_run.head_sha }}"
+            TARGET_REF="$TARGET_SHA"
+          else
+            TARGET_REF="${{ github.event.inputs.ref }}"
+            TARGET_SHA="$(git ls-remote https://github.com/${{ github.repository }}.git "$TARGET_REF" | awk 'NR==1 {print $1}')"
+            if [ -z "$TARGET_SHA" ]; then
+              echo "Unable to resolve ref: $TARGET_REF" >&2
+              exit 1
+            fi
+          fi
+
+          echo "ref=$TARGET_REF" >> "$GITHUB_OUTPUT"
+          echo "sha=$TARGET_SHA" >> "$GITHUB_OUTPUT"
+          echo "immutable_tag=sha-$TARGET_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.meta.outputs.ref }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.immutable_tag }}
+            ghcr.io/${{ github.repository }}:main
+
+      - name: Summary
+        run: |
+          {
+            echo "### Docker Publish"
+            echo ""
+            echo "- Ref: \`${{ steps.meta.outputs.ref }}\`"
+            echo "- Commit SHA: \`${{ steps.meta.outputs.sha }}\`"
+            echo "- Immutable tag: \`${{ steps.meta.outputs.immutable_tag }}\`"
+            echo "- Digest: \`${{ steps.build.outputs.digest }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

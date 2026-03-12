@@ -1,0 +1,38 @@
+# Node
+node_modules/
+dist/
+.next/
+.nuxt/
+.output/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# Env files
+.env
+.env.*
+
+# Logs
+*.log
+logs/
+05_ai/runs/*.json
+05_ai/runs/*.approval.md
+
+# Build
+build/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
