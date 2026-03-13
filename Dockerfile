@@ -25,6 +25,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
+    HOSTNAME=0.0.0.0 \
     HOST=0.0.0.0 \
     PORT=3000
 

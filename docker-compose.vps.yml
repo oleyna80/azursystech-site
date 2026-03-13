@@ -6,6 +6,7 @@ services:
     image: azursystech-app:vps
     container_name: azursystech-app
     environment:
+      HOSTNAME: 0.0.0.0
       HOST: 0.0.0.0
       PORT: 3000
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY is required}
@@ -13,7 +14,7 @@ services:
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://azursystech.fr,https://www.azursystech.fr}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/health || exit 1"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://$(hostname -i | awk '{print $1}'):3000/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5

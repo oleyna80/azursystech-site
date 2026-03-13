@@ -37,6 +37,7 @@ cp /home/dmitrii/projects/azursystech-site/.env.vps.example /home/dmitrii/projec
 ```
 
 Update `/home/dmitrii/projects/azursystech-site/.env`:
+- `HOSTNAME=0.0.0.0`
 - `DEEPSEEK_API_KEY=...`
 - `DEEPSEEK_BASE_URL=https://api.deepseek.com`
 - `ALLOWED_ORIGINS=https://azursystech.fr,https://www.azursystech.fr`

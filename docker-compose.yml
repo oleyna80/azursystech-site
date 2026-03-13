@@ -6,6 +6,7 @@ services:
     image: azursystech-web:local
     container_name: azursystech-app-local
     environment:
+      HOSTNAME: 0.0.0.0
       HOST: 0.0.0.0
       PORT: 3000
     ports:

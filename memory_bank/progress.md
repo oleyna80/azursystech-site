@@ -290,6 +290,23 @@
 - `docker compose -f docker-compose.vps.yml config` - pass
 - workflow YAML checked via local readback - pass
 
+## 2026-03-13: Next.js Container Healthcheck Fix
+
+### Done
+
+- Обновлен `Dockerfile`:
+  - runtime теперь явно задает `HOSTNAME=0.0.0.0` для standalone Next.js.
+- Обновлен `docker-compose.vps.yml`:
+  - app environment дополнен `HOSTNAME=0.0.0.0`;
+  - healthcheck больше не бьет в `127.0.0.1`, а использует фактический container IP.
+- Обновлен `docker-compose.yml` для локального parity.
+- Обновлены `.env.vps.example` и `docs/deployment/github-vps.md`.
+
+### Validation
+
+- локальный `docker run` smoke test showed `/health` = `200`
+- container listen socket inspected: app was binding to container IP, not loopback
+
 ## 2026-03-13: Reviews System Tail Formatting Fix
 
 ### Done
