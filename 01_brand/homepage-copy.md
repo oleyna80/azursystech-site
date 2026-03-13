@@ -314,11 +314,11 @@ AzurSysTech — это практичный локальный IT-сервис �
 - чат с ИИ-агентом
 
 ### Important note
-Пока номер телефона и WhatsApp не добавлен, интерфейс должен быть спроектирован с placeholder blocks:
-- `[номер телефона]`
-- `[ссылка WhatsApp]`
+Номер телефона и WhatsApp для launch baseline:
+- `+33 7 49 70 54 65`
+- `https://wa.me/33749705465`
 
-Tech Lead must make these fields easy to replace later.
+Tech Lead should use these values as current launch contact baseline.
 
 ---
 
@@ -442,7 +442,7 @@ WhatsApp / direct contact
   - English
 - all homepage blocks should be localization-friendly
 - avoid hardcoding culturally specific wording into layout
-- leave placeholders for phone and WhatsApp
+- support visible phone and WhatsApp contact actions
 - chat widget area must be planned in layout from the start
 
 ---

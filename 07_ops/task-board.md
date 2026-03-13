@@ -1,32 +1,44 @@
 # Task Board — AzurSysTech
 
-## Backlog
+## Current Phase
 
-- Define pricing framework
-- Draft FAQ content
-- Plan analytics & tracking setup
-- Design lead follow-up email sequences
-- Write Facebook ad copy variants
-- Define AI escalation rules
+- `implementation phase`
+- active ticket target: `AZR-002 implementation handoff`
+
+## Now
+
+- convert filled docs into Tech Lead implementation packages
+- refresh stale management docs and operational pointers
+- separate implementation-ready assets from launch blockers
 
 ## Next
 
-- Paste roadmap into `00_strategy/roadmap.md`
-- Paste positioning into `00_strategy/positioning.md`
-- Define offer stack
-- Choose homepage structure
-
-## In Progress
-
-- _(nothing yet)_
+- finalize legal / business identity data
+- finalize phone / WhatsApp / contact flow
+- populate deploy secrets and VPS `.env`
+- decide whether AI live-run is enabled at launch
 
 ## Blocked
 
-- _(nothing yet)_
+- website go-live is blocked by missing legal/business values
+- contact UX cannot be finalized until phone / WhatsApp decision is made
+- deploy automation cannot be completed until GitHub secrets are added
+- live AI execution cannot be validated without `DEEPSEEK_API_KEY`
+
+## Later
+
+- local citations plan
+- broader service page expansion
+- French / English localization rollout
+- deeper CRM automation
+- broader AI runtime automation beyond draft-assist mode
 
 ## Done
 
-- ✅ Project skeleton created
-- ✅ Directory structure in place
-- ✅ README bootstrapped
-- ✅ Launch checklist drafted
+- strategy and brand baseline filled
+- website architecture, forms, analytics, and wireframes filled
+- lead intake, taxonomy, CRM flow, and follow-up docs filled
+- Facebook strategy and reply playbooks filled
+- SEO block filled for MVP planning
+- AI runtime MVP scaffolded and aligned with DeepSeek contract
+- VPS delivery scaffolded with Docker and GitHub Actions

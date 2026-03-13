@@ -187,8 +187,8 @@ Expanded mobile menu:
 
 * business audience must recognize relevance immediately
 * CTA visible without scroll
-* WhatsApp button can be placeholder-hidden until number is ready
-* “Открыть чат” can replace WhatsApp until launch
+* WhatsApp button should be visible at launch
+* chat CTA should complement WhatsApp, not replace it by default
 
 ---
 
@@ -463,8 +463,8 @@ Main conversion zone.
 | Связаться с AzurSysTech                                  |
 |                                                          |
 | Left column:                    | Right column:          |
-| - phone placeholder             | [Form title]           |
-| - WhatsApp placeholder          | Имя                    |
+| - phone: +33 7 49 70 54 65      | [Form title]           |
+| - WhatsApp: +33 7 49 70 54 65   | Имя                    |
 | - short contact intro           | Телефон                |
 | - service area                  | Email                  |
 |                                 | Город                  |
@@ -480,8 +480,8 @@ Main conversion zone.
 ```text
 --------------------------------
 | Связаться с AzurSysTech       |
-| [phone placeholder]           |
-| [WhatsApp placeholder]        |
+| [+33 7 49 70 54 65]           |
+| [WhatsApp: +33 7 49 70 54 65] |
 | [short intro]                 |
 | [form starts]                 |
 | Имя                           |

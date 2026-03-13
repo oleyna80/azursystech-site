@@ -20,10 +20,18 @@ Output format (strict):
 3) urgency: <low|medium|high>
 4) confidence: <0-100>
 5) escalation_required: <yes|no>
-6) draft_reply:
+6) escalation_level: <1|2|3|null>
+7) escalation_category: <short label|null>
+8) risk_reason: <one line|null>
+9) suggested_human_action: <one line|null>
+10) draft_reply:
 <message>
-7) next_internal_action:
+11) next_internal_action:
 <one line>
+
+Escalation rule:
+- If `escalation_required = yes`, fill `escalation_level`, `escalation_category`, `risk_reason`, `suggested_human_action`.
+- If `escalation_required = no`, set those four fields to `null`.
 
 Reference context:
 {{project_context}}

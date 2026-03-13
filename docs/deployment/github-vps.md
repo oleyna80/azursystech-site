@@ -46,6 +46,13 @@ cp .env.vps.example /home/dmitrii/projects/azursystech-site/.env
 Update `/home/dmitrii/projects/azursystech-site/.env`:
 - `IMAGE_REPO=ghcr.io/<owner>/<repo>`
 - `IMAGE_TAG=sha-<commit-sha>`
+- `DEEPSEEK_API_KEY=...`
+- `DEEPSEEK_BASE_URL=https://api.deepseek.com`
+- `ALLOWED_ORIGINS=https://azursystech.fr,https://www.azursystech.fr`
+
+Important:
+- do not commit real runtime secrets into the repository
+- rotate any AI key that was ever saved into a tracked file by mistake
 
 ## 4) Configure GitHub Secrets
 
@@ -57,6 +64,11 @@ Required by `Deploy to VPS` workflow:
 - `VPS_APP_DIR` (example: `/home/dmitrii/projects/azursystech-site`)
 - `GHCR_USERNAME`
 - `GHCR_TOKEN` (`read:packages`)
+
+Required on VPS `.env` for live AI intake:
+- `DEEPSEEK_API_KEY`
+- `DEEPSEEK_BASE_URL` (optional if default is kept)
+- `ALLOWED_ORIGINS`
 
 Optional for monitoring:
 - `UPTIME_ALERT_WEBHOOK`
@@ -81,6 +93,7 @@ cd /home/dmitrii/projects/azursystech-site
 docker compose -f docker-compose.vps.yml ps
 docker compose -f docker-compose.vps.yml logs -f --tail=100
 docker exec azursystech-app wget -qO- http://127.0.0.1:3000/health
+docker exec azursystech-app /bin/sh -lc 'echo "$DEEPSEEK_BASE_URL"'
 ```
 
 ## 7) Runtime contract

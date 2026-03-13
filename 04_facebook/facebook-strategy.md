@@ -90,7 +90,7 @@ AzurSysTech = локальный IT-сервис, который помогае�
 ### CTA recommendation
 Use a CTA that points to:
 - website form
-- WhatsApp later
+- WhatsApp
 - Messenger as secondary channel
 
 ---
@@ -216,7 +216,7 @@ Posts specifically for TPE.
 Posts explaining:
 - website
 - form
-- WhatsApp later
+- WhatsApp
 - AI chat
 
 ### Category E — “Short practical advice”

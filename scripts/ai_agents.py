@@ -19,6 +19,7 @@ AI_DIR = REPO_ROOT / "05_ai"
 REGISTRY_PATH = AI_DIR / "agents" / "registry.json"
 RUNS_DIR = AI_DIR / "runs"
 PLACEHOLDER_RE = re.compile(r"{{\s*([a-zA-Z0-9_.-]+)\s*}}")
+STRUCTURED_FIELD_RE = re.compile(r"^\s*(?:\d+\)\s*)?([a-zA-Z0-9_]+)\s*:\s*(.*)$")
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -78,26 +79,26 @@ def build_response_payload(model: str, system_prompt: str, user_prompt: str, tem
     return {
         "model": model,
         "temperature": temperature,
-        "input": [
+        "messages": [
             {
                 "role": "system",
-                "content": [{"type": "input_text", "text": system_prompt}],
+                "content": system_prompt,
             },
             {
                 "role": "user",
-                "content": [{"type": "input_text", "text": user_prompt}],
+                "content": user_prompt,
             },
         ],
     }
 
 
-def call_openai(payload: dict[str, Any]) -> dict[str, Any]:
-    api_key = os.getenv("OPENAI_API_KEY")
+def call_deepseek(payload: dict[str, Any]) -> dict[str, Any]:
+    api_key = os.getenv("DEEPSEEK_API_KEY")
     if not api_key:
-        raise RuntimeError("OPENAI_API_KEY is not set.")
+        raise RuntimeError("DEEPSEEK_API_KEY is not set.")
 
-    base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
-    url = f"{base_url}/responses"
+    base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com").rstrip("/")
+    url = f"{base_url}/chat/completions"
     request = urllib.request.Request(
         url=url,
         data=json.dumps(payload).encode("utf-8"),
@@ -113,27 +114,153 @@ def call_openai(payload: dict[str, Any]) -> dict[str, Any]:
             return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         body = exc.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"OpenAI API error {exc.code}: {body}") from exc
+        raise RuntimeError(f"DeepSeek API error {exc.code}: {body}") from exc
 
 
 def extract_output_text(raw_response: dict[str, Any]) -> str:
-    output_text = raw_response.get("output_text")
-    if isinstance(output_text, str) and output_text.strip():
-        return output_text.strip()
-
     chunks: list[str] = []
-    for item in raw_response.get("output", []):
-        if not isinstance(item, dict):
+
+    for choice in raw_response.get("choices", []):
+        if not isinstance(choice, dict):
             continue
-        for content in item.get("content", []):
-            if not isinstance(content, dict):
-                continue
-            if content.get("type") in {"output_text", "text"}:
-                text = content.get("text")
+        message = choice.get("message", {})
+        if not isinstance(message, dict):
+            continue
+        content = message.get("content")
+        if isinstance(content, str) and content.strip():
+            chunks.append(content.strip())
+            continue
+        if isinstance(content, list):
+            for item in content:
+                if not isinstance(item, dict):
+                    continue
+                text = item.get("text")
                 if isinstance(text, str) and text.strip():
                     chunks.append(text.strip())
 
     return "\n\n".join(chunks).strip()
+
+
+def parse_structured_output(text: str, schema: dict[str, Any]) -> dict[str, Any]:
+    field_names = schema.get("field_order", [])
+    multiline_fields = set(schema.get("multiline_fields", []))
+    parsed: dict[str, Any] = {}
+    current_field: str | None = None
+    buffer: list[str] = []
+
+    def flush() -> None:
+        nonlocal current_field, buffer
+        if current_field is None:
+            return
+        value = "\n".join(buffer).strip()
+        parsed[current_field] = value
+        current_field = None
+        buffer = []
+
+    for raw_line in text.splitlines():
+        match = STRUCTURED_FIELD_RE.match(raw_line)
+        if match:
+            field_name = match.group(1)
+            if field_name in field_names:
+                flush()
+                current_field = field_name
+                buffer = [match.group(2).strip()]
+                continue
+        if current_field is not None:
+            if current_field in multiline_fields or raw_line.strip():
+                buffer.append(raw_line.rstrip())
+
+    flush()
+    return parsed
+
+
+def normalize_structured_value(value: str, field_schema: dict[str, Any]) -> Any:
+    raw = value.strip()
+    if raw == "":
+        return None if field_schema.get("nullable") else ""
+
+    if field_schema.get("nullable") and raw.lower() == "null":
+        return None
+
+    if field_schema.get("type") == "integer":
+        try:
+            return int(raw)
+        except ValueError as exc:
+            raise RuntimeError(f"Field `{field_schema['name']}` must be an integer, got: {raw}") from exc
+
+    return raw
+
+
+def validate_structured_output(parsed: dict[str, Any], schema: dict[str, Any]) -> dict[str, Any]:
+    normalized: dict[str, Any] = {}
+    fields = schema.get("fields", [])
+
+    for field_schema in fields:
+        name = field_schema["name"]
+        required = field_schema.get("required", False)
+
+        if name not in parsed:
+            if required:
+                raise RuntimeError(f"Structured output is missing required field: {name}")
+            normalized[name] = None if field_schema.get("nullable") else ""
+            continue
+
+        value = normalize_structured_value(parsed[name], field_schema)
+        if required and (value is None or value == ""):
+            raise RuntimeError(f"Structured output field `{name}` is empty.")
+
+        allowed = field_schema.get("enum")
+        if value is not None and allowed and value not in allowed:
+            allowed_values = ", ".join(str(item) for item in allowed)
+            raise RuntimeError(
+                f"Structured output field `{name}` must be one of [{allowed_values}], got: {value}"
+            )
+
+        min_value = field_schema.get("min")
+        max_value = field_schema.get("max")
+        if isinstance(value, int):
+            if min_value is not None and value < min_value:
+                raise RuntimeError(f"Structured output field `{name}` must be >= {min_value}")
+            if max_value is not None and value > max_value:
+                raise RuntimeError(f"Structured output field `{name}` must be <= {max_value}")
+
+        normalized[name] = value
+
+    escalation_required_field = schema.get("escalation_required_field")
+    escalation_detail_fields = schema.get("escalation_detail_fields", [])
+    if escalation_required_field and escalation_required_field in normalized:
+        is_escalated = normalized[escalation_required_field] == "yes"
+        for field_name in escalation_detail_fields:
+            value = normalized.get(field_name)
+            if is_escalated and value in {None, ""}:
+                raise RuntimeError(
+                    f"Structured output field `{field_name}` is required when `{escalation_required_field}` is yes."
+                )
+            if not is_escalated and value not in {None, ""}:
+                raise RuntimeError(
+                    f"Structured output field `{field_name}` must be null/empty when `{escalation_required_field}` is no."
+                )
+
+    return normalized
+
+
+def evaluate_escalation(
+    input_payload: dict[str, Any],
+    output_text: str,
+    parsed_output: dict[str, Any] | None,
+    agent: dict[str, Any],
+) -> tuple[bool, list[str]]:
+    schema = agent.get("structured_output", {})
+    escalation_field = schema.get("escalation_required_field")
+    if parsed_output and escalation_field:
+        return parsed_output.get(escalation_field) == "yes", []
+
+    escalation_hits = detect_escalation(
+        input_payload=input_payload,
+        output_text=output_text,
+        keywords=agent.get("escalation_keywords", []),
+    )
+    return bool(escalation_hits), escalation_hits
 
 
 def detect_escalation(input_payload: dict[str, Any], output_text: str, keywords: list[str]) -> list[str]:
@@ -238,13 +365,14 @@ def command_run(args: argparse.Namespace) -> int:
         print(user_prompt)
         print("-------------------------")
 
-    model = args.model or agent.get("model", "gpt-4.1-mini")
+    model = args.model or agent.get("model", "deepseek-chat")
     temperature = args.temperature
     if temperature is None:
         temperature = float(agent.get("temperature", 0.2))
 
     raw_response: dict[str, Any] | None = None
     output_text = ""
+    parsed_output: dict[str, Any] | None = None
 
     if args.dry_run:
         output_text = "[DRY RUN] API call skipped. Prompt assembly completed successfully."
@@ -255,19 +383,27 @@ def command_run(args: argparse.Namespace) -> int:
             user_prompt=user_prompt,
             temperature=temperature,
         )
-        raw_response = call_openai(request_payload)
+        raw_response = call_deepseek(request_payload)
         output_text = extract_output_text(raw_response)
 
-    escalation_hits = detect_escalation(
+        structured_output_schema = agent.get("structured_output")
+        if structured_output_schema:
+            parsed_output = validate_structured_output(
+                parse_structured_output(output_text, structured_output_schema),
+                structured_output_schema,
+            )
+
+    is_escalated, escalation_hits = evaluate_escalation(
         input_payload=payload,
         output_text=output_text,
-        keywords=agent.get("escalation_keywords", []),
+        parsed_output=parsed_output,
+        agent=agent,
     )
 
     status = "completed"
     if args.dry_run:
         status = "dry_run"
-    elif escalation_hits:
+    elif is_escalated:
         status = "escalated"
     elif agent.get("requires_approval") and not args.auto_approve:
         status = "pending_approval"
@@ -285,6 +421,7 @@ def command_run(args: argparse.Namespace) -> int:
         "system_prompt": system_prompt,
         "user_prompt": user_prompt,
         "output_text": output_text,
+        "parsed_output": parsed_output,
         "raw_response": raw_response,
     }
 
@@ -340,7 +477,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     run_parser.add_argument("--print-prompts", action="store_true", help="Print rendered prompts")
     run_parser.add_argument("--auto-approve", action="store_true", help="Skip pending approval state")
-    run_parser.add_argument("--dry-run", action="store_true", help="Do not call OpenAI API")
+    run_parser.add_argument("--dry-run", action="store_true", help="Do not call DeepSeek API")
     run_parser.set_defaults(func=command_run)
 
     return parser

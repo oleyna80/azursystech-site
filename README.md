@@ -36,10 +36,10 @@ Web delivery scaffold is also in place (`web/` + Docker/VPS CI/CD chain).
 ./scripts/ai_agents.py run --agent lead_router --input-file 05_ai/examples/lead_router_input.json --dry-run
 ```
 
-For live execution with OpenAI API:
+For live execution with DeepSeek API:
 
 ```bash
-export OPENAI_API_KEY=your_key
+export DEEPSEEK_API_KEY=your_key
 ./scripts/ai_agents.py run --agent content_writer --input-file 05_ai/examples/content_writer_input.json
 ```
 

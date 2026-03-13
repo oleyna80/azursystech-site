@@ -5,6 +5,9 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: 3000
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY is required}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://azursystech.fr,https://www.azursystech.fr}
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/health || exit 1"]

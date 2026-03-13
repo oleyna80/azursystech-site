@@ -58,9 +58,12 @@ Examples:
 - website_chat
 - facebook_page
 - facebook_group
-- messenger
+- facebook_messenger
 - direct
 - referral
+- google_business_profile
+- organic_search
+- unknown_source
 
 ---
 

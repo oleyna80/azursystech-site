@@ -29,10 +29,10 @@ Use `scripts/ai_agents.py` from repository root.
   --print-prompts
 ```
 
-### Live run (OpenAI API)
+### Live run (DeepSeek API)
 
 ```bash
-export OPENAI_API_KEY=your_key
+export DEEPSEEK_API_KEY=your_key
 ./scripts/ai_agents.py run \
   --agent content_writer \
   --input-file 05_ai/examples/content_writer_input.json
@@ -40,13 +40,14 @@ export OPENAI_API_KEY=your_key
 
 ## Environment variables
 
-- `OPENAI_API_KEY` (required for live runs)
-- `OPENAI_BASE_URL` (optional, default: `https://api.openai.com/v1`)
+- `DEEPSEEK_API_KEY` (required for live runs)
+- `DEEPSEEK_BASE_URL` (optional, default: `https://api.deepseek.com`)
 
 ## Runtime behavior
 
 - Loads strategy context files automatically from `registry.json`
 - Renders prompt templates with JSON payload values
-- Detects escalation keywords
+- Validates structured output for schema-bound agents
+- Prefers model-declared escalation fields over keyword fallback
 - Creates run artifact in `05_ai/runs/*.json`
 - Creates `*.approval.md` when approval is required

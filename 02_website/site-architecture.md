@@ -101,7 +101,7 @@ Primary CTA:
 
 Secondary CTA:
 - **Открыть чат**
-- future: **WhatsApp**
+- **WhatsApp**
 
 ---
 
@@ -327,13 +327,13 @@ Make FAQ scannable with accordion or anchor navigation.
 6. FAQ mini-block
 
 ### Contact methods
-- phone placeholder
-- WhatsApp placeholder
+- phone: `+33 7 49 70 54 65`
+- WhatsApp: `+33 7 49 70 54 65`
 - main lead form
 - embedded AI chat widget
 
 ### Important note
-Since phone/WhatsApp number is not ready, system must support placeholders without breaking layout.
+Phone and WhatsApp are available at launch and should be reflected in the contact layer without placeholder fallback.
 
 ---
 
@@ -381,7 +381,7 @@ Must align with forms and chat collection.
 - navigation links
 - legal links
 - contact CTA
-- future phone/WhatsApp placeholders if needed
+- phone / WhatsApp contact actions in launch contact layer
 
 ### Suggested footer text
 AzurSysTech — локальная IT-помощь для малого бизнеса и частных клиентов в Ницце и рядом.

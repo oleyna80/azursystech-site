@@ -143,12 +143,12 @@ For launch, minimum required public legal pages:
 **Информация о владельце сайта**
 
 ### Fields (placeholders until finalized)
-- ФИО / название бизнеса: `[указать]`
-- Статус: `[Entrepreneur individuel / EI / micro-entreprise / иное]`
-- SIREN / SIRET: `[указать]`
-- Adresse professionnelle: `[указать]`
-- Email: `[указать]`
-- Téléphone: `[указать]`
+- ФИО / название бизнеса: `OLEINIK DMITRII`
+- Статус: `Entrepreneur individuel - micro-entrepreneur`
+- SIREN / SIRET: `SIREN 940 870 140 / SIRET 940 870 140 00016`
+- Adresse professionnelle: `9 AV EMMANUEL BRIDAULT, 06000 NICE`
+- Email: `contact@azursystech.fr`
+- Téléphone: `+33 7 49 70 54 65`
 
 ### Note for Tech Lead
 All fields should support:
@@ -164,9 +164,9 @@ All fields should support:
 **Хостинг**
 
 ### Fields
-- Название хостинг-провайдера: `[указать]`
-- Адрес хостинг-провайдера: `[указать]`
-- Контакт / сайт хостинга: `[указать]`
+- Название хостинг-провайдера: `Hetzner Online GmbH`
+- Адрес хостинг-провайдера: `Industriestr. 25, 91710 Gunzenhausen, Germany`
+- Контакт / сайт хостинга: `https://www.hetzner.com`
 
 ---
 
@@ -369,8 +369,8 @@ Detailed rights wording may be expanded later.
 **Контакт по вопросам данных**
 
 ### Fields
-- Email: `[указать]`
-- Additional contact if needed: `[указать]`
+- Email: `contact@azursystech.fr`
+- Additional contact if needed: `WhatsApp: +33 7 49 70 54 65`
 
 ---
 

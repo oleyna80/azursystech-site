@@ -100,7 +100,7 @@ This is enough for first traction.
 - chat open
 - chat handoff submit
 - contact click
-- future WhatsApp click
+- WhatsApp click
 
 ### Level 4 — Lead quality
 From CRM:
@@ -226,7 +226,7 @@ Track:
 - form view
 - form submit
 - chat open
-- future phone / WhatsApp clicks
+- phone / WhatsApp clicks
 
 ---
 
@@ -292,15 +292,16 @@ No raw personal message content should be sent to analytics.
 Understand where leads come from.
 
 ### Expected source buckets
-- website_form
-- website_chat
-- facebook_page
-- facebook_group
-- messenger
-- direct
-- referral
-- organic_search
-- unknown
+- `website_form`
+- `website_chat`
+- `facebook_page`
+- `facebook_group`
+- `facebook_messenger`
+- `direct`
+- `referral`
+- `google_business_profile`
+- `organic_search`
+- `unknown_source`
 
 ### MVP attribution method
 Use:
@@ -313,13 +314,13 @@ If GA source and CRM source differ, CRM source is the lead-level source of truth
 
 ### Recommended UTM examples
 #### Facebook Page
-`?utm_source=facebook&utm_medium=social&utm_campaign=page_launch`
+`?utm_source=facebook&utm_medium=social&utm_campaign=page_post_[topic]`
 
 #### Facebook Group
-`?utm_source=facebook&utm_medium=group&utm_campaign=group_post`
+`?utm_source=facebook&utm_medium=group&utm_campaign=group_post_[topic]`
 
 #### Messenger
-`?utm_source=facebook&utm_medium=messenger&utm_campaign=direct_inquiry`
+`?utm_source=facebook&utm_medium=messenger&utm_campaign=dm_followup_[topic]`
 
 ---
 
@@ -576,8 +577,8 @@ Review CRM source properties
 | `chat_start`               | first chat interaction  | recommended | higher intent        |
 | `chat_handoff_view`        | contact capture shown   | recommended | funnel step          |
 | `chat_handoff_submit`      | contact handoff success |         yes | core chat conversion |
-| `click_phone`              | phone CTA click         |       later | when number exists   |
-| `click_whatsapp`           | WhatsApp click          |       later | when link exists     |
+| `click_phone`              | phone CTA click         |         yes | launch contact CTA   |
+| `click_whatsapp`           | WhatsApp click          |         yes | launch contact CTA   |
 
 ---
 

@@ -1,5 +1,5 @@
 {
-  "source": "facebook_dm",
+  "source": "facebook_messenger",
   "language": "fr",
   "customer_name": "Mme Dupont",
   "channel_metadata": {

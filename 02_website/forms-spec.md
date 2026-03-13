@@ -337,10 +337,10 @@ If email provided:
 Спасибо. Мы получили вашу заявку и свяжемся с вами для уточнения деталей.
 
 ### Optional secondary line
-Если задача срочная, можно дополнительно связаться через WhatsApp.
+Если задача срочная, можно дополнительно связаться через WhatsApp: `+33 7 49 70 54 65`.
 
 ### Important note
-Since phone/WhatsApp number is not yet available, the UI must support hidden placeholders until real contact data is added.
+Phone and WhatsApp are available for launch and should be supported as visible contact options.
 
 ---
 
