@@ -180,3 +180,25 @@ Runtime `scripts/ai_agents.py` был привязан к `OPENAI_API_KEY` и Op
 - Contact UX and legal/public contact data can now be aligned across website, Facebook, and GBP.
 - Analytics should treat phone and WhatsApp clicks as active launch events, not future placeholders.
 - AI remains useful at launch without crossing into risky autonomous client communication.
+
+---
+
+## ADR-009: Launch Deploy Path = GitHub Actions SSH + Git Pull + Docker Build on VPS
+
+**Date:** 2026-03-13
+**Status:** Accepted
+
+### Context
+Первичный deploy-контур был собран вокруг `GHCR` и immutable image tags, но фактический launch setup использует минимальный GitHub repo `oleyna80/azursystech-site`, VPS checkout в `/home/dmitrii/projects/azursystech-site`, и SSH-based deploy без настроенных `GHCR_*` secrets.
+
+### Decision
+- Launch deploy path переводится на `CI -> Deploy to VPS`.
+- `Deploy to VPS` обновляет git checkout на VPS и выполняет `docker compose up -d --build`.
+- Production app image собирается непосредственно на VPS из текущего commit checkout.
+- `GHCR_USERNAME` и `GHCR_TOKEN` не требуются для launch baseline.
+- ADR-004 не удаляется, но для launch-phase superseded этим решением.
+
+### Consequences
+- Deploy контур становится проще и совместим с текущей operational reality.
+- Rollback выполняется через git history, а не через immutable image tags.
+- Позже можно вернуться к registry-based deploy, если понадобится более быстрый rollback и artifact traceability.

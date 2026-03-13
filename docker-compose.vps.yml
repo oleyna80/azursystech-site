@@ -1,6 +1,9 @@
 services:
   app:
-    image: ${IMAGE_REPO:?IMAGE_REPO is required}:${IMAGE_TAG:?IMAGE_TAG is required}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: azursystech-app:vps
     container_name: azursystech-app
     environment:
       HOST: 0.0.0.0

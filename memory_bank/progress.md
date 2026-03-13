@@ -268,6 +268,28 @@
 - `rg -n '^```|^````' 06_seo/reviews-system.md` - pass
 - проверен хвост файла и секция tracking/status mapping - pass
 
+## 2026-03-13: Deploy Baseline Simplified to Build on VPS
+
+### Done
+
+- Обновлен `docker-compose.vps.yml`:
+  - `app` теперь собирается из локального `Dockerfile` на VPS;
+  - runtime больше не требует `IMAGE_REPO` и `IMAGE_TAG`.
+- Обновлен `.github/workflows/deploy-vps.yml`:
+  - trigger переведен на успешный `CI`, а не на `Docker Publish`;
+  - deploy выполняет `git pull --ff-only origin main` на VPS;
+  - runtime поднимается через `docker compose up -d --build --remove-orphans`.
+- Обновлен `.github/workflows/docker-publish.yml`:
+  - automatic trigger removed;
+  - GHCR publish path оставлен только как manual fallback.
+- Обновлен runbook `docs/deployment/github-vps.md` под source-based deploy без `GHCR_*`.
+- Зафиксировано архитектурное решение `ADR-009`.
+
+### Validation
+
+- `docker compose -f docker-compose.vps.yml config` - pass
+- workflow YAML checked via local readback - pass
+
 ## 2026-03-13: Reviews System Tail Formatting Fix
 
 ### Done

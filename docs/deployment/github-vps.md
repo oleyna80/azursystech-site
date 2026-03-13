@@ -19,8 +19,7 @@ git push origin main
 
 Pipeline order:
 - `CI` checks lint/types/build for `web/`
-- `Docker Publish` builds and pushes image to GHCR with immutable tag `sha-<commit>`
-- `Deploy to VPS` deploys the same immutable tag to VPS
+- `Deploy to VPS` connects over SSH, updates repo checkout on VPS, and rebuilds containers locally
 
 ## 3) Prepare VPS (one-time)
 
@@ -28,24 +27,16 @@ Install on VPS:
 - Docker Engine
 - Docker Compose plugin
 
-Create app directory:
+Create app directory and clone the repository:
 
 ```bash
 sudo mkdir -p /home/dmitrii/projects/azursystech-site
 sudo chown -R $USER:$USER /home/dmitrii/projects/azursystech-site
-```
-
-Copy runtime files and create `.env`:
-
-```bash
-cp docker-compose.vps.yml /home/dmitrii/projects/azursystech-site/
-cp nginx.proxy.conf /home/dmitrii/projects/azursystech-site/
-cp .env.vps.example /home/dmitrii/projects/azursystech-site/.env
+git clone git@github.com:oleyna80/azursystech-site.git /home/dmitrii/projects/azursystech-site
+cp /home/dmitrii/projects/azursystech-site/.env.vps.example /home/dmitrii/projects/azursystech-site/.env
 ```
 
 Update `/home/dmitrii/projects/azursystech-site/.env`:
-- `IMAGE_REPO=ghcr.io/<owner>/<repo>`
-- `IMAGE_TAG=sha-<commit-sha>`
 - `DEEPSEEK_API_KEY=...`
 - `DEEPSEEK_BASE_URL=https://api.deepseek.com`
 - `ALLOWED_ORIGINS=https://azursystech.fr,https://www.azursystech.fr`
@@ -62,8 +53,6 @@ Required by `Deploy to VPS` workflow:
 - `VPS_SSH_KEY`
 - `VPS_PORT` (optional, default `22`)
 - `VPS_APP_DIR` (example: `/home/dmitrii/projects/azursystech-site`)
-- `GHCR_USERNAME`
-- `GHCR_TOKEN` (`read:packages`)
 
 Required on VPS `.env` for live AI intake:
 - `DEEPSEEK_API_KEY`
@@ -77,13 +66,12 @@ Optional for monitoring:
 ## 5) Deploy
 
 Automatic mode:
-- after successful `CI -> Docker Publish` chain on `main`
+- after successful `CI` on `main`
 
 Manual mode:
 
 ```bash
-# image_tag must be immutable sha-* (latest is forbidden)
-gh workflow run "Deploy to VPS" -f image_tag="sha-<40-char-commit>"
+gh workflow run "Deploy to VPS"
 ```
 
 ## 6) Verify on VPS
@@ -104,8 +92,9 @@ docker exec azursystech-app /bin/sh -lc 'echo "$DEEPSEEK_BASE_URL"'
 
 ## 8) Rollback
 
-Re-run deploy workflow with previous known-good immutable tag:
+Rollback is source-based, not image-tag-based. Revert the repository to a known-good commit and redeploy:
 
 ```bash
-gh workflow run "Deploy to VPS" -f image_tag="sha-<previous-good-commit>"
+git revert <bad-commit>
+git push origin main
 ```
