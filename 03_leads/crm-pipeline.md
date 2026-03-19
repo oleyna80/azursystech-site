@@ -1,7 +1,7 @@
 # crm-pipeline.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: working CRM baseline
 _brand: AzurSysTech
 _primary_language: ru
 
@@ -15,7 +15,7 @@ _primary_language: ru
 - заявки не терялись
 - было видно, кто уже обработан, а кто нет
 - follow-up происходил системно
-- HubSpot Free или fallback CRM/Google Sheets использовались осмысленно
+- HubSpot CRM использовался как единый launch CRM без параллельного fallback-sheet контура
 
 ---
 
@@ -511,27 +511,16 @@ Very visual, easy to understand, low friction.
 
 ---
 
-## 15. Google Sheets fallback model
+## 15. CRM implementation note
 
-If using Google Sheets temporarily, use a `status` column with exact same status names.
-
-### Suggested columns
-
-* date
-* name
-* segment
-* service type
-* source
-* city
-* urgency
-* status
-* next action
-* follow-up date
-* notes
+For launch baseline:
+- HubSpot is the primary CRM
+- statuses in HubSpot must use the same stage names as this document
+- no parallel Google Sheets workflow should be treated as standard operating path
 
 ### Rule
 
-Keep status vocabulary identical between Sheet and CRM.
+If a temporary manual export is ever needed, it should mirror HubSpot fields and stages instead of introducing a second operational system.
 
 ---
 
@@ -603,18 +592,6 @@ CRM pipeline is valid if:
 
 ---
 
-## 19. Next file to create
+## Current status
 
-After this file, next artifact should be:
-
-`follow-up-sequences.md`
-
-It must define:
-
-* no-reply follow-up
-* business lead follow-up
-* quote reminder
-* scheduled-later follow-up
-* post-service review request
-
-````
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

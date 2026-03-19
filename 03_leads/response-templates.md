@@ -1,7 +1,7 @@
 # response-templates.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: working ops baseline
 _brand: AzurSysTech
 _primary_language: ru
 _note: templates are written for fast operational use and should later be localized into French and English
@@ -574,15 +574,6 @@ Response templates are valid if:
 
 ---
 
-## 19. Next file to create
+## Current status
 
-After this file, next artifact should be:
-
-`comment-reply-playbook.md`
-
-It must define:
-- public comment handling rules
-- when to reply publicly
-- when to move to DM
-- business-safe short comment templates
-- trust-preserving escalation rules
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

@@ -1,7 +1,7 @@
 # facebook-content-plan.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: working ops baseline
 _brand: AzurSysTech
 _primary_language: ru
 
@@ -526,15 +526,6 @@ Facebook content plan is valid if:
 
 ---
 
-## 20. Next file to create
+## Current status
 
-After approval of this file, next artifact should be:
-
-`comment-reply-playbook.md`
-
-It must define:
-- как отвечать в комментариях
-- когда отвечать публично
-- когда переводить в личные сообщения
-- как не спорить и не перегружать комментарии
-- шаблоны коротких публичных ответов
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

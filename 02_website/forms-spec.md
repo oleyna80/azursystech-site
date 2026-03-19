@@ -1,7 +1,7 @@
 # forms-spec.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: approved implementation contract
 _brand: AzurSysTech
 _language: ru
 
@@ -363,7 +363,7 @@ Examples:
 ## 13. CRM mapping
 
 ### Recommended CRM
-**HubSpot Free**
+**HubSpot CRM**
 
 ### Main mapping rules
 Each form submission should create or update:
@@ -395,29 +395,9 @@ For homepage form:
 
 ---
 
-## 14. Fallback Google Sheets mapping
+## 14. CRM launch rule
 
-If CRM is not live yet, send form submissions to Google Sheets.
-
-### Suggested columns
-- timestamp
-- name
-- phone
-- email
-- city
-- segment
-- service_type
-- problem_description
-- device_count
-- onsite_required
-- urgency
-- source
-- company_name
-- business_type
-- workstation_count
-- business_needs
-- home_device_type
-- device_state
+For launch baseline, form submissions should map directly into HubSpot CRM fields and associated records.
 - home_need_type
 - status
 - notes
@@ -536,7 +516,7 @@ Build main form structure
 Add conditional branching
 
 ### Step 3
-Connect CRM or Google Sheets fallback
+Connect CRM
 
 ### Step 4
 Build AI chat handoff
@@ -554,21 +534,12 @@ The forms implementation is valid if:
 - TPE fields appear only when relevant
 - home-user fields appear only when relevant
 - all required fields validate correctly
-- submission is saved to CRM or fallback sheet
+- submission is saved to CRM
 - AI chat can hand off to contact capture
 - system is ready for future localization
 
 ---
 
-## 22. Next file to create
+## Current status
 
-After this file, next artifact should be:
-
-`facebook-page-copy.md`
-
-It must define:
-- page bio
-- pinned post
-- about section
-- service summary
-- first 10 Facebook posts
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

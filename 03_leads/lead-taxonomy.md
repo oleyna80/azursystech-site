@@ -1,7 +1,7 @@
 # lead-taxonomy.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: approved taxonomy baseline
 _brand: AzurSysTech
 _primary_language: ru
 
@@ -541,15 +541,6 @@ Lead taxonomy is valid if:
 
 ---
 
-## 22. Next file to create
+## Current status
 
-After this file, next artifact should be:
-
-`crm-pipeline.md`
-
-It must define:
-- statuses
-- movement rules
-- who/what updates the status
-- follow-up triggers
-- lead handling logic
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

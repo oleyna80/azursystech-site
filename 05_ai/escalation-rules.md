@@ -1,7 +1,7 @@
 # escalation-rules.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: approved policy baseline
 _brand: AzurSysTech
 _primary_language: ru
 
@@ -568,17 +568,6 @@ Escalation rules are valid if:
 
 ---
 
-## 20. Next file to create
+## Current status
 
-After approval of this file, next artifact should be:
-
-`content-engine-spec.md`
-
-It must define:
-
-* AI content workflow
-* input sources
-* content types
-* draft generation rules
-* human review path
-* repurposing logic
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

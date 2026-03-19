@@ -20,6 +20,58 @@ REGISTRY_PATH = AI_DIR / "agents" / "registry.json"
 RUNS_DIR = AI_DIR / "runs"
 PLACEHOLDER_RE = re.compile(r"{{\s*([a-zA-Z0-9_.-]+)\s*}}")
 STRUCTURED_FIELD_RE = re.compile(r"^\s*(?:\d+\)\s*)?([a-zA-Z0-9_]+)\s*:\s*(.*)$")
+ALLOWED_AI_LAUNCH_MODES = {"limited_live_intake", "manual_assisted_only", "dry_run_only"}
+
+
+def parse_env_bool(name: str, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+
+    value = raw.strip().lower()
+    if value in {"1", "true", "yes", "on"}:
+        return True
+    if value in {"0", "false", "no", "off"}:
+        return False
+
+    raise RuntimeError(f"{name} must be a boolean-like value, got: {raw}")
+
+
+def load_runtime_policy() -> dict[str, Any]:
+    launch_mode = os.getenv("AI_LAUNCH_MODE", "limited_live_intake").strip()
+    if launch_mode not in ALLOWED_AI_LAUNCH_MODES:
+        raise RuntimeError(
+            "AI_LAUNCH_MODE must be one of: "
+            + ", ".join(sorted(ALLOWED_AI_LAUNCH_MODES))
+        )
+
+    allow_autonomous_outbound = parse_env_bool("AI_ALLOW_AUTONOMOUS_OUTBOUND", False)
+    allow_pricing_commitments = parse_env_bool("AI_ALLOW_PRICING_COMMITMENTS", False)
+    allow_scheduling_promises = parse_env_bool("AI_ALLOW_SCHEDULING_PROMISES", False)
+
+    allowed_actions = ["intake", "summary", "handoff"]
+    runtime_policy = {
+        "launch_mode": launch_mode,
+        "allowed_actions": allowed_actions,
+        "allow_autonomous_outbound": allow_autonomous_outbound,
+        "allow_pricing_commitments": allow_pricing_commitments,
+        "allow_scheduling_promises": allow_scheduling_promises,
+    }
+
+    if launch_mode == "limited_live_intake":
+        violations: list[str] = []
+        if allow_autonomous_outbound:
+            violations.append("AI_ALLOW_AUTONOMOUS_OUTBOUND must remain false")
+        if allow_pricing_commitments:
+            violations.append("AI_ALLOW_PRICING_COMMITMENTS must remain false")
+        if allow_scheduling_promises:
+            violations.append("AI_ALLOW_SCHEDULING_PROMISES must remain false")
+        if violations:
+            raise RuntimeError(
+                "Unsafe runtime policy for limited_live_intake: " + "; ".join(violations)
+            )
+
+    return runtime_policy
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -323,6 +375,21 @@ def command_run(args: argparse.Namespace) -> int:
 
     payload.setdefault("project_name", "AzurSysTech")
     payload.setdefault("run_timestamp_utc", dt.datetime.now(dt.timezone.utc).isoformat())
+    runtime_policy = load_runtime_policy()
+    payload.setdefault("ai_launch_mode", runtime_policy["launch_mode"])
+    payload.setdefault("ai_allowed_actions", ", ".join(runtime_policy["allowed_actions"]))
+    payload.setdefault(
+        "ai_allow_autonomous_outbound",
+        "yes" if runtime_policy["allow_autonomous_outbound"] else "no",
+    )
+    payload.setdefault(
+        "ai_allow_pricing_commitments",
+        "yes" if runtime_policy["allow_pricing_commitments"] else "no",
+    )
+    payload.setdefault(
+        "ai_allow_scheduling_promises",
+        "yes" if runtime_policy["allow_scheduling_promises"] else "no",
+    )
 
     context_files = agent.get("context_files", [])
     payload.setdefault(
@@ -416,6 +483,7 @@ def command_run(args: argparse.Namespace) -> int:
         "model": model,
         "temperature": temperature,
         "status": status,
+        "runtime_policy": runtime_policy,
         "escalation_hits": escalation_hits,
         "input": payload,
         "system_prompt": system_prompt,

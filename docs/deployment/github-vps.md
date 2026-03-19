@@ -40,6 +40,10 @@ Update `/home/dmitrii/projects/azursystech-site/.env`:
 - `HOSTNAME=0.0.0.0`
 - `DEEPSEEK_API_KEY=...`
 - `DEEPSEEK_BASE_URL=https://api.deepseek.com`
+- `AI_LAUNCH_MODE=limited_live_intake`
+- `AI_ALLOW_AUTONOMOUS_OUTBOUND=false`
+- `AI_ALLOW_PRICING_COMMITMENTS=false`
+- `AI_ALLOW_SCHEDULING_PROMISES=false`
 - `ALLOWED_ORIGINS=https://azursystech.fr,https://www.azursystech.fr`
 
 Important:
@@ -58,6 +62,13 @@ Required by `Deploy to VPS` workflow:
 Required on VPS `.env` for live AI intake:
 - `DEEPSEEK_API_KEY`
 - `DEEPSEEK_BASE_URL` (optional if default is kept)
+- `AI_LAUNCH_MODE=limited_live_intake`
+- `AZURSYSTECH_CONTACT_SUBMIT_ENABLED=false|true`
+- `AZURSYSTECH_CONTACT_SUBMIT_BASE_URL`
+- `AZURSYSTECH_CONTACT_SUBMIT_TOKEN`
+- `AI_ALLOW_AUTONOMOUS_OUTBOUND=false`
+- `AI_ALLOW_PRICING_COMMITMENTS=false`
+- `AI_ALLOW_SCHEDULING_PROMISES=false`
 - `ALLOWED_ORIGINS`
 
 Optional for monitoring:
@@ -81,8 +92,9 @@ gh workflow run "Deploy to VPS"
 cd /home/dmitrii/projects/azursystech-site
 docker compose -f docker-compose.vps.yml ps
 docker compose -f docker-compose.vps.yml logs -f --tail=100
-docker exec azursystech-app wget -qO- http://127.0.0.1:3000/health
+docker exec azursystech-app /bin/sh -lc 'wget -qO- http://$(hostname -i | awk '"'"'{print $1}'"'"'):3000/health'
 docker exec azursystech-app /bin/sh -lc 'echo "$DEEPSEEK_BASE_URL"'
+curl -sSI https://azursystech.fr/health
 ```
 
 ## 7) Runtime contract
@@ -90,6 +102,11 @@ docker exec azursystech-app /bin/sh -lc 'echo "$DEEPSEEK_BASE_URL"'
 - `app`: Next.js standalone runtime on `:3000`, health endpoint `GET /health`
 - `web`: Nginx reverse proxy using `nginx.proxy.conf`, forwards traffic to `app:3000`
 - `npm_default` external network is expected for Nginx Proxy Manager integration
+- SSL / edge path at launch:
+  - `Cloudflare` terminates public edge traffic
+  - `Nginx Proxy Manager` handles reverse proxy on the VPS
+  - `azursystech-web` serves the app internally on the Docker network
+  - public production domain: `https://azursystech.fr`
 
 ## 8) Rollback
 

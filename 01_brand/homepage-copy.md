@@ -1,7 +1,7 @@
 # homepage-copy.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: implementation input
 _language: ru
 _brand: AzurSysTech
 
@@ -478,16 +478,6 @@ Homepage copy is valid if:
 
 ---
 
-## 19. Next file to create
+## Current status
 
-After homepage copy, next artifact should be:
-
-`facebook-strategy.md`
-
-It must define:
-- Facebook Page positioning
-- content pillars
-- post categories
-- lead capture flow
-- DM / comment handling
-- relationship between Facebook and site form/chat
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

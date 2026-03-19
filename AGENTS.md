@@ -87,3 +87,56 @@
   - scope, AC, ограничения;
   - артефакты проверки и открытые риски.
 - SLA по ролям определяется в `.agent/ROSTER.md` и обязателен к соблюдению.
+
+## 15) Multi-Agent Operating Model
+- Для проекта принят multi-agent execution model.
+- Канонический control layer:
+  - `Tech Lead / Control Tower` - приоритеты, tasking, review, финальные решения, SSOT sync
+- Разрешенные execution streams:
+  - `Website Build Stream` - Tech Lead/Reviewer <-> RooCode
+  - `VPS / n8n Integration Stream` - integration lead <-> VPS/n8n agent
+  - `HubSpot CRM Stream` - CRM lead <-> HubSpot agent
+- Каждый stream работает в отдельном чате/контуре, чтобы не смешивать:
+  - product decisions
+  - coding execution
+  - infra/integration setup
+  - CRM setup
+- Этот проектный контур считает нормой параллельную работу нескольких агентов, если:
+  - scope streams разделен;
+  - финальные решения возвращаются в control layer;
+  - SSOT обновляется после принятого результата.
+
+## 16) Reporting Contract Between Streams
+- Любой параллельный stream возвращает итог только в коротком structured формате:
+  1. `What was done`
+  2. `Decisions made`
+  3. `Files / settings changed`
+  4. `Open blockers`
+  5. `Next recommended action`
+- Этот 5-пунктовый блок считается каноническим return format для всех parallel chats и stream summaries.
+- В control layer не переносить:
+  - длинные live-debug логи;
+  - промежуточные варианты без решения;
+  - шумовые обсуждения интерфейсов сторонних систем.
+- В control layer переносить обязательно:
+  - accepted code changes;
+  - принятые integration contracts;
+  - принятые CRM stage/property names;
+  - любые изменения deploy/runtime assumptions;
+  - все решения, влияющие на SSOT.
+
+## 17) Ownership Rule for Parallel Work
+- `Tech Lead` остается владельцем:
+  - active ticket state
+  - task priority
+  - acceptance / rejection of results
+  - updates to `memory_bank/*`
+  - updates to `docs/specs|plans|tasklist`
+- Stream leads не должны silently менять SSOT.
+- Любое решение, которое меняет:
+  - pipeline names
+  - source taxonomy
+  - deploy path
+  - AI runtime policy
+  - legal/contact baseline
+  должно быть возвращено в control layer и только после этого считаться принятым.

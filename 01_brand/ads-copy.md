@@ -1,7 +1,7 @@
 # ads-copy.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: working campaign draft
 _brand: AzurSysTech
 _language: ru
 
@@ -370,15 +370,6 @@ Ads copy is valid if:
 
 ---
 
-## 16. Next file to create
+## Current status
 
-After this file, next artifact should be:
-
-`faq.md`
-
-It must define:
-- website FAQ
-- Facebook FAQ
-- objections and answers
-- business-specific questions
-- home-user questions
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

@@ -1,7 +1,7 @@
 # faq.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: implementation input
 _brand: AzurSysTech
 _language: ru
 
@@ -339,17 +339,6 @@ FAQ is valid if:
 
 ---
 
-## 16. Next file to create
+## Current status
 
-After this file, next artifact should be:
-
-`site-architecture.md`
-
-It must define:
-- sitemap
-- page hierarchy
-- navigation
-- homepage structure
-- service page structure
-- multilingual readiness
-- contact/chat placement
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

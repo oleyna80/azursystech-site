@@ -1,7 +1,7 @@
 # prompt-library-support.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: working prompt baseline
 _brand: AzurSysTech
 _primary_language: ru
 

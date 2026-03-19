@@ -43,6 +43,16 @@
 - Blocking:
 - Non-blocking:
 
+## Stream Summary For Control Tower
+
+Use this exact 5-point structure for parallel stream summaries.
+
+- What was done:
+- Decisions made:
+- Files / settings changed:
+- Open blockers:
+- Next recommended action:
+
 ## Expected Action from Receiver
 
 - `Implement | Review | Approve | Escalate`

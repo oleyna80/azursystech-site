@@ -1,7 +1,7 @@
 # legal-pages.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: working legal baseline
 _brand: AzurSysTech
 _primary_language: ru
 _note: final legal wording must be reviewed and completed with real business data before publication
@@ -142,7 +142,7 @@ For launch, minimum required public legal pages:
 ### Title
 **Информация о владельце сайта**
 
-### Fields (placeholders until finalized)
+### Fields (launch baseline)
 - ФИО / название бизнеса: `OLEINIK DMITRII`
 - Статус: `Entrepreneur individuel - micro-entrepreneur`
 - SIREN / SIRET: `SIREN 940 870 140 / SIRET 940 870 140 00016`
@@ -151,10 +151,8 @@ For launch, minimum required public legal pages:
 - Téléphone: `+33 7 49 70 54 65`
 
 ### Note for Tech Lead
-All fields should support:
-- hidden placeholders during staging
-- visible placeholders in draft content files
-- final easy replacement before launch
+Business identity and contact values above are now fixed for launch baseline.
+Remaining legal work is in wording polish and final publishability review, not in placeholder replacement.
 
 ---
 
@@ -203,7 +201,7 @@ Do not overcomplicate this paragraph.
 Сайт регулируется применимым правом Франции. Использование сайта означает согласие пользователя с действующей структурой правовой информации и политикой конфиденциальности.
 
 ### Note
-Final wording can be adjusted later.
+This block should remain concise and publishable.
 
 ---
 
@@ -216,9 +214,9 @@ Final wording can be adjusted later.
 3. Какие данные собираются
 4. Через какие каналы данные собираются
 5. Зачем данные собираются
-6. Правовое основание / operational basis placeholder
+6. Правовое основание / operational basis
 7. Как данные используются
-8. Срок хранения / placeholder
+8. Срок хранения
 9. Передача третьим сторонам / tools
 10. Права пользователя
 11. Контакт по вопросам данных
@@ -294,16 +292,13 @@ Keep purpose tied to service delivery and communication.
 
 ---
 
-# 9.6 Legal/operational basis placeholder
+# 9.6 Legal/operational basis
 
 ### Title
 **Основание обработки**
 
-### Suggested placeholder text
-Данные обрабатываются в объёме, необходимом для ответа на запрос пользователя, организации связи и выполнения услуг. Финальная юридическая формулировка будет уточнена и приведена в окончательной версии страницы.
-
-### Note
-This is a placeholder, not final legal doctrine text.
+### Suggested text
+Данные обрабатываются в объёме, необходимом для ответа на запрос пользователя, организации связи, ведения заявки и выполнения услуг AzurSysTech, в пределах, допустимых применимым правом.
 
 ---
 
@@ -317,13 +312,13 @@ This is a placeholder, not final legal doctrine text.
 
 ---
 
-# 9.8 Storage / retention placeholder
+# 9.8 Storage / retention
 
 ### Title
 **Срок хранения данных**
 
-### Suggested placeholder text
-Данные хранятся столько, сколько это необходимо для обработки обращения, дальнейшей коммуникации и выполнения услуг, а также в пределах сроков, требуемых применимыми правилами. Финальная формулировка будет уточнена в рабочей версии сайта.
+### Suggested text
+Данные хранятся столько, сколько это необходимо для обработки обращения, дальнейшей коммуникации, выполнения услуг и соблюдения применимых требований по хранению информации.
 
 ---
 
@@ -340,10 +335,9 @@ This is a placeholder, not final legal doctrine text.
 - чат-модуль
 
 ### Current expected tools
-- HubSpot Free (planned / recommended)
+- HubSpot CRM
 - Google Analytics 4
-- future chat widget
-- optional Google Sheets fallback
+- chat widget if enabled in production
 
 ### Important note
 Final list should match actual production tools only.
@@ -536,16 +530,6 @@ Legal pages setup is valid if:
 
 ---
 
-## 18. Next file to create
+## Current status
 
-After this file, next artifact should be:
-
-`response-templates.md`
-
-It must define:
-- first reply templates
-- business lead replies
-- home-user replies
-- follow-up templates
-- quote/intake clarification templates
-- French-ready structure for future localization
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

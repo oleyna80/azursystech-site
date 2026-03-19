@@ -1,7 +1,7 @@
 # comment-reply-playbook.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: working ops baseline
 _brand: AzurSysTech
 _primary_language: ru
 
@@ -399,15 +399,6 @@ Comment reply playbook is valid if:
 
 ---
 
-## 24. Next file to create
+## Current status
 
-After approval of this file, next artifact should be:
-
-`dm-reply-playbook.md`
-
-It must define:
-- правила ответа в личных сообщениях
-- first-touch sequences
-- qualification flow
-- short DM templates for business and home leads
-- transition from DM to site / form / CRM
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

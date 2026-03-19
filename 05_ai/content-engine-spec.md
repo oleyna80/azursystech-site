@@ -1,7 +1,7 @@
 # content-engine-spec.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: working runtime spec
 _brand: AzurSysTech
 _primary_language: ru
 
@@ -607,10 +607,6 @@ Content engine spec is valid if:
 
 ---
 
-## 25. Next file to create
+## Current status
 
-After approval of this file, next artifact should be one of:
-
-* implementation of the content engine runtime
-* prompt templates for content generation
-* content calendar / batch planning contract
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

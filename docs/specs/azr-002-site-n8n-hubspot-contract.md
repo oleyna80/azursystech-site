@@ -2,16 +2,32 @@
 
 ## Problem
 
-`/contact` submit path is implemented as a safe site boundary, but final external delivery contract is still unresolved. Current route intentionally keeps a provisional boundary and returns `integration_not_ready` until external contract details are fixed.
+`/contact` submit path already has a safe site-side boundary, but until now it had no approved transport contract for the outbound `site -> n8n` hop. This kept the route in a provisional `integration_not_ready` state.
 
 ## Goal
 
-Lock canonical SSOT contract for `site -> n8n -> HubSpot` without undocumented assumptions, explicitly labeling unresolved items as `BLOCKER` before production adapter implementation.
+Lock an explicit `v1` transport contract for the website submit path so implementation can proceed without guessing endpoint, auth, timeout, retry, idempotency, or response semantics.
+
+## Supersession Note (2026-03-19)
+
+- Sections `1`-`6` remain valid as the approved transport baseline for `site -> n8n`.
+- HubSpot mapping in section `7` is no longer the active launch baseline.
+- Current launch path is:
+  - `site -> n8n -> Google Sheets`
+  - AI widget live integration + Telegram notification later
+  - CRM in a later phase
+- Section `7` is retained only as a historical phase-2 CRM reference.
 
 ## Lifecycle State
 
-- Current state: `blocked`
-- Reason: во всех 5 обязательных blocker-группах остаются критичные `BLOCKER`-поля; перевод в `ready-for-implementation` запрещен gate rule.
+- Current state: `transport contract approved`
+- Ticket result: `AZR-002-023` is approved as a transport-baseline decision
+- `ready-for-implementation`: `APPROVED` for site adapter implementation only
+- Still not approved:
+  - production deploy changes
+  - live workflow enablement
+  - HubSpot object/property mapping
+  - secret provisioning in live environments
 
 ## Ticket Binding
 
@@ -23,17 +39,19 @@ Lock canonical SSOT contract for `site -> n8n -> HubSpot` without undocumented a
 
 1. Endpoint boundary contract for `site -> n8n`
 2. Auth contract
-3. Payload contract and mapping path to HubSpot
+3. `site -> n8n` payload contract
 4. Response contract back to site
-5. Error semantics and ownership boundaries
+5. Operational constraints for the transport layer
 
 ## Out of Scope
 
 - UI/page updates in `web/src/app/*`
 - runtime/infra deployment changes
 - production adapter coding
-- secret provisioning in live environments
-- undocumented field creation
+- live workflow enablement
+- HubSpot object decisions beyond transport necessity
+- full HubSpot property mapping
+- secret values in repository artifacts
 
 ## SSOT Sources Used
 
@@ -45,261 +63,269 @@ Lock canonical SSOT contract for `site -> n8n -> HubSpot` without undocumented a
 - `03_leads/lead-intake-spec.md`
 - `03_leads/lead-taxonomy.md`
 - `03_leads/crm-pipeline.md`
-- `07_ops/task-board.md`
 - `07_ops/launch-checklist.md`
 - boundary code:
   - `web/src/app/api/contact/submit/route.ts`
   - `web/src/lib/contact-submit.ts`
-  - `web/src/app/contact/page.tsx`
 
-## Decision Checklist — `AZR-002-023`
-
-Ниже фиксируется только то, что подтверждено SSOT. Неутвержденные значения не угадываются и помечаются как `BLOCKER` с owner и next action.
-
-### Final approved snapshot (control-layer)
-
-| Group | Approved values fixed in SSOT | Still `BLOCKER` | Group state |
-|---|---|---|---|
-| Endpoint | none | URL/path, method, content-type, required headers, versioning | `BLOCKED` |
-| Auth | secret storage rule (runtime env only) | auth/signature scheme, exact header names, minimal rotation rule | `BLOCKED` |
-| Timeout / Retry / Idempotency | none | timeout, retry policy, idempotency/duplicate rule | `BLOCKED` |
-| Mapping | `source = website_form`, `status = New`, allowed site payload fields and branching | target HubSpot object, full HubSpot property mapping, stage/property mapping | `BLOCKED` |
-| Response contract | deterministic no-fake-success boundary rule | upstream success/permanent-failure/temporary-failure schemas | `BLOCKED` |
-
-Итог snapshot: `AZR-002-023` остается `blocked`.
+## Approved v1 Transport Contract
 
 ### 1) Endpoint
 
-Status: `BLOCKED`
-
-Value set:
-
-- Final URL/path: `BLOCKER` (не утверждено)
-- Method: `BLOCKER` (не утверждено)
-- Content-Type: `BLOCKER` (не утверждено)
-- Required headers: `BLOCKER` (не утверждено)
-- Versioning rule: `BLOCKER` (не утверждено)
-
-Source/approval:
-
-- В SSOT отсутствует approved endpoint contract для live `site -> n8n`.
-- В [`07_ops/launch-checklist.md`](07_ops/launch-checklist.md:24) и [`07_ops/launch-checklist.md`](07_ops/launch-checklist.md:25) зафиксировано, что HubSpot/n8n intake еще не ready.
-- В [`web/src/app/api/contact/submit/route.ts`](web/src/app/api/contact/submit/route.ts:15) boundary явно помечен provisional до фиксации финального контракта.
-
-Blockers:
-
-| Blocker | Description | Owner | Next action |
-|---|---|---|---|
-| `BLOCKER-000` | final HTTP method for external `site -> n8n` call | Integration Lead | Вернуть control-layer approval с выбранным методом и rationale в stream summary 1-5 |
-| `BLOCKER-001` | final live n8n endpoint URL/path | Integration Lead | Зафиксировать canonical URL/path и source of truth в этом spec |
-| `BLOCKER-002` | endpoint versioning policy | Integration Lead | Утвердить версионирование webhook/API и backward-compatibility rule |
-| `BLOCKER-003` | request content type for `site -> n8n` | Integration Lead | Утвердить content type и serialization contract |
-| `BLOCKER-004` | required/optional header contract | Integration Lead | Вернуть обязательный список headers и optional policy |
+- Endpoint URL/path: `<n8n-base-url>/webhook/azursystech/contact-submit`
+- Canonical path: `/webhook/azursystech/contact-submit`
+- HTTP method: `POST`
+- `Content-Type`: `application/json`
+- Required headers:
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <token>`
+  - `X-Contract-Version: 1`
+  - `X-Idempotency-Key: <uuid-v4>`
+- Versioning rule:
+  - header-based versioning only
+  - current approved version: `X-Contract-Version: 1`
+  - breaking transport changes require a new integer contract version
 
 ### 2) Auth
 
-Status: `BLOCKED`
-
-Value set:
-
-- Auth/signature scheme: `BLOCKER` (не утверждено)
-- Exact header name(s): `BLOCKER` (не утверждено)
-- Secret storage rule: `CLOSED` = секреты только в runtime env / `.env`, не в репозитории
-- Minimal rotation rule: `BLOCKER` (не утверждено)
-
-Source/approval:
-
-- Secret storage rule подтвержден в [`AGENTS.md`](AGENTS.md:31) и [`AGENTS.md`](AGENTS.md:33).
-- Auth/signature/header naming и rotation rule не имеют approved control-layer артефакта.
-
-Blockers:
-
-| Blocker | Description | Owner | Next action |
-|---|---|---|---|
-| `BLOCKER-005` | auth/signature scheme and secret header naming | Integration Lead | Зафиксировать схему auth/signature + точные header names в contract spec |
-| `BLOCKER-012` | minimal secret rotation rule | Integration Lead | Утвердить минимальное правило ротации и rollback-safe порядок обновления секретов |
+- Auth scheme: `Authorization: Bearer <token>`
+- Exact auth header name: `Authorization`
+- Additional required headers:
+  - `X-Contract-Version`
+  - `X-Idempotency-Key`
+- Secret storage rule:
+  - token stored only in runtime env / `.env`
+  - token must not appear in repository, docs, logs, or client-side payloads
+- Minimal secret rotation rule:
+  - rotate with a dual-token overlap window of `24h`
+  - sequence:
+    1. add new token on receiving side
+    2. update site runtime secret
+    3. verify one successful non-live test call
+    4. remove old token within `24h`
 
 ### 3) Timeout / Retry / Idempotency
 
-Status: `BLOCKED`
+- Request timeout: `10s`
+- Retry policy:
+  - website performs `0` automatic retries
+  - downstream retries, if any, are handled outside the website transport layer
+- Idempotency rule:
+  - website must send `X-Idempotency-Key` as `uuid-v4`
+  - deduplication window: `24h`
+  - duplicate request with the same idempotency key must not create a second downstream write
+  - duplicate request may return the same accepted status category as the original request
 
-Value set:
+### 4) Payload Contract `site -> n8n`
 
-- Timeout: `BLOCKER` (число и единица не утверждены)
-- Retry policy: `BLOCKER` (yes/no, лимиты, условия не утверждены)
-- Duplicate prevention/idempotency rule: `BLOCKER` (не утверждено)
+- Serialization: JSON object
+- Transform policy: `1:1` from validated site payload to outbound JSON body
+- Transport baseline fields:
+  - `source`
+  - `status`
+  - `name`
+  - `phone`
+  - `email`
+  - `city`
+  - `segment`
+  - `service_type`
+  - `problem_description`
+  - `device_count`
+  - `onsite_required`
+  - `urgency`
+  - `company_name`
+  - `business_type`
+  - `workstation_count`
+  - `business_needs`
+  - `business_address`
+  - `home_device_type`
+  - `device_state`
+  - `home_need_type`
+- Transport invariants:
+  - `source = website_form`
+  - `status = New`
+  - arrays remain arrays
+  - field names are not remapped in `v1`
 
-Source/approval:
+### 5) Response Contract `n8n -> site`
 
-- В текущем контракте timeout/retry/idempotency остаются незакрытыми gap-ами.
-- В [`memory_bank/progress.md`](memory_bank/progress.md:14), [`memory_bank/progress.md`](memory_bank/progress.md:15) и [`memory_bank/progress.md`](memory_bank/progress.md:16) эти области уже зафиксированы как blocker-level.
+- Success response:
+  - HTTP status: `200`
+  - schema:
+    ```json
+    {
+      "status": "accepted",
+      "request_id": "string"
+    }
+    ```
+- Temporary failure response:
+  - HTTP status: `503`
+  - schema:
+    ```json
+    {
+      "status": "temporary_failure",
+      "message": "string",
+      "request_id": "string"
+    }
+    ```
+- Permanent failure response:
+  - HTTP status: `400 | 401 | 403 | 422`
+  - schema:
+    ```json
+    {
+      "status": "rejected",
+      "message": "string",
+      "request_id": "string"
+    }
+    ```
+- Deterministic success rule:
+  - site boundary may return `success` only if upstream explicitly returns `200` with `status = accepted`
+  - any other upstream result must map to non-success handling on site side
 
-Blockers:
+### 6) Operational Constraints
 
-| Blocker | Description | Owner | Next action |
+- Exposure mode: `proxy-protected`
+- Rate-limit expectation: `none` at contract layer for `v1`
+- Logging/redaction rule:
+  - allowed structured log fields:
+    - `request_id`
+    - `source`
+    - `segment`
+    - `service_type`
+    - `status`
+    - upstream result status
+  - must not log:
+    - `Authorization` header
+    - bearer token value
+    - `X-Idempotency-Key`
+    - raw request body
+    - full `problem_description`
+    - `phone`
+    - `email`
+    - `business_address`
+- No-secret exposure rule in error payloads:
+  - error payloads may include only safe fields defined in the response schema
+  - no secrets, stack traces, internal headers, or internal URLs with credentials
+
+## 7) Historical HubSpot Object / Property Mapping (approved 2026-03-15, deferred on 2026-03-19)
+
+### Object model
+
+- **Contact** = person entity for communication; standard fields only, no custom contact properties.
+- **Deal** = specific request/lead with site payload attributes; custom properties below.
+- One form submission creates or updates one Contact and creates one Deal.
+
+### Contact mapping
+
+| Site payload field | HubSpot object | Label (UI) | Internal name | Notes |
+|---|---|---|---|---|
+| `name` | Contact | First name | `firstname` | Full `name` field maps here; `lastname` left empty, not parsed |
+| — | Contact | Last name | `lastname` | Always empty at MVP |
+| `phone` | Contact | Phone number | `phone` | Primary contact number |
+| `email` | Contact | Email | `email` | Optional |
+| `city` | Contact | City | `city` | Standard contact field |
+| `company_name` | Contact | Company name | `company` | Filled only for TPE segment |
+
+### Deal: standard properties
+
+| Site payload field | HubSpot object | Label (UI) | Internal name | Notes |
+|---|---|---|---|---|
+| `status` | Deal | Deal stage | `dealstage` | Canonical stages from `crm-pipeline.md`: `new`, `need_info`, `qualified`, `contacted`, `waiting_reply`, `visit_planned`, `quote_sent`, `won`, `lost`, `follow_up_later` |
+
+### Deal: custom properties
+
+| Site payload field | HubSpot object | Label (UI) | Internal name | Field type | Values |
+|---|---|---|---|---|---|
+| `segment` | Deal | Lead segment | `lead_segment` | Dropdown select | `particulier`, `tpe` |
+| `service_type` | Deal | Service type | `service_type` | Dropdown select | `depannage_pc`, `installation_pc`, `wifi`, `imprimante`, `reseau_local`, `partage_fichiers`, `poste_travail`, `petite_infra_tpe`, `autre` |
+| `urgency` | Deal | Urgency | `urgency` | Dropdown select | `urgent`, `standard`, `planning` |
+| `source` | Deal | Source | `lead_source` | Dropdown select | `website_form`, `website_chat`, `facebook_page`, `facebook_group`, `facebook_messenger`, `direct`, `referral`, `google_business_profile`, `organic_search`, `unknown_source` |
+| `problem_description` | Deal | Problem summary | `problem_summary` | Single-line text | Mapped from site `problem_description` |
+| `device_count` | Deal | Device count | `device_count` | Dropdown select | `1`, `2-3`, `4-10`, `10+` |
+| `onsite_required` | Deal | Onsite required | `onsite_required` | Dropdown select | `yes`, `no`, `not_sure` |
+
+### Deal: Note format for overflow fields
+
+All segment-specific and supplementary fields that are not Deal custom properties are written as a single structured Note on the Deal at creation time:
+
+```text
+Intake payload (MVP)
+
+segment: {{lead_segment}}
+service_type: {{service_type}}
+urgency: {{urgency}}
+source: {{lead_source}}
+
+# TPE-only (omit if particulier)
+business_type: {{business_type}}
+workstation_count: {{workstation_count}}
+business_needs: {{business_needs}}
+business_address: {{business_address}}
+
+# Particulier-only (omit if tpe)
+home_device_type: {{home_device_type}}
+device_state: {{device_state}}
+home_need_type: {{home_need_type}}
+
+# Common
+device_count: {{device_count}}
+onsite_required: {{onsite_required}}
+problem_description_raw: {{problem_description}}
+```
+
+Rules:
+- `problem_description` is duplicated in Note as `problem_description_raw` to preserve full context alongside the Deal property `problem_summary`
+- Fields absent for a given segment may be omitted or set to `n/a`
+- Arrays (e.g. `business_needs`, `home_device_type`, `home_need_type`) are serialized as comma-separated values
+
+### Corrections applied to CRM stream proposal
+
+| Field | CRM stream proposed | Control-layer corrected | Reason |
 |---|---|---|---|
-| `BLOCKER-006` | timeout/retry values and behavior | Integration Lead | Вернуть конкретные timeout/retry параметры и failure-condition rule |
-| `BLOCKER-011` | idempotency and duplicate-prevention rule | Integration Lead | Утвердить idempotency key/rule и duplicate handling semantics |
+| `service_type` values | `support_ponctuel`, `maintenance_recurrente`, `installation_projet`, `conseil` | 9 values from site payload | Must match `contact-submit.ts` enum |
+| `urgency` values | `low`, `medium`, `high` | `urgent`, `standard`, `planning` | Must match `contact-submit.ts` enum |
+| `lead_source` values | `site_web`, `telephone`, `whatsapp`, `reference`, `autre` | 10 values from `lead-taxonomy.md` | Must match canonical source taxonomy |
+| `device_count` type | Number | Dropdown select (`1`, `2-3`, `4-10`, `10+`) | Site sends string enum, not integer |
+| `onsite_required` type | Checkbox (true/false) | Dropdown select (`yes`, `no`, `not_sure`) | Site sends 3-option enum, not boolean |
 
-### 4) Mapping `site -> n8n -> HubSpot`
+## Remaining Follow-Up Items
 
-Status: `BLOCKED`
+The following items remain outside this approval and still require separate follow-up work:
 
-Value set:
+- pipeline ID / stage ID provisioning in HubSpot
+- Google Sheets target sheet/tab provisioning
+- live n8n workflow enablement
+- production secret provisioning
 
-- Target HubSpot object: `BLOCKER` (не утверждено)
-- Full mapping of allowed fields: `BLOCKED` на этапе `n8n -> HubSpot` property mapping
-- Initial status/stage/property mapping: `BLOCKER` (не утверждено)
+These are downstream follow-up items. For launch, Google Sheets provisioning now matters; HubSpot provisioning is phase-2 only.
 
-Source/approval:
+## Compatibility With Current Site Boundary
 
-- `CLOSED` на стороне site boundary: допустимый набор полей и их валидация зафиксированы в [`web/src/lib/contact-submit.ts`](web/src/lib/contact-submit.ts:27).
-- `CLOSED` launch baseline: `source = website_form` в [`web/src/lib/contact-submit.ts`](web/src/lib/contact-submit.ts:1), `status = New` в [`web/src/lib/contact-submit.ts`](web/src/lib/contact-submit.ts:2), HubSpot-only baseline в [`memory_bank/decisions.md`](memory_bank/decisions.md:306).
-- `BLOCKED` для object/property/stage mapping: в SSOT нет утвержденного HubSpot object model/property map.
+Current boundary behavior remains valid and launch-safe:
 
-Allowed field set at site boundary:
+1. `web/src/lib/contact-submit.ts`
+   - validates allowed fields only
+   - preserves `source = website_form`
+   - preserves `status = New`
+2. `web/src/app/api/contact/submit/route.ts`
+   - keeps no-fake-success behavior
+   - allows `integration_not_ready` fallback until runtime adapter is actually wired
+   - keeps redirect-safe `success` semantics only on true upstream acceptance
 
-- `source`
-- `status`
-- `name`
-- `phone`
-- `email`
-- `city`
-- `segment`
-- `service_type`
-- `problem_description`
-- `device_count`
-- `onsite_required`
-- `urgency`
-- `company_name`
-- `business_type`
-- `workstation_count`
-- `business_needs`
-- `business_address`
-- `home_device_type`
-- `device_state`
-- `home_need_type`
+## Final Decision Snapshot
 
-Branching constraints at site boundary:
+- `AZR-002-023`: `APPROVED`
+- Decision type: `transport baseline approved; HubSpot mapping retained as deferred phase-2 reference`
+- Live enablement: `NOT APPROVED`
+- Production deploy changes: `NOT APPROVED`
+- HubSpot property mapping: `DEFERRED FOR PHASE 2` (2026-03-19)
+- Pipeline ID / stage ID provisioning: `DEFERRED`
 
-- `segment = tpe` -> `company_name`, `business_type`, `workstation_count`, `business_needs`, `business_address`
-- `segment = particulier` -> `home_device_type`, `device_state`, `home_need_type`
+## Acceptance Criteria for This Pass
 
-Blockers:
-
-| Blocker | Description | Owner | Next action |
-|---|---|---|---|
-| `BLOCKER-007` | `site -> n8n` field transform policy | Integration Lead | Зафиксировать transform rule 1:1 или explicit remap для каждого allowed field |
-| `BLOCKER-008` | HubSpot object model and exact property mapping | CRM Lead | Утвердить target object и property names для полного field mapping |
-| `BLOCKER-009` | initial status mapping `New -> HubSpot stage/property` | CRM Lead | Утвердить initial stage/property mapping from site status |
-
-### 5) Response contract `n8n -> site`
-
-Status: `BLOCKED`
-
-Value set:
-
-- Success schema: `BLOCKER` (не утверждено)
-- Permanent failure schema: `BLOCKER` (не утверждено)
-- Temporary failure schema: `BLOCKER` (не утверждено)
-- Deterministic rule when site may return `success`: `CLOSED` = только при explicit upstream success, без fake success
-
-Source/approval:
-
-- Anti-fake-success rule подтвержден текущим boundary в [`web/src/app/api/contact/submit/route.ts`](web/src/app/api/contact/submit/route.ts:78), [`web/src/app/api/contact/submit/route.ts`](web/src/app/api/contact/submit/route.ts:64) и [`web/src/app/api/contact/submit/route.ts`](web/src/app/api/contact/submit/route.ts:71).
-- Финальный upstream schema не утвержден в SSOT.
-
-Deterministic success boundary rule (approved):
-
-- Site boundary может вернуть `success` только если upstream branch явно вернул success-result, без fallback/optimistic success.
-- Если upstream не готов или завершился ошибкой, site boundary обязан вернуть non-success status (`integration_not_ready` или `submit_failed`) и fallback message.
-
-Blockers:
-
-| Blocker | Description | Owner | Next action |
-|---|---|---|---|
-| `BLOCKER-010` | n8n success response schema for site consumption | Integration Lead | Утвердить success/failure schema contract и deterministic mapping rule в site boundary |
-
-## Gate rule
-
-`AZR-002-023` НЕ может перейти в `ready-for-implementation`, пока хотя бы одна из 5 decision groups имеет статус `BLOCKED`.
-
-Текущее состояние gate: `blocked`.
-
-## Final closure decision snapshot (control-layer)
-
-Дата фиксации: `2026-03-15`
-
-- `AZR-002-023` формально закрыт как control-layer closure pass c итогом `blocked`.
-- `ready-for-implementation`: `DENIED`.
-- Причина отказа: в каждой из 5 групп есть как минимум один критичный `BLOCKER`, требующий explicit approval от Integration Lead и/или CRM Lead.
-
-Group-by-group result:
-
-1. Endpoint - `BLOCKED`
-2. Auth - `BLOCKED`
-3. Timeout / Retry / Idempotency - `BLOCKED`
-4. Mapping - `BLOCKED`
-5. Response contract - `BLOCKED`
-
-No-silent-assumptions declaration:
-
-- Не добавлены неподтвержденные URL, header names, auth/signature scheme, timeout/retry/idempotency числа, HubSpot object/property names или upstream response schema.
-- Все незакрытые зоны сохранены как `BLOCKER` без implicit допущений.
-
-## Closure revalidation pass (control-layer)
-
-Дата фиксации: `2026-03-15`
-
-- Revalidation trigger: control-layer closure rerun for `AZR-002-023` with explicit confirmation that no new approved values were provided by Integration Lead / CRM Lead.
-- SSOT basis: unchanged, only approved values from current repository artifacts.
-- Result: all five mandatory groups remain `BLOCKED`; no `BLOCKER` moved to approved state.
-- Gate decision: `ready-for-implementation` = `DENIED`.
-- Ticket state after revalidation: `blocked`.
-
-Group-by-group revalidation result:
-
-1. Endpoint - `BLOCKED`
-2. Auth - `BLOCKED`
-3. Timeout / Retry / Idempotency - `BLOCKED`
-4. Mapping - `BLOCKED`
-5. Response contract - `BLOCKED`
-
-No-silent-assumptions revalidation:
-
-- No endpoint URL/path, method, content-type, headers, versioning rule were invented.
-- No auth scheme/header names/rotation rule were invented.
-- No timeout/retry/idempotency values were invented.
-- No HubSpot object/property/stage mapping values were invented.
-- No upstream response schemas were invented.
-
-## Hard-constraints compliance check
-
-- HubSpot-only baseline: `PASS` (см. [`memory_bank/decisions.md`](memory_bank/decisions.md:306)).
-- Preserve `source = website_form`: `PASS` (см. [`web/src/lib/contact-submit.ts`](web/src/lib/contact-submit.ts:1)).
-- No fake success: `PASS` (см. [`web/src/app/api/contact/submit/route.ts`](web/src/app/api/contact/submit/route.ts:64)).
-- No autonomous outbound implications: `PASS` (см. [`memory_bank/decisions.md`](memory_bank/decisions.md:175)).
-- No invention outside approved control-layer values: `PASS` (все неутвержденные поля оставлены как `BLOCKER`).
-
-## Compatibility Check
-
-Совместимость итогового состояния контракта с текущим site boundary подтверждена:
-
-1. [`web/src/lib/contact-submit.ts`](web/src/lib/contact-submit.ts:109)
-   - валидация и сбор только допустимых полей
-   - `source = website_form`
-   - `status = New`
-2. [`web/src/app/api/contact/submit/route.ts`](web/src/app/api/contact/submit/route.ts:33)
-   - no fake success
-   - redirect-safe semantics через `success` only
-   - honest fallback statuses `integration_not_ready` и `submit_failed`
-
-Следовательно, контракт остается launch-safe и полностью совместим с текущим provisional boundary, при этом формально остается `blocked` до закрытия blocker-групп.
-
-## Acceptance Criteria for this closure pass
-
-- Все 5 decision groups явно заполнены как `CLOSED` или `BLOCKED`
-- Для каждого `BLOCKER` указан owner и next action
-- Нет скрытых или молчаливых допущений
-- `ready-for-implementation` не выставлен при наличии `BLOCKED`
-- Совместимость с текущим site boundary подтверждена
+- endpoint, auth, timeout/retry/idempotency, response semantics, and operational constraints are fixed with exact values
+- `site -> n8n` payload transform rule is explicit
+- transport boundary is fixed and launch-ready for downstream `n8n` work
+- deferred HubSpot object model remains documented for a later CRM phase
+- no undocumented assumptions are left inside the transport or mapping boundary
+- current site boundary remains compatible with the approved contract

@@ -1,45 +1,222 @@
 # Progress Log - AzurSysTech
 
-## 2026-03-19: AZR-003-010 Blocker Pass Completed — Status BLOCKED
+## 2026-03-19: AZR-003-010 SSOT Re-check Pass (control-layer)
 
-### What was done
+### Done
 
-- Выполнен control-layer blocker анализ по группам B1–B5 для тикета `AZR-003-010` (launch intake path `site → n8n → Google Sheets`).
-- Прочитаны и верифицированы:
-  - `web/src/app/api/contact/submit/route.ts` — `isFinalIntegrationContractReady()` hardcoded `false`;
-  - `web/src/lib/contact-submit.ts` — полный payload schema закреплён на стороне сайта;
-  - production VPS `.env` (`/home/dmitrii/projects/azursystech-site/.env`) — `AZURSYSTECH_CONTACT_SUBMIT_BASE_URL` и `AZURSYSTECH_CONTACT_SUBMIT_TOKEN` отсутствуют;
-  - `docker-compose.vps.yml` — pass-through для этих переменных не настроен.
-- Создан новый spec артефакт:
-  - [`docs/specs/azr-003-010-site-n8n-google-sheets.md`](docs/specs/azr-003-010-site-n8n-google-sheets.md)
-- Обновлён tasklist:
-  - [`docs/tasklist/azr-003-tasklist.md`](docs/tasklist/azr-003-tasklist.md) — добавлена задача `AZR-003-010` со статусом `blocked` и списком B1–B5.
+- Выполнена повторная SSOT-проверка для `AZR-003-010` в рамках control-layer pass.
+- Обнаружено и исправлено 2 drift-пункта:
+  1. `memory_bank/context.md` строка 52: статус `AZR-003-010` исправлен с `todo` на `in_progress` (соответствие с `azr-003-tasklist.md` и последней записью в `progress.md`).
+  2. `docs/specs/azr-003-010-site-n8n-google-sheets.md` секция 3: уточнена формулировка для array-полей (`business_needs`, `home_device_type`, `home_need_type`) — добавлено явное разделение между wire-форматом (JSON array) и Google Sheets column encoding (JSON string или comma-separated).
 
-### Blocker group results
+### No Drift Found
 
-| Blocker | Status | Notes |
-|---|---|---|
-| B1: live BASE_URL | **BLOCKED** | не в VPS .env, route не читает |
-| B2: production TOKEN + rotation | **BLOCKED** | не в VPS .env, n8n не настроен |
-| B3: Google Sheets target | **BLOCKED** | sheet ID / tab / credential отсутствуют в SSOT |
-| B4: response schema (site) | **CLOSED** | code-verified в route.ts |
-| B4: response schema (n8n) | **BLOCKED** | n8n workflow не верифицирован |
-| B5: idempotency dedupe 24h | **BLOCKED** | не реализовано ни на одном слое |
-
-### Compatibility check
-
-- Hardcoded provisional boundary (`isFinalIntegrationContractReady() = false`) сохранена.
-- No-fake-success rule не нарушена.
-- Secrets не добавлены в репозиторий.
-- HubSpot / CRM не затронуты.
+- `web/src/app/api/contact/submit/route.ts` — полностью соответствует spec секции 1: env vars, webhook path, headers (`Authorization`, `X-Contract-Version`, `X-Idempotency-Key`), timeout 10s, response schema, fallback behavior.
+- `web/src/lib/contact-submit.ts` — payload fields и enums соответствуют spec секции 3 mapping table и transport contract sections 4 ADR-016.
+- `tasklist`, `go-live spec`, `decisions.md` — все согласованы между собой по launch sequence и статусам тикетов.
 
 ### Notes
 
-- Новых архитектурных/процессных решений не введено; `memory_bank/decisions.md` без изменений.
-- `AZR-003-010` остаётся `blocked` до закрытия всех B1–B5.
+- Новых архитектурных/процессных решений не принято; `memory_bank/decisions.md` без изменений.
+
+---
+
+## 2026-03-19: AZR-003-010 Integration Step — Launch Intake Path `site -> n8n -> Google Sheets` (contract + blockers + dry-run)
+
+### Done
+
+- Выполнена SSOT-проверка для `AZR-003-010` в рамках launch scope:
+  - `AGENTS.md`
+  - `memory_bank/context.md`
+  - `memory_bank/progress.md`
+  - `memory_bank/decisions.md`
+  - `docs/tasklist/azr-003-tasklist.md`
+  - `docs/specs/azr-003-go-live-readiness.md`
+  - `docs/specs/azr-002-site-n8n-hubspot-contract.md`
+  - `web/src/app/api/contact/submit/route.ts`
+  - `web/src/lib/contact-submit.ts`
+  - `docs/deployment/github-vps.md`
+  - `.env.vps.example`
+- Зафиксирован отдельный integration artifact:
+  - `docs/specs/azr-003-010-site-n8n-google-sheets.md`
+  - включает:
+    - локальный readiness snapshot site boundary
+    - точные требования для `n8n -> Google Sheets`
+    - явный mapping `validated payload -> sheet columns`
+    - blocker register (`B1-B5`) с owner + next action
+    - проверяемый test path (local dry-run + controlled test lead + e2e AC)
+    - rollback rule через `AZURSYSTECH_CONTACT_SUBMIT_ENABLED=false`
+- Обновлен task artifact:
+  - `docs/tasklist/azr-003-tasklist.md`
+  - `AZR-003-010` переведен в `in_progress` с delivery notes и явными blockers.
+
+### Doc-to-UI self-check (submit boundary)
+
+- Critical: none
+- High: none
+- Medium: none
+- Low: none
+
+Residual untested/live-risk areas:
+- реальная n8n response-schema совместимость (`accepted|temporary_failure|rejected`) не подтверждена в живом workflow;
+- 24h idempotency dedupe на стороне n8n не подтвержден test evidence;
+- live Google Sheets target provisioning и write credential в n8n остаются внешними зависимостями.
+
+### Validation
+
+- `cd /home/dmitrii/azursystech/web && npm run check:types` - pass
+- `cd /home/dmitrii/azursystech/web && npm run build` - pass
+- Local dry-run for `/api/contact/submit`:
+  - valid payload with unconfigured integration -> `503 integration_not_ready` (pass)
+  - honeypot payload -> `200 spam_detected` (pass)
+  - enabled integration with unreachable upstream -> `502 submit_failed` (pass)
+
+### Notes
+
+- Scope строго integration-only (`AZR-003-010`), без UI redesign и без CRM/HubSpot enablement.
+- Новых архитектурных/процессных решений не принято; `memory_bank/decisions.md` без изменений.
+
+## 2026-03-19: AZR-003-009 Website Closure Pass (About + SEO Service Pages + Legal/Privacy Readiness)
+
+### Done
+
+- Реализован trust/founder route:
+  - `web/src/app/about/page.tsx`
+- Реализованы 4 Phase 1.5 service routes по `06_seo/service-pages-plan.md`:
+  - `web/src/app/services/new-pc-setup/page.tsx`
+  - `web/src/app/services/wifi-printer/page.tsx`
+  - `web/src/app/services/tpe-setup/page.tsx`
+  - `web/src/app/services/onsite-support/page.tsx`
+- Добавлен shared шаблон для service landing pages:
+  - `web/src/components/service-landing-page.tsx`
+- Обновлен `web/src/app/services/page.tsx` с internal links на новые service routes.
+- Выполнен safe-readiness pass по legal/privacy без изменения legal identity facts:
+  - `web/src/app/legal/page.tsx`
+  - `web/src/app/privacy/page.tsx`
+  - data-вынесение в `web/src/lib/legal-content.ts` для future real-data injection readiness.
+- Обновлен task artifact:
+  - `docs/tasklist/azr-003-tasklist.md` — `AZR-003-009` переведен в `done`.
+
+### Validation
+
+- `cd /home/dmitrii/azursystech/web && npm run build` - pass
+- В build output подтверждены routes:
+  - `/about`
+  - `/services/new-pc-setup`
+  - `/services/wifi-printer`
+  - `/services/tpe-setup`
+  - `/services/onsite-support`
+  - `/legal`
+  - `/privacy`
+
+### Notes
+
+- Scope строго ограничен website layer (`AZR-003-009`), без drift в n8n/Sheets/Telegram/AI runtime/CRM implementation.
+- Launch contact model и `/contact` submit flow не изменялись.
+- Новых архитектурных/процессных решений не вводилось; `memory_bank/decisions.md` без изменений.
+
+## 2026-03-19: Launch Path Simplified — Website First, Google Sheets via n8n, CRM Deferred
+
+### Done
+
+- По founder/product decision launch sequence был пересобран в более простой порядок:
+  - website closure first
+  - `site -> n8n -> Google Sheets`
+  - AI widget live integration + Telegram notification later
+  - CRM moved to phase 2
+- Обновлены control-layer документы:
+  - `memory_bank/context.md`
+  - `memory_bank/decisions.md`
+  - `07_ops/task-board.md`
+  - `07_ops/launch-checklist.md`
+  - `07_ops/kpi-framework.md`
+  - `docs/specs/azr-003-go-live-readiness.md`
+  - `docs/specs/azr-002-site-n8n-hubspot-contract.md`
+  - `docs/tasklist/azr-003-tasklist.md`
+- Historical HubSpot mapping retained only as future CRM reference.
+
+### Notes
+
+- Транспортный baseline `site -> n8n` сохранен.
+- Full CRM rollout intentionally moved out of current launch scope.
+
+## 2026-03-15: AZR-002-025 HubSpot MVP Property Mapping Locked in SSOT
+
+### Done
+
+- Received CRM stream mapping proposal and performed control-layer review against SSOT.
+- Identified and corrected 5 drift points in CRM stream proposal:
+  - `service_type` values: replaced CRM-invented values with 9 values from `contact-submit.ts`
+  - `urgency` values: replaced `low/medium/high` with `urgent/standard/planning`
+  - `lead_source` values: replaced `site_web/telephone/...` with canonical 10 values from `lead-taxonomy.md`
+  - `device_count` type: corrected from Number to Dropdown select (string enum)
+  - `onsite_required` type: corrected from Checkbox to Dropdown select (3-option enum)
+- Locked full mapping in [`docs/specs/azr-002-site-n8n-hubspot-contract.md`](docs/specs/azr-002-site-n8n-hubspot-contract.md) section 7:
+  - Contact: 5 standard fields, no custom properties
+  - Deal: `dealstage` + 7 custom properties with exact internal names and types
+  - Note: structured text format for segment-specific overflow fields
+- Recorded decision as ADR-017 in [`memory_bank/decisions.md`](memory_bank/decisions.md).
+- Added and closed task `AZR-002-025` in [`docs/tasklist/azr-002-tasklist.md`](docs/tasklist/azr-002-tasklist.md).
+
+### Next
+
+- CRM agent: verify/create exact properties in HubSpot with locked internal names.
+- VPS/n8n stream: build workflow against locked mapping + transport contract.
+
+## 2026-03-15: AZR-002-024 Site Runtime Adapter Implemented for Approved v1 Contract
+
+### Done
+
+- Started implementation of the site-side runtime adapter in [`web/src/app/api/contact/submit/route.ts`](web/src/app/api/contact/submit/route.ts):
+- Implemented the site-side runtime adapter in [`web/src/app/api/contact/submit/route.ts`](web/src/app/api/contact/submit/route.ts):
+  - reads runtime env flags for contact submit integration
+  - prepares outbound `POST` JSON request for the approved webhook path
+  - sends `Authorization`, `X-Contract-Version`, and `X-Idempotency-Key`
+  - keeps `integration_not_ready` when runtime env is not configured
+  - treats only upstream `200 {"status":"accepted","request_id":"..."}` as success
+- Added required env names to:
+  - [`.env.vps.example`](.env.vps.example)
+  - [`docs/deployment/github-vps.md`](docs/deployment/github-vps.md)
+- Added runtime implementation task in [`docs/tasklist/azr-002-tasklist.md`](docs/tasklist/azr-002-tasklist.md):
+  - `AZR-002-024` closed as `done`
+- Validation passed:
+  - `npm run check:types`
+  - `npm run build`
+
+### Next
+
+- Hand the env contract and approved webhook settings to the VPS/n8n stream for configuration against the fixed adapter.
+
+## 2026-03-15: AZR-002-023 Transport Contract Approved as v1 Baseline
+
+### Done
+
+- Approved exact `v1` transport contract for `site -> n8n` in:
+  - [`docs/specs/azr-002-site-n8n-hubspot-contract.md`](docs/specs/azr-002-site-n8n-hubspot-contract.md)
+- Locked exact values for:
+  - endpoint path `/webhook/azursystech/contact-submit`
+  - method `POST`
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <token>`
+  - `X-Contract-Version: 1`
+  - `X-Idempotency-Key: <uuid-v4>`
+  - timeout `10s`
+  - retry `0` from website transport layer
+  - idempotency dedupe window `24h`
+  - response schemas for `accepted`, `temporary_failure`, and `rejected`
+  - exposure mode `proxy-protected`
+  - exact logging/redaction and no-secret error-payload rules
+- Updated [`docs/tasklist/azr-002-tasklist.md`](docs/tasklist/azr-002-tasklist.md):
+  - `AZR-002-023` moved from `blocked` to `done` as a transport-baseline approval pass.
+- Updated [`web/src/app/api/contact/submit/route.ts`](web/src/app/api/contact/submit/route.ts):
+  - comment now reflects that SSOT contract is fixed, while runtime adapter/config is still disabled.
+
+### Notes
+
+- This pass approves transport only, not live enablement.
+- HubSpot object/property mapping, pipeline/stage IDs, and secret provisioning remain follow-up items.
 
 ## 2026-03-15: AZR-002-023 VPS/n8n Handoff Package Prepared
-
 
 ### Done
 
@@ -1638,3 +1815,21 @@ Residual risks / untested areas:
 ### Notes
 
 - Новых архитектурных/процессных решений не вводилось; `memory_bank/decisions.md` не изменялся.
+
+## 2026-03-15: AZR-002 Complete, transitioning to AZR-003
+
+### Done
+
+- Performed full documentation review of the `AZR-002` scope.
+- Confirmed that all 25 implementation tasks in `AZR-002-tasklist.md` are closed.
+- Closed `AZR-002` ticket and set `AZR-003` as the active ticket pointer.
+- Updated SSOT to reflect the phase change:
+  - `07_ops/task-board.md`
+  - `docs/backlog.md`
+  - `memory_bank/context.md`
+- Separated blocked `AZR-003` go-live tasks (legal, GBP) from queued Phase 1.5 frontend improvements (`/about`, SEO landing pages).
+
+### Next
+
+- Prepare implementation handoff prompt for RooCode: `/about` page (Phase 1.5).
+- Prepare implementation handoff prompt for RooCode: SEO landing pages (Phase 1.5).

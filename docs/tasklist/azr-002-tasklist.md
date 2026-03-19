@@ -269,14 +269,56 @@ Status: IN_PROGRESS
   - AC3: undocumented critical points are marked `BLOCKER` instead of being invented
   - AC4: contract stays compatible with current provisional boundary in `web/src/app/api/contact/submit/route.ts`
   - AC5: contract preserves launch-safe submit semantics and HubSpot-only CRM baseline
-  Status: blocked
-  Blocked by: Endpoint group unresolved final URL/path + method + content-type + required headers + versioning; Auth group unresolved auth/signature + exact header names + minimal rotation; Timeout/Retry/Idempotency group unresolved timeout + retry policy + duplicate prevention; Mapping group unresolved HubSpot object/property/stage mapping; Response group unresolved upstream success/permanent-failure/temporary-failure schemas
-  Blocker owners:
-  - Integration Lead: endpoint/method/headers/versioning, auth/signature/header naming, timeout/retry/idempotency, upstream response schema
-  - CRM Lead: HubSpot target object/property mapping and initial stage/property mapping
-  Gate rule check (2026-03-15 final closure): `ready-for-implementation` denied, because all 5 mandatory decision groups still contain critical `BLOCKER` values
-  Closure note: control-layer final closure pass completed without undocumented assumptions; ticket state intentionally kept `blocked`
-  Gate rule revalidation (2026-03-15): no new approved values from Integration Lead / CRM Lead; all 5 groups remain `BLOCKED`; `ready-for-implementation` denied again
-  Revalidation note: status intentionally remains `blocked` with explicit no-silent-assumptions enforcement
+  Status: done
+  Approved transport baseline:
+  - endpoint path `/webhook/azursystech/contact-submit`
+  - method `POST`
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <token>`
+  - `X-Contract-Version: 1`
+  - `X-Idempotency-Key: <uuid-v4>`
+  - timeout `10s`
+  - retry `0` from website transport layer
+  - response schemas fixed for `accepted`, `temporary_failure`, and `rejected`
+  Closure note:
+  - `AZR-002-023` is closed as a transport-baseline approval pass
+  - current site route may still return `integration_not_ready` until runtime adapter/config is implemented
+  - full HubSpot object/property mapping remains follow-up outside this task's transport decision
   Handoff artifact (2026-03-15): `docs/reports/AZR-002-023-integrationlead-to-vps-n8n.md` prepared for VPS/n8n verification pass with exact-value-only return format
-  Next action: enforce gate rule and keep `AZR-002-023` in `blocked` until all 5 Decision Checklist groups have approved non-`BLOCKER` values in `docs/specs/azr-002-site-n8n-hubspot-contract.md`
+  Next action: hand the approved `v1` transport contract to the VPS/n8n stream for configuration against these exact values without enabling the live workflow
+
+- AZR-002-024: Implement site runtime adapter for approved `v1` contact submit transport
+  Owner: Codex
+  Priority: P0
+  Depends on: AZR-002-023
+  Acceptance Criteria:
+  - AC1: `web/src/app/api/contact/submit/route.ts` sends `POST` JSON requests to the approved webhook path when runtime env is configured
+  - AC2: request uses `Authorization`, `X-Contract-Version`, and `X-Idempotency-Key` headers from the approved `v1` contract
+  - AC3: missing runtime env keeps route in honest `integration_not_ready` state
+  - AC4: upstream success is recognized only from `200 {"status":"accepted","request_id":"..."}`; all other upstream outcomes stay non-success
+  - AC5: required env names are documented in `.env.vps.example` and deploy docs without exposing secret values
+  Status: done
+  Validation:
+  - `npm run check:types`
+  - `npm run build`
+  Closure note:
+  - runtime adapter is implemented in `web/src/app/api/contact/submit/route.ts`
+  - route still remains launch-safe because outbound submit is disabled unless runtime env is explicitly configured
+  Next action: hand the env contract and approved webhook settings to the VPS/n8n stream for configuration against the fixed `v1` adapter
+
+- AZR-002-025: Lock HubSpot MVP property mapping in SSOT
+  Owner: Tech Lead (control layer)
+  Priority: P0
+  Depends on: AZR-002-023
+  Acceptance Criteria:
+  - AC1: Contact/Deal object model locked with exact HubSpot internal names and field types
+  - AC2: all dropdown enum values aligned with site payload (`contact-submit.ts`) and canonical taxonomy (`lead-taxonomy.md`)
+  - AC3: Note format for segment-specific overflow fields is defined
+  - AC4: CRM stream proposal corrections documented in contract spec
+  - AC5: decision recorded as ADR-017
+  Status: done
+  Closure note:
+  - mapping locked in `docs/specs/azr-002-site-n8n-hubspot-contract.md` section 7
+  - 5 corrections applied to CRM stream proposal (service_type values, urgency values, lead_source values, device_count type, onsite_required type)
+  - `memory_bank/decisions.md` updated with ADR-017
+  Next action: CRM agent to verify/create exact properties in HubSpot with these internal names; VPS/n8n stream to build workflow against locked mapping

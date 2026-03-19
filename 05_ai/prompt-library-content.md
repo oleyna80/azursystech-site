@@ -1,7 +1,7 @@
 # prompt-library-content.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: working prompt baseline
 _brand: AzurSysTech
 _primary_language: ru
 
@@ -542,10 +542,6 @@ Prompt library for content is valid if:
 
 ---
 
-## 28. Next file to create
+## Current status
 
-After approval of this file, next artifact should be one of:
-
-- prompt templates in `05_ai/prompts/`
-- runtime wiring for content generation
-- prompt versioning and review workflow
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

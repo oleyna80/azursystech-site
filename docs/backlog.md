@@ -2,22 +2,18 @@
 
 ## P0
 
-- `AZR-002 implementation handoff`
-  - convert docs into Tech Lead work packages
-  - identify what can be built immediately
-  - isolate real go-live blockers
-
 - `AZR-003 go-live readiness`
-  - replace legal and business placeholders with real values
-  - finalize phone / WhatsApp / contact flow
-  - set GitHub deploy secrets and VPS runtime values
-  - decide whether AI live-run is enabled at launch
+  - replace legal and business placeholders with real values (AZR-003-001, founder)
+  - confirm GBP / review readiness (AZR-003-006, founder)
+  - go / no-go review (AZR-003-007)
+  - separate deferred improvements from blockers (AZR-003-008)
 
 ## P1
 
+- implement `/about` trust/founder page (Phase 1.5)
+- implement SEO service landing pages (Phase 1.5)
+- prepare legal/privacy pages for real data injection
 - refresh stale `Next file to create` tails in legacy docs
-- create `06_seo/local-citations-plan.md`
-- prepare implementation handoff artifacts for website + ops + AI
 
 ## P2
 
@@ -25,3 +21,4 @@
 - wider service page rollout after first demand validation
 - stronger CRM automation and reporting
 - secondary SEO expansion beyond MVP
+- local citations plan
