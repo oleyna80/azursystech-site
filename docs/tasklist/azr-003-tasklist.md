@@ -90,3 +90,23 @@ Status: TODO
   - AC2: no launch decision depends on a deferred item
   - AC3: the team has a clean post-launch queue
   Status: todo
+
+- AZR-003-010: Lock integration contract site → n8n → Google Sheets
+  Owner: Tech Lead + Founder
+  Priority: P0
+  Depends on: AZR-003-004
+  Spec: docs/specs/azr-003-010-site-n8n-google-sheets.md
+  Blockers:
+  - B1 (BLOCKED): live AZURSYSTECH_CONTACT_SUBMIT_BASE_URL not set in VPS .env
+  - B2 (BLOCKED): production AZURSYSTECH_CONTACT_SUBMIT_TOKEN not generated/set; rotation SOP missing
+  - B3 (BLOCKED): Google Sheets target (sheet ID, tab name, write credential) not fixed in SSOT
+  - B4 (PARTIAL): site-side response schema verified in code; n8n workflow response nodes not verified
+  - B5 (BLOCKED): idempotency key generation and 24h dedupe not implemented
+  Acceptance Criteria:
+  - AC1: B1 closed — live n8n webhook URL set in VPS .env and read by route.ts
+  - AC2: B2 closed — production token set in VPS .env, n8n Header Auth configured, rotation SOP documented
+  - AC3: B3 closed — sheet ID, tab name, write credential confirmed and set in n8n
+  - AC4: B4 closed — n8n workflow verified, controlled test passed, all response codes confirmed
+  - AC5: B5 closed — idempotency key generated site-side, dedupe checked in n8n, 24h proof done
+  - AC6: rollback-safe default preserved until full test pass complete
+  Status: blocked

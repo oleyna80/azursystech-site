@@ -1,6 +1,45 @@
 # Progress Log - AzurSysTech
 
+## 2026-03-19: AZR-003-010 Blocker Pass Completed — Status BLOCKED
+
+### What was done
+
+- Выполнен control-layer blocker анализ по группам B1–B5 для тикета `AZR-003-010` (launch intake path `site → n8n → Google Sheets`).
+- Прочитаны и верифицированы:
+  - `web/src/app/api/contact/submit/route.ts` — `isFinalIntegrationContractReady()` hardcoded `false`;
+  - `web/src/lib/contact-submit.ts` — полный payload schema закреплён на стороне сайта;
+  - production VPS `.env` (`/home/dmitrii/projects/azursystech-site/.env`) — `AZURSYSTECH_CONTACT_SUBMIT_BASE_URL` и `AZURSYSTECH_CONTACT_SUBMIT_TOKEN` отсутствуют;
+  - `docker-compose.vps.yml` — pass-through для этих переменных не настроен.
+- Создан новый spec артефакт:
+  - [`docs/specs/azr-003-010-site-n8n-google-sheets.md`](docs/specs/azr-003-010-site-n8n-google-sheets.md)
+- Обновлён tasklist:
+  - [`docs/tasklist/azr-003-tasklist.md`](docs/tasklist/azr-003-tasklist.md) — добавлена задача `AZR-003-010` со статусом `blocked` и списком B1–B5.
+
+### Blocker group results
+
+| Blocker | Status | Notes |
+|---|---|---|
+| B1: live BASE_URL | **BLOCKED** | не в VPS .env, route не читает |
+| B2: production TOKEN + rotation | **BLOCKED** | не в VPS .env, n8n не настроен |
+| B3: Google Sheets target | **BLOCKED** | sheet ID / tab / credential отсутствуют в SSOT |
+| B4: response schema (site) | **CLOSED** | code-verified в route.ts |
+| B4: response schema (n8n) | **BLOCKED** | n8n workflow не верифицирован |
+| B5: idempotency dedupe 24h | **BLOCKED** | не реализовано ни на одном слое |
+
+### Compatibility check
+
+- Hardcoded provisional boundary (`isFinalIntegrationContractReady() = false`) сохранена.
+- No-fake-success rule не нарушена.
+- Secrets не добавлены в репозиторий.
+- HubSpot / CRM не затронуты.
+
+### Notes
+
+- Новых архитектурных/процессных решений не введено; `memory_bank/decisions.md` без изменений.
+- `AZR-003-010` остаётся `blocked` до закрытия всех B1–B5.
+
 ## 2026-03-15: AZR-002-023 VPS/n8n Handoff Package Prepared
+
 
 ### Done
 
