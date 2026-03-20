@@ -15,11 +15,12 @@ AzurSysTech - локальный IT-сервис для particuliers и TPE в �
   - deploy path: `CI -> SSH -> git pull -> docker compose up -d --build`
   - health endpoint `https://azursystech.fr/health` отвечает `200`
 - Launch AI mode зафиксирован как `limited_live_intake` и enforced через runtime env flags.
-- Website scope closure (`AZR-003-009`) is completed; live launch sequence now proceeds as:
-  1. enable `site -> n8n -> Google Sheets`
-  2. add AI widget live integration + Telegram contact notification
-  3. move CRM to a later phase
-- Existing site chat widget shell remains in the codebase, but live AI-agent handling is deferred until after the `n8n + Google Sheets` path is stable.
+- Website scope closure (`AZR-003-009`) and intake activation (`AZR-003-010`) are completed; live launch sequence now proceeds as:
+  1. close founder-side launch blockers (`AZR-003-001`, `AZR-003-006`)
+  2. prepare `AZR-003-007` go / no-go review
+  3. add AI widget live integration + Telegram contact notification
+  4. move CRM to a later phase
+- Existing site chat widget shell remains in the codebase, but live AI-agent handling is deferred until after go / no-go and stable intake operations.
 - Public MVP language is fixed as Russian for the russophone audience on the Côte d'Azur.
 - Launch intake sink is Google Sheets via `n8n`; CRM is deferred to phase 2.
 - Approved MVP visual direction is `Local Professional`.
@@ -45,14 +46,13 @@ AzurSysTech - локальный IT-сервис для particuliers и TPE в �
 
 1. Активный тикет: `AZR-003` (go-live readiness)
 2. Предыдущий тикет `AZR-002` (website MVP implementation) — **полностью закрыт** (25/25 задач done)
-3. Текущая фаза: post-website-closure intake activation + go-live preparation
+3. Текущая фаза: post-intake-activation go-live preparation
 4. AZR-003 blockers:
    - AZR-003-001: legal identity data (in_progress, founder)
    - AZR-003-006: GBP/review readiness (todo, founder)
-   - AZR-003-010: enable `site -> n8n -> Google Sheets` (in_progress, active execution step)
-   - AZR-003-007: go/no-go review (todo, depends on 001+006+010)
+   - AZR-003-007: go/no-go review (todo, depends on 001+006)
    - Later sequencing / post-launch queue (not current launch blockers):
-     - AZR-003-011: AI widget + Telegram notification (todo, after 010)
+     - AZR-003-011: AI widget + Telegram notification (todo, after 007)
      - AZR-003-008: deferred separation (todo, depends on 007+011)
 
 ## Что уже сделано в implementation
@@ -71,11 +71,15 @@ AzurSysTech - локальный IT-сервис для particuliers и TPE в �
   - `particulier` / `tpe` branching
   - hidden honeypot field
   - public-facing copy cleaned from dev/internal wording
-- Site-side submit adapter для `/contact` уже реализован, но live downstream path еще не включен
+- Site-side submit adapter для `/contact` уже реализован и live downstream path `site -> n8n -> Google Sheets` активирован
 - Website scope closure (`AZR-003-009`) выполнен:
   - `/about` trust/founder page completed
   - 4 service landing pages completed: `/services/new-pc-setup`, `/services/wifi-printer`, `/services/tpe-setup`, `/services/onsite-support`
   - legal/privacy readiness pass completed for real-data injection preparation
+- Intake activation (`AZR-003-010`) выполнена:
+  - live webhook `https://n8n.hardwarelab.org/webhook/azursystech/contact-submit` active
+  - Google Sheets sink connected (`intake_leads`)
+  - auth / duplicate / append behavior verified by live tests
 - Зафиксирован visual baseline для frontend:
   - warm light background
   - dark slate text
@@ -85,16 +89,13 @@ AzurSysTech - локальный IT-сервис для particuliers и TPE в �
 
 ## Ближайшие шаги
 
-1. Активный execution step: включить intake path (`AZR-003-010`):
-   - `site -> n8n -> Google Sheets`
-   - basic intake notification path without CRM dependency
-2. После этого:
-   - live AI widget integration
-   - Telegram notification for new contact/intake events
-3. AZR-003 go-live:
+1. AZR-003 go-live:
    - ждать founder по AZR-003-001 (legal) и AZR-003-006 (GBP)
    - после закрытия — go/no-go review (AZR-003-007)
-4. CRM phase 2:
+2. После go / no-go:
+   - live AI widget integration
+   - Telegram notification for new contact/intake events
+3. CRM phase 2:
    - evaluate HubSpot or another CRM only after launch intake is stable
 
 ## Важные операционные факты
@@ -106,4 +107,4 @@ AzurSysTech - локальный IT-сервис для particuliers и TPE в �
   - no scheduling promises
 - `azursystech-site` placeholder history сохранена в branch `placeholder-backup`.
 
-**Last update:** 2026-03-19
+**Last update:** 2026-03-20

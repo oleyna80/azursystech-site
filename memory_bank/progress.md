@@ -1,5 +1,35 @@
 # Progress Log - AzurSysTech
 
+## 2026-03-20: AZR-003-010 Live Activation Completed — site -> n8n -> Google Sheets
+
+### Done
+
+- Live intake path `site -> n8n -> Google Sheets` activated on current shared host:
+  - `https://n8n.hardwarelab.org/webhook/azursystech/contact-submit`
+- Google Sheets target fixed and connected:
+  - `spreadsheetId = 1xS9sF74ICi1DxU1AvPLu0O4FUAuGZ_ia4WSLlMdZGhU`
+  - `tabName = intake_leads`
+- Shared auth token rotated, production env updated on `n8n` and site runtime, services restarted.
+- Live verification completed with 3 direct webhook tests:
+  - valid request -> `200 accepted`
+  - bad auth -> `401 rejected`
+  - duplicate `X-Idempotency-Key` -> `200 accepted` with duplicate-ignore behavior
+- Execution evidence confirmed that duplicate flow does not execute `Google Sheets Append Row`.
+
+### Outcome
+
+- `B1`: closed
+- `B2`: closed
+- `B3`: closed
+- `B4`: closed
+- `B5`: closed
+
+### Notes
+
+- `AZR-003-010` is treated as done in control-layer tracking.
+- Public `/contact` smoke test remains recommended before `AZR-003-007`, but it is not held as a blocker for closing the integration stream.
+- Новых архитектурных/процессных решений не принято; `memory_bank/decisions.md` без изменений.
+
 ## 2026-03-19: AZR-003-010 SSOT Re-check Pass (control-layer)
 
 ### Done

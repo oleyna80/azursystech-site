@@ -8,8 +8,7 @@ Status: IN_PROGRESS
 
 1. `AZR-003-001` legal identity and business data
 2. `AZR-003-006` GBP and review readiness
-3. `AZR-003-010` enable launch intake path `site -> n8n -> Google Sheets`
-4. `AZR-003-007` go / no-go review
+3. `AZR-003-007` go / no-go review
 
 ### After intake activation and go / no-go
 
@@ -113,12 +112,17 @@ Status: IN_PROGRESS
   - AC2: validated form submissions are written to the launch Google Sheet
   - AC3: test lead proves end-to-end form intake without CRM dependency
   - AC4: live workflow keeps launch-safe fallback behavior on site when downstream fails
-  Status: in_progress
+  Status: done
   Delivery notes (2026-03-19):
   - integration contract + mapping spec prepared: `docs/specs/azr-003-010-site-n8n-google-sheets.md`
   - local boundary dry-run verified `integration_not_ready`, `spam_detected`, and `submit_failed` branches
   - exact live blockers recorded (n8n base URL, token provisioning, sheet target, response-schema proof, idempotency proof)
-  - task remains open until blockers B1-B5 are closed and one controlled test lead is confirmed in Google Sheets
+  Delivery notes (2026-03-20):
+  - live webhook activated on `https://n8n.hardwarelab.org/webhook/azursystech/contact-submit`
+  - shared submit token rotated, runtime env updated, and services restarted
+  - Google Sheets sink connected to `intake_leads` with successful append path
+  - live tests passed for `accepted`, `rejected(auth_failed)`, and duplicate-ignore behavior
+  - duplicate path confirmed without `Google Sheets Append Row` execution
 
 - AZR-003-011: Add AI widget live integration and Telegram contact notification
   Owner: AI / integration stream
