@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquareText, X, Send, ChevronRight } from 'lucide-react';
 
 const CONTACT_PHONE = '+33 7 49 70 54 65';
 const CONTACT_PHONE_HREF = 'tel:+33749705465';
@@ -37,7 +36,7 @@ export default function ChatWidget({ locale, t }) {
   const scrollToContactForm = () => {
     setIsOpen(false);
     setIsHandoffOpen(false);
-    document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+    window.location.href = '/contact';
   };
 
   const buildChatSummary = () => {
@@ -46,7 +45,7 @@ export default function ChatWidget({ locale, t }) {
       .map((msg) => msg.content.trim())
       .filter(Boolean);
 
-    return userMessages.join('\n');
+    return userMessages.join('\n').slice(0, 1500);
   };
 
   useEffect(() => {
@@ -121,31 +120,48 @@ export default function ChatWidget({ locale, t }) {
     setHandoffLoading(true);
 
     const chatSummary = buildChatSummary();
-    const payload = {
-      name: handoffForm.name.trim(),
-      phone: handoffForm.phone.trim(),
-      email: handoffForm.email.trim() || undefined,
-      city: handoffForm.city.trim(),
-      segment: handoffForm.segment,
-      service_type: handoffForm.serviceType,
-      problem_description: chatSummary || handoffForm.serviceType,
-      source: 'website_chat',
-      status: 'New',
-      honeypot: '',
-    };
+    const formData = new FormData();
+    formData.set('name', handoffForm.name.trim());
+    formData.set('phone', handoffForm.phone.trim());
+    formData.set('city', handoffForm.city.trim());
+    formData.set('segment', handoffForm.segment);
+    formData.set('service_type', handoffForm.serviceType);
+    formData.set(
+      'problem_description',
+      chatSummary || `Заявка из чат-виджета: ${handoffForm.serviceType}.`,
+    );
+    formData.set('source', 'website_chat');
+    formData.set('website', '');
+
+    if (handoffForm.email.trim()) {
+      formData.set('email', handoffForm.email.trim());
+    }
 
     try {
-      const res = await fetch('/api/contact', {
+      const res = await fetch('/api/contact/submit', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(payload),
+        body: formData,
       });
+
+      let result = null;
+      try {
+        result = await res.json();
+      } catch {
+        result = null;
+      }
 
       if (res.status === 429) {
         setHandoffErrorKey('tooManyRequests');
+        return;
+      }
+
+      if (result?.status === 'success') {
+        setHandoffSubmitted(true);
+        return;
+      }
+
+      if (result?.status === 'validation_error') {
+        setHandoffErrorKey('submitError');
         return;
       }
 
@@ -153,8 +169,6 @@ export default function ChatWidget({ locale, t }) {
         setHandoffErrorKey('submitError');
         return;
       }
-
-      setHandoffSubmitted(true);
     } catch (err) {
       setHandoffErrorKey('networkError');
     } finally {
@@ -221,7 +235,7 @@ export default function ChatWidget({ locale, t }) {
           aria-label={t('chat.openButtonAriaLabel')}
           className="w-14 h-14 rounded-full bg-surface border border-graphite/10 text-accent-teal shadow-premium-soft flex items-center justify-center transition-all transform hover:-translate-y-1 hover:bg-white"
         >
-          <MessageSquareText size={24} />
+          <span className="text-sm font-bold">AI</span>
         </button>
       </div>
     );
@@ -232,12 +246,12 @@ export default function ChatWidget({ locale, t }) {
       <div className="flex justify-between items-center p-4 border-b border-graphite/5 bg-base/50">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-accent-teal/10 flex items-center justify-center text-accent-teal">
-            <MessageSquareText size={16} />
+            <span className="text-xs font-bold">AI</span>
           </div>
           <span className="font-bold text-graphite text-sm">{isHandoffOpen ? t('contact.form.title') : t('chat.title')}</span>
         </div>
         <button aria-label={t('chat.closeButtonAriaLabel')} onClick={() => setIsOpen(false)} className="text-graphite/50 hover:text-graphite transition-colors">
-          <X size={20} />
+          <span className="text-lg leading-none">x</span>
         </button>
       </div>
 
@@ -382,7 +396,7 @@ export default function ChatWidget({ locale, t }) {
                 onClick={wrapUpCall}
                 className="w-full mb-3 flex items-center justify-center gap-1 py-2 text-xs font-bold text-accent-teal bg-accent-teal/5 hover:bg-accent-teal/10 rounded-lg transition-colors"
               >
-                {t('chat.wrapUp')} <ChevronRight size={14} />
+                {t('chat.wrapUp')} <span aria-hidden="true">&gt;</span>
               </button>
             )}
             {hasUserMessages && !chatErrorKey && (
@@ -403,7 +417,7 @@ export default function ChatWidget({ locale, t }) {
                 disabled={!input.trim() || isLoading}
                 className="w-10 h-10 flex flex-shrink-0 items-center justify-center bg-accent-teal text-white rounded-xl disabled:opacity-50"
               >
-                <Send size={16} />
+                <span className="text-base font-bold">&gt;</span>
               </button>
             </form>
           </>

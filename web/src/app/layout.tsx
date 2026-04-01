@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ChatWidgetShell } from "@/components/chat-widget-shell";
+import { ChatWidgetContainer } from "@/components/chat-widget";
 import { SiteFooter } from "@/components/shell/site-footer";
 import { SiteHeader } from "@/components/shell/site-header";
 import "./globals.css";
@@ -34,7 +34,7 @@ export default function RootLayout({
           <SiteHeader />
           <div className="flex-1">{children}</div>
           <SiteFooter />
-          <ChatWidgetShell />
+          <ChatWidgetContainer />
         </div>
       </body>
     </html>

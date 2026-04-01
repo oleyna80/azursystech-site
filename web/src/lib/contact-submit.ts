@@ -1,5 +1,8 @@
 export const CONTACT_SUBMIT_SOURCE = "website_form" as const;
+export const CONTACT_CHAT_SOURCE = "website_chat" as const;
 export const CONTACT_DEFAULT_STATUS = "New" as const;
+
+const SOURCES = [CONTACT_SUBMIT_SOURCE, CONTACT_CHAT_SOURCE] as const;
 
 const SEGMENTS = ["particulier", "tpe"] as const;
 const SERVICE_TYPES = [
@@ -25,7 +28,7 @@ const HOME_NEED_TYPES = ["repair", "setup", "migration", "speedup", "installatio
 export type ContactSubmitSegment = (typeof SEGMENTS)[number];
 
 export type ContactSubmitPayload = {
-  source: typeof CONTACT_SUBMIT_SOURCE;
+  source: (typeof SOURCES)[number];
   status: typeof CONTACT_DEFAULT_STATUS;
   name: string;
   phone: string;
@@ -117,6 +120,7 @@ export function validateAndBuildContactPayload(formData: FormData): ValidationRe
   const name = readTextField(formData, "name");
   const phone = readTextField(formData, "phone");
   const email = readOptionalField(formData, "email");
+  const sourceRaw = readOptionalField(formData, "source");
   const city = readTextField(formData, "city");
   const segmentRaw = readTextField(formData, "segment");
   const serviceTypeRaw = readTextField(formData, "service_type");
@@ -152,6 +156,10 @@ export function validateAndBuildContactPayload(formData: FormData): ValidationRe
 
   if (!city) {
     issues.push({ field: "city", message: "Укажите город" });
+  }
+
+  if (sourceRaw && !isOneOf(sourceRaw, SOURCES)) {
+    issues.push({ field: "source", message: "Недопустимый источник обращения" });
   }
 
   if (!isOneOf(segmentRaw, SEGMENTS)) {
@@ -213,7 +221,7 @@ export function validateAndBuildContactPayload(formData: FormData): ValidationRe
 
   const segment = segmentRaw as ContactSubmitSegment;
   const payload: ContactSubmitPayload = {
-    source: CONTACT_SUBMIT_SOURCE,
+    source: (sourceRaw && isOneOf(sourceRaw, SOURCES) ? sourceRaw : CONTACT_SUBMIT_SOURCE),
     status: CONTACT_DEFAULT_STATUS,
     name,
     phone,
@@ -276,4 +284,3 @@ export type ContactSubmitApiResult =
 export function getSubmitFallbackMessage(): string {
   return FALLBACK_MESSAGE;
 }
-
