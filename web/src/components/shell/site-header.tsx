@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { OpenChatButton } from "@/components/open-chat-button";
+
 const NAV_LINKS = [
   { href: "/", label: "Главная" },
   { href: "/services", label: "Услуги" },
@@ -41,12 +43,9 @@ export function SiteHeader() {
           >
             WhatsApp
           </a>
-          <Link
-            href="/#chat-entry"
-            className="hidden rounded-lg border border-[#D8D0C4] bg-[#FFFDFC] px-3 py-2 text-sm font-semibold text-[#1F2A37] hover:bg-[#F6F1E8] sm:inline-block"
-          >
+          <OpenChatButton className="hidden rounded-lg border border-[#D8D0C4] bg-[#FFFDFC] px-3 py-2 text-sm font-semibold text-[#1F2A37] hover:bg-[#F6F1E8] sm:inline-block">
             Открыть чат
-          </Link>
+          </OpenChatButton>
           <Link
             href="/contact"
             className="rounded-lg bg-[#1F6F78] px-4 py-2 text-sm font-semibold text-white hover:bg-[#185A61]"
@@ -66,9 +65,9 @@ export function SiteHeader() {
           <a href={CONTACT.whatsappHref} className="text-sm font-medium text-[#8A4A2F] underline">
             WhatsApp: {CONTACT.whatsappDisplay}
           </a>
-          <Link href="/#chat-entry" className="text-sm font-medium text-[#1F2A37]/85 underline">
+          <OpenChatButton className="text-sm font-medium text-[#1F2A37]/85 underline">
             Открыть чат
-          </Link>
+          </OpenChatButton>
         </div>
       </div>
     </header>

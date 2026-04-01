@@ -53,6 +53,18 @@ export default function ChatWidget({ locale, t }) {
   }, [messages, isOpen]);
 
   useEffect(() => {
+    const handleExternalOpen = () => {
+      setIsOpen(true);
+    };
+
+    window.addEventListener('azursystech:open-chat', handleExternalOpen);
+
+    return () => {
+      window.removeEventListener('azursystech:open-chat', handleExternalOpen);
+    };
+  }, []);
+
+  useEffect(() => {
     setMessages([{ role: 'assistant', content: t('chat.welcome') }]);
     setInput('');
     setIsLoading(false);
