@@ -75,17 +75,29 @@ Status: IN_PROGRESS
   - AC1: GBP setup baseline is actionable
   - AC2: review request process is operationally usable
   - AC3: local presence flow is aligned with launch contact logic
-  Status: todo
+  Status: done
+  Delivery notes (2026-03-28):
+  - founder confirmed all required evidence points from `docs/reports/azr-003-006-gbp-review-readiness-pack.md`:
+    - GBP baseline complete
+    - site/GBP contact consistency confirmed
+    - review request flow usable
+    - review evidence capture method defined
+  - closure reflected in control-layer tracking artifacts (`docs/tasklist`, `07_ops/task-board.md`, `07_ops/launch-checklist.md`, `memory_bank/progress.md`)
 
 - AZR-003-007: Prepare go / no-go review
   Owner: Tech Lead
   Priority: P0
-  Depends on: AZR-003-001, AZR-003-002, AZR-003-003, AZR-003-004, AZR-003-005, AZR-003-006, AZR-003-009, AZR-003-010
+  Depends on: AZR-003-002, AZR-003-003, AZR-003-004, AZR-003-005, AZR-003-006, AZR-003-009, AZR-003-010
   Acceptance Criteria:
   - AC1: every launch blocker has an explicit status
   - AC2: unresolved blockers are not mislabeled as post-launch work
   - AC3: founder can make a go / no-go decision based on the package
-  Status: todo
+  Status: done
+  Delivery notes (2026-03-30):
+  - decision package refreshed to current SSOT-only inputs (`docs/reports/azr-003-007-go-no-go-package.md`)
+  - launch-ready baseline, non-blocking conditions, and post-launch queue remain explicitly separated
+  - founder decision formally confirmed by control layer: `GO`
+  - formal closure reflected in control-layer tracking artifacts
 
 - AZR-003-009: Close remaining website scope before new integrations
   Owner: RooCode
