@@ -1,94 +1,78 @@
-import Link from "next/link";
-
 const FOOTER_LINKS = [
-  { href: "/", label: "Главная" },
-  { href: "/services", label: "Услуги" },
-  { href: "/business", label: "Для бизнеса" },
-  { href: "/home", label: "Для дома" },
-  { href: "/pricing", label: "Цены" },
-  { href: "/faq", label: "FAQ" },
-  { href: "/contact", label: "Контакты" },
+  { href: "#business", label: "Для бизнеса" },
+  { href: "#automation", label: "Автоматизация и ИИ" },
+  { href: "#how-it-works", label: "Как мы работаем" },
+  { href: "#pricing", label: "Цены" },
+  { href: "#faq", label: "FAQ" },
+  { href: "#contact", label: "Контакты" },
 ];
 
 const LEGAL_LINKS = [
   { href: "/privacy", label: "Политика конфиденциальности" },
   { href: "/legal", label: "Правовая информация" },
+  { href: "/terms", label: "Условия оказания услуг" },
 ];
 
 const CONTACT = {
-  phoneDisplay: "+33 7 49 70 54 65",
-  phoneHref: "tel:+33749705465",
-  whatsappDisplay: "+33 7 49 70 54 65",
-  whatsappHref: "https://wa.me/33749705465",
+  phoneDisplay: "+33 7 80 72 09 94",
+  phoneHref: "tel:+33780720994",
+  whatsappDisplay: "+33 7 80 72 09 94",
+  whatsappHref: "https://wa.me/33780720994",
   email: "contact@azursystech.fr",
 };
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-[#D8D0C4] bg-[#F6F1E8]">
-      <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-4 lg:px-8">
-        <section>
-          <h2 className="text-base font-semibold text-[#1F2A37]">AzurSysTech</h2>
-          <p className="mt-3 text-sm leading-6 text-[#1F2A37]/85">
-            Локальная IT-помощь для малого бизнеса и частных клиентов в Nice и в зоне до 30 км.
-          </p>
-          <p className="mt-3 text-sm text-[#1F2A37]/85">Зона обслуживания: Nice + 30 км.</p>
-          <div className="mt-4">
-            <Link
-              href="/contact"
-              className="inline-block rounded-lg bg-[#1F6F78] px-4 py-2 text-sm font-semibold text-white hover:bg-[#185A61]"
-            >
-              Оставить заявку
-            </Link>
+    <footer className="bg-graphite py-16 text-white/66">
+      <div className="container mx-auto px-4 md:px-8">
+        <div className="grid gap-12 border-b border-white/10 pb-10 md:grid-cols-[0.9fr_1.1fr]">
+          <div className="max-w-sm">
+            <span className="mb-4 block text-2xl font-bold text-white">AzurSysTech</span>
+            <p className="text-sm leading-7 text-white/72">
+              Локальная техническая помощь для малого бизнеса в Ницце и рядом.
+            </p>
           </div>
-        </section>
-
-        <section>
-          <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-[#1F2A37]/80">Навигация</h2>
-          <ul className="mt-3 space-y-2">
-            {FOOTER_LINKS.map((link) => (
-              <li key={link.href}>
-                <Link href={link.href} className="text-sm text-[#1F2A37]/85 hover:text-[#1F2A37]">
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section>
-          <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-[#1F2A37]/80">Правовое</h2>
-          <ul className="mt-3 space-y-2">
-            {LEGAL_LINKS.map((link) => (
-              <li key={link.href}>
-                <Link href={link.href} className="text-sm text-[#1F2A37]/85 hover:text-[#1F2A37]">
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section>
-          <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-[#1F2A37]/80">Связь</h2>
-          <ul className="mt-3 space-y-2 text-sm text-[#1F2A37]/85">
-            <li>
-              <a className="hover:text-[#1F2A37]" href={CONTACT.phoneHref}>
-                Телефон: {CONTACT.phoneDisplay}
-              </a>
-            </li>
-            <li>
-              <a className="hover:text-[#1F2A37]" href={CONTACT.whatsappHref}>
-                WhatsApp: {CONTACT.whatsappDisplay}
-              </a>
-            </li>
-            <li>
-              <a className="hover:text-[#1F2A37]" href={`mailto:${CONTACT.email}`}>
-                Email: {CONTACT.email}
-              </a>
-            </li>
-          </ul>
-        </section>
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4">
+              <h2 className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/92">Навигация</h2>
+              <div className="grid gap-3">
+                {FOOTER_LINKS.map((link) => (
+                  <a key={link.href} href={link.href} className="text-base font-semibold text-white/78 transition-colors hover:text-white">
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+            <div className="grid gap-4">
+              <h2 className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/92">Документы</h2>
+              <div className="grid gap-3">
+                {LEGAL_LINKS.map((link) => (
+                  <a key={link.href} href={link.href} className="text-base font-semibold text-white/78 transition-colors hover:text-white">
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+            <div className="grid gap-4 sm:col-span-2 lg:col-span-1">
+              <h2 className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/92">Контакты</h2>
+              <div className="grid gap-3 text-base font-semibold text-white/82">
+                <a href={CONTACT.phoneHref} className="transition-colors hover:text-white">
+                  {CONTACT.phoneDisplay}
+                </a>
+                <a href={`mailto:${CONTACT.email}`} className="transition-colors hover:text-white">
+                  {CONTACT.email}
+                </a>
+                <a href={CONTACT.whatsappHref} target="_blank" rel="noreferrer" className="transition-colors hover:text-white">
+                  WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col gap-4 pt-8 text-sm font-medium text-white/58 md:flex-row md:items-center md:justify-between">
+          <span>&copy; {new Date().getFullYear()} AzurSysTech</span>
+          <span>Ницца и до 30 км вокруг</span>
+        </div>
       </div>
     </footer>
   );

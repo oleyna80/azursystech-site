@@ -1,296 +1,358 @@
-import Link from "next/link";
-
-import { OpenChatButton } from "@/components/open-chat-button";
+import { HomeContactSection } from "@/components/sections/home-contact";
 
 const CONTACT = {
-  phoneDisplay: "+33 7 49 70 54 65",
-  phoneHref: "tel:+33749705465",
-  whatsappDisplay: "+33 7 49 70 54 65",
-  whatsappHref: "https://wa.me/33749705465",
-  email: "contact@azursystech.fr",
+  whatsappHref: "https://wa.me/33780720994",
 };
 
-const SERVICE_LANES = [
+const BUSINESS_WORKSPACE = [
+  "подготовка новых рабочих мест",
+  "подключение компьютеров и периферии",
+  "базовая настройка системы и программ",
+  "подключение принтеров и общего доступа",
+];
+
+const BUSINESS_NETWORK = [
+  "Wi-Fi и базовая организация сети",
+  "диагностика сбоев на месте",
+  "локальная сеть и техника для малого бизнеса",
+  "пошаговое наведение порядка без лишней сложности",
+];
+
+const AUTOMATION_POINTS = [
   {
-    title: "Для малого бизнеса",
-    description: "Рабочие места, Wi-Fi, локальная сеть, принтеры и базовая IT-среда для TPE без лишней сложности.",
-    bullets: ["Рабочие станции", "Сеть и Wi-Fi", "Общие папки", "Выездная помощь"],
+    title: "Боты, ассистенты и ИИ-агенты",
+    desc: "Для повторяющихся задач, быстрых ответов и первичной обработки запросов.",
   },
   {
-    title: "Для дома",
-    description: "Настройка нового ПК, ремонт типовых проблем, домашний интернет, принтер и перенос данных.",
-    bullets: ["Новый компьютер", "Домашний Wi-Fi", "Принтер", "Оптимизация системы"],
+    title: "Рабочие процессы для заявок и информации",
+    desc: "Чтобы заявки, сообщения и данные не терялись между почтой, мессенджерами и таблицами.",
+  },
+  {
+    title: "Простые сайты и страницы под проект",
+    desc: "Небольшие сайты и страницы для локальных услуг, проектов и рабочих задач.",
+  },
+  {
+    title: "Интеграции и небольшие инструменты",
+    desc: "Небольшие программы и связки сервисов там, где нужен реальный рабочий результат.",
   },
 ];
 
-const CONTACT_PATHS = [
+const HOW_IT_WORKS = [
   {
-    title: "Чат-помощник",
-    description: "Быстро уточняет задачу, помогает собрать описание и переводит в заявку без лишних шагов.",
-    accent: "text-[#1F6F78]",
+    step: "01",
+    title: "Вы описываете задачу",
+    desc: "Форма, WhatsApp или чат-помощник.",
   },
   {
-    title: "Форма заявки",
-    description: "Основной launch-safe путь: структурированные поля, квалификация обращения и передача в intake.",
-    accent: "text-[#1F2A37]",
+    step: "02",
+    title: "Мы уточняем детали",
+    desc: "Уточняем, сколько устройств, нужен ли выезд и с чего начать.",
   },
   {
-    title: "WhatsApp",
-    description: "Резервный прямой канал, если нужно отправить контакты и краткое описание вручную.",
-    accent: "text-[#8A4A2F]",
+    step: "03",
+    title: "Делаем рабочее решение",
+    desc: "Настраиваем, подключаем, исправляем и проверяем на месте.",
+  },
+  {
+    step: "04",
+    title: "Следующий шаг",
+    desc: "Если задача больше — раскладываем по шагам, без лишних обещаний.",
   },
 ];
 
-const OPERATING_POINTS = [
-  "Зона выезда: Nice и до 30 км вокруг.",
-  "Работаем и с частными клиентами, и с TPE.",
-  "Не обещаем цену и сроки до ручного уточнения задачи.",
-  "Чат помогает собрать вводные, а не заменяет финальную квалификацию.",
+const PRICES = [
+  { title: "Выездная помощь и диагностика", price: "от 50 €" },
+  { title: "Wi-Fi, принтеры, подключение устройств", price: "от 70 €" },
+  { title: "Новый ПК или рабочее место", price: "от 80-90 €" },
 ];
 
-const STEPS = [
-  "Вы описываете задачу в чате или через форму.",
-  "Мы получаем структурированное обращение и контакты.",
-  "Уточняем объём, формат работ и выезд при необходимости.",
-  "После этого подтверждаем ручной следующий шаг без ложных обещаний.",
-];
-
-const FAQ_PREVIEW = [
-  {
-    question: "Вы работаете только по Ницце?",
-    answer: "Работаем в Nice и в радиусе до 30 км.",
-  },
-  {
-    question: "Вы помогаете бизнесу или частным клиентам?",
-    answer: "Помогаем и малому бизнесу (TPE), и частным клиентам.",
-  },
-  {
-    question: "Можно ли сначала просто описать задачу?",
-    answer: "Да. Для этого и сделан чат-помощник и контактная форма.",
-  },
-  {
-    question: "Вы настраиваете Wi-Fi и принтеры?",
-    answer: "Да, это одна из самых частых практических задач.",
-  },
+const FAQS = [
+  { q: "Вы работаете только по Ницце?", a: "Работаем в Ницце и в радиусе до 30 км." },
+  { q: "Вы помогаете только бизнесу?", a: "Основной фокус — бизнес, но если задача не связана с ним, тоже можно написать." },
+  { q: "Можно ли вызвать вас для настройки Wi-Fi и принтера?", a: "Да. Это одна из самых частых и практических задач." },
+  { q: "Можно ли сначала описать задачу в сообщении?", a: "Да, это предпочтительный формат для первичной оценки." },
+  { q: "Вы делаете только ремонт?", a: "Нет. Кроме ремонта и диагностики настраиваем рабочие места, сеть, принтеры и базовую техническую среду." },
 ];
 
 export default function HomePage() {
   return (
-    <main className="bg-base px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <section className="relative overflow-hidden rounded-[2rem] border border-[#D8D0C4] bg-[#FFFDFC] px-8 py-10 shadow-premium-soft sm:px-10 sm:py-12">
-          <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-r from-[#1F6F78]/10 via-transparent to-[#C96F4A]/10" />
-          <div className="absolute -right-16 top-10 h-40 w-40 rounded-full bg-[#1F6F78]/6 blur-3xl" />
-          <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-[#C96F4A]/8 blur-3xl" />
+    <main className="bg-base text-graphite">
+      <section className="relative isolate min-h-[100svh] overflow-hidden bg-graphite text-white">
+        <img
+          src="/hero.png"
+          alt="Локальная техническая помощь для малого бизнеса на Лазурном берегу"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(12,18,24,0.92)_0%,rgba(16,24,32,0.75)_45%,rgba(18,26,34,0.25)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_18%,rgba(255,255,255,0.16),transparent_58%)] opacity-70" />
 
-          <div className="relative grid gap-8 lg:grid-cols-[1.25fr_0.75fr] lg:items-start">
+        <div className="container relative z-10 mx-auto flex min-h-[100svh] flex-col justify-end px-4 pb-12 pt-24 md:px-8 md:pb-20 md:pt-36">
+          <div className="max-w-2xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3.5 py-2 text-xs font-semibold tracking-[0.18em] text-white/85">
+              <svg viewBox="0 0 24 24" className="h-4 w-4 text-accent-terra" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  d="M12 2C8.1 2 5 5.2 5 9.1c0 4.8 6.2 12.1 6.4 12.4a.8.8 0 0 0 1.2 0c.2-.3 6.4-7.6 6.4-12.4C19 5.2 15.9 2 12 2zm0 10.1a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"
+                />
+              </svg>
+              Ницца и окрестности
+            </div>
+            <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-white/60">AzurSysTech</p>
+            <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight text-white md:text-6xl md:leading-[0.98]">
+              Техническая помощь для малого бизнеса
+            </h1>
+            <p className="mt-6 max-w-xl text-lg font-medium leading-8 text-white/82">
+              Рабочие места, Wi-Fi, принтеры, локальная сеть и выездная помощь для офисов,
+              кабинетов и магазинов.
+            </p>
+
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <a
+                href="#contact"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-accent-teal px-7 py-3.5 text-base font-bold text-white shadow-premium-soft transition-transform duration-200 hover:-translate-y-0.5 hover:bg-accent-teal/90 active:scale-95"
+              >
+                Оставить заявку
+                <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                  <path fill="currentColor" d="M5 11h11.2l-4.6-4.6L13 5l7 7-7 7-1.4-1.4 4.6-4.6H5v-2z" />
+                </svg>
+              </a>
+              <a
+                href={CONTACT.whatsappHref}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/8 px-7 py-3.5 text-base font-bold text-white transition-colors hover:bg-white/12"
+              >
+                Написать в WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="business" className="bg-base py-20 md:py-28">
+        <div className="container mx-auto px-4 md:px-8">
+          <div className="grid gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#1F6F78]">
-                AzurSysTech · Nice + 30 км
+              <p className="mb-4 text-sm font-bold uppercase tracking-[0.18em] text-accent-teal/90">
+                Для малого бизнеса
               </p>
-              <h1 className="mt-5 max-w-4xl font-serif text-4xl leading-tight text-[#1F2A37] sm:text-5xl">
-                IT-поддержка для малого бизнеса и дома с новым intake через чат и форму
-              </h1>
-              <p className="mt-5 max-w-3xl text-base leading-7 text-[#1F2A37]/85 sm:text-lg">
-                Новый сайт ведёт в один понятный поток: клиент может быстро описать задачу через
-                чат-помощник, перейти в структурированную заявку и передать контакты без лишней
-                переписки и фальшивых обещаний.
+              <h2 className="max-w-3xl text-3xl font-extrabold tracking-tight text-graphite md:text-5xl md:leading-[1.02]">
+                Решаем обычные технические задачи, которые мешают работе
+              </h2>
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-graphite/72">
+                Настройка рабочих мест, Wi-Fi, принтеров и локальной сети. Не усложняем
+                процесс, а приводим технику и рабочую среду в порядок.
               </p>
 
-              <div className="mt-8 flex flex-wrap gap-3">
-                <OpenChatButton className="rounded-xl bg-[#1F6F78] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#185A61]">
-                  Открыть чат-помощник
-                </OpenChatButton>
-                <Link
-                  href="/contact"
-                  className="rounded-xl border border-[#D8D0C4] bg-[#FFFDFC] px-5 py-3 text-sm font-semibold text-[#1F2A37] transition hover:bg-[#F6F1E8]"
-                >
-                  Перейти к заявке
-                </Link>
+              <div className="mt-10 grid gap-8 border-t border-graphite/10 pt-8 md:grid-cols-2">
+                <div>
+                  <h3 className="mb-4 text-sm font-bold uppercase tracking-[0.16em] text-graphite/55">
+                    Рабочие места
+                  </h3>
+                  <ul className="space-y-4 text-base font-medium leading-7 text-graphite/80">
+                    {BUSINESS_WORKSPACE.map((item) => (
+                      <li key={item} className="flex gap-3 transition duration-300 ease-out md:hover:-translate-y-0.5">
+                        <span className="mt-2 h-1.5 w-1.5 rounded-full bg-accent-teal" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="mb-4 text-sm font-bold uppercase tracking-[0.16em] text-graphite/55">
+                    Сеть и поддержка
+                  </h3>
+                  <ul className="space-y-4 text-base font-medium leading-7 text-graphite/80">
+                    {BUSINESS_NETWORK.map((item) => (
+                      <li key={item} className="flex gap-3 transition duration-300 ease-out md:hover:-translate-y-0.5">
+                        <span className="mt-2 h-1.5 w-1.5 rounded-full bg-accent-terra" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <a href="#contact" className="mt-10 inline-flex items-center gap-2 text-base font-bold text-accent-teal hover:text-graphite">
+                Обсудить задачу
+                <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                  <path fill="currentColor" d="M5 11h11.2l-4.6-4.6L13 5l7 7-7 7-1.4-1.4 4.6-4.6H5v-2z" />
+                </svg>
+              </a>
+            </div>
+
+            <div className="overflow-hidden rounded-[2rem] bg-surface shadow-premium-soft ring-1 ring-graphite/5">
+              <img src="/business.png" alt="Рабочая среда для небольшого бизнеса" className="aspect-[4/3] w-full object-cover" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="automation" className="border-y border-graphite/8 bg-[#f5f1ea] py-20 md:py-28">
+        <div className="container mx-auto px-4 md:px-8">
+          <div className="grid gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+            <div>
+              <p className="mb-4 text-sm font-bold uppercase tracking-[0.18em] text-accent-terra/90">
+                Автоматизация и ИИ
+              </p>
+              <h2 className="max-w-2xl text-3xl font-extrabold tracking-tight text-graphite md:text-5xl md:leading-[1.02]">
+                Автоматизация, ИИ и цифровые инструменты для повседневной работы
+              </h2>
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-graphite/72">
+                Помогаем убрать ручную рутину, навести порядок в процессах и ускорить работу без
+                сложной инфраструктуры и лишней перегрузки.
+              </p>
+
+              <div className="mt-10 space-y-6 border-t border-graphite/10 pt-8">
+                {AUTOMATION_POINTS.map((point) => (
+                  <div
+                    key={point.title}
+                    className="group flex gap-4 rounded-[1.5rem] px-2 py-2 transition duration-300 ease-out md:hover:-translate-y-1 md:hover:scale-[1.03]"
+                  >
+                    <div className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-accent-teal shadow-premium-soft ring-1 ring-graphite/5 transition duration-300 ease-out group-hover:scale-110 group-hover:bg-accent-teal group-hover:text-white">
+                      <span className="h-2.5 w-2.5 rounded-full bg-current" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-graphite">{point.title}</h3>
+                      <p className="mt-1 max-w-xl text-base leading-7 text-graphite/70">{point.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-10 flex flex-wrap items-center gap-4">
                 <a
-                  href={CONTACT.whatsappHref}
-                  className="rounded-xl border border-[#C96F4A] bg-[#FFF3EE] px-5 py-3 text-sm font-semibold text-[#8A4A2F] transition hover:bg-[#FBE8DF]"
+                  href="#contact"
+                  className="inline-flex items-center gap-2 rounded-full bg-graphite px-7 py-3.5 text-base font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-graphite/90"
                 >
-                  Написать в WhatsApp
+                  Обсудить автоматизацию
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                    <path fill="currentColor" d="M5 11h11.2l-4.6-4.6L13 5l7 7-7 7-1.4-1.4 4.6-4.6H5v-2z" />
+                  </svg>
                 </a>
               </div>
+            </div>
 
-              <div className="mt-8 grid gap-3 sm:grid-cols-3">
-                <article className="rounded-2xl border border-[#D8D0C4] bg-white/80 p-4 backdrop-blur">
-                  <p className="text-xs uppercase tracking-[0.18em] text-[#1F6F78]">Scope</p>
-                  <p className="mt-2 text-sm font-semibold text-[#1F2A37]">TPE и particuliers</p>
-                </article>
-                <article className="rounded-2xl border border-[#D8D0C4] bg-white/80 p-4 backdrop-blur">
-                  <p className="text-xs uppercase tracking-[0.18em] text-[#1F6F78]">Intake</p>
-                  <p className="mt-2 text-sm font-semibold text-[#1F2A37]">Чат, форма, WhatsApp</p>
-                </article>
-                <article className="rounded-2xl border border-[#D8D0C4] bg-white/80 p-4 backdrop-blur">
-                  <p className="text-xs uppercase tracking-[0.18em] text-[#1F6F78]">Policy</p>
-                  <p className="mt-2 text-sm font-semibold text-[#1F2A37]">Без обещаний цены и срока до ручной проверки</p>
-                </article>
+            <div className="relative">
+              <div className="absolute inset-0 -z-10 translate-x-5 translate-y-5 rounded-[2.5rem] bg-accent-terra/10 blur-2xl" />
+              <div className="overflow-hidden rounded-[2rem] bg-surface shadow-premium-soft ring-1 ring-graphite/5">
+                <img src="/automation-illustration.svg" alt="Иллюстрация автоматизации и ИИ" className="h-full w-full object-cover" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="how-it-works" className="bg-graphite py-20 text-white md:py-28">
+        <div className="container mx-auto px-4 md:px-8">
+          <div className="mb-14 max-w-2xl">
+            <p className="mb-4 text-sm font-bold uppercase tracking-[0.18em] text-accent-teal/90">Как мы работаем</p>
+            <h2 className="text-3xl font-extrabold tracking-tight md:text-5xl md:leading-[1.02]">
+              Понятный процесс без лишних шагов
+            </h2>
+          </div>
+
+          <div className="grid gap-8 border-t border-white/10 pt-8 md:grid-cols-4">
+            {HOW_IT_WORKS.map((step) => (
+              <div key={step.step} className="border-l border-white/10 pl-5 md:pl-6">
+                <div className="mb-5 text-xs font-bold tracking-[0.22em] text-accent-teal">{step.step}</div>
+                <h3 className="mb-3 text-xl font-bold">{step.title}</h3>
+                <p className="text-base font-medium leading-7 text-white/70">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="pricing" className="border-t border-graphite/5 bg-surface py-20 md:py-28">
+        <div className="container mx-auto px-4 md:px-8">
+          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+            <div className="max-w-xl">
+              <p className="mb-4 text-sm font-bold uppercase tracking-[0.18em] text-accent-terra/90">
+                Стартовые цены
+              </p>
+              <h2 className="text-3xl font-extrabold tracking-tight text-graphite md:text-5xl md:leading-[1.02]">
+                Понятные стартовые ориентиры
+              </h2>
+              <p className="mt-6 text-lg leading-8 text-graphite/72">
+                Для небольших задач можно назвать стартовую цену. Для малого бизнеса и более широкой
+                настройки итог уточняется после короткого описания задачи.
+              </p>
+              <a
+                href="#contact"
+                className="mt-8 inline-flex rounded-full bg-graphite px-7 py-3.5 text-base font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-graphite/90"
+              >
+                Запросить оценку
+              </a>
+              <div className="mt-8 border-t border-graphite/8 pt-5 text-sm font-medium leading-6 text-graphite/55">
+                Без обещаний по срокам и точной цене до уточнения задачи.
               </div>
             </div>
 
-            <div className="grid gap-4">
-              <section className="rounded-[1.75rem] border border-[#D8D0C4] bg-[#1F2A37] p-6 text-white shadow-premium-soft">
-                <p className="text-xs uppercase tracking-[0.22em] text-white/60">Primary flow</p>
-                <h2 className="mt-3 text-2xl font-semibold">Новый маршрут обращения</h2>
-                <ol className="mt-5 space-y-3 text-sm text-white/85">
-                  <li className="rounded-xl border border-white/10 bg-white/5 p-3">1. Чат уточняет суть проблемы</li>
-                  <li className="rounded-xl border border-white/10 bg-white/5 p-3">2. Клиент передаёт контакты и детали</li>
-                  <li className="rounded-xl border border-white/10 bg-white/5 p-3">3. Intake уходит в обработку без потери контекста</li>
-                </ol>
-              </section>
-
-              <section className="rounded-[1.75rem] border border-[#D8D0C4] bg-[#FFF8F4] p-6">
-                <p className="text-xs uppercase tracking-[0.22em] text-[#8A4A2F]">Direct contact</p>
-                <ul className="mt-4 space-y-3 text-sm text-[#1F2A37]/90">
-                  <li>
-                    Телефон: <a className="font-semibold text-[#1F6F78] underline" href={CONTACT.phoneHref}>{CONTACT.phoneDisplay}</a>
-                  </li>
-                  <li>
-                    WhatsApp: <a className="font-semibold text-[#8A4A2F] underline" href={CONTACT.whatsappHref}>{CONTACT.whatsappDisplay}</a>
-                  </li>
-                  <li>
-                    Email: <a className="font-semibold text-[#1F6F78] underline" href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
-                  </li>
-                </ul>
-              </section>
+            <div className="border-t border-graphite/10">
+              {PRICES.map((p) => (
+                <div key={p.title} className="grid gap-2 border-b border-graphite/10 py-7 md:grid-cols-[1fr_auto] md:items-center">
+                  <span className="pr-4 text-lg font-bold text-graphite">{p.title}</span>
+                  <span className="text-2xl font-extrabold text-accent-teal">{p.price}</span>
+                </div>
+              ))}
+              <div className="grid gap-2 border-b border-graphite/10 py-7 md:grid-cols-[1fr_auto] md:items-center">
+                <span className="pr-4 text-lg font-bold text-graphite">
+                  Небольшая рабочая среда для малого бизнеса
+                </span>
+                <span className="text-2xl font-extrabold text-accent-terra">по запросу</span>
+              </div>
+              <div className="grid gap-2 border-b border-graphite/10 py-7 md:grid-cols-[1fr_auto] md:items-center">
+                <span className="pr-4 text-lg font-bold text-graphite">
+                  Автоматизация, ИИ и цифровые процессы
+                </span>
+                <span className="text-2xl font-extrabold text-accent-terra">обсуждается</span>
+              </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="grid gap-6 lg:grid-cols-2">
-          {SERVICE_LANES.map((lane) => (
-            <article key={lane.title} className="rounded-[1.75rem] border border-[#D8D0C4] bg-[#FFFDFC] p-8 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1F6F78]">Service lane</p>
-              <h2 className="mt-3 font-serif text-3xl text-[#1F2A37]">{lane.title}</h2>
-              <p className="mt-3 text-base leading-7 text-[#1F2A37]/85">{lane.description}</p>
-              <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-                {lane.bullets.map((bullet) => (
-                  <li key={bullet} className="rounded-xl border border-[#D8D0C4] bg-[#F9F5EE] px-4 py-3 text-sm font-medium text-[#1F2A37]">
-                    {bullet}
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </section>
-
-        <section className="rounded-[1.75rem] border border-[#D8D0C4] bg-[#FFFDFC] p-8 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1F6F78]">Ways In</p>
-              <h2 className="mt-3 font-serif text-3xl text-[#1F2A37]">Три launch-safe пути для нового обращения</h2>
-            </div>
-            <p className="max-w-2xl text-sm leading-6 text-[#1F2A37]/75">
-              Все CTA теперь ведут в согласованный intake: чат открывает widget, форма ведёт на
-              `/contact`, резервный канал остаётся WhatsApp.
+      <section id="faq" className="bg-base py-20 md:py-28">
+        <div className="container mx-auto max-w-3xl px-4 md:px-8">
+          <div className="mb-12 text-center">
+            <p className="mb-4 text-sm font-bold uppercase tracking-[0.18em] text-accent-teal/90">
+              Частые вопросы
             </p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-graphite md:text-4xl md:leading-[1.05]">
+              Короткие ответы на частые вопросы
+            </h2>
           </div>
-
-          <div className="mt-6 grid gap-4 lg:grid-cols-3">
-            {CONTACT_PATHS.map((path) => (
-              <article key={path.title} className="rounded-2xl border border-[#D8D0C4] bg-[#FCFAF6] p-5">
-                <h3 className={`text-lg font-semibold ${path.accent}`}>{path.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-[#1F2A37]/85">{path.description}</p>
-              </article>
-            ))}
-          </div>
-
-          <div className="mt-6 flex flex-wrap gap-3">
-            <OpenChatButton className="rounded-xl bg-[#1F6F78] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#185A61]">
-              Открыть чат сейчас
-            </OpenChatButton>
-            <Link
-              href="/contact"
-              className="rounded-xl border border-[#D8D0C4] bg-white px-5 py-3 text-sm font-semibold text-[#1F2A37] transition hover:bg-[#F6F1E8]"
-            >
-              Открыть форму заявки
-            </Link>
-          </div>
-        </section>
-
-        <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-          <article className="rounded-[1.75rem] border border-[#D8D0C4] bg-[#FFFDFC] p-8 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1F6F78]">Operating model</p>
-            <h2 className="mt-3 font-serif text-3xl text-[#1F2A37]">Как мы держим launch-safe режим</h2>
-            <ul className="mt-6 space-y-3">
-              {OPERATING_POINTS.map((point) => (
-                <li key={point} className="rounded-xl border border-[#D8D0C4] bg-[#F9F5EE] px-4 py-3 text-sm leading-6 text-[#1F2A37]/90">
-                  {point}
-                </li>
-              ))}
-            </ul>
-          </article>
-
-          <article className="rounded-[1.75rem] border border-[#D8D0C4] bg-[#1F6F78] p-8 text-white shadow-premium-soft">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/65">Workflow</p>
-            <h2 className="mt-3 font-serif text-3xl">Как проходит работа после отправки</h2>
-            <ol className="mt-6 grid gap-3 sm:grid-cols-2">
-              {STEPS.map((step, index) => (
-                <li key={step} className="rounded-2xl border border-white/15 bg-white/10 p-4 text-sm leading-6 text-white/90">
-                  <span className="block text-xs font-semibold uppercase tracking-[0.18em] text-white/55">
-                    Step 0{index + 1}
-                  </span>
-                  <span className="mt-2 block">{step}</span>
-                </li>
-              ))}
-            </ol>
-          </article>
-        </section>
-
-        <section className="rounded-[1.75rem] border border-[#D8D0C4] bg-[#FFFDFC] p-8 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1F6F78]">FAQ Preview</p>
-              <h2 className="mt-3 font-serif text-3xl text-[#1F2A37]">Частые вопросы до отправки заявки</h2>
-            </div>
-            <Link
-              href="/faq"
-              className="text-sm font-semibold text-[#1F6F78] underline decoration-[#1F6F78]/30 underline-offset-4"
-            >
-              Перейти в полный FAQ
-            </Link>
-          </div>
-
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            {FAQ_PREVIEW.map((item) => (
-              <article key={item.question} className="rounded-2xl border border-[#D8D0C4] bg-[#FCFAF6] p-5">
-                <h3 className="text-lg font-semibold text-[#1F2A37]">{item.question}</h3>
-                <p className="mt-3 text-sm leading-6 text-[#1F2A37]/85">{item.answer}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="rounded-[2rem] border border-[#D8D0C4] bg-gradient-to-br from-[#FFFDFC] via-[#FFF8F4] to-[#F4EFE6] p-8 shadow-premium-soft sm:p-10">
-          <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#1F6F78]">Ready To Start</p>
-              <h2 className="mt-3 font-serif text-3xl text-[#1F2A37] sm:text-4xl">
-                Новый дизайн и новый intake теперь говорят на одном языке
-              </h2>
-              <p className="mt-4 max-w-3xl text-base leading-7 text-[#1F2A37]/85">
-                Откройте чат-помощник для короткого диалога, или сразу переходите в форму заявки,
-                если уже готовы описать задачу подробно.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-              <OpenChatButton className="rounded-xl bg-[#1F6F78] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#185A61]">
-                Открыть чат-помощник
-              </OpenChatButton>
-              <Link
-                href="/contact"
-                className="rounded-xl border border-[#D8D0C4] bg-white px-5 py-3 text-center text-sm font-semibold text-[#1F2A37] transition hover:bg-[#F6F1E8]"
+          <div className="mb-10 space-y-4">
+            {FAQS.map((f) => (
+              <details
+                key={f.q}
+                className="group rounded-2xl border border-graphite/5 bg-surface shadow-premium-soft [&_summary::-webkit-details-marker]:hidden"
               >
-                Перейти к форме
-              </Link>
-            </div>
+                <summary className="flex cursor-pointer items-center justify-between rounded-2xl p-6 font-bold text-graphite outline-none transition duration-200 hover:bg-base/40 focus-visible:ring-2 focus-visible:ring-accent-teal focus-visible:ring-offset-2">
+                  {f.q}
+                  <svg viewBox="0 0 24 24" className="h-5 w-5 text-graphite/50 transition-transform group-open:-rotate-180">
+                    <path fill="currentColor" d="M12 15.4 6.3 9.7l1.4-1.4L12 12.6l4.3-4.3 1.4 1.4z" />
+                  </svg>
+                </summary>
+                <div className="mt-2 border-t border-graphite/5 p-6 pt-0 text-graphite/70">
+                  {f.a}
+                </div>
+              </details>
+            ))}
           </div>
-        </section>
-      </div>
+          <div className="flex justify-center">
+            <a
+              href="#contact"
+              className="flex justify-center rounded-full bg-graphite px-6 py-3 text-center font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-graphite/90"
+            >
+              Задать свой вопрос
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <HomeContactSection />
     </main>
   );
 }

@@ -1,5 +1,180 @@
 # Progress Log - AzurSysTech
 
+## 2026-04-13: AZR-003-012 Contact Contract + SSOT Parity Sync (Stages 27-35)
+
+### Done
+
+- В `web` завершен business-first parity pass для контактной формы на основе `frontend_mvp`:
+  - inline submit states (`success/error`) вместо redirect flow;
+  - `segment=tpe` как default;
+  - удалены UI-дубли и неактуальные conditional branches из текущего form flow.
+- Server-side validation/normalize синхронизированы с фактическим UI:
+  - убрана валидация неиспользуемых form-полей (`business_needs`, `home_*`);
+  - legacy fields сохранены в payload как compatibility-only `null`;
+  - добавлена legacy-нормализация `service_type: wifi -> reseau_local`.
+- Выполнен docs sync для form/n8n SSOT:
+  - `02_website/forms-spec.md`
+  - `03_leads/lead-intake-spec.md`
+  - `docs/specs/azr-003-010-site-n8n-google-sheets.md`
+- Закрыт финальный drift по `email` representation:
+  - в spec зафиксировано `email: null if absent` (с допустимым mapping в blank на стороне n8n/Sheets).
+
+### Validation
+
+- `cd /home/dmitrii/azursystech/web && npm run check:types` - pass
+- `cd /home/dmitrii/azursystech/web && npm run build` - pass
+- Read-only parity verifier pass (`code vs docs`) по contact/n8n contract - pass
+
+### Notes
+
+- Это website/docs alignment pass в рамках `AZR-003-012`; deploy/infra/CRM/external integrations не менялись.
+- `AZR-003-012` остается `in_progress`; следующий шаг — visual build smoke on WSL + backend readiness review перед стартом `AZR-003-011`.
+
+## 2026-04-13: Legal + Privacy Pages Sync + New Terms Page (RU)
+
+### Done
+
+- `/privacy` в `web` синхронизирован с `02_website/privacy.md`, добавлен краткий блок про cookies/consent.
+- `/legal` в `web` синхронизирован с `02_website/mentions_légales.md`.
+- Добавлена новая русская страница `/terms` (общие условия оказания услуг) на базе `02_website/prestations-de-services-ru.md`.
+- В footer добавлена ссылка на `/terms`.
+- Контакты (телефон/WhatsApp) выровнены на актуальный `+33 7 80 72 09 94` в новых legal/terms страницах.
+
+### Notes
+
+- Это content/legal pass; runtime, deploy, CRM и внешние интеграции не менялись.
+
+## 2026-04-13: Header Anchor Links Fixed For Legal/Privacy/Terms Pages
+
+### Done
+
+- В `web` исправлены якорные ссылки шапки: с `/privacy`, `/legal`, `/terms` навигация теперь ведёт на `/#section` главной.
+
+### Notes
+
+- Это UI-fix; runtime, deploy и интеграции не менялись.
+
+## 2026-04-12: AZR-003-012 Docs Sync — Automation Module Explicit In Website SSOT
+
+### Done
+
+- Выполнен точечный docs-sync для website baseline:
+  - `01_brand/homepage-copy.md`
+  - `02_website/site-architecture.md`
+  - `02_website/wireframes.md`
+- В документах явно зафиксирован отдельный business-first модуль:
+  - `Автоматизация + ИИ-агенты`
+  - сценарии: повторяющиеся задачи, обработка заявок, workflow, практичные цифровые инструменты
+  - единый CTA-путь через канонический contact flow
+
+### Notes
+
+- Это docs-only pass в рамках `AZR-003-012`.
+- Runtime/deploy/integration контуры не менялись.
+
+## 2026-04-12: AZR-003-012 A/A Baseline Pass Accepted (chat -> payload -> n8n env -> tokens)
+
+### Done
+
+- В `web` принят и подтвержден последовательный baseline-pass в фиксированном порядке:
+  1. canonical chat cleanup (`chat-widget-shell` как единственный активный shell, legacy `ChatWidget.jsx` удален)
+  2. dual payload intake (`FormData` + `JSON`) для `/api/contact/submit` с единым server-side validate/normalize
+  3. `n8n` env layer (`N8N_WEBHOOK_*` как primary + legacy fallback) и required transport headers
+  4. визуальные токены из `frontend_mvp` в `web` через Tailwind v4 `@theme` в `web/src/app/globals.css`
+- Сводная verifier-проверка по item `1 -> 4` выполнена с итогом `PASS`.
+
+### Validation
+
+- `cd /home/dmitrii/azursystech/web && npm run build` - pass
+- `cd /home/dmitrii/azursystech/web && npm run check:types` - pass
+
+### Notes
+
+- Это baseline-alignment pass в рамках `AZR-003-012`; deploy path и внешние интеграции не переключались.
+- `web` остается runtime/deploy baseline до отдельного explicit решения о cutover.
+- Следующий шаг в этом же тикете: визуальная проверка сборки на WSL (desktop + mobile viewport smoke).
+
+## 2026-04-12: AZR-003-012 Parity/Migration Planning Artifact Drafted
+
+### Done
+
+- Выполнен planning pass для `AZR-003-012` в рамках `Safe baseline` модели.
+- Добавлен spec-документ:
+  - `docs/specs/azr-003-012-frontend-mvp-parity-migration-plan.md`
+- В документе зафиксированы:
+  - launch-critical gap register (`frontend_mvp` vs `web`)
+  - выбранная стратегия миграции: `incremental parity`
+  - readiness gate перед запуском `AZR-003-011`
+- `docs/tasklist/azr-003-tasklist.md` обновлен:
+  - `AZR-003-012` переведен в `in_progress`
+  - добавлены delivery notes со ссылкой на planning artifact
+
+### Notes
+
+- Это planning/docs pass; runtime, deploy, CRM и внешние интеграции не менялись.
+- Production baseline по-прежнему `web`; deploy switch не выполнялся.
+
+## 2026-04-12: frontend_mvp Locked As Website Template Baseline (Safe Baseline Mode)
+
+### Done
+
+- Проведен control-layer SSOT sync по founder decision:
+  - `frontend_mvp` зафиксирован как текущий template baseline для website build stream;
+  - дальнейшая website product/UI разработка считается канонически привязанной к `frontend_mvp`.
+- Зафиксировано ограничение решения:
+  - production runtime/deploy baseline **не** переключался;
+  - deploy path по-прежнему остается на `web` до отдельного explicit stage.
+- Добавлен bridge-step в execution queue:
+  - `AZR-003-012` frontend_mvp parity/migration planning;
+  - `AZR-003-011` перемещен после `AZR-003-012`, чтобы не создавать baseline drift.
+- Обновлены control-layer артефакты:
+  - `memory_bank/context.md`
+  - `memory_bank/decisions.md` (ADR-020)
+  - `docs/tasklist/azr-003-tasklist.md`
+  - `07_ops/task-board.md`
+  - `docs/backlog.md`
+
+### Notes
+
+- Это SSOT/planning pass; runtime, deploy, CRM и внешние интеграции не менялись.
+- Исторические записи о старом статусе `frontend_mvp` сохранены как historical context.
+
+## 2026-04-08: AZR-003 Control-Layer Status Sync — 001/006/007 Closed, 011 Next
+
+### Done
+
+- Reconciled `AZR-003` control-layer tracking after drift between `tasklist` and higher-level status docs.
+- Closed `AZR-003-001` in tracking artifacts based on the already-injected legal baseline:
+  - real legal/business/contact/hosting values are fixed in docs and code
+  - public legal/privacy routes no longer rely on placeholder identity data
+- Reaffirmed `AZR-003-006` and `AZR-003-007` as closed in control-layer tracking.
+- Moved the active execution queue to:
+  - `AZR-003-011` AI widget live integration + Telegram notification
+  - `AZR-003-008` deferred improvements separation
+- Synced launch-checklist items for the completed `site -> n8n -> Google Sheets` intake baseline.
+
+### Notes
+
+- This entry is a status-sync pass; it does not change runtime, deploy, or website behavior.
+- Historical RooCode handoffs and earlier progress entries remain as implementation history.
+
+## 2026-04-08: Control Tower + Internal Subagents Operating Model Adopted
+
+### Done
+
+- Adopted the new active operating model for the control layer:
+  - current chat = `Tech Lead / Control Tower / Orchestrator`
+  - primary execution path = internal subagents
+  - stage gate remains mandatory between stages
+  - `RooCode` is fallback-only for explicit exceptions
+- Preserved historical RooCode delivery records as history; no retroactive rewriting was performed.
+- Locked the rule that AI outputs remain drafts until explicit human approval.
+
+### Notes
+
+- This update is a control-layer transition record only.
+- No runtime, website, deploy, or integration artifacts were changed in this entry.
+
 ## 2026-03-20: AZR-003-010 Live Activation Completed — site -> n8n -> Google Sheets
 
 ### Done
@@ -1863,3 +2038,52 @@ Residual risks / untested areas:
 
 - Prepare implementation handoff prompt for RooCode: `/about` page (Phase 1.5).
 - Prepare implementation handoff prompt for RooCode: SEO landing pages (Phase 1.5).
+
+## 2026-04-08: frontend_mvp landing pass, automation module added
+
+### Done
+
+- Подтвержден рабочий дизайн-контур: дальнейшие landing-итерации ведутся в `frontend_mvp`, при этом текущий production runtime/deploy path не менялся.
+- В `frontend_mvp` выполнен первый структурный landing pass:
+  - укорочен flow секций;
+  - убраны повторяющиеся смысловые блоки;
+  - сохранен business-first narrative.
+- Добавлен новый модуль `Автоматизация, ИИ и полезные цифровые инструменты`:
+  - новый section в `frontend_mvp/src/components/Automation.jsx`;
+  - подключение в `frontend_mvp/src/App.jsx` после `Business`.
+- Для модуля добавлена отдельная кодовая иллюстрация:
+  - `frontend_mvp/public/automation-illustration.svg`
+- В ценовом блоке добавлена отдельная строка:
+  - `Автоматизация, ИИ и цифровые workflow — обсуждается`
+
+### Validation
+
+- `cd /home/dmitrii/azursystech/frontend_mvp && npm run build` - pass
+- Vite dev server в текущей сессии больше не показывает parse errors для обновленных компонентов
+
+### Notes
+
+- Это content/UI pass в `frontend_mvp`; runtime, deploy, CRM и внешние интеграции не менялись.
+- Решение о полном production parity `frontend_mvp` с `web` остается открытым и требует отдельного stage.
+- В бизнес-секции убран вспомогательный текстовый хвост под иллюстрацией, чтобы правая колонка оставалась компактным image-only блоком.
+- В hero убраны повторяющиеся нижние micro-proof строки, которые дублировали смысл заголовка и описания.
+- В header добавлена навигационная ссылка на секцию `Автоматизация ИИ`.
+- В пунктах секции `Автоматизация` добавлен мягкий hover-эффект с легким увеличением и выдвижением вперед.
+- Заголовок automation-секции сокращен, чтобы занимать меньше строк в desktop-композиции.
+- Выполнен общий copy-pass по русской версии `frontend_mvp`: упрощены формулировки, убраны смешанные англицизмы и приведены к более естественному русскому пользовательские тексты.
+- Выполнен русский copy-pass по `frontend_mvp`: упрощены формулировки, убраны лишние англицизмы и заменены непонятные латинские слова в публичных текстах.
+- Из landing flow убран отдельный блок `Также для дома`; публичное позиционирование стало business-first, при этом fallback для небизнесовых обращений сохранен через `Contact`, `FAQ` и footer.
+- В header добавлена навигационная ссылка на раздел `FAQ`.
+- В форме `Что нужно сделать` услуги перегруппированы в более крупные категории; добавлен видимый business-oriented пункт `Автоматизация и ИИ / рабочая среда для бизнеса` без изменения backend enum-контракта.
+- В business-чекбоксах формы labels укрупнены и упрощены, без изменения `business_needs` payload-ключей.
+- В business-части contact-формы дополнительно сокращены названия полей и select-подсказки, чтобы весь блок звучал ровнее и проще.
+- В `frontend_mvp` публичный телефон и все `tel:` / `WhatsApp` ссылки обновлены на `+33 7 80 72 09 94`.
+- Из левой колонки contact-формы убран дублирующий поясняющий блок про стартовые каналы и небизнесовые обращения; остались только прямые каналы связи и сама форма.
+- В форме дополнительно сокращены служебные и длинные тексты: `Информация для бизнеса` -> `Параметры бизнеса`, `Что нужно для бизнеса (можно выбрать несколько)` -> `Что нужно для бизнеса`, `Автоматизация и ИИ / рабочая среда для бизнеса` -> `Автоматизация и ИИ`; из hero убрана лишняя фраза про основной фокус на бизнесе.
+- Для мобильной версии добавлен компактный header-menu: иконка открывает dropdown со ссылками по секциям и быстрым переходом в WhatsApp. Chat button на мобильных уменьшен и сдвинут в более компактный след, а открытый chat panel теперь лучше укладывается по ширине экрана.
+- В `Pricing` заголовок сокращен до `Понятные стартовые ориентиры`; из TPE-ветки contact-формы удален дублирующий checklist `Что нужно для бизнеса`, а `forms-spec` синхронизирован с обновленным form contract.
+- В hero основной заголовок сокращен до `Техническая помощь для малого бизнеса`; хвост `без лишней бюрократии` удален для более чистого первого экрана.
+- В review-ready polish pass дополнительно уменьшена плотность mobile header, chat trigger перестал спорить с hero CTA в верхнем мобильном экране, из automation-блока убрана слабая подпись под иллюстрацией, а footer снова приведен к более чистому business-first тону.
+- Исправлена читаемость пунктов mobile dropdown в header: вместо `text-white/82` установлен явно читаемый стиль ссылок (`text-white`), чтобы пункты меню не пропадали на реальном экране.
+- Усилен контраст legal/privacy страниц в `frontend_mvp`: карточка переведена на `bg-white`, основной текст параграфов повышен до явного `text-graphite` с более комфортным размером и межстрочным интервалом.
+- Выполнен scoped sync-pass: новый номер `+33 7 80 72 09 94` обновлен в `web` runtime и актуальных SSOT/docs, без переписывания исторических progress-записей.

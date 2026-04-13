@@ -14,27 +14,31 @@ AzurSysTech - локальный IT-сервис для particuliers и TPE в �
   - VPS app dir: `/home/dmitrii/projects/azursystech-site`
   - deploy path: `CI -> SSH -> git pull -> docker compose up -d --build`
   - health endpoint `https://azursystech.fr/health` отвечает `200`
-- Launch AI mode зафиксирован как `limited_live_intake` и enforced через runtime env flags.
-- Website scope closure (`AZR-003-009`) and intake activation (`AZR-003-010`) are completed; live launch sequence now proceeds as:
-  1. close founder-side launch blockers (`AZR-003-001`, `AZR-003-006`)
-  2. prepare `AZR-003-007` go / no-go review
-  3. add AI widget live integration + Telegram contact notification
+- Launch AI mode зафиксирован как `limited_live_intake` and enforced via runtime env flags.
+- Website scope closure (`AZR-003-009`), intake activation (`AZR-003-010`), legal baseline (`AZR-003-001`), GBP/readiness (`AZR-003-006`), and go / no-go review (`AZR-003-007`) are completed.
+- Current live sequence now proceeds as:
+  1. lock `frontend_mvp` as the current website template baseline and run parity/migration planning (`AZR-003-012`)
+  2. add AI widget live integration + Telegram contact notification on the selected baseline (`AZR-003-011`)
+  3. separate deferred improvements from launch-ready baseline (`AZR-003-008`)
   4. move CRM to a later phase
 - Existing site chat widget shell remains in the codebase, but live AI-agent handling is deferred until after go / no-go and stable intake operations.
 - Public MVP language is fixed as Russian for the russophone audience on the Côte d'Azur.
 - Launch intake sink is Google Sheets via `n8n`; CRM is deferred to phase 2.
 - Approved MVP visual direction is `Local Professional`.
-- Для RooCode добавлены локальные skills в `.roo/skills/`.
+- Current operating model is `Tech Lead / Control Tower / Orchestrator` with internal subagents as the primary execution path.
+- `RooCode` is retained only as a fallback external coder stream for cases the control tower explicitly chooses.
+- Project-local skills may be created as needed; no active baseline depends on `.roo/skills/`.
 
 ## Текущий рабочий режим
 
-- Роль текущего агента: `Tech Lead`
-- Основной код пишет `RooCode`
+- Роль текущего агента: `Tech Lead / Control Tower / Orchestrator`
+- Основной execution path: internal subagents with stage roles `Reviewer`, `Coder`, `Verifier`
 - Рабочий цикл:
-  1. Tech Lead формулирует task
-  2. RooCode реализует
-  3. Tech Lead делает review
-  4. Follow-up corrections возвращаются RooCode
+  1. Control Tower формулирует stage task
+  2. Internal subagent выполняет scoped work для своей роли
+  3. Control Tower делает review / acceptance
+  4. Follow-up corrections возвращаются через control tower к нужному subagent
+- Переход к следующему stage требует explicit user confirmation; внутри stage допускается несколько internal handoff
 - К пользователю обращаться только по product/ops decisions, которые нельзя безопасно вывести из SSOT.
 - Параллельные stream'ы разрешены:
   - website build
@@ -48,12 +52,11 @@ AzurSysTech - локальный IT-сервис для particuliers и TPE в �
 2. Предыдущий тикет `AZR-002` (website MVP implementation) — **полностью закрыт** (25/25 задач done)
 3. Текущая фаза: post-intake-activation go-live preparation
 4. AZR-003 blockers:
-   - AZR-003-001: legal identity data (in_progress, founder)
-   - AZR-003-006: GBP/review readiness (todo, founder)
-   - AZR-003-007: go/no-go review (todo, depends on 001+006)
-   - Later sequencing / post-launch queue (not current launch blockers):
-     - AZR-003-011: AI widget + Telegram notification (todo, after 007)
-     - AZR-003-008: deferred separation (todo, depends on 007+011)
+   - no open launch-critical blockers remain in control-layer tracking
+   - Current execution queue:
+     - AZR-003-012: frontend_mvp parity/migration planning (in_progress; next steps: visual build smoke on WSL + backend readiness review for n8n/AI assistant stream)
+     - AZR-003-011: AI widget + Telegram notification (todo)
+     - AZR-003-008: deferred separation (todo, depends on 011)
 
 ## Что уже сделано в implementation
 
@@ -86,13 +89,39 @@ AzurSysTech - локальный IT-сервис для particuliers и TPE в �
   - restrained teal primary accent
   - terracotta secondary accent
   - calm `Local Professional` layout direction
+- Текущие landing-итерации и визуальная полировка ведутся в `frontend_mvp` как в рабочем UI-контуре:
+  - business-first landing flow собран и укорочен
+  - добавлен модуль автоматизации
+  - русский copy упрощен и очищен от лишнего дублирования
+  - mobile header получил компактное меню
+  - TPE contact form упрощена и очищена от дублирующих service-блоков
+- `frontend_mvp` принят как текущий template baseline для website build stream:
+  - дальнейшая продуктовая и UI-разработка сайта ведется в `frontend_mvp`
+  - current production/runtime/deploy path по-прежнему остается на `web` (без deploy-switch в этом решении)
+  - решение о deploy switch остается отдельным stage и зависит от parity/migration planning (`AZR-003-012`)
+- В рамках `AZR-003-012` выполнен и принят baseline-pass `A/A` на стороне `web`:
+  - canonical chat cleanup (`chat-widget-shell` как единственный активный shell)
+  - dual payload intake для `/api/contact/submit` (`FormData` + `JSON`)
+  - `n8n` env layer (`N8N_WEBHOOK_*` primary + legacy fallback) с required headers
+  - визуальные токены из `frontend_mvp` перенесены в Tailwind v4 `@theme` слой `web/src/app/globals.css`
+- В рамках `AZR-003-012` выполнен contact contract parity/sync pass (stages 27-35):
+  - contact UI flow в `web` приведен к текущему `frontend_mvp` business-first контру
+  - server-side validate/normalize очищены от неактуальных UI-полей; legacy fields оставлены как `null` compatibility layer
+  - `wifi -> reseau_local` закреплен как legacy-normalization rule на server-side
+  - `code vs docs` drift закрыт в `forms-spec`, `lead-intake-spec`, `azr-003-010-site-n8n-google-sheets`
+- Новый публичный телефон `+33 7 80 72 09 94` синхронизирован в рабочих frontend/runtime контурах и актуальных SSOT/docs.
+- Обновлен legal/privacy контур в `web`:
+  - `/privacy` синхронизирован с `02_website/privacy.md`, добавлен краткий блок про cookies/consent
+  - `/legal` синхронизирован с `02_website/mentions_légales.md`
+  - добавлена новая русская страница `/terms` (общие условия оказания услуг), ссылка в footer
 
 ## Ближайшие шаги
 
 1. AZR-003 go-live:
-   - ждать founder по AZR-003-001 (legal) и AZR-003-006 (GBP)
-   - после закрытия — go/no-go review (AZR-003-007)
-2. После go / no-go:
+   - launch blockers and formal `GO` decision are closed in control-layer tracking
+2. Next execution:
+   - visual build smoke on WSL for accepted `AZR-003-012` baseline pass
+   - backend readiness review for n8n + AI assistant stream (pre-implementation checklist)
    - live AI widget integration
    - Telegram notification for new contact/intake events
 3. CRM phase 2:
@@ -107,4 +136,4 @@ AzurSysTech - локальный IT-сервис для particuliers и TPE в �
   - no scheduling promises
 - `azursystech-site` placeholder history сохранена в branch `placeholder-backup`.
 
-**Last update:** 2026-03-20
+**Last update:** 2026-04-13
