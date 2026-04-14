@@ -7,6 +7,12 @@ import {
   getSubmitFallbackMessage,
   validateAndBuildContactPayload,
 } from "@/lib/contact-submit";
+import {
+  getIntakeStorageMode,
+  isSqlStorageEnabled,
+  persistLeadSubmission,
+  recordLeadEvent,
+} from "@/lib/intake-storage";
 
 type IntegrationResult =
   | { kind: "success"; requestId: string }
@@ -28,6 +34,10 @@ type UpstreamFailureResponse = {
   status: "temporary_failure" | "rejected";
   message: string;
   request_id: string;
+};
+
+type IntegrationDispatchContext = {
+  idempotencyKey: string;
 };
 
 const CONTRACT_VERSION = "1";
@@ -68,7 +78,10 @@ function isUpstreamFailureResponse(value: unknown): value is UpstreamFailureResp
   return hasKnownStatus && typeof candidate.message === "string" && typeof candidate.request_id === "string";
 }
 
-async function forwardToConfiguredIntegration(payload: ContactSubmitPayload): Promise<IntegrationResult> {
+async function forwardToConfiguredIntegration(
+  payload: ContactSubmitPayload,
+  dispatchContext: IntegrationDispatchContext,
+): Promise<IntegrationResult> {
   const config = getIntegrationConfig();
   if (!config) {
     return { kind: "integration_not_ready" };
@@ -76,7 +89,6 @@ async function forwardToConfiguredIntegration(payload: ContactSubmitPayload): Pr
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-  const idempotencyKey = randomUUID();
 
   try {
     const response = await fetch(buildWebhookUrl(config.baseUrl), {
@@ -85,7 +97,7 @@ async function forwardToConfiguredIntegration(payload: ContactSubmitPayload): Pr
         "Content-Type": "application/json",
         Authorization: `Bearer ${config.token}`,
         "X-Contract-Version": CONTRACT_VERSION,
-        "X-Idempotency-Key": idempotencyKey,
+        "X-Idempotency-Key": dispatchContext.idempotencyKey,
       },
       body: JSON.stringify(payload),
       signal: controller.signal,
@@ -121,6 +133,22 @@ function jsonResult(statusCode: number, result: ContactSubmitApiResult) {
   return NextResponse.json(result, { status: statusCode });
 }
 
+async function safeRecordLeadEvent(
+  leadId: string | null,
+  eventType: string,
+  eventPayload: Record<string, unknown>,
+) {
+  if (!leadId) {
+    return;
+  }
+
+  try {
+    await recordLeadEvent(leadId, eventType, eventPayload);
+  } catch (error) {
+    console.error(`Failed to persist lead event "${eventType}"`, error);
+  }
+}
+
 export async function POST(request: Request) {
   let formData: FormData;
 
@@ -151,8 +179,46 @@ export async function POST(request: Request) {
     });
   }
 
-  const integrationResult = await forwardToConfiguredIntegration(validated.payload);
+  const intakeStorageMode = getIntakeStorageMode();
+  const requestId = randomUUID();
+  const idempotencyKey = randomUUID();
+  const receivedAtUtc = new Date();
+  const sqlStorageEnabled = isSqlStorageEnabled(intakeStorageMode);
+  let leadId: string | null = null;
+
+  if (sqlStorageEnabled) {
+    try {
+      const persistedLead = await persistLeadSubmission({
+        payload: validated.payload,
+        requestId,
+        idempotencyKey,
+        receivedAtUtc,
+      });
+      leadId = persistedLead.leadId;
+    } catch (error) {
+      console.error("Failed to persist intake lead in SQL", error);
+      return jsonResult(502, {
+        status: "submit_failed",
+        userMessage: getSubmitFallbackMessage(),
+      });
+    }
+  }
+
+  const integrationResult = await forwardToConfiguredIntegration(validated.payload, {
+    idempotencyKey,
+  });
   if (integrationResult.kind === "integration_not_ready") {
+    await safeRecordLeadEvent(leadId, "integration.not_ready", {
+      request_id: requestId,
+      storage_mode: intakeStorageMode,
+    });
+    if (intakeStorageMode === "sql_primary") {
+      return jsonResult(200, {
+        status: "success",
+        userMessage: "Заявка отправлена.",
+      });
+    }
+
     return jsonResult(503, {
       status: "integration_not_ready",
       userMessage: getSubmitFallbackMessage(),
@@ -160,11 +226,28 @@ export async function POST(request: Request) {
   }
 
   if (integrationResult.kind === "submit_failed") {
+    await safeRecordLeadEvent(leadId, "integration.submit_failed", {
+      request_id: requestId,
+      storage_mode: intakeStorageMode,
+    });
+    if (intakeStorageMode === "sql_primary") {
+      return jsonResult(200, {
+        status: "success",
+        userMessage: "Заявка отправлена.",
+      });
+    }
+
     return jsonResult(502, {
       status: "submit_failed",
       userMessage: getSubmitFallbackMessage(),
     });
   }
+
+  await safeRecordLeadEvent(leadId, "integration.accepted", {
+    request_id: requestId,
+    upstream_request_id: integrationResult.requestId,
+    storage_mode: intakeStorageMode,
+  });
 
   return jsonResult(200, {
     status: "success",

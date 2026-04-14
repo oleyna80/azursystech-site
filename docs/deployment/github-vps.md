@@ -45,6 +45,8 @@ Update `/home/dmitrii/projects/azursystech-site/.env`:
 - `AI_ALLOW_PRICING_COMMITMENTS=false`
 - `AI_ALLOW_SCHEDULING_PROMISES=false`
 - `ALLOWED_ORIGINS=https://azursystech.fr,https://www.azursystech.fr`
+- `INTAKE_STORAGE_MODE=sql_primary` (или `dual`; `legacy` только для fallback)
+- `DATABASE_URL=postgresql://...`
 
 Important:
 - do not commit real runtime secrets into the repository
@@ -70,6 +72,8 @@ Required on VPS `.env` for live AI intake:
 - `AI_ALLOW_PRICING_COMMITMENTS=false`
 - `AI_ALLOW_SCHEDULING_PROMISES=false`
 - `ALLOWED_ORIGINS`
+- `INTAKE_STORAGE_MODE=legacy|dual|sql_primary`
+- `DATABASE_URL` (required when `INTAKE_STORAGE_MODE` is not `legacy`)
 
 Optional for monitoring:
 - `UPTIME_ALERT_WEBHOOK`
@@ -94,6 +98,8 @@ docker compose -f docker-compose.vps.yml ps
 docker compose -f docker-compose.vps.yml logs -f --tail=100
 docker exec azursystech-app /bin/sh -lc 'wget -qO- http://$(hostname -i | awk '"'"'{print $1}'"'"'):3000/health'
 docker exec azursystech-app /bin/sh -lc 'echo "$DEEPSEEK_BASE_URL"'
+docker exec azursystech-app /bin/sh -lc 'echo "$INTAKE_STORAGE_MODE"'
+docker exec azursystech-app /bin/sh -lc 'if [ -n "$DATABASE_URL" ]; then echo "DATABASE_URL is set"; else echo "DATABASE_URL is missing"; fi'
 curl -sSI https://azursystech.fr/health
 ```
 
@@ -102,6 +108,9 @@ curl -sSI https://azursystech.fr/health
 - `app`: Next.js standalone runtime on `:3000`, health endpoint `GET /health`
 - `web`: Nginx reverse proxy using `nginx.proxy.conf`, forwards traffic to `app:3000`
 - `npm_default` external network is expected for Nginx Proxy Manager integration
+- intake storage runtime flags:
+  - `INTAKE_STORAGE_MODE` (`legacy` / `dual` / `sql_primary`)
+  - `DATABASE_URL` (mandatory for `dual` and `sql_primary`)
 - SSL / edge path at launch:
   - `Cloudflare` terminates public edge traffic
   - `Nginx Proxy Manager` handles reverse proxy on the VPS
