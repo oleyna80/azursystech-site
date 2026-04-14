@@ -69,6 +69,12 @@
 | Local SEO Ops | `.agent/skills/local-seo-ops.md` | "local seo", "gbp" |
 | AI Runtime Ops | `.agent/skills/ai-runtime-ops.md` | "агент runtime", "prompts", "registry" |
 | Memory Bank Manager | `.agent/skills/memory-bank-manager.md` | "update memory bank" |
+| VPS SQL Runtime Proof | `.agent/skills/vps-sql-runtime-proof.md` | "runtime proof", "sql_primary", "gate A/B/C/D/E" |
+| VPS Repo Sync | `.agent/skills/vps-repo-sync.md` | "sync vps -> repo", "runtime artifacts" |
+| Contact Drift Audit | `.agent/skills/contact-drift-audit.md` | "проверь контакты", "AZR-003-013" |
+| Scoped Commit Guard | `.agent/skills/scoped-commit-guard.md` | "scoped commit", "грязное дерево" |
+| SSOT Sync Closeout | `.agent/skills/ssot-sync-closeout.md` | "закрыть stage", "sync memory bank" |
+| Index Exclusions Manager | `.agent/skills/index-exclusions-manager.md` | "исключи из индексации", "ignore для модели" |
 
 ## Core Workflow
 
