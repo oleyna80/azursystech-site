@@ -171,6 +171,11 @@ Status: IN_PROGRESS
   - `intake_leads` and `intake_lead_events` writes confirmed for proof marker/test lead
   - backup and restore scripts executed successfully (restore-check passed)
   - launch intake runtime baseline accepted as `SQL-first confirmed`
+  Delivery notes (2026-04-14 repo sync):
+  - repository deployment/runtime artifacts aligned with SQL-first VPS baseline
+  - `docker-compose.vps.yml` includes internal `postgres` service + persistent volume
+  - PostgreSQL backup/restore scripts added to `scripts/`
+  - deployment runbooks updated for SQL backup/restore and env/runtime checks
 
 - AZR-003-012: Close `frontend_mvp -> web` baseline parity / migration
   Owner: Tech Lead

@@ -45,8 +45,11 @@ Update `/home/dmitrii/projects/azursystech-site/.env`:
 - `AI_ALLOW_PRICING_COMMITMENTS=false`
 - `AI_ALLOW_SCHEDULING_PROMISES=false`
 - `ALLOWED_ORIGINS=https://azursystech.fr,https://www.azursystech.fr`
+- `POSTGRES_DB=azursystech`
+- `POSTGRES_USER=azursystech_app`
+- `POSTGRES_PASSWORD=...`
 - `INTAKE_STORAGE_MODE=sql_primary` (или `dual`; `legacy` только для fallback)
-- `DATABASE_URL=postgresql://...`
+- `DATABASE_URL=postgresql://azursystech_app:...@postgres:5432/azursystech`
 
 Important:
 - do not commit real runtime secrets into the repository
@@ -72,6 +75,9 @@ Required on VPS `.env` for live AI intake:
 - `AI_ALLOW_PRICING_COMMITMENTS=false`
 - `AI_ALLOW_SCHEDULING_PROMISES=false`
 - `ALLOWED_ORIGINS`
+- `POSTGRES_DB`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
 - `INTAKE_STORAGE_MODE=legacy|dual|sql_primary`
 - `DATABASE_URL` (required when `INTAKE_STORAGE_MODE` is not `legacy`)
 
@@ -100,6 +106,7 @@ docker exec azursystech-app /bin/sh -lc 'wget -qO- http://$(hostname -i | awk '"
 docker exec azursystech-app /bin/sh -lc 'echo "$DEEPSEEK_BASE_URL"'
 docker exec azursystech-app /bin/sh -lc 'echo "$INTAKE_STORAGE_MODE"'
 docker exec azursystech-app /bin/sh -lc 'if [ -n "$DATABASE_URL" ]; then echo "DATABASE_URL is set"; else echo "DATABASE_URL is missing"; fi'
+docker compose -f docker-compose.vps.yml exec -T postgres sh -lc 'export PGPASSWORD="$POSTGRES_PASSWORD"; psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\dt intake_*"'
 curl -sSI https://azursystech.fr/health
 ```
 
@@ -107,10 +114,14 @@ curl -sSI https://azursystech.fr/health
 
 - `app`: Next.js standalone runtime on `:3000`, health endpoint `GET /health`
 - `web`: Nginx reverse proxy using `nginx.proxy.conf`, forwards traffic to `app:3000`
+- `postgres`: self-hosted PostgreSQL 16 (`azursystech-postgres`), internal-only Docker network access
 - `npm_default` external network is expected for Nginx Proxy Manager integration
 - intake storage runtime flags:
   - `INTAKE_STORAGE_MODE` (`legacy` / `dual` / `sql_primary`)
   - `DATABASE_URL` (mandatory for `dual` and `sql_primary`)
+- backup/restore operational scripts:
+  - `scripts/postgres-backup.sh`
+  - `scripts/postgres-restore.sh`
 - SSL / edge path at launch:
   - `Cloudflare` terminates public edge traffic
   - `Nginx Proxy Manager` handles reverse proxy on the VPS

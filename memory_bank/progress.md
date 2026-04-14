@@ -1,5 +1,24 @@
 # Progress Log - AzurSysTech
 
+## 2026-04-14: VPS Runtime Artifacts Synced To Repository (PostgreSQL Ops)
+
+### Done
+
+- Synced deployment/runtime repo artifacts with current SQL-first VPS reality:
+  - `docker-compose.vps.yml` now includes internal `postgres` service and persistent `postgres_data` volume.
+  - `.env.vps.example` extended with `POSTGRES_*` vars and SQL-first sample `DATABASE_URL`.
+- Added PostgreSQL operational scripts to repository:
+  - `scripts/postgres-backup.sh`
+  - `scripts/postgres-restore.sh`
+- Updated deployment runbooks:
+  - `docs/deployment/github-vps.md` aligned with PostgreSQL service/env/runtime checks.
+  - `docs/deployment/backup-restore-runbook.md` updated from env-only backup to SQL dump/restore workflow.
+
+### Notes
+
+- This pass syncs repo docs/ops artifacts only; no UI changes, no runtime route logic changes.
+- Offsite backup is still not configured and remains an operational follow-up.
+
 ## 2026-04-14: AZR-003-014 Runtime Proof Completed (SQL-first Confirmed on VPS)
 
 ### Done
