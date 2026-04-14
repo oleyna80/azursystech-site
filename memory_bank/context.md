@@ -17,13 +17,16 @@ AzurSysTech - локальный IT-сервис для particuliers и TPE в �
 - Launch AI mode зафиксирован как `limited_live_intake` and enforced via runtime env flags.
 - Website scope closure (`AZR-003-009`), intake activation (`AZR-003-010`), legal baseline (`AZR-003-001`), GBP/readiness (`AZR-003-006`), and go / no-go review (`AZR-003-007`) are completed.
 - Current live sequence now proceeds as:
-  1. lock `frontend_mvp` as the current website template baseline and run parity/migration planning (`AZR-003-012`)
-  2. add AI widget live integration + Telegram contact notification on the selected baseline (`AZR-003-011`)
-  3. separate deferred improvements from launch-ready baseline (`AZR-003-008`)
-  4. move CRM to a later phase
+  1. keep `web` as the current website/design/runtime baseline after completed `frontend_mvp -> web` transfer (`AZR-003-012`)
+  2. keep backend-first SQL intake on `web` as confirmed runtime baseline (`AZR-003-014` completed)
+  3. add AI widget live integration + Telegram contact notification on `web` (`AZR-003-011`, backend events path)
+  4. separate deferred improvements from launch-ready baseline (`AZR-003-008`)
+  5. move CRM to a later phase
 - Existing site chat widget shell remains in the codebase, but live AI-agent handling is deferred until after go / no-go and stable intake operations.
 - Public MVP language is fixed as Russian for the russophone audience on the Côte d'Azur.
-- Launch intake sink is Google Sheets via `n8n`; CRM is deferred to phase 2.
+- Intake architecture pivot is accepted: `web backend -> PostgreSQL` as primary system of record.
+- `n8n` and Google Sheets are no longer primary intake baseline; they are optional secondary automation/reporting contour.
+- CRM is deferred to phase 2.
 - Approved MVP visual direction is `Local Professional`.
 - Current operating model is `Tech Lead / Control Tower / Orchestrator` with internal subagents as the primary execution path.
 - `RooCode` is retained only as a fallback external coder stream for cases the control tower explicitly chooses.
@@ -42,7 +45,7 @@ AzurSysTech - локальный IT-сервис для particuliers и TPE в �
 - К пользователю обращаться только по product/ops decisions, которые нельзя безопасно вывести из SSOT.
 - Параллельные stream'ы разрешены:
   - website build
-  - VPS / n8n integration
+  - backend / SQL intake integration
   - HubSpot CRM
 - Все финальные решения stream'ов должны возвращаться в control layer этого проекта.
 
@@ -52,10 +55,10 @@ AzurSysTech - локальный IT-сервис для particuliers и TPE в �
 2. Предыдущий тикет `AZR-002` (website MVP implementation) — **полностью закрыт** (25/25 задач done)
 3. Текущая фаза: post-intake-activation go-live preparation
 4. AZR-003 blockers:
-   - no open launch-critical blockers remain in control-layer tracking
+   - known P0 consistency risk before deploy verification: public phone / WhatsApp values drift across `web` and docs
    - Current execution queue:
-     - AZR-003-012: frontend_mvp parity/migration planning (in_progress; next steps: visual build smoke on WSL + backend readiness review for n8n/AI assistant stream)
-     - AZR-003-011: AI widget + Telegram notification (todo)
+     - AZR-003-013: phone/contact consistency sync for current `web` baseline
+     - AZR-003-011: AI widget + Telegram notification on `web` (todo; backend events path)
      - AZR-003-008: deferred separation (todo, depends on 011)
 
 ## Что уже сделано в implementation
@@ -74,7 +77,7 @@ AzurSysTech - локальный IT-сервис для particuliers и TPE в �
   - `particulier` / `tpe` branching
   - hidden honeypot field
   - public-facing copy cleaned from dev/internal wording
-- Site-side submit adapter для `/contact` уже реализован и live downstream path `site -> n8n -> Google Sheets` активирован
+- Site-side submit adapter для `/contact` реализован; исторический downstream path `site -> n8n -> Google Sheets` зафиксирован как previous baseline
 - Website scope closure (`AZR-003-009`) выполнен:
   - `/about` trust/founder page completed
   - 4 service landing pages completed: `/services/new-pc-setup`, `/services/wifi-printer`, `/services/tpe-setup`, `/services/onsite-support`
@@ -89,20 +92,19 @@ AzurSysTech - локальный IT-сервис для particuliers и TPE в �
   - restrained teal primary accent
   - terracotta secondary accent
   - calm `Local Professional` layout direction
-- Текущие landing-итерации и визуальная полировка ведутся в `frontend_mvp` как в рабочем UI-контуре:
-  - business-first landing flow собран и укорочен
-  - добавлен модуль автоматизации
-  - русский copy упрощен и очищен от лишнего дублирования
-  - mobile header получил компактное меню
-  - TPE contact form упрощена и очищена от дублирующих service-блоков
-- `frontend_mvp` принят как текущий template baseline для website build stream:
-  - дальнейшая продуктовая и UI-разработка сайта ведется в `frontend_mvp`
-  - current production/runtime/deploy path по-прежнему остается на `web` (без deploy-switch в этом решении)
-  - решение о deploy switch остается отдельным stage и зависит от parity/migration planning (`AZR-003-012`)
+- Исторический `frontend_mvp` использовался как дизайн/template sandbox:
+  - business-first landing flow
+  - automation module direction
+  - Russian copy simplification
+  - mobile/header and TPE form simplification
+- `frontend_mvp` больше не является активным baseline:
+  - дизайн и релевантные наработки перенесены в `web`
+  - дальнейшая website product/UI/runtime работа ведется в `web`
+  - production/runtime/deploy path остается `web`
 - В рамках `AZR-003-012` выполнен и принят baseline-pass `A/A` на стороне `web`:
   - canonical chat cleanup (`chat-widget-shell` как единственный активный shell)
   - dual payload intake для `/api/contact/submit` (`FormData` + `JSON`)
-  - `n8n` env layer (`N8N_WEBHOOK_*` primary + legacy fallback) с required headers
+  - `n8n` env compatibility layer (`N8N_WEBHOOK_*` + legacy fallback) с required headers
   - визуальные токены из `frontend_mvp` перенесены в Tailwind v4 `@theme` слой `web/src/app/globals.css`
 - В рамках `AZR-003-012` выполнен contact contract parity/sync pass (stages 27-35):
   - contact UI flow в `web` приведен к текущему `frontend_mvp` business-first контру
@@ -114,16 +116,26 @@ AzurSysTech - локальный IT-сервис для particuliers и TPE в �
   - `/privacy` синхронизирован с `02_website/privacy.md`, добавлен краткий блок про cookies/consent
   - `/legal` синхронизирован с `02_website/mentions_légales.md`
   - добавлена новая русская страница `/terms` (общие условия оказания услуг), ссылка в footer
+- В `web` добавлен SQL intake foundation:
+  - schema `web/sql/001_intake_schema.sql`
+  - storage adapter `web/src/lib/intake-storage.ts`
+  - `INTAKE_STORAGE_MODE` (`legacy` / `dual` / `sql_primary`)
+  - `contact-submit` route обновлен под SQL write + integration event logging
+- AZR-003-014 runtime proof выполнен на VPS:
+  - self-hosted PostgreSQL поднят в docker compose с внутренней сетью
+  - SQL schema применена, таблицы intake-контуров подтверждены
+  - controlled submit дал успешный ответ и подтвердил запись в `intake_leads` + `intake_lead_events`
+  - backup/restore runbook и smoke-restore проверены
+  - текущий intake runtime baseline подтвержден как `SQL-first`
 
 ## Ближайшие шаги
 
 1. AZR-003 go-live:
    - launch blockers and formal `GO` decision are closed in control-layer tracking
 2. Next execution:
-   - visual build smoke on WSL for accepted `AZR-003-012` baseline pass
-   - backend readiness review for n8n + AI assistant stream (pre-implementation checklist)
-   - live AI widget integration
-   - Telegram notification for new contact/intake events
+   - close remaining phone/contact consistency drift in docs/UI where still present (`AZR-003-013`)
+   - backend notification/export path (Telegram/email/Sheets export policy)
+   - live AI widget integration on `web` against backend-first intake
 3. CRM phase 2:
    - evaluate HubSpot or another CRM only after launch intake is stable
 
@@ -136,4 +148,4 @@ AzurSysTech - локальный IT-сервис для particuliers и TPE в �
   - no scheduling promises
 - `azursystech-site` placeholder history сохранена в branch `placeholder-backup`.
 
-**Last update:** 2026-04-13
+**Last update:** 2026-04-14

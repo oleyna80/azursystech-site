@@ -1,5 +1,139 @@
 # Progress Log - AzurSysTech
 
+## 2026-04-14: AZR-003-014 Runtime Proof Completed (SQL-first Confirmed on VPS)
+
+### Done
+
+- Runtime verification on VPS confirmed `SQL-first` intake baseline:
+  - `INTAKE_STORAGE_MODE=sql_primary` active in app runtime
+  - self-hosted PostgreSQL service is healthy in compose stack
+  - PostgreSQL is not exposed publicly (`5432` internal-only)
+- SQL schema apply verified and intake tables confirmed:
+  - `intake_leads`
+  - `intake_lead_events`
+  - `intake_conversations`
+  - `intake_conversation_messages`
+- Controlled submit test to `/api/contact/submit` passed with successful user response.
+- Persistence proof confirmed:
+  - lead row present in `intake_leads`
+  - integration events present in `intake_lead_events`
+- Backup/restore baseline validated:
+  - `postgres-backup.sh` produced timestamped dump
+  - `postgres-restore.sh` restore-check into temporary DB passed
+
+### Verdict
+
+- `AZR-003-014`: `PASS`
+- Runtime intake baseline: `SQL-first confirmed`
+
+### Notes
+
+- Offsite backup target is still pending (current backup location is same VPS).
+- One test lead used for runtime proof may remain in production DB as audit evidence.
+
+## 2026-04-14: AZR-003-014 Runtime Wiring Prep (VPS Env Contract)
+
+### Done
+
+- Updated VPS runtime compose contract for SQL intake flags:
+  - `docker-compose.vps.yml` now forwards `INTAKE_STORAGE_MODE` and `DATABASE_URL` to `app`.
+- Updated deploy runbook:
+  - `docs/deployment/github-vps.md` now includes SQL intake env requirements and runtime verification commands.
+- Added missing project template file:
+  - `.env.vps.example` (safe placeholders only, no secrets).
+- Synced `AZR-003-014` delivery notes in tasklist with this runtime-wiring prep step.
+
+### Notes
+
+- This pass is config/docs only; backend route logic was not changed.
+- SQL-first confirmation still requires runtime execution evidence on target VPS:
+  - schema apply
+  - env configured
+  - controlled submit proving write into SQL tables.
+
+## 2026-04-13: Intake Architecture Pivot Locked in SSOT (Backend-First SQL)
+
+### Done
+
+- SSOT sync completed for intake architecture pivot:
+  - primary path fixed as `web backend -> validation/normalization -> PostgreSQL`
+  - `n8n` and Google Sheets moved to optional secondary automation/export role
+- Added ADR-020 in `memory_bank/decisions.md` to formalize the new baseline.
+- Updated `docs/tasklist/azr-003-tasklist.md`:
+  - added `AZR-003-014` (backend-first SQL hardening) as current execution item
+  - moved `AZR-003-011` behind `AZR-003-014`
+  - marked `AZR-003-010` as historical launch activation reference
+- Marked `docs/specs/azr-003-010-site-n8n-google-sheets.md` as historical reference to avoid baseline ambiguity.
+
+### Notes
+
+- This is a docs/control-layer alignment pass; runtime code and deployment settings were not changed.
+
+## 2026-04-13: SQL Intake Foundation + Dual-Write Mode (web backend)
+
+### Done
+
+- В `web` добавлен SQL foundation для intake:
+  - `web/sql/001_intake_schema.sql` с таблицами:
+    - `intake_leads`
+    - `intake_lead_events`
+    - `intake_conversations`
+    - `intake_conversation_messages`
+- Добавлен серверный DB adapter:
+  - `web/src/lib/intake-storage.ts`
+  - поддержка `INTAKE_STORAGE_MODE` (`legacy`, `dual`, `sql_primary`)
+  - сохранение нормализованного lead payload в SQL
+  - запись событий в `intake_lead_events`
+- Обновлен `web/src/app/api/contact/submit/route.ts`:
+  - при SQL mode сохраняет lead в БД до dispatch в n8n
+  - продолжает отправку в n8n с контрактными заголовками
+  - использует один `idempotency_key` для текущего submit цикла
+  - в `sql_primary` возвращает success при SQL write даже если downstream n8n недоступен
+  - логирует integration events в SQL (`integration.accepted`, `integration.not_ready`, `integration.submit_failed`)
+- Контракт источников intake расширен в runtime:
+  - `whatsapp_chat` добавлен как валидный `source`
+- Обновлен fallback контактный номер в `web/src/lib/contact-submit.ts`:
+  - `+33 7 80 72 09 94`
+
+### Validation
+
+- `cd /home/dmitrii/azursystech/web && npm run check:types` - pass
+- `cd /home/dmitrii/azursystech/web && npm run build` - pass
+
+### Notes
+
+- UI/маршруты фронтенда не менялись.
+- Текущий путь `web -> n8n` сохранен; SQL добавлен как foundation/primary-ready backend слой.
+
+## 2026-04-13: Public Phone Docs Sync — New Number Marked Current, Old Number Deprecated
+
+### Done
+
+- Current public phone / WhatsApp number documented as `+33 7 80 72 09 94` in current public-facing docs and operational specs.
+- Old number `+33 7 49 70 54 65` retained only as `legacy/deprecated` reference where needed, not deleted silently.
+
+### Notes
+
+- This is a docs-only pass; runtime/UI code was not changed.
+- Follow-up remains: sync any stale `web` runtime/UI constants that still expose the legacy number.
+
+## 2026-04-13: AZR-003-012 Baseline Closure — `web` Is Current Website Baseline
+
+### Done
+
+- Control-layer SSOT sync completed after founder clarification:
+  - `frontend_mvp` is no longer the active website baseline.
+  - design and relevant implementation work from `frontend_mvp` have been transferred into `web`.
+  - current website/design/runtime/deploy baseline is `web`.
+- `frontend_mvp` remains historical/reference only and must not be used as the target for new launch-critical implementation.
+- `AZR-003-012` is treated as completed for baseline selection/parity purposes.
+
+### Notes
+
+- This is a docs/control-layer sync; runtime, deploy and external integrations were not changed.
+- Next implementation target is `AZR-003-011` on `web`.
+- Follow-up required before deploy verification: public phone / WhatsApp values drift across current `web` baseline and docs.
+
 ## 2026-04-13: AZR-003-012 Contact Contract + SSOT Parity Sync (Stages 27-35)
 
 ### Done
