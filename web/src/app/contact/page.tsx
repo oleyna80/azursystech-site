@@ -8,10 +8,10 @@ import { getSubmitFallbackMessage, type ContactSubmitApiResult } from "@/lib/con
 type Segment = "particulier" | "tpe";
 
 const CONTACT = {
-  phoneDisplay: "+33 7 49 70 54 65",
-  phoneHref: "tel:+33749705465",
-  whatsappDisplay: "+33 7 49 70 54 65",
-  whatsappHref: "https://wa.me/33749705465",
+  phoneDisplay: "+33 7 80 72 09 94",
+  phoneHref: "tel:+33780720994",
+  whatsappDisplay: "+33 7 80 72 09 94",
+  whatsappHref: "https://wa.me/33780720994",
   email: "contact@azursystech.fr",
 };
 

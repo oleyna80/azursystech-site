@@ -1,9 +1,9 @@
 export const LEGAL_CONTACT = {
   email: "contact@azursystech.fr",
-  phoneDisplay: "+33 7 49 70 54 65",
-  phoneHref: "tel:+33749705465",
-  whatsappDisplay: "+33 7 49 70 54 65",
-  whatsappHref: "https://wa.me/33749705465",
+  phoneDisplay: "+33 7 80 72 09 94",
+  phoneHref: "tel:+33780720994",
+  whatsappDisplay: "+33 7 80 72 09 94",
+  whatsappHref: "https://wa.me/33780720994",
 } as const;
 
 export const LEGAL_BUSINESS = {
@@ -26,4 +26,3 @@ export const PRIVACY_TOOLS = [
   "CRM-инструмент (подключается на следующем этапе после launch)",
   "Инструменты аналитики сайта (если фактически включены)",
 ] as const;
-

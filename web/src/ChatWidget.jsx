@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const CONTACT_PHONE = '+33 7 49 70 54 65';
-const CONTACT_PHONE_HREF = 'tel:+33749705465';
-const WHATSAPP_HREF = 'https://wa.me/33749705465';
+const CONTACT_PHONE = '+33 7 80 72 09 94';
+const CONTACT_PHONE_HREF = 'tel:+33780720994';
+const WHATSAPP_HREF = 'https://wa.me/33780720994';
 
 export default function ChatWidget({ locale, t }) {
   const initialAssistantMessage = { role: 'assistant', content: t('chat.welcome') };
