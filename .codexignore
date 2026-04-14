@@ -1,0 +1,4 @@
+# Model indexing exclusions
+*.log
+data/*.csv
+.git/
