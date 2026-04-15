@@ -148,7 +148,7 @@ For launch, minimum required public legal pages:
 - SIREN / SIRET: `SIREN 940 870 140 / SIRET 940 870 140 00016`
 - Adresse professionnelle: `9 AV EMMANUEL BRIDAULT, 06000 NICE`
 - Email: `contact@azursystech.fr`
-- Téléphone: `+33 7 49 70 54 65`
+- Téléphone: `+33 7 80 72 09 94`
 
 ### Note for Tech Lead
 Business identity and contact values above are now fixed for launch baseline.
@@ -364,7 +364,7 @@ Detailed rights wording may be expanded later.
 
 ### Fields
 - Email: `contact@azursystech.fr`
-- Additional contact if needed: `WhatsApp: +33 7 49 70 54 65`
+- Additional contact if needed: `WhatsApp: +33 7 80 72 09 94`
 
 ---
 

@@ -1,5 +1,60 @@
 # Progress Log - AzurSysTech
 
+## 2026-04-15: AZR-003-013 Phone / WhatsApp Consistency Sync Closed
+
+### Done
+
+- Closed current phone/contact drift for the active `web` baseline.
+- Confirmed canonical current public phone / WhatsApp value:
+  - `+33 7 80 72 09 94`
+  - `https://wa.me/33780720994`
+- Synced current runtime fallback copy:
+  - `web/src/lib/contact-submit.ts`
+- Synced current public docs / SSOT surfaces:
+  - `01_brand/faq.md`
+  - `01_brand/homepage-copy.md`
+  - `02_website/forms-spec.md`
+  - `02_website/legal-pages.md`
+  - `02_website/site-architecture.md`
+  - `02_website/wireframes.md`
+  - `03_leads/lead-intake-spec.md`
+  - `06_seo/gbp-setup-checklist.md`
+  - `docs/specs/azr-003-go-live-readiness.md`
+
+### Validation
+
+- Repo-wide old-number scan confirmed no remaining `+33 7 49 70 54 65` / `33749705465` references in current public/runtime surfaces.
+- Remaining old-number references are historical only (`memory_bank/progress.md`, ADR-008).
+
+### Notes
+
+- No lead data, deploy settings, external infrastructure, or runtime secrets were changed.
+- `AZR-003-013`: `done`.
+- Next launch-critical item: `AZR-003-011` (AI widget live integration + Telegram notification on `web`).
+
+## 2026-04-15: Post-Deploy Production Smoke Completed
+
+### Done
+
+- Merged PR #3 to `main` and verified successful deploy to VPS at commit `2fa9874`.
+- Confirmed VPS runtime checkout is on `main` and matches `origin/main`.
+- Confirmed compose services are healthy:
+  - `app`
+  - `postgres`
+  - `web`
+- Confirmed public health endpoint returns `HTTP/2 200`.
+- Confirmed public `/api/chat` route is reachable without invoking DeepSeek:
+  - invalid `{}` payload returned expected `400`.
+- Confirmed public `/api/contact/submit` e2e:
+  - valid post-deploy smoke request returned `200 success`;
+  - SQL evidence contains `lead.submitted` and `integration.accepted`.
+- Confirmed `api_rate_limits` records post-deploy `chat` and `contact_submit` windows.
+
+### Notes
+
+- One post-deploy smoke marker remains in production DB as audit evidence: `postdeploy-smoke-20260415T190457Z-702458@example.com`.
+- No lead data was deleted or modified.
+
 ## 2026-04-15: CI Lint + Next Security Unblock
 
 ### Done

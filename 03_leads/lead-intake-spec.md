@@ -462,8 +462,8 @@ Suggested next step:
 
 ### Contact block requirement
 Homepage must support:
-- phone `+33 7 49 70 54 65`
-- WhatsApp `+33 7 49 70 54 65`
+- phone `+33 7 80 72 09 94`
+- WhatsApp `+33 7 80 72 09 94`
 - form
 - AI chat widget
 
