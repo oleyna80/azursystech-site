@@ -243,6 +243,10 @@ Status: IN_PROGRESS
   - `app` rebuilt/recreated from Stage 5 and required env passthrough restored in VPS compose for `AZURSYSTECH_CONTACT_SUBMIT_ALLOWED_HOSTS` and `DATABASE_SSL_MODE`.
   - Persistent limiter proof passed: `/api/chat` returned `400` for requests 1-5, `429` for request 6, and remained `429` for request 7 after `app` restart.
   - Contact e2e passed with SQL evidence for `lead.submitted` and `integration.accepted`.
+  Delivery notes (2026-04-15 CI/security unblock):
+  - cleared current CI lint blockers in `web/src/components/chat-widget.tsx` and `web/src/components/shell/site-header.tsx`.
+  - updated `next` and `eslint-config-next` to `16.2.3`.
+  - `npm run check:ci` and `npm audit --omit=dev --audit-level=high` pass locally on the branch.
 
 - AZR-003-013: Sync public phone / WhatsApp across current `web` baseline and docs
   Owner: Tech Lead

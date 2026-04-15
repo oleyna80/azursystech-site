@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV_LINKS = [
@@ -53,7 +54,7 @@ export function SiteHeader() {
   return (
     <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-graphite/80 backdrop-blur-xl">
       <div className="container relative mx-auto flex items-center justify-between gap-2 px-4 py-4 md:px-8 md:gap-3">
-        <a href="/" className="group flex items-center gap-2.5 md:gap-3">
+        <Link href="/" className="group flex items-center gap-2.5 md:gap-3">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-teal text-white transition-transform group-hover:scale-105">
             <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
               <path
@@ -65,7 +66,7 @@ export function SiteHeader() {
           <span className="text-lg font-extrabold tracking-tight text-white transition-colors group-hover:text-white/80 sm:text-xl md:text-2xl">
             AzurSysTech
           </span>
-        </a>
+        </Link>
 
         <nav aria-label="Основная навигация" className="hidden items-center gap-7 text-sm font-bold text-white/90 [text-shadow:0_1px_1px_rgba(0,0,0,0.25)] lg:flex">
           {navLinks.map((link) => (

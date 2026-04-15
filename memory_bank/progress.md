@@ -1,5 +1,27 @@
 # Progress Log - AzurSysTech
 
+## 2026-04-15: CI Lint + Next Security Unblock
+
+### Done
+
+- Cleared current CI lint blockers on Stage 5 branch:
+  - replaced synchronous `setState` in `ChatWidgetContainer` effect with `useSyncExternalStore`;
+  - replaced homepage `<a href="/">` in `SiteHeader` with Next `<Link>`.
+- Updated `web` framework packages:
+  - `next` to `16.2.3`;
+  - `eslint-config-next` to `16.2.3`.
+- Verified local CI-equivalent and production security audit.
+
+### Validation
+
+- `cd web && npm audit --omit=dev --audit-level=high` - pass (`0 vulnerabilities`)
+- `cd web && npm run check:ci` - pass
+
+### Notes
+
+- Remaining lint output is warnings-only for existing unused variables and `<img>` usage.
+- No runtime/deploy settings or lead data were changed in this pass.
+
 ## 2026-04-15: Stage 5 VPS Runtime Proof (persistent limiter + contact e2e)
 
 ### Done
