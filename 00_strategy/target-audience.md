@@ -1,7 +1,7 @@
 # target-audience.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: research baseline
 _brand: AzurSysTech
 _primary_language: ru
 

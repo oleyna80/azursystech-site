@@ -21,6 +21,10 @@ env/
 logs/
 05_ai/runs/*.json
 05_ai/runs/*.approval.md
+data/*.csv
+
+# Model/indexing noise
+.git/
 
 # Build
 build/

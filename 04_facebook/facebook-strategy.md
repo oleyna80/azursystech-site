@@ -1,7 +1,7 @@
 # facebook-strategy.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: working ops baseline
 _brand: AzurSysTech
 _language: ru
 
@@ -402,15 +402,6 @@ Facebook strategy is working if:
 
 ---
 
-## 20. Next file to create
+## Current status
 
-After this file, next artifact should be:
-
-`lead-intake-spec.md`
-
-It must define:
-- form fields
-- qualification logic
-- lead routing
-- AI chat questions
-- CRM integration flow
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

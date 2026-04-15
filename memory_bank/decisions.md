@@ -202,3 +202,252 @@ Runtime `scripts/ai_agents.py` был привязан к `OPENAI_API_KEY` и Op
 - Deploy контур становится проще и совместим с текущей operational reality.
 - Rollback выполняется через git history, а не через immutable image tags.
 - Позже можно вернуться к registry-based deploy, если понадобится более быстрый rollback и artifact traceability.
+
+---
+
+## ADR-010: Launch AI Runtime Policy Enforced via Env Flags
+
+**Date:** 2026-03-13
+**Status:** Accepted
+
+### Context
+Safe launch mode для AI уже был описан в `AZR-003` и docs, но не был зафиксирован как runtime configuration contract. Это оставляло риск, что live runtime будет запущен без явных ограничений по outbound, pricing, или scheduling behavior.
+
+### Decision
+- Runtime получает канонические launch policy env flags:
+  - `AI_LAUNCH_MODE`
+  - `AI_ALLOW_AUTONOMOUS_OUTBOUND`
+  - `AI_ALLOW_PRICING_COMMITMENTS`
+  - `AI_ALLOW_SCHEDULING_PROMISES`
+- Launch default:
+  - `AI_LAUNCH_MODE=limited_live_intake`
+  - все три `AI_ALLOW_*` flags = `false`
+- `scripts/ai_agents.py` валидирует эти флаги при запуске.
+- Runtime policy добавляется в prompt context и сохраняется в run artifacts.
+
+### Consequences
+- Safe launch mode больше не живет только в документации.
+- Misconfiguration всплывает на runtime startup, а не после нежелательного поведения агента.
+- Lead agent получает явные prompt-level guardrails для intake-only launch behavior.
+
+---
+
+## ADR-011: Delivery Workflow = Tech Lead Tasking + RooCode Implementation + Tech Lead Review
+
+**Date:** 2026-03-14
+**Status:** Accepted
+
+### Context
+После стабилизации docs, deploy baseline и runtime contracts проект перешел в implementation phase. Для скорости и снижения context drift нужен стабильный execution loop между текущим агентом и RooCode.
+
+### Decision
+- Текущий агент работает как `Tech Lead`, а не как primary coder.
+- Основной код пишет `RooCode`.
+- Стандартный цикл работы:
+  1. Tech Lead формулирует task со scope, SSOT, AC и constraints
+  2. RooCode реализует и возвращает structured report
+  3. Tech Lead делает review
+  4. Follow-up corrections при необходимости снова уходят RooCode
+- К пользователю эскалируются только product/ops decisions, которые нельзя безопасно вывести из документов.
+
+### Consequences
+- Снижается риск, что implementation уйдет от SSOT между сессиями.
+- Review становится отдельным обязательным шагом, а не опциональной проверкой.
+- Context continuity теперь должна фиксировать не только code/runtime state, но и delivery mode.
+
+---
+
+## ADR-012: Multi-Agent Project Execution Uses Parallel Streams With Control Tower SSOT
+
+**Date:** 2026-03-14
+**Status:** Accepted
+
+### Context
+Проект одновременно ведет website implementation, VPS/n8n integration и HubSpot CRM setup. Без отдельного control layer промежуточные решения начинают конфликтовать и теряется continuity между чатами.
+
+### Decision
+- Execution разбивается на параллельные stream'ы.
+- Этот чат работает как control tower и держит SSOT по решениям.
+- Все stream'ы возвращают итог только в 5-пунктовом формате:
+  1. What was done
+  2. Decisions made
+  3. Files / settings changed
+  4. Open blockers
+  5. Next recommended action
+
+### Consequences
+- Снижается context noise в control layer.
+- Повышается управляемость параллельной работы.
+- Все принятые решения нужно явно возвращать в SSOT, иначе stream считается незавершенным.
+
+---
+
+## ADR-013: Public MVP Launches in Russian for the Russophone Audience on the Côte d'Azur
+
+**Date:** 2026-03-14
+**Status:** Accepted
+
+### Context
+Нужно было снять tension между local French market, local SEO и фактическим launch scope сайта. Без явного решения implementation мог метаться между RU-first и FR-first публичным интерфейсом.
+
+### Decision
+- Public MVP website launches in Russian.
+- Primary launch audience: russophone residents and small businesses on the Côte d'Azur.
+- French and English versions move to phase 2 after MVP validation.
+- German remains optional later expansion.
+
+### Consequences
+- Copy, routes and UI can be implemented without waiting for FR/EN localization.
+- SEO/public expansion to French moves into later iteration planning.
+- Docs may remain multilingual internally, but public MVP output should stay Russian-first.
+
+---
+
+## ADR-014: Launch CRM SSOT = HubSpot Only
+
+**Date:** 2026-03-14
+**Status:** Superseded by ADR-018 for launch baseline
+
+### Context
+Initial docs still allowed a dual model with CRM plus Google Sheets fallback. For launch operations this created ambiguity in the intake path, reporting model and future n8n integration.
+
+### Decision
+- HubSpot is the only launch CRM SSOT.
+- Google Sheets is no longer the standard launch operating path.
+- Website, lead intake, AI handoff and ops docs should refer to CRM as the primary destination.
+
+### Consequences
+- Intake and reporting assumptions become simpler.
+- Future `site -> n8n -> HubSpot` integration can be specified against one target.
+- Any future spreadsheet use should be treated as contingency or export, not baseline CRM.
+
+---
+
+## ADR-015: MVP Visual Direction = Local Professional
+
+**Date:** 2026-03-14
+**Status:** Accepted
+
+### Context
+Frontend implementation moved from page contracts into actual UI work. Without an approved visual direction, parallel page implementation risked drifting into generic, inconsistent, or overly technical layouts.
+
+### Decision
+- Approved MVP visual direction: `Local Professional`.
+- Design intent:
+  - local
+  - trustworthy
+  - practical
+  - calm
+  - human
+  - structured
+- MVP palette baseline:
+  - background: `#F6F1E8`
+  - surface: `#FFFDFC`
+  - text: `#1F2A37`
+  - primary accent: `#1F6F78`
+  - secondary accent: `#C96F4A`
+  - border: `#D8D0C4`
+- Layout/visual constraints:
+  - no generic startup purple
+  - no cold corporate look
+  - no noisy gradients
+  - no stock-photo clutter
+  - no dark-mode-first bias
+
+### Consequences
+- Agent + RooCode stream now has a stable visual contract for MVP routes.
+- Existing and upcoming pages should be reviewed not only for content drift, but also for visual-system drift.
+- Later visual iteration remains allowed after MVP, but changes should start from this baseline rather than from an unbounded style search.
+
+---
+
+## ADR-016: Site -> n8n Transport Contract v1 = JSON POST With Bearer Auth and Idempotency Header
+
+**Date:** 2026-03-15
+**Status:** Accepted
+
+### Context
+`/contact` already had a safe server-side submit boundary, but the outbound `site -> n8n` hop stayed blocked because endpoint, auth, timeout, retry, idempotency, and response semantics had never been fixed with exact values.
+
+### Decision
+- Approved `v1` transport path:
+  - `/webhook/azursystech/contact-submit`
+- Approved request contract:
+  - method: `POST`
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <token>`
+  - `X-Contract-Version: 1`
+  - `X-Idempotency-Key: <uuid-v4>`
+- Approved runtime behavior:
+  - website timeout: `10s`
+  - website retries: `0`
+  - idempotency dedupe window: `24h`
+- Approved response contract:
+  - `200 {"status":"accepted","request_id":"..."}`
+  - `503 {"status":"temporary_failure","message":"...","request_id":"..."}`
+  - `400|401|403|422 {"status":"rejected","message":"...","request_id":"..."}`
+- Approved operational constraints:
+  - exposure mode: `proxy-protected`
+  - no secrets in repo/docs/logs/error payloads
+  - raw request bodies and auth headers must not be logged
+
+### Consequences
+- Site adapter implementation can proceed against a fixed transport contract without guessing.
+- Current route may still return `integration_not_ready` until runtime adapter/config is implemented.
+- HubSpot object/property mapping remains a separate follow-up and no longer blocks transport-baseline approval.
+
+---
+
+## ADR-017: HubSpot MVP Object Model = Contact (Standard Fields) + Deal (Custom Properties) + Note (Overflow)
+
+**Date:** 2026-03-15
+**Status:** Accepted as future CRM reference; superseded by ADR-018 for launch baseline
+
+### Context
+Transport contract (ADR-016) was approved but the outbound hop could not proceed without a locked HubSpot object model and property mapping. The CRM stream proposed an initial mapping that required corrections to align with site payload enums and canonical source taxonomy.
+
+### Decision
+- **Contact** uses only standard HubSpot fields: `firstname`, `phone`, `email`, `city`, `company`. No custom contact properties at MVP.
+- **Deal** uses standard `dealstage` + 7 custom properties:
+  - `lead_segment` (dropdown): `particulier`, `tpe`
+  - `service_type` (dropdown): 9 values from `contact-submit.ts`
+  - `urgency` (dropdown): `urgent`, `standard`, `planning`
+  - `lead_source` (dropdown): 10 values from `lead-taxonomy.md`
+  - `problem_summary` (text): mapped from site `problem_description`
+  - `device_count` (dropdown): `1`, `2-3`, `4-10`, `10+`
+  - `onsite_required` (dropdown): `yes`, `no`, `not_sure`
+- **Note** on Deal at creation: structured text with all segment-specific overflow fields (TPE: `business_type`, `workstation_count`, `business_needs`, `business_address`; Particulier: `home_device_type`, `device_state`, `home_need_type`; Common: raw `problem_description`).
+- `name` maps to `firstname`; `lastname` left empty, not parsed.
+- 5 corrections applied to CRM stream proposal values/types (service_type, urgency, lead_source values; device_count and onsite_required field types).
+
+### Consequences
+- n8n workflow can now map site payload to HubSpot objects without guessing property names or types.
+- Dropdown enums are 1:1 with site payload, eliminating runtime re-mapping.
+- Segment-specific data preserved in Notes avoids custom-field sprawl on free HubSpot tier.
+
+---
+
+## ADR-018: Launch Execution Order = Website Closure -> n8n + Google Sheets -> AI Widget + Telegram -> CRM Later
+
+**Date:** 2026-03-19
+**Status:** Accepted
+
+### Context
+К марту 2026 сайт уже вышел на стабильный MVP baseline, но launch path оставался перегружен одновременными ожиданиями по `n8n`, AI widget, Telegram notifications и HubSpot CRM. Это делало go-live unnecessarily complex и затягивало closure по самому сайту.
+
+### Decision
+- Приоритетный launch sequence фиксируется так:
+  1. полностью закрыть website scope;
+  2. включить `site -> n8n -> Google Sheets`;
+  3. после стабилизации intake path включить live AI widget integration + Telegram notification;
+  4. CRM перенести на phase 2.
+- Google Sheets разрешен как launch intake log и operational board.
+- HubSpot больше не считается launch blocker.
+- ADR-014 и ADR-017 остаются как historical CRM references, но больше не задают launch baseline.
+- ADR-016 сохраняет силу без изменений: transport contract `site -> n8n` остается активным baseline.
+
+### Consequences
+- Launch scope упрощается и снова фокусируется на реально нужных зависимостях.
+- Сайт можно закрыть до интеграционного слоя без ожидания CRM setup.
+- `n8n` workflow может запускаться против Google Sheets без HubSpot private app token и property provisioning.
+- AI widget и Telegram notifications становятся controlled step after the primary form intake path proves stable.

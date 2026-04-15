@@ -1,7 +1,7 @@
 # dm-reply-playbook.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: working ops baseline
 _brand: AzurSysTech
 _primary_language: ru
 
@@ -543,17 +543,6 @@ DM reply playbook is valid if:
 
 ---
 
-## 24. Next file to create
+## Current status
 
-After approval of this file, next artifact should be:
-
-`groups-outreach-list.md`
-
-It must define:
-
-* типы Facebook-групп
-* приоритет групп
-* критерии отбора
-* формат присутствия
-* правила публикации
-* tracking logic for outreach
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

@@ -1,7 +1,7 @@
 # analytics-spec.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: approved implementation contract
 _brand: AzurSysTech
 _primary_language: ru
 
@@ -67,7 +67,7 @@ _primary_language: ru
 - **Google Analytics 4**
 - optional lightweight event layer via GTM later
 - CRM-side lead data from **HubSpot**
-- fallback manual review in Google Sheets if needed
+- fallback manual review in CRM exports if needed
 
 ### Recommendation
 Start with:
@@ -595,17 +595,6 @@ Analytics implementation is valid if:
 
 ---
 
-## 24. Next file to create
+## Current status
 
-After this file, next artifact should be:
-
-`legal-pages.md`
-
-It must define:
-
-* mentions légales structure
-* privacy page structure
-* form data notice
-* chat data notice
-* business identity placeholders
-* contact/legal footer requirements
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

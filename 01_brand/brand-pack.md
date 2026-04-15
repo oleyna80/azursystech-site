@@ -183,17 +183,33 @@ A local IT service page focused on:
 - modern but simple
 
 ### Suggested palette
-- azure / blue tones
-- dark slate / gray
-- white background
-- one accent color only
+- warm light background
+- dark slate / ink text
+- restrained teal accent
+- terracotta secondary accent
+- calm, non-corporate contrast
+
+### Approved MVP direction
+- visual direction: `Local Professional`
+- base background: `#F6F1E8`
+- surface: `#FFFDFC`
+- primary text: `#1F2A37`
+- primary accent: `#1F6F78`
+- secondary accent: `#C96F4A`
+- border / muted line: `#D8D0C4`
+
+### Typography direction
+- headings: expressive but restrained serif
+- body: neutral readable sans-serif
+- tone: trustworthy, calm, local, practical
 
 ### Image direction
-- clean tech visuals
-- service-oriented illustrations
+- minimal service-oriented illustrations
 - workstation / Wi-Fi / printer / laptop icons
-- local and practical vibe
+- local and practical vibe through color and layout, not stock-photo clutter
 - no cyberpunk / hacker aesthetics
+- no noisy generic startup gradients
+- no cold corporate look
 
 ---
 
@@ -241,17 +257,6 @@ Brand decision is valid if:
 
 ---
 
-## 14. Next file to create
+## Current status
 
-After this file, next artifact should be:
-
-`homepage-copy.md`
-
-It must define:
-- homepage structure
-- hero
-- service blocks
-- trust blocks
-- CTA blocks
-- FAQ preview
-- contact conversion copy
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

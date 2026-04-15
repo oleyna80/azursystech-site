@@ -1,7 +1,7 @@
 # gbp-setup-checklist.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: working ops baseline
 _brand: AzurSysTech
 _primary_language: ru
 _note: profile details must match real business data before publication
@@ -455,15 +455,6 @@ GBP setup plan is valid if:
 
 ---
 
-## 24. Next file to create
+## Current status
 
-After approval of this file, next artifact should be:
-
-`reviews-system.md`
-
-It must define:
-- how to request reviews
-- when to ask
-- review follow-up workflow
-- review request templates
-- negative review handling basics
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

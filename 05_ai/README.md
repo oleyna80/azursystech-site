@@ -42,6 +42,10 @@ export DEEPSEEK_API_KEY=your_key
 
 - `DEEPSEEK_API_KEY` (required for live runs)
 - `DEEPSEEK_BASE_URL` (optional, default: `https://api.deepseek.com`)
+- `AI_LAUNCH_MODE` (default: `limited_live_intake`)
+- `AI_ALLOW_AUTONOMOUS_OUTBOUND` (default: `false`)
+- `AI_ALLOW_PRICING_COMMITMENTS` (default: `false`)
+- `AI_ALLOW_SCHEDULING_PROMISES` (default: `false`)
 
 ## Runtime behavior
 
@@ -49,5 +53,6 @@ export DEEPSEEK_API_KEY=your_key
 - Renders prompt templates with JSON payload values
 - Validates structured output for schema-bound agents
 - Prefers model-declared escalation fields over keyword fallback
+- Enforces launch-safe runtime policy from env flags before live execution
 - Creates run artifact in `05_ai/runs/*.json`
 - Creates `*.approval.md` when approval is required

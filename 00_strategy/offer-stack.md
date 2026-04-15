@@ -581,16 +581,6 @@ Offer stack is validated if:
 
 ---
 
-## 18. Next file to create
+## Current status
 
-After this file, next artifact should be:
-
-`brand-pack.md`
-
-It must define:
-- brand naming directions
-- tone of voice
-- tagline options
-- homepage hero options
-- Facebook profile copy
-- trust language
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

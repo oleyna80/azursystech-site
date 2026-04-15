@@ -1,7 +1,7 @@
 # reviews-system.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: working ops baseline
 _brand: AzurSysTech
 _primary_language: ru
 
@@ -629,16 +629,6 @@ Review system is valid if:
 
 ---
 
-## 30. Next file to create
+## Current status
 
-After approval of this file, next artifact should be:
-
-`service-pages-plan.md`
-
-It must define:
-
-* which service pages to create first
-* page priorities
-* page intent
-* local query alignment
-* business vs home-user service page strategy
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

@@ -1,7 +1,7 @@
 # site-architecture.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: approved architecture baseline
 _brand: AzurSysTech
 _primary_language: ru
 _future_languages:
@@ -473,6 +473,7 @@ Russian
 ### Future languages
 - French
 - English
+- German (optional later)
 
 ### Routing recommendation
 Use localization-ready architecture from day one.
@@ -483,8 +484,10 @@ Recommended future model:
 - `/en/...`
 
 For MVP:
-- Russian can live as default
-- but route structure and content system must support language expansion later
+- public site launches in Russian for the russophone audience on the Côte d'Azur
+- French and English are planned as phase 2 public languages
+- German is optional phase 3 only if there is real demand
+- route structure and content system must support later language expansion
 
 ### Tech requirement
 - no hardcoded text deep inside components
@@ -673,17 +676,6 @@ Site architecture is valid if:
 
 ---
 
-## 30. Next file to create
+## Current status
 
-After this file, next artifact should be:
-
-`wireframes.md`
-
-It must define:
-- section-by-section wireframes
-- homepage wireframe
-- business page wireframe
-- contact page wireframe
-- mobile priority layout
-- CTA positions
-- chat/form placement
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

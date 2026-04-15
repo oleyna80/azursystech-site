@@ -57,6 +57,12 @@ Must be finalized before launch:
 - review request workflow usable in practice
 - site and GBP contact logic aligned
 
+### 6. Primary intake workflow readiness
+Must be finalized before launch:
+- `site -> n8n` webhook path configured
+- Google Sheets intake log writable from `n8n`
+- at least one full test lead proves end-to-end intake
+
 ## Cannot Launch Until
 
 1. Legal/business identity placeholders are replaced with real data.
@@ -65,6 +71,7 @@ Must be finalized before launch:
 4. Deploy secrets and VPS runtime config are populated and verified.
 5. AI launch mode is explicitly chosen.
 6. GBP and review workflow are operationally usable.
+7. Primary `site -> n8n -> Google Sheets` intake path is operationally usable.
 
 ## Source of Truth For Go-Live
 
@@ -89,7 +96,8 @@ Must be finalized before launch:
 3. Deployment readiness
 4. AI runtime readiness
 5. GBP / review / local presence readiness
-6. Go / No-Go criteria definition
+6. Primary intake workflow readiness
+7. Go / No-Go criteria definition
 
 ## Out of Scope
 
@@ -106,14 +114,16 @@ Must be finalized before launch:
 - publish with finalized business identity now
 - or delay public launch until business identity is fully confirmed
 
-2. Operational lead board at launch
-- Google Sheets fallback
-- lightweight CRM board
-
 ## Confirmed Launch Decisions
 
 - public WhatsApp is enabled on the same launch number:
   - `+33 7 49 70 54 65`
+- launch intake sink:
+  - `Google Sheets via n8n`
+- sequencing after website closure:
+  - first `n8n + Google Sheets`
+  - then AI widget + Telegram notification
+  - CRM later
 - AI launch mode:
   - `limited live intake`
   - intake + summary + handoff only
@@ -136,7 +146,7 @@ Unless explicitly overridden before launch:
 - ops mode default:
   - website live
   - form live
-  - CRM / Sheets live
+  - `n8n + Google Sheets` live
   - Facebook manual ops live
   - GBP live
 

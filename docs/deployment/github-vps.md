@@ -6,6 +6,7 @@
 cd /home/dmitrii/azursystech/web
 npm ci
 npm run check:ci
+npm run check:security
 ```
 
 ## 2) Push to GitHub
@@ -40,7 +41,17 @@ Update `/home/dmitrii/projects/azursystech-site/.env`:
 - `HOSTNAME=0.0.0.0`
 - `DEEPSEEK_API_KEY=...`
 - `DEEPSEEK_BASE_URL=https://api.deepseek.com`
+- `AI_LAUNCH_MODE=limited_live_intake`
+- `AI_ALLOW_AUTONOMOUS_OUTBOUND=false`
+- `AI_ALLOW_PRICING_COMMITMENTS=false`
+- `AI_ALLOW_SCHEDULING_PROMISES=false`
 - `ALLOWED_ORIGINS=https://azursystech.fr,https://www.azursystech.fr`
+- `POSTGRES_DB=azursystech`
+- `POSTGRES_USER=azursystech_app`
+- `POSTGRES_PASSWORD=...`
+- `INTAKE_STORAGE_MODE=sql_primary` (или `dual`; `legacy` только для fallback)
+- `DATABASE_URL=postgresql://azursystech_app:...@postgres:5432/azursystech`
+- `DATABASE_SSL_MODE=disable|require|verify-full` (`disable` допустим для текущего internal Docker DB; переходить на `require`/`verify-full` после валидации cert path)
 
 Important:
 - do not commit real runtime secrets into the repository
@@ -58,7 +69,24 @@ Required by `Deploy to VPS` workflow:
 Required on VPS `.env` for live AI intake:
 - `DEEPSEEK_API_KEY`
 - `DEEPSEEK_BASE_URL` (optional if default is kept)
+- `AI_LAUNCH_MODE=limited_live_intake`
+- `AZURSYSTECH_CONTACT_SUBMIT_ENABLED=false|true`
+- `AZURSYSTECH_CONTACT_SUBMIT_BASE_URL`
+- `AZURSYSTECH_CONTACT_SUBMIT_TOKEN`
+- `AZURSYSTECH_CONTACT_SUBMIT_ALLOWED_HOSTS` (required and non-empty in production when submit integration is enabled; comma-separated hostnames)
+- `AI_ALLOW_AUTONOMOUS_OUTBOUND=false`
+- `AI_ALLOW_PRICING_COMMITMENTS=false`
+- `AI_ALLOW_SCHEDULING_PROMISES=false`
 - `ALLOWED_ORIGINS`
+- `POSTGRES_DB`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `INTAKE_STORAGE_MODE=legacy|dual|sql_primary`
+- `DATABASE_URL` (required when `INTAKE_STORAGE_MODE` is not `legacy`)
+- `DATABASE_SSL_MODE=disable|require|verify-full` (recommended: move from `disable` to `require`/`verify-full` once TLS cert validation is confirmed)
+
+Production integration guard:
+- if `NODE_ENV=production` and `AZURSYSTECH_CONTACT_SUBMIT_ENABLED=true`, `AZURSYSTECH_CONTACT_SUBMIT_ALLOWED_HOSTS` must be explicitly set and non-empty or outbound dispatch is blocked as misconfigured.
 
 Optional for monitoring:
 - `UPTIME_ALERT_WEBHOOK`
@@ -81,15 +109,63 @@ gh workflow run "Deploy to VPS"
 cd /home/dmitrii/projects/azursystech-site
 docker compose -f docker-compose.vps.yml ps
 docker compose -f docker-compose.vps.yml logs -f --tail=100
-docker exec azursystech-app wget -qO- http://127.0.0.1:3000/health
+docker exec azursystech-app /bin/sh -lc 'wget -qO- http://$(hostname -i | awk '"'"'{print $1}'"'"'):3000/health'
 docker exec azursystech-app /bin/sh -lc 'echo "$DEEPSEEK_BASE_URL"'
+docker exec azursystech-app /bin/sh -lc 'echo "$INTAKE_STORAGE_MODE"'
+docker exec azursystech-app /bin/sh -lc 'if [ -n "$DATABASE_URL" ]; then echo "DATABASE_URL is set"; else echo "DATABASE_URL is missing"; fi'
+docker compose -f docker-compose.vps.yml exec -T postgres sh -lc 'export PGPASSWORD="$POSTGRES_PASSWORD"; psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\dt intake_*"'
+curl -sSI https://azursystech.fr/health
 ```
+
+## 6.1) DATABASE_SSL_MODE rollout (safe apply + fallback)
+
+Before switching to `DATABASE_SSL_MODE=require` or `verify-full`, PostgreSQL must report SSL enabled (`SHOW ssl; -> on`).  
+If SSL is not enabled on the DB side, rollout must not proceed.
+
+Dry-run (precheck only, no changes):
+
+```bash
+cd /home/dmitrii/projects/azursystech-site
+./scripts/postgres-ssl-rollout.sh --mode require
+```
+
+Apply with automatic rollback on failed DB probe:
+
+```bash
+cd /home/dmitrii/projects/azursystech-site
+./scripts/postgres-ssl-rollout.sh --mode require --apply
+```
+
+Optional strict cert validation mode:
+
+```bash
+cd /home/dmitrii/projects/azursystech-site
+./scripts/postgres-ssl-rollout.sh --mode verify-full --apply
+```
+
+Script markers:
+- `DB_SSL_ROLLOUT_DRY_RUN ...`
+- `DB_SSL_ROLLOUT_APPLIED ...`
+- `DB_SSL_ROLLOUT_ROLLBACK ...`
+- `DB_SSL_ROLLOUT_OK ...`
 
 ## 7) Runtime contract
 
 - `app`: Next.js standalone runtime on `:3000`, health endpoint `GET /health`
 - `web`: Nginx reverse proxy using `nginx.proxy.conf`, forwards traffic to `app:3000`
+- `postgres`: self-hosted PostgreSQL 16 (`azursystech-postgres`), internal-only Docker network access
 - `npm_default` external network is expected for Nginx Proxy Manager integration
+- intake storage runtime flags:
+  - `INTAKE_STORAGE_MODE` (`legacy` / `dual` / `sql_primary`)
+  - `DATABASE_URL` (mandatory for `dual` and `sql_primary`)
+- backup/restore operational scripts:
+  - `scripts/postgres-backup.sh`
+  - `scripts/postgres-restore.sh`
+- SSL / edge path at launch:
+  - `Cloudflare` terminates public edge traffic
+  - `Nginx Proxy Manager` handles reverse proxy on the VPS
+  - `azursystech-web` serves the app internally on the Docker network
+  - public production domain: `https://azursystech.fr`
 
 ## 8) Rollback
 

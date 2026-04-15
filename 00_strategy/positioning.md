@@ -416,15 +416,6 @@ Positioning is validated if:
 
 ---
 
-## 17. Next file to create
+## Current status
 
-After this file, next artifact should be:
-
-`offer-stack.md`
-
-It must define:
-- core offers
-- packaged services
-- segment-specific offers
-- CTA logic
-- priority offers for launch
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

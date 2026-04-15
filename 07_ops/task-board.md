@@ -2,43 +2,55 @@
 
 ## Current Phase
 
-- `implementation phase`
-- active ticket target: `AZR-002 implementation handoff`
+- `site closure + go-live preparation`
+- active ticket target: `AZR-003 go-live readiness`
+- previous ticket `AZR-002 website MVP implementation` — **closed** (25/25 tasks done)
 
 ## Now
 
-- convert filled docs into Tech Lead implementation packages
-- refresh stale management docs and operational pointers
-- separate implementation-ready assets from launch blockers
+- fully close the website scope before new integrations
+- keep remaining AZR-003 blockers visible (legal identity, GBP readiness)
+- prepare the next downstream step as `site -> n8n -> Google Sheets`
 
 ## Next
 
-- finalize legal / business identity data
-- finalize phone / WhatsApp / contact flow
-- populate deploy secrets and VPS `.env`
-- decide whether AI live-run is enabled at launch
+- implement `/about` trust/founder page
+- implement SEO service landing pages: `/services/new-pc-setup`, `/services/wifi-printer`, `/services/tpe-setup`, `/services/onsite-support`
+- prepare legal/privacy pages for real data injection when founder closes `AZR-003-001`
+- enable live intake path `site -> n8n -> Google Sheets`
+- add AI widget live integration and Telegram notification after the intake path is stable
 
 ## Blocked
 
-- website go-live is blocked by missing legal/business values
-- contact UX cannot be finalized until phone / WhatsApp decision is made
-- deploy automation cannot be completed until GitHub secrets are added
-- live AI execution cannot be validated without `DEEPSEEK_API_KEY`
+- public legal publishability depends on founder closing `AZR-003-001` (legal identity data)
+- GBP / reviews readiness open under `AZR-003-006` (founder)
+- end-to-end lead intake blocked until VPS/n8n stream configures webhook + Google Sheets write target
+- go/no-go review (`AZR-003-007`) depends on AZR-003-001 + AZR-003-006
 
 ## Later
 
-- local citations plan
-- broader service page expansion
 - French / English localization rollout
-- deeper CRM automation
+- local citations plan
+- broader service page expansion beyond MVP SEO set
+- CRM implementation and automation
 - broader AI runtime automation beyond draft-assist mode
+- cleanup of non-critical stale tails in legacy docs
 
 ## Done
 
-- strategy and brand baseline filled
-- website architecture, forms, analytics, and wireframes filled
-- lead intake, taxonomy, CRM flow, and follow-up docs filled
-- Facebook strategy and reply playbooks filled
-- SEO block filled for MVP planning
-- AI runtime MVP scaffolded and aligned with DeepSeek contract
-- VPS delivery scaffolded with Docker and GitHub Actions
+- **AZR-002 website MVP implementation** — all 25 tasks closed:
+  - strategy/brand/ops docs baseline filled (`00_strategy` – `07_ops`)
+  - app shell, header, footer, nav
+  - all Phase 1 routes: `/`, `/services`, `/business`, `/home`, `/pricing`, `/faq`, `/contact`, `/thank-you`, `/legal`, `/privacy`
+  - chat widget shell (intake-only, launch-safe)
+  - visual consistency pass (`Local Professional`, ADR-015)
+  - safe site-side submit path with contract validation and honeypot handling
+  - runtime adapter for `v1` transport contract `site → n8n` (ADR-016)
+  - historical HubSpot MVP property mapping locked as phase-2 reference (ADR-017)
+- AI runtime MVP scaffolded and aligned with DeepSeek contract (ADR-007)
+- VPS delivery live with Docker and GitHub Actions
+- deploy assumptions confirmed for `azursystech.fr`
+- multi-agent operating model standardized (ADR-012)
+- launch contact baseline confirmed (ADR-008): form + phone + WhatsApp + site chat
+- launch AI mode confirmed (ADR-010): `limited_live_intake`
+- launch intake baseline reset to `Google Sheets via n8n`; CRM deferred to a later phase (ADR-018)

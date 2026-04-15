@@ -1,7 +1,7 @@
 # local-seo-plan.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: working SEO baseline
 _brand: AzurSysTech
 _primary_language: ru
 _future_languages:
@@ -432,10 +432,13 @@ Long-term local SEO in France will eventually need strong French presence.
 For now:
 - build clean architecture
 - keep content localization-ready
-- accept that strongest long-term local SEO performance will require French pages later
+- launch site content targets the russophone audience on the Côte d'Azur
+- accept that strongest long-term local SEO performance will require French pages in phase 2
 
 ### Important note
-Russian-first is fine for launch and operations, but French SEO layer should be planned as phase 2.
+Russian-first public MVP is accepted for launch.
+French and English public layers should be planned as phase 2.
+German is optional phase 3 only if supported by real demand.
 
 ---
 
@@ -523,16 +526,6 @@ Local SEO plan is valid if:
 
 ---
 
-## 24. Next file to create
+## Current status
 
-After approval of this file, next artifact should be:
-
-`gbp-setup-checklist.md`
-
-It must define:
-- Google Business Profile setup steps
-- required business data
-- category choices
-- profile content blocks
-- launch checklist
-- maintenance routine
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

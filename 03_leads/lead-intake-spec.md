@@ -1,7 +1,7 @@
 # lead-intake-spec.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: approved implementation contract
 _brand: AzurSysTech
 
 ---
@@ -25,10 +25,10 @@ _brand: AzurSysTech
 ### Recommended MVP stack
 - Website form
 - Embedded chat widget
-- HubSpot Free CRM
+- HubSpot CRM
 
 ### Why HubSpot first
-- free CRM
+- CRM
 - forms
 - live chat / widget
 - simple website integration
@@ -329,7 +329,7 @@ Each lead should receive at least:
 ## 14. CRM recommendation
 
 ### Recommended MVP CRM
-**HubSpot Free**
+**HubSpot CRM**
 
 ### Why
 - free CRM
@@ -374,26 +374,17 @@ Lead generation must start before full business back-office is optimized.
 
 ---
 
-## 16. Google Sheets fallback
+## 16. CRM baseline
 
-If CRM integration is delayed, use:
-- Google Sheets as temporary lead table
+### Launch rule
+For launch baseline, all inbound leads should land in HubSpot CRM.
 
-### Minimum columns
-- date
-- name
-- phone
-- email
-- city
-- segment
-- service type
-- source
-- urgency
-- status
-- notes
-
-### Rule
-Google Sheets is fallback only, not preferred final MVP if HubSpot launches quickly.
+### Why
+- one operational system
+- cleaner stage tracking
+- clearer ownership
+- better future `n8n` integration
+- no parallel sheet drift
 
 ---
 
@@ -471,8 +462,8 @@ Suggested next step:
 
 ### Contact block requirement
 Homepage must support:
-- phone placeholder
-- WhatsApp placeholder
+- phone `+33 7 49 70 54 65`
+- WhatsApp `+33 7 49 70 54 65`
 - form
 - AI chat widget
 
@@ -484,7 +475,7 @@ Lead intake system is valid if:
 - user can submit in under 2 minutes
 - business and home leads are distinguished
 - every lead gets basic tags
-- leads are stored in CRM or fallback sheet
+- leads are stored in CRM
 - chat supports qualification
 - founder receives usable summaries
 - no false pricing or deadline promises are made by AI
@@ -510,16 +501,6 @@ Template replies
 
 ---
 
-## 23. Next file to create
+## Current status
 
-After this file, next artifact should be:
-
-`forms-spec.md`
-
-It must define:
-- exact field list
-- form variants
-- validation rules
-- business branching logic
-- CRM mapping
-- success messages
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

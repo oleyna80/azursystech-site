@@ -1,7 +1,7 @@
 # facebook-page-copy.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: working copy baseline
 _brand: AzurSysTech
 _language: ru
 
@@ -555,15 +555,6 @@ Facebook page copy is valid if:
 
 ---
 
-## 17. Next file to create
+## Current status
 
-After this file, next artifact should be:
-
-`ads-copy.md`
-
-It must define:
-- short ad-style texts for groups
-- ultra-short service blurbs
-- local promotion posts
-- business-focused variants
-- home-user variants
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

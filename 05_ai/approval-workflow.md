@@ -1,7 +1,7 @@
 # approval-workflow.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: approved policy baseline
 _brand: AzurSysTech
 _primary_language: ru
 
@@ -85,7 +85,7 @@ AI может помочь структурировать, но решение �
 - присвоение source tag
 - присвоение urgency guess
 - AI summary обращения
-- routing в CRM / Google Sheets
+- routing в CRM
 - генерация внутренних заметок
 - подготовка content ideas list
 - генерация short internal checklists
@@ -486,16 +486,6 @@ Approval workflow is valid if:
 
 ---
 
-## 23. Next file to create
+## Current status
 
-After approval of this file, next artifact should be:
-
-`escalation-rules.md`
-
-It must define:
-
-* when AI should escalate to founder
-* risk categories
-* escalation triggers by channel
-* business vs home-user escalation differences
-* “do not answer directly” scenarios
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.

@@ -1,7 +1,7 @@
 # lead-agent-spec.md
 _version: v0.1
 _owner: Marketing Lead
-_status: draft
+_status: approved runtime contract
 _brand: AzurSysTech
 _primary_language: ru
 
@@ -453,7 +453,7 @@ Use structured escalation note per `escalation-rules.md`.
 * suggest next action
 * prepare reply draft
 * store internal note
-* push to CRM / Google Sheets
+* push to CRM
 * mark follow-up needed
 
 ### Not allowed automatically
@@ -680,10 +680,6 @@ Lead agent spec is valid if:
 
 ---
 
-## 28. Next file to create
+## Current status
 
-After approval of this file, next artifact should be one of:
-
-* `lead_router_system.md` / `lead_router_user.md` contract alignment
-* example payloads for lead routing
-* runtime schema for CRM handoff object
+Downstream sequencing is now managed through `docs/specs`, `docs/plans`, `docs/tasklist`, and `memory_bank/*`.
