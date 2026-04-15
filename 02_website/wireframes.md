@@ -463,8 +463,8 @@ Main conversion zone.
 | Связаться с AzurSysTech                                  |
 |                                                          |
 | Left column:                    | Right column:          |
-| - phone: +33 7 49 70 54 65      | [Form title]           |
-| - WhatsApp: +33 7 49 70 54 65   | Имя                    |
+| - phone: +33 7 80 72 09 94      | [Form title]           |
+| - WhatsApp: +33 7 80 72 09 94   | Имя                    |
 | - short contact intro           | Телефон                |
 | - service area                  | Email                  |
 |                                 | Город                  |
@@ -480,8 +480,8 @@ Main conversion zone.
 ```text
 --------------------------------
 | Связаться с AzurSysTech       |
-| [+33 7 49 70 54 65]           |
-| [WhatsApp: +33 7 49 70 54 65] |
+| [+33 7 80 72 09 94]           |
+| [WhatsApp: +33 7 80 72 09 94] |
 | [short intro]                 |
 | [form starts]                 |
 | Имя                           |

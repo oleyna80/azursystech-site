@@ -247,6 +247,11 @@ Status: IN_PROGRESS
   - cleared current CI lint blockers in `web/src/components/chat-widget.tsx` and `web/src/components/shell/site-header.tsx`.
   - updated `next` and `eslint-config-next` to `16.2.3`.
   - `npm run check:ci` and `npm audit --omit=dev --audit-level=high` pass locally on the branch.
+  Delivery notes (2026-04-15 post-deploy smoke):
+  - PR #3 merged to `main` and deployed successfully to VPS at commit `2fa9874`.
+  - public `/health` returned `HTTP/2 200`.
+  - public `/api/chat` route returned expected `400` for invalid `{}` smoke payload without invoking DeepSeek.
+  - public `/api/contact/submit` returned `200 success`; SQL evidence contains `lead.submitted` and `integration.accepted`.
 
 - AZR-003-013: Sync public phone / WhatsApp across current `web` baseline and docs
   Owner: Tech Lead
@@ -257,7 +262,12 @@ Status: IN_PROGRESS
   - AC2: current `web` runtime/UI surfaces use that value consistently
   - AC3: current public docs use that value consistently
   - AC4: historical progress/ADR records are not rewritten as if they were current facts
-  Status: todo
+  Status: done
+  Delivery notes (2026-04-15):
+  - canonical public phone / WhatsApp value confirmed as `+33 7 80 72 09 94` / `https://wa.me/33780720994`.
+  - current `web` runtime/UI contact surfaces are aligned, including fallback copy in `web/src/lib/contact-submit.ts`.
+  - current public docs/SSOT references in `01_brand`, `02_website`, `03_leads`, `06_seo`, and `docs/specs/azr-003-go-live-readiness.md` are aligned.
+  - old number references remain only in historical `memory_bank/progress.md` entries and ADR-008, not in current public/runtime surfaces.
 
 - AZR-003-008: Separate deferred improvements from blockers
   Owner: Tech Lead

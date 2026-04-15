@@ -117,7 +117,7 @@ Must be finalized before launch:
 ## Confirmed Launch Decisions
 
 - public WhatsApp is enabled on the same launch number:
-  - `+33 7 49 70 54 65`
+  - `+33 7 80 72 09 94`
 - launch intake sink:
   - `Google Sheets via n8n`
 - sequencing after website closure:

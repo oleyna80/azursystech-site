@@ -55,9 +55,8 @@ AzurSysTech - локальный IT-сервис для particuliers и TPE в �
 2. Предыдущий тикет `AZR-002` (website MVP implementation) — **полностью закрыт** (25/25 задач done)
 3. Текущая фаза: post-intake-activation go-live preparation
 4. AZR-003 blockers:
-   - known P0 consistency risk before deploy verification: public phone / WhatsApp values drift across `web` and docs
+   - no open launch-critical blockers remain in control-layer tracking
    - Current execution queue:
-     - AZR-003-013: phone/contact consistency sync for current `web` baseline
      - AZR-003-011: AI widget + Telegram notification on `web` (todo; backend events path)
      - AZR-003-008: deferred separation (todo, depends on 011)
 
@@ -133,7 +132,6 @@ AzurSysTech - локальный IT-сервис для particuliers и TPE в �
 1. AZR-003 go-live:
    - launch blockers and formal `GO` decision are closed in control-layer tracking
 2. Next execution:
-   - close remaining phone/contact consistency drift in docs/UI where still present (`AZR-003-013`)
    - backend notification/export path (Telegram/email/Sheets export policy)
    - live AI widget integration on `web` against backend-first intake
 3. CRM phase 2:
