@@ -238,6 +238,11 @@ Status: IN_PROGRESS
   - chat/contact endpoints moved from per-process in-memory rate limiting to PostgreSQL-backed persistent counters with bounded in-memory fallback on DB unavailability.
   - runtime behavior/limits preserved (`chat: 5/min`, `contact: 10/min`) with no API contract changes.
   - contact integration policy tightened: in production, `AZURSYSTECH_CONTACT_SUBMIT_ALLOWED_HOSTS` is mandatory/non-empty when integration is enabled; otherwise outbound dispatch is treated as misconfigured.
+  Delivery notes (2026-04-15 Stage 5 VPS runtime proof):
+  - VPS runtime verified on Stage 5 commit `a481c32` with `web/src/lib/request-rate-limit.ts` present.
+  - `app` rebuilt/recreated from Stage 5 and required env passthrough restored in VPS compose for `AZURSYSTECH_CONTACT_SUBMIT_ALLOWED_HOSTS` and `DATABASE_SSL_MODE`.
+  - Persistent limiter proof passed: `/api/chat` returned `400` for requests 1-5, `429` for request 6, and remained `429` for request 7 after `app` restart.
+  - Contact e2e passed with SQL evidence for `lead.submitted` and `integration.accepted`.
 
 - AZR-003-013: Sync public phone / WhatsApp across current `web` baseline and docs
   Owner: Tech Lead

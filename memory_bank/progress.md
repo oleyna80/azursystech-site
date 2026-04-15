@@ -1,5 +1,33 @@
 # Progress Log - AzurSysTech
 
+## 2026-04-15: Stage 5 VPS Runtime Proof (persistent limiter + contact e2e)
+
+### Done
+
+- VPS checkout/runtime aligned to Stage 5 commit `a481c32` (`security(api): persist rate limits and enforce prod webhook host allowlist`).
+- Rebuilt/recreated `app` via `docker compose -f docker-compose.vps.yml up -d --build --force-recreate app`.
+- Restored required VPS compose env passthrough for Stage 5 runtime:
+  - `AZURSYSTECH_CONTACT_SUBMIT_ALLOWED_HOSTS`
+  - `DATABASE_SSL_MODE`
+- Confirmed final app env:
+  - `AZURSYSTECH_CONTACT_SUBMIT_ALLOWED_HOSTS=n8n.hardwarelab.org`
+  - `DATABASE_SSL_MODE=require`
+  - `NODE_ENV=production`
+- Confirmed PostgreSQL SSL path from `app` (`select 1` with `ssl: { rejectUnauthorized: false }`).
+- Confirmed `api_rate_limits` exists and matches Stage 5 DDL.
+- Confirmed persistent limiter behavior:
+  - `/api/chat` same-IP requests: first 5 returned `400`, 6th returned `429`;
+  - after `app` restart, 7th same-IP request remained `429`.
+- Confirmed contact e2e:
+  - `/api/contact/submit` returned `200 success`;
+  - SQL evidence for marker email contains `lead.submitted` and `integration.accepted`.
+
+### Notes
+
+- One final test lead marker remains in production DB as verification evidence: `stage5-final-e2e-20260415T164807Z-610103@example.com`.
+- No lead data was deleted or modified.
+- No new architectural decision was introduced; this is an operational runtime proof and env passthrough correction.
+
 ## 2026-04-15: P1 Hardening Continuation (proxy migration + CI security gate)
 
 ### Done
