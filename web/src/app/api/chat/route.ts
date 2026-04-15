@@ -1,8 +1,18 @@
 import { NextResponse } from "next/server";
+import { isRateLimitedPersistent } from "@/lib/request-rate-limit";
 
 const REQUEST_TIMEOUT_MS = 15_000;
+const MAX_REQUEST_BODY_BYTES = 50_000;
+const MAX_MESSAGE_LENGTH = 1_000;
+const MAX_REPLY_LENGTH = 2_000;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_MAX_KEYS = 10_000;
+const PROMPT_INJECTION_PATTERNS = [
+  /ignore\s+(all\s+)?(previous|prior|above)\s+instructions/iu,
+  /reveal\s+(the\s+)?system\s+prompt/iu,
+  /act\s+as\s+system/iu,
+];
 const SYSTEM_PROMPT = `Ты роль: IT-специалист компании AzurSysTech из Ниццы (Франция).
 Твоя задача помочь пользователю сформулировать его проблему перед тем, как он отправит заявку. Будь кратким, доброжелательным и компетентным.
 
@@ -11,13 +21,6 @@ const SYSTEM_PROMPT = `Ты роль: IT-специалист компании A
 2. Не обещай точных цен, сроков, выезда или начала работ. Если нужно, говори, что после заявки мы посмотрим описание и уточним детали вручную.
 3. В конце предлагай перейти к форме на сайте или написать в WhatsApp, чтобы передать контакты и описание задачи.
 4. Отвечай только на русском языке.`;
-
-type RateLimitEntry = {
-  count: number;
-  resetAt: number;
-};
-
-const rateLimitStore = new Map<string, RateLimitEntry>();
 
 function getClientIp(request: Request) {
   const forwardedFor = request.headers.get("x-forwarded-for");
@@ -28,30 +31,50 @@ function getClientIp(request: Request) {
   return request.headers.get("x-real-ip")?.trim() || "unknown";
 }
 
-function isRateLimited(request: Request) {
-  const clientIp = getClientIp(request);
-  const now = Date.now();
-  const existing = rateLimitStore.get(clientIp);
+function sanitizeReply(reply: string | undefined): string {
+  const cleaned = (reply ?? "")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .trim();
 
-  if (!existing || existing.resetAt <= now) {
-    rateLimitStore.set(clientIp, {
-      count: 1,
-      resetAt: now + RATE_LIMIT_WINDOW_MS,
-    });
+  if (!cleaned) {
+    return "К сожалению, не удалось получить ответ.";
+  }
+
+  return cleaned.slice(0, MAX_REPLY_LENGTH);
+}
+
+function hasPromptInjectionAttempt(message: string): boolean {
+  return PROMPT_INJECTION_PATTERNS.some((pattern) => pattern.test(message));
+}
+
+function isRequestBodyTooLarge(request: Request): boolean {
+  const contentLength = request.headers.get("content-length");
+  if (!contentLength) {
     return false;
   }
 
-  if (existing.count >= RATE_LIMIT_MAX) {
-    return true;
+  const parsed = Number.parseInt(contentLength, 10);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return false;
   }
 
-  existing.count += 1;
-  rateLimitStore.set(clientIp, existing);
-  return false;
+  return parsed > MAX_REQUEST_BODY_BYTES;
 }
 
 export async function POST(request: Request) {
-  if (isRateLimited(request)) {
+  if (isRequestBodyTooLarge(request)) {
+    return NextResponse.json({ error: "Request too large" }, { status: 413 });
+  }
+
+  const clientIp = getClientIp(request);
+  const isRateLimited = await isRateLimitedPersistent({
+    scope: "chat",
+    key: clientIp,
+    maxRequests: RATE_LIMIT_MAX,
+    windowMs: RATE_LIMIT_WINDOW_MS,
+    maxMemoryKeys: RATE_LIMIT_MAX_KEYS,
+  });
+  if (isRateLimited) {
     return NextResponse.json(
       { error: "Слишком много обращений подряд, пожалуйста, подождите минуту." },
       { status: 429 },
@@ -81,10 +104,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Message is required" }, { status: 400 });
   }
 
+  if (message.length > MAX_MESSAGE_LENGTH) {
+    return NextResponse.json(
+      { error: `Message must be between 1 and ${MAX_MESSAGE_LENGTH} characters` },
+      { status: 400 },
+    );
+  }
+
+  if (hasPromptInjectionAttempt(message)) {
+    return NextResponse.json(
+      { error: "Запрос отклонен по соображениям безопасности. Переформулируйте, пожалуйста, ваш технический вопрос." },
+      { status: 400 },
+    );
+  }
+
   const apiKey = process.env.DEEPSEEK_API_KEY?.trim();
   if (!apiKey) {
-    console.error("DEEPSEEK_API_KEY is missing");
-    return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
+    console.error("Chat API misconfigured: missing DEEPSEEK_API_KEY");
+    return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 500 });
   }
 
   const controller = new AbortController();
@@ -116,24 +153,24 @@ export async function POST(request: Request) {
         });
       }
 
-      console.error("DeepSeek API error. Status:", response.status);
-      return NextResponse.json({ error: "Failed to communicate with AI provider" }, { status: 500 });
+      console.error(`Chat upstream error: status=${response.status}`);
+      return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 500 });
     }
 
     const data = (await response.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
     };
-    const reply = data.choices?.[0]?.message?.content || "К сожалению, не удалось получить ответ.";
+    const reply = sanitizeReply(data.choices?.[0]?.message?.content);
 
     return NextResponse.json({ reply });
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
-      console.error("DeepSeek API timed out (AbortError)");
-      return NextResponse.json({ error: "AI request timeout" }, { status: 504 });
+      console.error("Chat upstream timeout");
+      return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 504 });
     }
 
-    console.error("Chat endpoint error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("Chat endpoint unexpected error");
+    return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 500 });
   } finally {
     clearTimeout(timeout);
   }

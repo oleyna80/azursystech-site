@@ -1,5 +1,59 @@
 # Progress Log - AzurSysTech
 
+## 2026-04-15: P1 Hardening Continuation (proxy migration + CI security gate)
+
+### Done
+
+- Migrated Next API origin policy from deprecated `web/src/middleware.ts` convention to `web/src/proxy.ts` with equivalent behavior and matcher scope (`/api/:path*`).
+- Added `web` security CI gate:
+  - new script `check:security` (`npm audit --omit=dev --audit-level=high`);
+  - appended to `check:ci` chain.
+- Updated VPS deploy runbook with `check:security` pre-publish step and explicit `DATABASE_SSL_MODE` guidance (`disable|require|verify-full`).
+
+## 2026-04-15: P1 Hardening Pass (headers, CORS middleware, DB TLS mode)
+
+### Done
+
+- Added app-level security headers in `web/next.config.ts` for defense-in-depth, aligned with existing nginx policy and kept runtime-compatible defaults.
+- Added `web/src/middleware.ts` for `/api/:path*` origin policy:
+  - reject only when `Origin` is present and not allowlisted;
+  - allow requests with no `Origin`;
+  - handle `OPTIONS` preflight for allowed origins with `Access-Control-*` headers.
+- Added configurable PostgreSQL SSL policy in `web/src/lib/intake-storage.ts` via `DATABASE_SSL_MODE`:
+  - supported modes: `disable` (default), `require`, `verify-full`;
+  - explicit runtime error for unknown values.
+- Updated `.env.vps.example` with commented `DATABASE_SSL_MODE` docs and safe default guidance.
+
+## 2026-04-15: Web Security Hardening Pass (chat/contact runtime)
+
+### Done
+
+- Hardened `web` API boundaries for chat and contact submit:
+  - request body size guards on `/api/chat` and `/api/contact/submit`;
+  - chat input length guard (`max 1000`) and response sanitization/length cap;
+  - lightweight per-IP in-memory rate limiting on contact submit;
+  - bounded in-memory cleanup logic for chat/contact rate-limit stores.
+- Added a minimal prompt-injection guard on `/api/chat` for common jailbreak patterns.
+- Added safer integration URL validation for contact submit runtime:
+  - production requires `https` for `AZURSYSTECH_CONTACT_SUBMIT_BASE_URL`;
+  - optional host allowlist via `AZURSYSTECH_CONTACT_SUBMIT_ALLOWED_HOSTS`;
+  - local non-production `http://localhost|127.0.0.1` remains allowed.
+- Reduced health endpoint metadata exposure in production (`/health` returns only `status`).
+- Updated framework dependencies in `web`:
+  - `next` `16.1.6 -> 16.2.3`
+  - `eslint-config-next` `16.1.6 -> 16.2.3`
+
+### Validation
+
+- `cd /home/dmitrii/azursystech/web && npm audit --omit=dev --json` - pass (`0` prod vulnerabilities)
+- `cd /home/dmitrii/azursystech/web && npm run check:types` - pass
+- `cd /home/dmitrii/azursystech/web && npm run build` - pass
+
+### Notes
+
+- `npm run check:ci` still reports pre-existing lint errors in unrelated files (`web/src/components/chat-widget.tsx`, `web/src/components/shell/site-header.tsx`).
+- This pass intentionally avoided runtime-breaking changes (no forced Postgres TLS for internal Docker DB, no global strict CORS middleware, no app-level HTTPS redirect policy change).
+
 ## 2026-04-14: VPS Runtime Artifacts Synced To Repository (PostgreSQL Ops)
 
 ### Done
@@ -2240,3 +2294,83 @@ Residual risks / untested areas:
 - Исправлена читаемость пунктов mobile dropdown в header: вместо `text-white/82` установлен явно читаемый стиль ссылок (`text-white`), чтобы пункты меню не пропадали на реальном экране.
 - Усилен контраст legal/privacy страниц в `frontend_mvp`: карточка переведена на `bg-white`, основной текст параграфов повышен до явного `text-graphite` с более комфортным размером и межстрочным интервалом.
 - Выполнен scoped sync-pass: новый номер `+33 7 80 72 09 94` обновлен в `web` runtime и актуальных SSOT/docs, без переписывания исторических progress-записей.
+
+## 2026-04-15: AZR-003 lint-unblock pass (web)
+
+### Done
+
+- Убран lint-блокер `react-hooks/set-state-in-effect` в `web/src/components/chat-widget.tsx`:
+  - runtime locale вычисляется в lazy initializer `useState(resolveRuntimeLocale)`;
+  - добавлен безопасный guard на отсутствие `document`.
+- Убран lint-блокер `@next/next/no-html-link-for-pages` в `web/src/components/shell/site-header.tsx`:
+  - внутренние переходы переведены с `<a>` на `next/link`;
+  - сохранено закрытие mobile-меню при click по пунктам;
+  - hash-навигация сохранена для `/` и non-root.
+
+### Validation
+
+- `cd /home/dmitrii/azursystech/web && npm run lint` - pass
+- `cd /home/dmitrii/azursystech/web && npm run check:ci` - pass
+
+## 2026-04-15: DB SSL rollout pack prepared (no VPS execution)
+
+### Done
+
+- Added `scripts/postgres-ssl-rollout.sh` for safe `DATABASE_SSL_MODE` rollout with dry-run, apply, and automatic rollback on failed DB probe.
+- Updated deployment docs with exact dry-run/apply commands and SSL precondition (`SHOW ssl;` must be `on` for `require`/`verify-full`).
+- Added backup/restore runbook fallback note for restoring `.env` backup and restarting `app`.
+
+### Validation
+
+- `bash -n /home/dmitrii/azursystech/scripts/postgres-ssl-rollout.sh` - pass
+
+### Notes
+
+- This pass prepared the operational pack only; rollout was **not executed on VPS**.
+
+## 2026-04-15: DB SSL rollout executed on VPS (`require`)
+
+### Done
+
+- PostgreSQL SSL enabled on VPS runtime (`SHOW ssl;` returned `on` after cert install + restart).
+- Runtime policy switched to `DATABASE_SSL_MODE=require` in VPS `.env`.
+- `docker-compose.vps.yml` wiring for `app` environment includes `DATABASE_SSL_MODE` passthrough.
+- `app` was recreated and validated with in-container DB probe.
+
+### Validation
+
+- `docker compose -f docker-compose.vps.yml exec -T postgres ... "SHOW ssl;"` - `on`
+- `docker compose -f docker-compose.vps.yml exec -T app sh -lc 'echo "DATABASE_SSL_MODE=$DATABASE_SSL_MODE"'` - `DATABASE_SSL_MODE=require`
+- in-container Node/pg probe - `DB_PROBE_OK`
+- `curl -sSI https://azursystech.fr/health | head -n 1` - `HTTP/2 200`
+
+### Notes
+
+- Current mode is `require` (TLS enforced, cert hostname chain not yet pinned as `verify-full`).
+
+## 2026-04-15: Persistent API rate limit + production webhook allowlist guard
+
+### Done
+
+- Added shared helper `web/src/lib/request-rate-limit.ts`:
+  - PostgreSQL-backed request counters (`api_rate_limits`) via `INSERT ... ON CONFLICT ... DO UPDATE`,
+  - SHA-256 hashing of limiter keys before storage,
+  - opportunistic cleanup of expired buckets,
+  - bounded in-memory fallback (max keys) when DB is unavailable or not configured.
+- Switched `/api/chat` and `/api/contact/submit` to persistent limiter backend while preserving existing thresholds:
+  - chat: `5 requests / 60s`,
+  - contact: `10 requests / 60s`.
+- Tightened contact webhook config policy:
+  - in production with integration enabled, `AZURSYSTECH_CONTACT_SUBMIT_ALLOWED_HOSTS` must be explicit and non-empty;
+  - if missing/empty, integration is treated as misconfigured and outbound dispatch is skipped.
+- Updated runtime docs/template:
+  - `.env.vps.example` includes `AZURSYSTECH_CONTACT_SUBMIT_ALLOWED_HOSTS`,
+  - deploy runbook documents production requirement.
+
+### Validation
+
+- `cd /home/dmitrii/azursystech/web && npm run check:types` - pass
+
+### Notes
+
+- Persistent limiter schema bootstrap is in-app (`CREATE TABLE IF NOT EXISTS api_rate_limits`), so immediate manual migration is not required for rollout.

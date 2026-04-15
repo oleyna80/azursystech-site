@@ -203,6 +203,41 @@ Status: IN_PROGRESS
   - AC3: no autonomous outbound, pricing, or scheduling behavior is introduced
   - AC4: primary launch path (`/contact`, phone, WhatsApp) remains usable if the widget is unavailable
   Status: todo
+  Delivery notes (2026-04-15 security baseline):
+  - chat/contact runtime hardening landed in `web` as readiness prerequisite:
+    - request size guards, chat length limits, response sanitization
+    - contact submit per-IP rate limit and webhook base URL validation
+    - production `/health` metadata reduced
+    - `next`/`eslint-config-next` bumped to `16.2.3`
+  Delivery notes (2026-04-15 p1 hardening continuation):
+  - app-level defense-in-depth baseline added in `web`:
+    - Next-level security headers via `next.config.ts`
+    - API origin policy via `web/src/proxy.ts` (`Origin`-aware allowlist, safe no-Origin pass-through)
+    - configurable DB TLS mode via `DATABASE_SSL_MODE` in `intake-storage.ts` with backward-compatible default `disable`
+  Delivery notes (2026-04-15 p1 continuation delivery):
+  - migrated deprecated Next middleware convention to `web/src/proxy.ts` with same `/api/:path*` behavior.
+  - added CI security gate in `web/package.json`: `check:security` included at end of `check:ci`.
+  - this pass does not close `AZR-003-011`; Telegram notification and full live AI integration remain pending scope.
+  Delivery notes (2026-04-15 lint unblock):
+  - cleared pre-existing CI lint blockers in `web/src/components/chat-widget.tsx` and `web/src/components/shell/site-header.tsx`.
+  - `npm run lint` and `npm run check:ci` now pass on current branch.
+  Delivery notes (2026-04-15 DB SSL rollout pack):
+  - prepared `scripts/postgres-ssl-rollout.sh` for `DATABASE_SSL_MODE` safe rollout with:
+    - dry-run precheck,
+    - `.env` timestamped backup,
+    - PostgreSQL `SHOW ssl;` gate for `require|verify-full`,
+    - app restart + in-container Node/pg DB probe (`select 1`),
+    - automatic rollback on probe failure.
+  - updated deployment/runbook docs with exact commands and fallback note.
+  - this delivery prepared operations artifacts; execution status is documented in the next delivery note block.
+  Delivery notes (2026-04-15 DB SSL rollout execution):
+  - VPS rollout executed successfully with PostgreSQL SSL enabled (`SHOW ssl;` -> `on`).
+  - runtime switched to `DATABASE_SSL_MODE=require` and propagated into `app` container env.
+  - DB probe from `app` container passed (`DB_PROBE_OK`), public health remained `HTTP/2 200`.
+  Delivery notes (2026-04-15 rate-limit + webhook policy hardening):
+  - chat/contact endpoints moved from per-process in-memory rate limiting to PostgreSQL-backed persistent counters with bounded in-memory fallback on DB unavailability.
+  - runtime behavior/limits preserved (`chat: 5/min`, `contact: 10/min`) with no API contract changes.
+  - contact integration policy tightened: in production, `AZURSYSTECH_CONTACT_SUBMIT_ALLOWED_HOSTS` is mandatory/non-empty when integration is enabled; otherwise outbound dispatch is treated as misconfigured.
 
 - AZR-003-013: Sync public phone / WhatsApp across current `web` baseline and docs
   Owner: Tech Lead
