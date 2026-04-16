@@ -50,6 +50,30 @@
 - No lead data was deleted or modified.
 - No new architectural decision was introduced; this is an operational runtime proof and env passthrough correction.
 
+## 2026-04-15: Agent Skill Pack Added (Shell/VPS Recovery/Security Runtime Proof)
+
+### Done
+
+- Added reusable shell-safety skill to prevent command dialect mismatch between PowerShell and Linux bash:
+  - `.agent/skills/shell-context-guard/SKILL.md`
+- Added VPS deploy recovery skill for blocked git/deploy states:
+  - diverged branch,
+  - unmerged files,
+  - compose/yaml conflict recovery,
+  - controlled sync back to deploy-ready state.
+  - `.agent/skills/vps-deploy-recovery/SKILL.md`
+- Added VPS security runtime proof skill for post-hardening gate checks:
+  - persistent limiter proof across app restart,
+  - DB SSL runtime probe,
+  - contact e2e + `integration.accepted` evidence,
+  - `api_rate_limits` SQL snapshot.
+  - `.agent/skills/vps-security-runtime-proof/SKILL.md`
+- Updated skill registry in `.agent/ROSTER.md` with new triggers and file mappings.
+
+### Notes
+
+- Skill pack is based on real failure patterns from the completed security hardening cycle (`shell mismatch`, `ff-only divergence`, `compose parse break`, staged runtime proof requirements).
+
 ## 2026-04-15: P1 Hardening Continuation (proxy migration + CI security gate)
 
 ### Done
