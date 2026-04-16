@@ -1,4 +1,9 @@
-# SPEC: AZR-003-010 Launch Intake Path `site -> n8n -> Google Sheets`
+# SPEC (Historical Reference): AZR-003-010 Launch Intake Path `site -> n8n -> Google Sheets`
+
+Status note (2026-04-13):
+- This spec remains valid as a historical launch activation record.
+- Current primary intake architecture is backend-first SQL (`ADR-020`).
+- `n8n -> Google Sheets` is optional secondary automation/export, not mandatory intake baseline.
 
 ## Problem
 
@@ -81,7 +86,7 @@ Column names MUST stay aligned with validated payload keys.
 
 | Payload field | Sheet column | Type | Rule |
 |---|---|---|---|
-| `source` | `source` | text | must stay `website_form` |
+| `source` | `source` | text | `website_form` (form), `website_chat` (site chat), `whatsapp_chat` (WhatsApp bot) |
 | `status` | `status` | text | must stay `New` at intake append |
 | `name` | `name` | text | direct |
 | `phone` | `phone` | text | direct |

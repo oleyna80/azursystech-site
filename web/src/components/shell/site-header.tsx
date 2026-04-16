@@ -70,9 +70,9 @@ export function SiteHeader() {
 
         <nav aria-label="Основная навигация" className="hidden items-center gap-7 text-sm font-bold text-white/90 [text-shadow:0_1px_1px_rgba(0,0,0,0.25)] lg:flex">
           {navLinks.map((link) => (
-            <a key={link.href} href={link.href} className="transition-colors hover:text-white">
+            <Link key={link.href} href={link.href} className="transition-colors hover:text-white">
               {link.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
@@ -85,12 +85,12 @@ export function SiteHeader() {
           >
             WhatsApp
           </a>
-          <a
-            href="#contact"
+          <Link
+            href={pathname === "/" ? "#contact" : "/#contact"}
             className="inline-flex rounded-full bg-accent-teal px-4 py-2.5 text-xs font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-accent-teal/90 sm:px-5 sm:text-sm"
           >
             Оставить заявку
-          </a>
+          </Link>
           <button
             type="button"
             onClick={() => setIsMenuOpen((prev) => !prev)}
@@ -117,14 +117,14 @@ export function SiteHeader() {
           <div className="absolute left-4 right-4 top-full mt-3 rounded-[1.5rem] border border-white/15 bg-graphite/95 p-4 shadow-[0_24px_80px_rgba(10,16,22,0.45)] backdrop-blur-xl lg:hidden">
             <nav className="flex flex-col">
               {navLinks.map((link) => (
-                <a
+                <Link
                   key={link.href}
                   href={link.href}
                   onClick={() => setIsMenuOpen(false)}
                   className="border-b border-white/10 py-3 text-sm font-bold text-white [text-shadow:0_1px_1px_rgba(0,0,0,0.35)] transition-colors last:border-b-0 hover:text-white/85"
                 >
                   {link.label}
-                </a>
+                </Link>
               ))}
               <a
                 href={CONTACT.whatsappHref}

@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "check:types": "tsc --noEmit",
-    "check:ci": "npm run lint && npm run check:types && npm run build"
+    "check:security": "npm audit --omit=dev --audit-level=high",
+    "check:ci": "npm run lint && npm run check:types && npm run build && npm run check:security"
   },
   "dependencies": {
     "next": "16.2.3",

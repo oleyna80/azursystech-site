@@ -161,9 +161,11 @@ Runtime `scripts/ai_agents.py` был привязан к `OPENAI_API_KEY` и Op
 
 ### Decision
 - Public phone at launch:
-  - `+33 7 49 70 54 65`
+  - current: `+33 7 80 72 09 94`
+  - legacy/deprecated reference: `+33 7 49 70 54 65`
 - Public WhatsApp at launch:
-  - same number `+33 7 49 70 54 65`
+  - current: same number `+33 7 80 72 09 94`
+  - legacy/deprecated reference: `+33 7 49 70 54 65`
 - Launch contact model:
   - form
   - phone
@@ -451,3 +453,49 @@ Transport contract (ADR-016) was approved but the outbound hop could not proceed
 - Сайт можно закрыть до интеграционного слоя без ожидания CRM setup.
 - `n8n` workflow может запускаться против Google Sheets без HubSpot private app token и property provisioning.
 - AI widget и Telegram notifications становятся controlled step after the primary form intake path proves stable.
+
+---
+
+## ADR-019: Current Website Baseline = `web`; `frontend_mvp` Is Historical Reference
+
+**Date:** 2026-04-13
+**Status:** Accepted
+
+### Context
+`frontend_mvp` использовался как отдельный дизайн/template sandbox для ускоренной визуальной и продуктовой итерации. После parity work и переноса релевантных наработок возник риск, что документы продолжат трактовать `frontend_mvp` как активный baseline, хотя production/runtime/deploy контур и текущая реализация уже должны идти через `web`.
+
+### Decision
+- Текущий website/design/runtime/deploy baseline — `web`.
+- `frontend_mvp` больше не является active baseline для launch-critical работ.
+- `frontend_mvp` сохраняется только как historical/reference artifact.
+- Все следующие launch-critical implementation streams, включая `AZR-003-011`, должны таргетировать `web`.
+
+### Consequences
+- Убирается baseline drift между template sandbox и production runtime.
+- `AZR-003-012` считается закрытым по baseline selection/parity purpose.
+- Новые изменения для сайта не должны выполняться в `frontend_mvp`, если это не отдельная явно sandboxed дизайн-задача.
+
+---
+
+## ADR-020: Intake Architecture Pivot = Backend-First SQL Core; n8n Is Optional Automation Layer
+
+**Date:** 2026-04-13
+**Status:** Accepted
+
+### Context
+Исторический launch intake path `site -> n8n -> Google Sheets` был успешно активирован как промежуточный operational baseline. После стабилизации `web` и принятия SQL foundation в backend стало критично убрать dual-primary ambiguity и закрепить единый intake контур для формы, сайт-чата и будущего WhatsApp-ассистента.
+
+### Decision
+- Primary intake path фиксируется как backend-first:
+  - `web channels -> /api/* -> server validation/normalization -> PostgreSQL`.
+- PostgreSQL становится primary system of record для intake.
+- `n8n` больше не считается обязательным launch/runtime intake hop:
+  - может использоваться только как optional automation/export layer.
+- Унифицированный normalized intake contract обязателен для всех каналов (`website_form`, `website_chat`, `whatsapp_chat`).
+- Backend отвечает за intake-side integrations (например: Telegram notifications, email dispatch, Sheets export) без требования n8n как обязательного посредника.
+
+### Consequences
+- Intake reliability больше не зависит от внешнего workflow-рантайма в критическом пути.
+- Упрощается дальнейшая реализация чат-ассистента и WhatsApp-канала за счет единого backend contract.
+- ADR-018 сохраняется как historical launch sequencing reference, но его часть про `site -> n8n -> Google Sheets` как baseline intake path больше не актуальна для текущей primary architecture.
+- ADR-016 сохраняется как optional transport reference для случаев, когда backend явно использует n8n как secondary automation hop.

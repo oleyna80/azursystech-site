@@ -14,6 +14,7 @@ import {
   recordLeadEvent,
 } from "@/lib/intake-storage";
 import { isRateLimitedPersistent } from "@/lib/request-rate-limit";
+import { sendTelegramLeadNotification } from "@/lib/telegram-notify";
 
 type IntegrationResult =
   | { kind: "success"; requestId: string }
@@ -39,6 +40,15 @@ type UpstreamFailureResponse = {
 
 type IntegrationDispatchContext = {
   idempotencyKey: string;
+};
+
+type NotificationDispatchContext = {
+  leadId: string | null;
+  inserted: boolean;
+  payload: ContactSubmitPayload;
+  requestId: string;
+  storageMode: string;
+  integrationKind: "accepted" | "integration_not_ready" | "submit_failed";
 };
 
 const CONTRACT_VERSION = "1";
@@ -235,6 +245,46 @@ async function safeRecordLeadEvent(
   }
 }
 
+async function sendTelegramNotificationForNewLead(context: NotificationDispatchContext): Promise<void> {
+  if (!context.leadId || !context.inserted) {
+    return;
+  }
+
+  const telegramResult = await sendTelegramLeadNotification({
+    requestId: context.requestId,
+    leadId: context.leadId,
+    payload: context.payload,
+    integrationOutcome: context.integrationKind,
+  });
+
+  if (telegramResult.status === "skipped") {
+    return;
+  }
+
+  if (telegramResult.status === "sent") {
+    await safeRecordLeadEvent(context.leadId, "notification.telegram.sent", {
+      request_id: context.requestId,
+      storage_mode: context.storageMode,
+      integration_kind: context.integrationKind,
+      telegram_message_id: telegramResult.messageId,
+    });
+    return;
+  }
+
+  await safeRecordLeadEvent(context.leadId, "notification.telegram.failed", {
+    request_id: context.requestId,
+    storage_mode: context.storageMode,
+    integration_kind: context.integrationKind,
+    error: telegramResult.error,
+    ...(typeof telegramResult.httpStatus === "number"
+      ? { telegram_http_status: telegramResult.httpStatus }
+      : {}),
+    ...(typeof telegramResult.telegramErrorCode === "number"
+      ? { telegram_error_code: telegramResult.telegramErrorCode }
+      : {}),
+  });
+}
+
 export async function POST(request: Request) {
   if (isRequestBodyTooLarge(request)) {
     return jsonResult(413, {
@@ -293,6 +343,7 @@ export async function POST(request: Request) {
   const receivedAtUtc = new Date();
   const sqlStorageEnabled = isSqlStorageEnabled(intakeStorageMode);
   let leadId: string | null = null;
+  let inserted = false;
 
   if (sqlStorageEnabled) {
     try {
@@ -303,6 +354,7 @@ export async function POST(request: Request) {
         receivedAtUtc,
       });
       leadId = persistedLead.leadId;
+      inserted = persistedLead.inserted;
     } catch {
       console.error("Lead persistence failed");
       return jsonResult(502, {
@@ -319,6 +371,14 @@ export async function POST(request: Request) {
     await safeRecordLeadEvent(leadId, "integration.not_ready", {
       request_id: requestId,
       storage_mode: intakeStorageMode,
+    });
+    await sendTelegramNotificationForNewLead({
+      leadId,
+      inserted,
+      payload: validated.payload,
+      requestId,
+      storageMode: intakeStorageMode,
+      integrationKind: "integration_not_ready",
     });
     if (intakeStorageMode === "sql_primary") {
       return jsonResult(200, {
@@ -338,6 +398,14 @@ export async function POST(request: Request) {
       request_id: requestId,
       storage_mode: intakeStorageMode,
     });
+    await sendTelegramNotificationForNewLead({
+      leadId,
+      inserted,
+      payload: validated.payload,
+      requestId,
+      storageMode: intakeStorageMode,
+      integrationKind: "submit_failed",
+    });
     if (intakeStorageMode === "sql_primary") {
       return jsonResult(200, {
         status: "success",
@@ -355,6 +423,14 @@ export async function POST(request: Request) {
     request_id: requestId,
     upstream_request_id: integrationResult.requestId,
     storage_mode: intakeStorageMode,
+  });
+  await sendTelegramNotificationForNewLead({
+    leadId,
+    inserted,
+    payload: validated.payload,
+    requestId,
+    storageMode: intakeStorageMode,
+    integrationKind: "accepted",
   });
 
   return jsonResult(200, {

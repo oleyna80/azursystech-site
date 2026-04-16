@@ -69,6 +69,15 @@ docker compose -f docker-compose.vps.yml exec -T -e TARGET_DB="azursystech_resto
 - RTO: under 30 minutes for application runtime recovery.
 - RPO: up to backup interval (default daily unless increased).
 
+## Fallback note: DB SSL rollout
+- If `scripts/postgres-ssl-rollout.sh --mode require|verify-full --apply` fails DB probe, restore `.env` from the timestamped backup created by the script and restart `app`:
+
+```bash
+cd /home/dmitrii/projects/azursystech-site
+cp .env.db-ssl-rollout-<timestamp>.bak .env
+docker compose -f docker-compose.vps.yml up -d app
+```
+
 ## Residual risk
 - If backups remain only on the same VPS disk, node loss can remove both production data and backups.
 - Recommended follow-up: offsite backup sync (S3, Storage Box, or separate host).

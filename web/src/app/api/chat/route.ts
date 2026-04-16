@@ -8,10 +8,30 @@ const MAX_REPLY_LENGTH = 2_000;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_MAX_KEYS = 10_000;
+const CHAT_UNAVAILABLE_MESSAGE =
+  "Чат временно недоступен. Пожалуйста, отправьте заявку через форму на сайте или напишите в WhatsApp.";
+const CTA_MESSAGE = "Оставьте заявку через форму на сайте или напишите в WhatsApp.";
+const POLICY_FALLBACK_MESSAGE =
+  "Я не могу обещать точные цены, сроки или проактивные действия в чате. Оставьте заявку через форму на сайте или напишите в WhatsApp.";
 const PROMPT_INJECTION_PATTERNS = [
   /ignore\s+(all\s+)?(previous|prior|above)\s+instructions/iu,
   /reveal\s+(the\s+)?system\s+prompt/iu,
   /act\s+as\s+system/iu,
+];
+const FORM_CTA_PATTERN = /\bформ(?:а|у|е|ой|ы)\b/iu;
+const WHATSAPP_CTA_PATTERN = /\bwhats\s*app\b|\bwhatsapp\b|ватсапп?/iu;
+const AUTONOMOUS_OUTBOUND_PATTERNS = [
+  /\b(?:я|мы)\s+(?:свяж(?:усь|емся)|позвон(?:ю|им)|напиш(?:у|ем)|отправ(?:лю|им)|вышл(?:ю|ем)|назнач(?:у|им)|запиш(?:у|ем)|заброниру(?:ю|ем)|организу(?:ю|ем)|приед(?:у|ем))\b/iu,
+  /\b(?:наш|мой)\s+специалист\s+(?:свяжется|позвонит|приедет|напишет|назначит)\b/iu,
+];
+const PRICING_COMMITMENT_PATTERNS = [
+  /\b(?:точн(?:ая|о)|ровно|фиксированн(?:ая|ую)\s+цен[ау]|гарантир(?:ую|уем)\s+цен[ыу])\b/iu,
+  /\b(?:будет|составит|стоит)\s*\d[\d\s.,]*(?:€|eur|евро|\$|usd|доллар(?:ов|а)?|₽|руб(?:\.|лей|ля|ль)?)\b/iu,
+];
+const SCHEDULING_COMMITMENT_PATTERNS = [
+  /\b(?:назнач(?:у|им)|запиш(?:у|ем)|приед(?:у|ем)|будем|начнем|созвонимся|подключимся)\b.{0,40}\b(?:в|на)\s*\d{1,2}[:.]\d{2}\b/iu,
+  /\b(?:назнач(?:у|им)|запиш(?:у|ем)|приед(?:у|ем)|будем|начнем)\b.{0,40}\b(?:на\s*)?\d{1,2}[./-]\d{1,2}(?:[./-]\d{2,4})?\b/iu,
+  /\b(?:завтра|сегодня|послезавтра)\s+(?:в\s*)?\d{1,2}[:.]\d{2}\b/iu,
 ];
 const SYSTEM_PROMPT = `Ты роль: IT-специалист компании AzurSysTech из Ниццы (Франция).
 Твоя задача помочь пользователю сформулировать его проблему перед тем, как он отправит заявку. Будь кратким, доброжелательным и компетентным.
@@ -47,6 +67,52 @@ function hasPromptInjectionAttempt(message: string): boolean {
   return PROMPT_INJECTION_PATTERNS.some((pattern) => pattern.test(message));
 }
 
+function matchesAnyPattern(value: string, patterns: RegExp[]): boolean {
+  return patterns.some((pattern) => pattern.test(value));
+}
+
+function hasForbiddenCommitment(reply: string): boolean {
+  return (
+    matchesAnyPattern(reply, AUTONOMOUS_OUTBOUND_PATTERNS) ||
+    matchesAnyPattern(reply, PRICING_COMMITMENT_PATTERNS) ||
+    matchesAnyPattern(reply, SCHEDULING_COMMITMENT_PATTERNS)
+  );
+}
+
+function hasClearCta(reply: string): boolean {
+  return FORM_CTA_PATTERN.test(reply) && WHATSAPP_CTA_PATTERN.test(reply);
+}
+
+function ensureCta(reply: string): string {
+  if (hasClearCta(reply)) {
+    return reply;
+  }
+
+  const compact = reply.replace(/\s+/g, " ").trim();
+  if (!compact) {
+    return CTA_MESSAGE;
+  }
+
+  const candidate = `${compact} ${CTA_MESSAGE}`;
+  if (candidate.length <= MAX_REPLY_LENGTH) {
+    return candidate;
+  }
+
+  const maxPrefixLength = Math.max(0, MAX_REPLY_LENGTH - CTA_MESSAGE.length - 1);
+  const prefix = compact
+    .slice(0, maxPrefixLength)
+    .replace(/\s+\S*$/u, "")
+    .trim()
+    .replace(/[.!?;,:-]+$/u, "");
+
+  return prefix ? `${prefix} ${CTA_MESSAGE}` : CTA_MESSAGE;
+}
+
+function enforcePostGenerationPolicy(reply: string): string {
+  const guardedReply = hasForbiddenCommitment(reply) ? POLICY_FALLBACK_MESSAGE : reply;
+  return sanitizeReply(ensureCta(guardedReply));
+}
+
 function isRequestBodyTooLarge(request: Request): boolean {
   const contentLength = request.headers.get("content-length");
   if (!contentLength) {
@@ -61,9 +127,21 @@ function isRequestBodyTooLarge(request: Request): boolean {
   return parsed > MAX_REQUEST_BODY_BYTES;
 }
 
+function isLiveChatEnabled(): boolean {
+  const launchMode = process.env.AI_LAUNCH_MODE?.trim();
+  const intakeStorageMode = process.env.INTAKE_STORAGE_MODE?.trim().toLowerCase() ?? "legacy";
+  const hasDeepseekApiKey = Boolean(process.env.DEEPSEEK_API_KEY?.trim());
+
+  return launchMode === "limited_live_intake" && intakeStorageMode !== "legacy" && hasDeepseekApiKey;
+}
+
 export async function POST(request: Request) {
   if (isRequestBodyTooLarge(request)) {
     return NextResponse.json({ error: "Request too large" }, { status: 413 });
+  }
+
+  if (!isLiveChatEnabled()) {
+    return NextResponse.json({ error: CHAT_UNAVAILABLE_MESSAGE }, { status: 503 });
   }
 
   const clientIp = getClientIp(request);
@@ -120,8 +198,7 @@ export async function POST(request: Request) {
 
   const apiKey = process.env.DEEPSEEK_API_KEY?.trim();
   if (!apiKey) {
-    console.error("Chat API misconfigured: missing DEEPSEEK_API_KEY");
-    return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 500 });
+    return NextResponse.json({ error: CHAT_UNAVAILABLE_MESSAGE }, { status: 503 });
   }
 
   const controller = new AbortController();
@@ -160,7 +237,8 @@ export async function POST(request: Request) {
     const data = (await response.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
     };
-    const reply = sanitizeReply(data.choices?.[0]?.message?.content);
+    const rawReply = sanitizeReply(data.choices?.[0]?.message?.content);
+    const reply = enforcePostGenerationPolicy(rawReply);
 
     return NextResponse.json({ reply });
   } catch (error) {

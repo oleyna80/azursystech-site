@@ -103,7 +103,8 @@ Profile should clearly reflect service area logic.
 ### Must prepare
 - Business name: `AzurSysTech`
 - Website: `https://azursystech.fr`
-- Phone: `+33 7 49 70 54 65`
+- Phone: `+33 7 80 72 09 94`
+- Legacy/deprecated phone reference: `+33 7 49 70 54 65`
 - Service area: `Nice + surrounding area`
 - Business category
 - Business description

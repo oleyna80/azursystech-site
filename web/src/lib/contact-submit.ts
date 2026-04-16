@@ -1,8 +1,9 @@
 export const CONTACT_SUBMIT_SOURCE = "website_form" as const;
 export const CONTACT_CHAT_SOURCE = "website_chat" as const;
+export const CONTACT_WHATSAPP_SOURCE = "whatsapp_chat" as const;
 export const CONTACT_DEFAULT_STATUS = "New" as const;
 
-const SOURCES = [CONTACT_SUBMIT_SOURCE, CONTACT_CHAT_SOURCE] as const;
+const SOURCES = [CONTACT_SUBMIT_SOURCE, CONTACT_CHAT_SOURCE, CONTACT_WHATSAPP_SOURCE] as const;
 
 const SEGMENTS = ["particulier", "tpe"] as const;
 const SERVICE_TYPES = [
@@ -61,7 +62,7 @@ type ValidationResult =
   | { kind: "validation_error"; issues: ContactSubmitValidationIssue[] };
 
 const FALLBACK_MESSAGE =
-  "Сейчас не удалось отправить заявку через форму. Используйте резервные каналы: телефон +33 7 49 70 54 65, WhatsApp +33 7 49 70 54 65, email contact@azursystech.fr или страницу /contact.";
+  "Сейчас не удалось отправить заявку через форму. Используйте резервные каналы: телефон +33 7 80 72 09 94, WhatsApp +33 7 80 72 09 94, email contact@azursystech.fr или страницу /contact.";
 
 function readTextField(formData: FormData, key: string): string {
   const value = formData.get(key);
