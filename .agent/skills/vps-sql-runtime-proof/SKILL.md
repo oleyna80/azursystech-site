@@ -1,5 +1,5 @@
 ---
-name: VPS SQL Runtime Proof
+name: vps-sql-runtime-proof
 description: Gate-проверка SQL-first runtime на VPS с формальным PASS/FAIL.
 ---
 
@@ -51,4 +51,3 @@ description: Gate-проверка SQL-first runtime на VPS с формаль�
   3. Files / settings changed
   4. Open blockers
   5. Next recommended action
-

@@ -1,5 +1,5 @@
 ---
-name: SSOT Sync Closeout
+name: ssot-sync-closeout
 description: Точечный post-stage sync в memory_bank и tasklist без переписывания истории.
 ---
 
@@ -32,4 +32,3 @@ description: Точечный post-stage sync в memory_bank и tasklist без 
 - 5-пунктовый stream summary
 - Список измененных SSOT файлов
 - Residual risks
-

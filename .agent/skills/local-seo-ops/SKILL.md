@@ -1,5 +1,5 @@
 ---
-name: Local SEO Ops
+name: local-seo-ops
 description: Планирование и проверка локального SEO-контента и GBP-активностей.
 ---
 

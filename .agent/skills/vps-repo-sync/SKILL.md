@@ -1,5 +1,5 @@
 ---
-name: VPS Repo Sync
+name: vps-repo-sync
 description: Сверка VPS runtime-фактов с репозиторием и точечный sync deployment артефактов.
 ---
 
@@ -33,4 +33,3 @@ description: Сверка VPS runtime-фактов с репозиторием �
 - Список `already synced` / `missing sync`
 - Scoped file list для commit
 - Риски (например offsite backup pending)
-

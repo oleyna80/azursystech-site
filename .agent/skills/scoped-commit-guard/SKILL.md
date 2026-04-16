@@ -1,5 +1,5 @@
 ---
-name: Scoped Commit Guard
+name: scoped-commit-guard
 description: Безопасный commit в dirty worktree только по whitelist файлам.
 ---
 
@@ -29,4 +29,3 @@ description: Безопасный commit в dirty worktree только по whi
 - Commit hash + message
 - Файлы в commit
 - Push status (ok / manual required)
-

@@ -1,5 +1,5 @@
 ---
-name: Index Exclusions Manager
+name: index-exclusions-manager
 description: Управление исключениями для индексации/контекстного шума в проекте.
 ---
 
@@ -29,4 +29,3 @@ description: Управление исключениями для индекса
 - Список новых pattern rules
 - Где применены (`.gitignore`, `.codexignore`)
 - Команда для валидации (`git status`, `rg` smoke)
-

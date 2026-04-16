@@ -1,5 +1,5 @@
 ---
-name: Contact Drift Audit
+name: contact-drift-audit
 description: Аудит drift по phone/WhatsApp/email между web и актуальными docs.
 ---
 
@@ -38,4 +38,3 @@ description: Аудит drift по phone/WhatsApp/email между web и акт
   - AC2 web runtime consistent
   - AC3 docs consistent
   - AC4 history preserved
-

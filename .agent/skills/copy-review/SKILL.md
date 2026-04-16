@@ -1,5 +1,5 @@
 ---
-name: Copy Review
+name: copy-review
 description: Проверка продающего текста на brand-fit, ясность и конверсионность.
 ---
 

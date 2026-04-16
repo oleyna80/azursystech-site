@@ -1,5 +1,5 @@
 ---
-name: Memory Bank Manager
+name: memory-bank-manager
 description: Поддержание актуального состояния памяти проекта между сессиями.
 ---
 

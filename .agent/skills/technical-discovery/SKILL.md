@@ -1,5 +1,5 @@
 ---
-name: Technical Discovery
+name: technical-discovery
 description: Анализ структуры проекта и подготовка решений на основе текущих артефактов.
 ---
 

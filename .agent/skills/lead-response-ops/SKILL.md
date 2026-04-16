@@ -1,5 +1,5 @@
 ---
-name: Lead Response Ops
+name: lead-response-ops
 description: Процедуры triage, классификации и первого ответа по входящим лидам.
 ---
 

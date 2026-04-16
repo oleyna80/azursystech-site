@@ -62,19 +62,25 @@
 
 | Skill | File | Trigger |
 | --- | --- | --- |
-| Technical Discovery | `.agent/skills/technical-discovery.md` | "исследуй", "проанализируй" |
-| Task Decomposition | `.agent/skills/task-decomposition.md` | "разбей на задачи", "tasklist" |
-| Copy Review | `.agent/skills/copy-review.md` | "проверь копирайт", "tone review" |
-| Lead Response Ops | `.agent/skills/lead-response-ops.md` | "ответ лидy", "lead routing" |
-| Local SEO Ops | `.agent/skills/local-seo-ops.md` | "local seo", "gbp" |
-| AI Runtime Ops | `.agent/skills/ai-runtime-ops.md` | "агент runtime", "prompts", "registry" |
-| Memory Bank Manager | `.agent/skills/memory-bank-manager.md` | "update memory bank" |
-| VPS SQL Runtime Proof | `.agent/skills/vps-sql-runtime-proof.md` | "runtime proof", "sql_primary", "gate A/B/C/D/E" |
-| VPS Repo Sync | `.agent/skills/vps-repo-sync.md` | "sync vps -> repo", "runtime artifacts" |
-| Contact Drift Audit | `.agent/skills/contact-drift-audit.md` | "проверь контакты", "AZR-003-013" |
-| Scoped Commit Guard | `.agent/skills/scoped-commit-guard.md` | "scoped commit", "грязное дерево" |
-| SSOT Sync Closeout | `.agent/skills/ssot-sync-closeout.md` | "закрыть stage", "sync memory bank" |
-| Index Exclusions Manager | `.agent/skills/index-exclusions-manager.md` | "исключи из индексации", "ignore для модели" |
+| Technical Discovery | `.agent/skills/technical-discovery/SKILL.md` | "исследуй", "проанализируй" |
+| Shell Context Guard | `.agent/skills/shell-context-guard/SKILL.md` | "ошибка в PowerShell", "shell mismatch", "код 1/127/128 после copy-paste" |
+| Task Decomposition | `.agent/skills/task-decomposition/SKILL.md` | "разбей на задачи", "tasklist" |
+| Copy Review | `.agent/skills/copy-review/SKILL.md` | "проверь копирайт", "tone review" |
+| Lead Response Ops | `.agent/skills/lead-response-ops/SKILL.md` | "ответ лидy", "lead routing" |
+| Local SEO Ops | `.agent/skills/local-seo-ops/SKILL.md` | "local seo", "gbp" |
+| AI Runtime Ops | `.agent/skills/ai-runtime-ops/SKILL.md` | "агент runtime", "prompts", "registry" |
+| Memory Bank Manager | `.agent/skills/memory-bank-manager/SKILL.md` | "update memory bank" |
+| VPS SQL Runtime Proof | `.agent/skills/vps-sql-runtime-proof/SKILL.md` | "runtime proof", "sql_primary", "gate A/B/C/D/E" |
+| VPS Security Runtime Proof | `.agent/skills/vps-security-runtime-proof/SKILL.md` | "security runtime proof", "persistent limiter", "integration.accepted" |
+| VPS Repo Sync | `.agent/skills/vps-repo-sync/SKILL.md` | "sync vps -> repo", "runtime artifacts" |
+| VPS Deploy Recovery | `.agent/skills/vps-deploy-recovery/SKILL.md` | "diverged branch", "unmerged files", "compose yaml error", "ff-only failed" |
+| Contact Drift Audit | `.agent/skills/contact-drift-audit/SKILL.md` | "проверь контакты", "AZR-003-013" |
+| Scoped Commit Guard | `.agent/skills/scoped-commit-guard/SKILL.md` | "scoped commit", "грязное дерево" |
+| SSOT Sync Closeout | `.agent/skills/ssot-sync-closeout/SKILL.md` | "закрыть stage", "sync memory bank" |
+| Index Exclusions Manager | `.agent/skills/index-exclusions-manager/SKILL.md` | "исключи из индексации", "ignore для модели" |
+| Security Audit Triage | `.agent/skills/security-audit-triage/SKILL.md` | "проверь security аудит", "валидация findings" |
+| Security Hardening Pass | `.agent/skills/security-hardening-pass/SKILL.md` | "сделай hardening", "закрой P0/P1 security" |
+| Security Verification Gate | `.agent/skills/security-verification-gate/SKILL.md` | "security verifier", "ship verdict" |
 
 ## Core Workflow
 

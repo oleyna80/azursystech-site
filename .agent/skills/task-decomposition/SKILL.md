@@ -1,5 +1,5 @@
 ---
-name: Task Decomposition
+name: task-decomposition
 description: Декомпозиция целей в атомарные задачи с проверяемыми AC.
 ---
 

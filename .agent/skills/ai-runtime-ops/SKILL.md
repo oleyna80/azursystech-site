@@ -1,5 +1,5 @@
 ---
-name: AI Runtime Ops
+name: ai-runtime-ops
 description: Управление реестром агентов, промптами, примерами входов и безопасным запуском.
 ---
 
