@@ -129,7 +129,7 @@ export default function PrivacyPage() {
               Email: <a className="font-medium text-[#1F6F78] underline" href={`mailto:${LEGAL_CONTACT.email}`}>{LEGAL_CONTACT.email}</a>
             </li>
             <li>
-              Телефон / WhatsApp: <a className="font-medium text-[#8A4A2F] underline" href={LEGAL_CONTACT.whatsappHref}>{LEGAL_CONTACT.phoneDisplay}</a>
+              Телефон / WhatsApp: <a className="font-medium text-[#8A4A2F] underline" href={LEGAL_CONTACT.whatsappHref}>{LEGAL_CONTACT.whatsappDisplay}</a>
             </li>
           </ul>
         </section>

@@ -59,9 +59,10 @@ Must be finalized before launch:
 
 ### 6. Primary intake workflow readiness
 Must be finalized before launch:
-- `site -> n8n` webhook path configured
-- Google Sheets intake log writable from `n8n`
-- at least one full test lead proves end-to-end intake
+- backend intake route (`/api/contact/submit`) validates and normalizes payload server-side
+- SQL intake storage is writable in target runtime (`DATABASE_URL`, schema applied)
+- at least one full test lead proves end-to-end intake into SQL
+- optional `n8n`/Sheets automation path does not block launch readiness
 
 ## Cannot Launch Until
 
@@ -71,7 +72,7 @@ Must be finalized before launch:
 4. Deploy secrets and VPS runtime config are populated and verified.
 5. AI launch mode is explicitly chosen.
 6. GBP and review workflow are operationally usable.
-7. Primary `site -> n8n -> Google Sheets` intake path is operationally usable.
+7. Primary backend-first SQL intake path is operationally usable.
 
 ## Source of Truth For Go-Live
 
@@ -117,12 +118,13 @@ Must be finalized before launch:
 ## Confirmed Launch Decisions
 
 - public WhatsApp is enabled on the same launch number:
-  - `+33 7 49 70 54 65`
+  - current: `+33 7 80 72 09 94`
 - launch intake sink:
-  - `Google Sheets via n8n`
+  - `backend-first SQL`
 - sequencing after website closure:
-  - first `n8n + Google Sheets`
+  - first backend SQL intake hardening (`AZR-003-014`)
   - then AI widget + Telegram notification
+  - optional `n8n`/Sheets automation/export later if needed
   - CRM later
 - AI launch mode:
   - `limited live intake`
@@ -146,7 +148,8 @@ Unless explicitly overridden before launch:
 - ops mode default:
   - website live
   - form live
-  - `n8n + Google Sheets` live
+  - backend SQL intake live
+  - `n8n + Google Sheets` optional (non-blocking)
   - Facebook manual ops live
   - GBP live
 

@@ -337,10 +337,10 @@ If email provided:
 Спасибо. Мы получили вашу заявку и свяжемся с вами для уточнения деталей.
 
 ### Optional secondary line
-Если задача срочная, можно дополнительно связаться через WhatsApp: `+33 7 49 70 54 65`.
+Если задача срочная, можно дополнительно связаться через WhatsApp: `+33 7 80 72 09 94`.
 
 ### Important note
-Phone and WhatsApp are available for launch and should be supported as visible contact options.
+Phone and WhatsApp are available for launch and should be supported as visible contact options. Current public number: `+33 7 80 72 09 94`.
 
 ---
 

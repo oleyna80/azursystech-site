@@ -327,8 +327,8 @@ Make FAQ scannable with accordion or anchor navigation.
 6. FAQ mini-block
 
 ### Contact methods
-- phone: `+33 7 49 70 54 65`
-- WhatsApp: `+33 7 49 70 54 65`
+- phone: `+33 7 80 72 09 94`
+- WhatsApp: `+33 7 80 72 09 94`
 - main lead form
 - embedded AI chat widget
 
