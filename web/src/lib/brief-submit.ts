@@ -1,0 +1,1182 @@
+export const BRIEF_SCHEMA_VERSION = "brief.v1" as const;
+export const BRIEF_SOURCE = "brief_form" as const;
+export const BRIEF_ROUTE = "/brief" as const;
+export const BRIEF_LOCALE = "ru" as const;
+
+const BRIEF_BUSINESS_TYPES = [
+  "local_service_company",
+  "small_office_cabinet",
+  "ecommerce",
+  "retail_store",
+  "agency_studio",
+  "consultant_expert_business",
+  "other",
+] as const;
+
+const BRIEF_PRIORITY_USE_CASES = [
+  "website_leads",
+  "messenger_intake",
+  "qualification",
+  "customer_support",
+  "routing",
+  "follow_up",
+  "document_workflow",
+  "other",
+] as const;
+
+const BRIEF_CURRENT_CHANNELS = [
+  "website_form",
+  "website_chat",
+  "whatsapp",
+  "facebook_instagram",
+  "email",
+  "phone",
+  "crm",
+  "marketplace",
+  "other",
+] as const;
+
+const BRIEF_APPROVAL_STAGES = [
+  "first_response",
+  "qualification",
+  "handoff_to_work",
+  "price_quote",
+  "deadlines_booking",
+  "documents",
+  "final_client_reply",
+  "not_sure",
+] as const;
+
+const BRIEF_START_MODES = [
+  "audit_review",
+  "pilot_one_process",
+  "ai_agent_incoming_requests",
+  "ai_agent_customer_requests",
+  "document_automation",
+  "discovery_call_only",
+  "not_sure",
+] as const;
+
+const BRIEF_TIMELINE_PRIORITIES = ["asap", "2_4_weeks", "1_3_months", "exploring"] as const;
+
+const BRIEF_BUDGET_RANGES = [
+  "no_budget_yet",
+  "audit_first",
+  "up_to_1000",
+  "1000_3000",
+  "3000_10000",
+  "10000_plus",
+  "prefer_to_discuss",
+] as const;
+
+const BRIEF_TEAM_SIZES = ["1", "2_5", "6_10", "11_25", "25_plus"] as const;
+
+const BRIEF_CONTACT_METHODS = ["email", "whatsapp", "phone", "meeting", "no_matter"] as const;
+
+export type BriefBusinessType = (typeof BRIEF_BUSINESS_TYPES)[number];
+export type BriefPriorityUseCase = (typeof BRIEF_PRIORITY_USE_CASES)[number];
+export type BriefCurrentChannel = (typeof BRIEF_CURRENT_CHANNELS)[number];
+export type BriefApprovalStage = (typeof BRIEF_APPROVAL_STAGES)[number];
+export type BriefStartMode = (typeof BRIEF_START_MODES)[number];
+export type BriefTimelinePriority = (typeof BRIEF_TIMELINE_PRIORITIES)[number];
+export type BriefBudgetRange = (typeof BRIEF_BUDGET_RANGES)[number];
+export type BriefTeamSize = (typeof BRIEF_TEAM_SIZES)[number];
+export type BriefPreferredContactMethod = (typeof BRIEF_CONTACT_METHODS)[number];
+
+type BriefOption = {
+  value: string;
+  label: string;
+};
+
+export type BriefFieldType = "text" | "textarea" | "url" | "email" | "select" | "multi_select";
+
+export type BriefFieldDefinition = {
+  key: BriefFieldKey;
+  label: string;
+  type: BriefFieldType;
+  required: boolean;
+  helperText: string;
+  placeholder?: string;
+  example?: string;
+  assistantTrigger?: boolean;
+  options?: BriefOption[];
+  allowOther?: boolean;
+  otherFieldKey?: string;
+  otherPlaceholder?: string;
+  notesFieldKey?: string;
+  notesPlaceholder?: string;
+};
+
+export type BriefStepDefinition = {
+  id: string;
+  title: string;
+  shortDescription: string;
+  fields: BriefFieldDefinition[];
+};
+
+export type BriefValidationIssue = {
+  field: string;
+  message: string;
+};
+
+export type BriefFormValues = {
+  company_name: string;
+  website_url: string;
+  business_type: BriefBusinessType | "";
+  business_type_other: string;
+  target_market: string;
+  team_size: BriefTeamSize | "";
+  main_goal: string;
+  main_problem: string;
+  desired_result: string;
+  priority_use_case: BriefPriorityUseCase | "";
+  priority_use_case_other: string;
+  why_now: string;
+  current_process_description: string;
+  current_channels: BriefCurrentChannel[];
+  current_channels_other: string;
+  current_owner_of_process: string;
+  main_bottleneck: string;
+  current_tools: string;
+  human_approval_required: BriefApprovalStage[];
+  human_approval_required_notes: string;
+  sensitive_data_or_constraints: string;
+  what_must_not_happen: string;
+  preferred_start_mode: BriefStartMode | "";
+  timeline_priority: BriefTimelinePriority | "";
+  budget_range: BriefBudgetRange | "";
+  contact_name: string;
+  contact_email: string;
+  contact_phone_or_whatsapp: string;
+  preferred_contact_method: BriefPreferredContactMethod | "";
+};
+
+export type BriefValueKey = keyof BriefFormValues;
+export type BriefFieldKey = BriefValueKey;
+
+export type BriefSubmissionMetadata = {
+  ai_assist_used: boolean;
+  assistant_interaction_count: number;
+};
+
+export type BriefSubmissionPayload = {
+  schema_version: typeof BRIEF_SCHEMA_VERSION;
+  source: typeof BRIEF_SOURCE;
+  route: typeof BRIEF_ROUTE;
+  locale: typeof BRIEF_LOCALE;
+  created_at: string;
+  brief: BriefFormValues;
+  metadata: BriefSubmissionMetadata;
+  crm_handoff: BriefHandoff;
+};
+
+export type BriefHandoff = {
+  company_name: string;
+  business_type: string;
+  main_goal: string;
+  main_problem: string;
+  desired_result: string;
+  priority_use_case: string;
+  current_process_description: string;
+  current_channels: string;
+  main_bottleneck: string;
+  human_approval_required: string;
+  what_must_not_happen: string;
+  preferred_start_mode: string;
+  timeline_priority: string;
+  budget_range: string;
+  contact: {
+    name: string;
+    email: string;
+    phone?: string;
+    preferred_contact_method?: string;
+  };
+  recommended_next_step: "discovery_call" | "audit" | "pilot_discussion" | "request_more_info" | "out_of_scope_review";
+  summary: string;
+};
+
+export type BriefSubmitRequestBody = {
+  values?: unknown;
+  ai_assist_used?: unknown;
+  assistant_interaction_count?: unknown;
+};
+
+export type BriefSubmitApiResult =
+  | { success: true; message: string; payload: BriefSubmissionPayload; handoff: BriefHandoff }
+  | { success: false; message: string; issues: BriefValidationIssue[] };
+
+type BriefValidationResult =
+  | { kind: "ok"; values: BriefFormValues }
+  | { kind: "validation_error"; issues: BriefValidationIssue[] };
+
+type BriefFieldRule = {
+  key: BriefFieldKey;
+  required: boolean;
+  minLength?: number;
+  maxLength?: number;
+};
+
+export const BRIEF_FIELDS: Record<BriefFieldKey, BriefFieldDefinition> = {
+  company_name: {
+    key: "company_name",
+    label: "Название компании / проекта",
+    type: "text",
+    required: true,
+    helperText: "Укажите, как называется бизнес или проект.",
+    placeholder: "AzurSysTech",
+    example: "AzurSysTech",
+  },
+  website_url: {
+    key: "website_url",
+    label: "Сайт компании",
+    type: "url",
+    required: false,
+    helperText: "Можно оставить пустым, если сайта ещё нет.",
+    placeholder: "https://example.com",
+    example: "https://example.com",
+  },
+  business_type: {
+    key: "business_type",
+    label: "Тип бизнеса",
+    type: "select",
+    required: true,
+    helperText: "Выберите наиболее близкий тип бизнеса.",
+    assistantTrigger: true,
+    options: [
+      { value: "local_service_company", label: "Локальная сервисная компания" },
+      { value: "small_office_cabinet", label: "Небольшой офис / кабинет" },
+      { value: "ecommerce", label: "E-commerce" },
+      { value: "retail_store", label: "Розница / магазин" },
+      { value: "agency_studio", label: "Агентство / студия" },
+      { value: "consultant_expert_business", label: "Консультант / экспертный бизнес" },
+      { value: "other", label: "Другое" },
+    ],
+    allowOther: true,
+    otherFieldKey: "business_type_other",
+    otherPlaceholder: "Кратко опишите тип бизнеса",
+  },
+  target_market: {
+    key: "target_market",
+    label: "Основной рынок / география",
+    type: "text",
+    required: false,
+    helperText: "Можно указать страну, регион или несколько рынков.",
+    placeholder: "Франция, ЕС",
+    example: "Франция, ЕС",
+  },
+  team_size: {
+    key: "team_size",
+    label: "Размер команды",
+    type: "select",
+    required: false,
+    helperText: "Если точного числа нет, выберите ближайший диапазон.",
+    options: [
+      { value: "1", label: "1" },
+      { value: "2_5", label: "2–5" },
+      { value: "6_10", label: "6–10" },
+      { value: "11_25", label: "11–25" },
+      { value: "25_plus", label: "25+" },
+    ],
+  },
+  main_goal: {
+    key: "main_goal",
+    label: "Что вы хотите автоматизировать в первую очередь?",
+    type: "textarea",
+    required: true,
+    helperText: "Опишите один главный процесс, который нужно улучшить первым.",
+    placeholder: "Хочу автоматизировать первичную обработку заявок с сайта и WhatsApp.",
+    example: "Хочу автоматизировать первичную обработку заявок с сайта и WhatsApp.",
+    assistantTrigger: true,
+  },
+  main_problem: {
+    key: "main_problem",
+    label: "Какая проблема сейчас ощущается сильнее всего?",
+    type: "textarea",
+    required: true,
+    helperText: "Укажите, где сейчас теряется время, управляемость или заявки.",
+    placeholder: "Заявки приходят из разных каналов, часть теряется, а сотрудники тратят много времени на одинаковые уточнения.",
+    example: "Заявки приходят из разных каналов, часть теряется, а сотрудники тратят много времени на одинаковые уточнения.",
+    assistantTrigger: true,
+  },
+  desired_result: {
+    key: "desired_result",
+    label: "Какой результат вы хотите получить на выходе?",
+    type: "textarea",
+    required: true,
+    helperText: "Опишите результат через бизнес-эффект, а не через стек.",
+    placeholder: "Чтобы обращения автоматически собирались в одну структуру, квалифицировались и передавались дальше с кратким summary.",
+    example: "Чтобы обращения автоматически собирались в одну структуру, квалифицировались и передавались дальше с кратким summary.",
+    assistantTrigger: true,
+  },
+  priority_use_case: {
+    key: "priority_use_case",
+    label: "Какой сценарий сейчас самый важный?",
+    type: "select",
+    required: true,
+    helperText: "Если есть несколько сценариев, выберите главный первый шаг.",
+    assistantTrigger: true,
+    options: [
+      { value: "website_leads", label: "Обработка заявок с сайта" },
+      { value: "messenger_intake", label: "Intake из чата / мессенджеров" },
+      { value: "qualification", label: "Первичная qualification" },
+      { value: "customer_support", label: "Клиентская поддержка по типовым вопросам" },
+      { value: "routing", label: "Маршрутизация обращений" },
+      { value: "follow_up", label: "Follow-up и напоминания" },
+      { value: "document_workflow", label: "Шаблонный документооборот" },
+      { value: "other", label: "Другое" },
+    ],
+    allowOther: true,
+    otherFieldKey: "priority_use_case_other",
+    otherPlaceholder: "Кратко опишите сценарий",
+  },
+  why_now: {
+    key: "why_now",
+    label: "Почему вы хотите заняться этим сейчас?",
+    type: "textarea",
+    required: false,
+    helperText: "Это поле не обязательное, но помогает понять срочность запроса.",
+    placeholder: "Количество обращений выросло, и ручная обработка уже тормозит продажи.",
+    example: "Количество обращений выросло, и ручная обработка уже тормозит продажи.",
+  },
+  current_process_description: {
+    key: "current_process_description",
+    label: "Как этот процесс выглядит сейчас?",
+    type: "textarea",
+    required: true,
+    helperText: "Опишите процесс простыми шагами: откуда приходит запрос, кто отвечает, что происходит дальше.",
+    placeholder: "Клиент оставляет заявку на сайте или пишет в WhatsApp, потом менеджер вручную уточняет детали и переносит всё в таблицу.",
+    example: "Клиент оставляет заявку на сайте или пишет в WhatsApp, потом менеджер вручную уточняет детали и переносит всё в таблицу.",
+    assistantTrigger: true,
+  },
+  current_channels: {
+    key: "current_channels",
+    label: "Через какие каналы сейчас приходят заявки и обращения?",
+    type: "multi_select",
+    required: true,
+    helperText: "Выберите все реальные каналы, которые уже работают сейчас.",
+    assistantTrigger: true,
+    options: [
+      { value: "website_form", label: "Сайт / форма" },
+      { value: "website_chat", label: "Чат на сайте" },
+      { value: "whatsapp", label: "WhatsApp" },
+      { value: "facebook_instagram", label: "Facebook / Instagram" },
+      { value: "email", label: "Email" },
+      { value: "phone", label: "Телефон" },
+      { value: "crm", label: "CRM" },
+      { value: "marketplace", label: "Маркетплейс" },
+      { value: "other", label: "Другое" },
+    ],
+    allowOther: true,
+    otherFieldKey: "current_channels_other",
+    otherPlaceholder: "Укажите другой канал",
+  },
+  current_owner_of_process: {
+    key: "current_owner_of_process",
+    label: "Кто сейчас обрабатывает этот процесс?",
+    type: "text",
+    required: false,
+    helperText: "Можно указать роль, а не конкретное имя.",
+    placeholder: "Владелец бизнеса, менеджер или администратор",
+    example: "Менеджер и владелец бизнеса",
+  },
+  main_bottleneck: {
+    key: "main_bottleneck",
+    label: "Где сейчас самый узкий участок процесса?",
+    type: "textarea",
+    required: true,
+    helperText: "Помогите выделить один основной bottleneck, а не весь список проблем.",
+    placeholder: "На этапе первого ответа и сбора информации: нужно вручную задавать одни и те же вопросы.",
+    example: "На этапе первого ответа и сбора информации: нужно вручную задавать одни и те же вопросы.",
+    assistantTrigger: true,
+  },
+  current_tools: {
+    key: "current_tools",
+    label: "Какие системы или инструменты уже используются сейчас?",
+    type: "textarea",
+    required: false,
+    helperText: "Достаточно базового перечисления: сайт, таблицы, CRM, мессенджеры.",
+    placeholder: "Сайт, Google Sheets, WhatsApp, CRM",
+    example: "Сайт, Google Sheets, WhatsApp, CRM",
+  },
+  human_approval_required: {
+    key: "human_approval_required",
+    label: "На каких этапах обязательно нужен контроль человека?",
+    type: "multi_select",
+    required: true,
+    helperText: "Это поле помогает понять, где automation допустима, а где нужен human-in-the-loop.",
+    assistantTrigger: true,
+    options: [
+      { value: "first_response", label: "Первый ответ" },
+      { value: "qualification", label: "Qualification" },
+      { value: "handoff_to_work", label: "Передача в работу" },
+      { value: "price_quote", label: "Цена / коммерческое предложение" },
+      { value: "deadlines_booking", label: "Сроки / запись" },
+      { value: "documents", label: "Документы" },
+      { value: "final_client_reply", label: "Финальный ответ клиенту" },
+      { value: "not_sure", label: "Не уверен" },
+    ],
+    notesFieldKey: "human_approval_required_notes",
+    notesPlaceholder: "Можно коротко пояснить, где нужен ручной контроль и почему.",
+  },
+  sensitive_data_or_constraints: {
+    key: "sensitive_data_or_constraints",
+    label: "Есть ли чувствительные данные, ограничения или особенности, которые нужно учитывать?",
+    type: "textarea",
+    required: false,
+    helperText: "Если есть ограничения по данным, стране хранения или внутренним документам, укажите их здесь.",
+    placeholder: "Например: персональные данные клиентов, финансовая информация, внутренние документы.",
+    example: "Например: персональные данные клиентов, финансовая информация, внутренние документы.",
+  },
+  what_must_not_happen: {
+    key: "what_must_not_happen",
+    label: "Чего точно не должно происходить в такой автоматизации?",
+    type: "textarea",
+    required: true,
+    helperText: "Например: агент не должен обещать цену, сроки или писать без проверки.",
+    placeholder: "Например: нельзя отправлять сообщения без проверки, нельзя менять CRM без подтверждения.",
+    example: "Нельзя отправлять сообщения без проверки и нельзя менять CRM без подтверждения.",
+    assistantTrigger: true,
+  },
+  preferred_start_mode: {
+    key: "preferred_start_mode",
+    label: "С чего вы хотите начать?",
+    type: "select",
+    required: true,
+    helperText: "Если не уверены, безопаснее выбрать аудит, пилот или discovery call.",
+    options: [
+      { value: "audit_review", label: "Аудит и разбор процесса" },
+      { value: "pilot_one_process", label: "Пилот на одном процессе" },
+      { value: "ai_agent_incoming_requests", label: "AI-agent для обработки заявок" },
+      { value: "ai_agent_customer_requests", label: "AI-agent для клиентских обращений" },
+      { value: "document_automation", label: "Автоматизация документооборота" },
+      { value: "discovery_call_only", label: "Пока нужен только discovery call" },
+      { value: "not_sure", label: "Не уверен" },
+    ],
+    assistantTrigger: true,
+  },
+  timeline_priority: {
+    key: "timeline_priority",
+    label: "Насколько срочно вы хотите начать?",
+    type: "select",
+    required: false,
+    helperText: "Можно выбрать ориентир, даже если дата пока не точная.",
+    options: [
+      { value: "asap", label: "Как можно скорее" },
+      { value: "2_4_weeks", label: "В ближайшие 2–4 недели" },
+      { value: "1_3_months", label: "В ближайшие 1–3 месяца" },
+      { value: "exploring", label: "Просто изучаю варианты" },
+    ],
+  },
+  budget_range: {
+    key: "budget_range",
+    label: "Есть ли ориентир по бюджету?",
+    type: "select",
+    required: false,
+    helperText: "Поле опциональное. Если пока без бюджета, это нормально.",
+    options: [
+      { value: "no_budget_yet", label: "Пока без бюджета" },
+      { value: "audit_first", label: "Сначала нужен аудит" },
+      { value: "up_to_1000", label: "До 1 000 €" },
+      { value: "1000_3000", label: "1 000–3 000 €" },
+      { value: "3000_10000", label: "3 000–10 000 €" },
+      { value: "10000_plus", label: "10 000 €+" },
+      { value: "prefer_to_discuss", label: "Предпочитаю обсудить" },
+    ],
+  },
+  contact_name: {
+    key: "contact_name",
+    label: "Имя",
+    type: "text",
+    required: true,
+    helperText: "Имя человека, с которым можно продолжить обсуждение.",
+    placeholder: "Иван",
+    example: "Иван",
+  },
+  contact_email: {
+    key: "contact_email",
+    label: "Email",
+    type: "email",
+    required: true,
+    helperText: "Главный канал для follow-up.",
+    placeholder: "ivan@example.com",
+    example: "ivan@example.com",
+  },
+  contact_phone_or_whatsapp: {
+    key: "contact_phone_or_whatsapp",
+    label: "Телефон / WhatsApp",
+    type: "text",
+    required: false,
+    helperText: "Можно указать один номер, если он удобен и для звонка, и для WhatsApp.",
+    placeholder: "+33 7 80 72 09 94",
+    example: "+33 7 80 72 09 94",
+  },
+  preferred_contact_method: {
+    key: "preferred_contact_method",
+    label: "Как с вами удобнее связаться?",
+    type: "select",
+    required: false,
+    helperText: "Если нет предпочтения, можно выбрать «Не важно».",
+    options: [
+      { value: "email", label: "Email" },
+      { value: "whatsapp", label: "WhatsApp" },
+      { value: "phone", label: "Телефон" },
+      { value: "meeting", label: "Созвон / meeting" },
+      { value: "no_matter", label: "Не важно" },
+    ],
+  },
+  business_type_other: {
+    key: "business_type_other",
+    label: "Уточнение типа бизнеса",
+    type: "text",
+    required: false,
+    helperText: "Заполните, если в типе бизнеса выбрано «Другое».",
+    placeholder: "Кратко опишите тип бизнеса",
+  },
+  priority_use_case_other: {
+    key: "priority_use_case_other",
+    label: "Уточнение сценария",
+    type: "text",
+    required: false,
+    helperText: "Заполните, если в сценарии выбрано «Другое».",
+    placeholder: "Кратко опишите сценарий",
+  },
+  current_channels_other: {
+    key: "current_channels_other",
+    label: "Другой канал",
+    type: "text",
+    required: false,
+    helperText: "Заполните, если в каналах выбрано «Другое».",
+    placeholder: "Укажите другой канал",
+  },
+  human_approval_required_notes: {
+    key: "human_approval_required_notes",
+    label: "Комментарий к ручному контролю",
+    type: "textarea",
+    required: false,
+    helperText: "Можно коротко пояснить, где именно нужен ручной контроль.",
+    placeholder: "Например: первый ответ можно автоматизировать, но цену и сроки должен подтверждать человек.",
+    example: "Первый ответ можно автоматизировать, но цену и сроки должен подтверждать человек.",
+  },
+};
+
+const BRIEF_FIELD_RULES: BriefFieldRule[] = [
+  { key: "company_name", required: true, minLength: 2, maxLength: 120 },
+  { key: "website_url", required: false, maxLength: 400 },
+  { key: "business_type", required: true },
+  { key: "target_market", required: false, maxLength: 120 },
+  { key: "team_size", required: false },
+  { key: "main_goal", required: true, minLength: 15, maxLength: 2000 },
+  { key: "main_problem", required: true, minLength: 15, maxLength: 2000 },
+  { key: "desired_result", required: true, minLength: 15, maxLength: 2000 },
+  { key: "priority_use_case", required: true },
+  { key: "why_now", required: false, minLength: 8, maxLength: 2000 },
+  { key: "current_process_description", required: true, minLength: 15, maxLength: 2500 },
+  { key: "current_channels", required: true },
+  { key: "current_owner_of_process", required: false, maxLength: 120 },
+  { key: "main_bottleneck", required: true, minLength: 15, maxLength: 2000 },
+  { key: "current_tools", required: false, maxLength: 2000 },
+  { key: "human_approval_required", required: true },
+  { key: "sensitive_data_or_constraints", required: false, maxLength: 2000 },
+  { key: "what_must_not_happen", required: true, minLength: 15, maxLength: 2000 },
+  { key: "preferred_start_mode", required: true },
+  { key: "timeline_priority", required: false },
+  { key: "budget_range", required: false },
+  { key: "contact_name", required: true, minLength: 2, maxLength: 120 },
+  { key: "contact_email", required: true, maxLength: 254 },
+  { key: "contact_phone_or_whatsapp", required: false, maxLength: 60 },
+  { key: "preferred_contact_method", required: false },
+];
+
+export const BRIEF_STEPS: BriefStepDefinition[] = [
+  {
+    id: "business-context",
+    title: "О компании / бизнесе",
+    shortDescription: "Краткий контекст по компании и рынку.",
+    fields: [
+      BRIEF_FIELDS.company_name,
+      BRIEF_FIELDS.website_url,
+      BRIEF_FIELDS.business_type,
+      BRIEF_FIELDS.target_market,
+      BRIEF_FIELDS.team_size,
+    ],
+  },
+  {
+    id: "goal-and-problem",
+    title: "О задаче и цели автоматизации",
+    shortDescription: "Что нужно автоматизировать и зачем.",
+    fields: [
+      BRIEF_FIELDS.main_goal,
+      BRIEF_FIELDS.main_problem,
+      BRIEF_FIELDS.desired_result,
+      BRIEF_FIELDS.priority_use_case,
+      BRIEF_FIELDS.why_now,
+    ],
+  },
+  {
+    id: "current-process",
+    title: "О текущем процессе",
+    shortDescription: "Как всё устроено сейчас и где возникает узкое место.",
+    fields: [
+      BRIEF_FIELDS.current_process_description,
+      BRIEF_FIELDS.current_channels,
+      BRIEF_FIELDS.current_owner_of_process,
+      BRIEF_FIELDS.main_bottleneck,
+    ],
+  },
+  {
+    id: "constraints-and-control",
+    title: "Системы, ограничения и контроль",
+    shortDescription: "Какие инструменты используются и где нужен человек.",
+    fields: [
+      BRIEF_FIELDS.current_tools,
+      BRIEF_FIELDS.human_approval_required,
+      BRIEF_FIELDS.human_approval_required_notes,
+      BRIEF_FIELDS.sensitive_data_or_constraints,
+      BRIEF_FIELDS.what_must_not_happen,
+    ],
+  },
+  {
+    id: "launch-and-contact",
+    title: "Запуск и контакт",
+    shortDescription: "Какой следующий шаг нужен и как удобнее связаться.",
+    fields: [
+      BRIEF_FIELDS.preferred_start_mode,
+      BRIEF_FIELDS.timeline_priority,
+      BRIEF_FIELDS.budget_range,
+      BRIEF_FIELDS.contact_name,
+      BRIEF_FIELDS.contact_email,
+      BRIEF_FIELDS.contact_phone_or_whatsapp,
+      BRIEF_FIELDS.preferred_contact_method,
+    ],
+  },
+];
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function toTrimmedString(value: unknown): string {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value.trim();
+}
+
+function toTrimmedStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.map((item) => toTrimmedString(item)).filter((item) => item.length > 0);
+}
+
+function isOneOf<T extends readonly string[]>(value: string, options: T): value is T[number] {
+  return (options as readonly string[]).includes(value);
+}
+
+function isSoftUrl(value: string): boolean {
+  if (!value) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    try {
+      const parsed = new URL(`https://${value}`);
+      return parsed.protocol === "http:" || parsed.protocol === "https:";
+    } catch {
+      return false;
+    }
+  }
+}
+
+function isEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function hasPhoneLikeShape(value: string): boolean {
+  return value.length >= 6 && /\d/.test(value);
+}
+
+function hasMinLength(value: string, minLength: number): boolean {
+  return value.trim().length >= minLength;
+}
+
+function pickEnumValue<T extends readonly string[]>(value: unknown, options: T): T[number] | "" {
+  const trimmed = toTrimmedString(value);
+  return isOneOf(trimmed, options) ? trimmed : "";
+}
+
+function validateCommonFields(values: Record<string, unknown>, fieldKeys: BriefFieldKey[]): BriefValidationIssue[] {
+  const issues: BriefValidationIssue[] = [];
+  const fieldKeySet = new Set(fieldKeys);
+
+  for (const rule of BRIEF_FIELD_RULES) {
+    if (!fieldKeySet.has(rule.key)) {
+      continue;
+    }
+
+    const fieldValue = values[rule.key];
+    const trimmed = typeof fieldValue === "string" ? fieldValue.trim() : "";
+
+    if (rule.required) {
+      if (rule.key === "current_channels") {
+        if (!Array.isArray(fieldValue) || toTrimmedStringArray(fieldValue).length === 0) {
+          issues.push({
+            field: rule.key,
+            message:
+              "Выберите хотя бы один канал",
+          });
+          continue;
+        }
+      } else if (rule.key === "human_approval_required") {
+        continue;
+      } else if (rule.key === "contact_email") {
+        if (!trimmed) {
+          issues.push({ field: rule.key, message: "Укажите email" });
+          continue;
+        }
+      } else if (!trimmed) {
+        issues.push({
+          field: rule.key,
+          message:
+            rule.key === "company_name"
+              ? "Укажите название компании или проекта"
+              : "Заполните обязательное поле",
+        });
+        continue;
+      }
+    }
+
+    if (trimmed && rule.minLength && trimmed.length < rule.minLength) {
+      issues.push({
+        field: rule.key,
+        message:
+          rule.key === "contact_phone_or_whatsapp"
+            ? "Проверьте номер телефона"
+            : "Добавьте немного больше деталей",
+      });
+      continue;
+    }
+
+    if (trimmed && rule.maxLength && trimmed.length > rule.maxLength) {
+      issues.push({
+        field: rule.key,
+        message: "Слишком длинный ответ",
+      });
+    }
+  }
+
+  return issues;
+}
+
+function normalizeBriefValues(values: BriefValuesInput): BriefFormValues {
+  const businessType = pickEnumValue(values.business_type, BRIEF_BUSINESS_TYPES);
+  const teamSize = pickEnumValue(values.team_size, BRIEF_TEAM_SIZES);
+  const priorityUseCase = pickEnumValue(values.priority_use_case, BRIEF_PRIORITY_USE_CASES);
+  const preferredStartMode = pickEnumValue(values.preferred_start_mode, BRIEF_START_MODES);
+  const timelinePriority = pickEnumValue(values.timeline_priority, BRIEF_TIMELINE_PRIORITIES);
+  const budgetRange = pickEnumValue(values.budget_range, BRIEF_BUDGET_RANGES);
+  const preferredContactMethod = pickEnumValue(values.preferred_contact_method, BRIEF_CONTACT_METHODS);
+
+  return {
+    company_name: toTrimmedString(values.company_name),
+    website_url: toTrimmedString(values.website_url),
+    business_type: businessType,
+    business_type_other: toTrimmedString(values.business_type_other),
+    target_market: toTrimmedString(values.target_market),
+    team_size: teamSize,
+    main_goal: toTrimmedString(values.main_goal),
+    main_problem: toTrimmedString(values.main_problem),
+    desired_result: toTrimmedString(values.desired_result),
+    priority_use_case: priorityUseCase,
+    priority_use_case_other: toTrimmedString(values.priority_use_case_other),
+    why_now: toTrimmedString(values.why_now),
+    current_process_description: toTrimmedString(values.current_process_description),
+    current_channels: toTrimmedStringArray(values.current_channels).filter((item): item is BriefCurrentChannel =>
+      isOneOf(item, BRIEF_CURRENT_CHANNELS),
+    ),
+    current_channels_other: toTrimmedString(values.current_channels_other),
+    current_owner_of_process: toTrimmedString(values.current_owner_of_process),
+    main_bottleneck: toTrimmedString(values.main_bottleneck),
+    current_tools: toTrimmedString(values.current_tools),
+    human_approval_required: toTrimmedStringArray(values.human_approval_required).filter(
+      (item): item is BriefApprovalStage => isOneOf(item, BRIEF_APPROVAL_STAGES),
+    ),
+    human_approval_required_notes: toTrimmedString(values.human_approval_required_notes),
+    sensitive_data_or_constraints: toTrimmedString(values.sensitive_data_or_constraints),
+    what_must_not_happen: toTrimmedString(values.what_must_not_happen),
+    preferred_start_mode: preferredStartMode,
+    timeline_priority: timelinePriority,
+    budget_range: budgetRange,
+    contact_name: toTrimmedString(values.contact_name),
+    contact_email: toTrimmedString(values.contact_email),
+    contact_phone_or_whatsapp: toTrimmedString(values.contact_phone_or_whatsapp),
+    preferred_contact_method: preferredContactMethod,
+  };
+}
+
+function validateEnumField<T extends readonly string[]>(
+  field: string,
+  value: string,
+  allowed: T,
+  issues: BriefValidationIssue[],
+) {
+  if (value && !isOneOf(value, allowed)) {
+    issues.push({ field, message: "Выберите значение из списка" });
+  }
+}
+
+function validateBriefBusinessType(values: BriefFormValues, issues: BriefValidationIssue[]) {
+  validateEnumField("business_type", values.business_type, BRIEF_BUSINESS_TYPES, issues);
+  if (values.business_type === "other" && !hasMinLength(values.business_type_other, 2)) {
+    issues.push({ field: "business_type_other", message: "Уточните тип бизнеса" });
+  }
+}
+
+function validateBriefPriorityUseCase(values: BriefFormValues, issues: BriefValidationIssue[]) {
+  validateEnumField("priority_use_case", values.priority_use_case, BRIEF_PRIORITY_USE_CASES, issues);
+  if (values.priority_use_case === "other" && !hasMinLength(values.priority_use_case_other, 2)) {
+    issues.push({ field: "priority_use_case_other", message: "Уточните сценарий" });
+  }
+}
+
+function validateBriefCurrentChannels(values: BriefFormValues, issues: BriefValidationIssue[]) {
+  if (values.current_channels.includes("other") && !hasMinLength(values.current_channels_other, 2)) {
+    issues.push({ field: "current_channels_other", message: "Уточните другой канал" });
+  }
+}
+
+function validateBriefHumanApproval(values: BriefFormValues, issues: BriefValidationIssue[]) {
+  const hasNotes = values.human_approval_required_notes.length > 0;
+
+  if (values.human_approval_required.length === 0) {
+    issues.push({
+      field: "human_approval_required",
+      message: "Выберите хотя бы один этап",
+    });
+    return;
+  }
+
+  if (hasNotes && values.human_approval_required_notes.length < 10) {
+    issues.push({
+      field: "human_approval_required_notes",
+      message: "Добавьте немного больше деталей",
+    });
+  }
+}
+
+function validateBriefContact(values: BriefFormValues, issues: BriefValidationIssue[]) {
+  if (values.contact_email && !isEmail(values.contact_email)) {
+    issues.push({ field: "contact_email", message: "Проверьте формат email" });
+  }
+
+  if (values.contact_phone_or_whatsapp && !hasPhoneLikeShape(values.contact_phone_or_whatsapp)) {
+    issues.push({ field: "contact_phone_or_whatsapp", message: "Проверьте формат телефона" });
+  }
+}
+
+function validateBriefUrls(values: BriefFormValues, issues: BriefValidationIssue[]) {
+  if (values.website_url && !isSoftUrl(values.website_url)) {
+    issues.push({ field: "website_url", message: "Проверьте формат URL" });
+  }
+}
+
+function validateBriefSelects(
+  values: BriefFormValues,
+  issues: BriefValidationIssue[],
+  fieldKeySet: Set<BriefFieldKey>,
+) {
+  if (fieldKeySet.has("team_size")) {
+    validateEnumField("team_size", values.team_size, BRIEF_TEAM_SIZES, issues);
+  }
+
+  if (fieldKeySet.has("preferred_start_mode")) {
+    validateEnumField("preferred_start_mode", values.preferred_start_mode, BRIEF_START_MODES, issues);
+  }
+
+  if (fieldKeySet.has("timeline_priority")) {
+    validateEnumField("timeline_priority", values.timeline_priority, BRIEF_TIMELINE_PRIORITIES, issues);
+  }
+
+  if (fieldKeySet.has("budget_range")) {
+    validateEnumField("budget_range", values.budget_range, BRIEF_BUDGET_RANGES, issues);
+  }
+
+  if (fieldKeySet.has("preferred_contact_method")) {
+    validateEnumField("preferred_contact_method", values.preferred_contact_method, BRIEF_CONTACT_METHODS, issues);
+  }
+
+  if (fieldKeySet.has("business_type")) {
+    validateBriefBusinessType(values, issues);
+  }
+
+  if (fieldKeySet.has("priority_use_case")) {
+    validateBriefPriorityUseCase(values, issues);
+  }
+
+  if (fieldKeySet.has("current_channels")) {
+    validateBriefCurrentChannels(values, issues);
+  }
+
+  if (fieldKeySet.has("human_approval_required")) {
+    validateBriefHumanApproval(values, issues);
+  }
+}
+
+function validateBriefValuesInternal(values: BriefValuesInput, fieldKeys: BriefFieldKey[]): BriefValidationResult {
+  if (!isRecord(values)) {
+    return {
+      kind: "validation_error",
+      issues: [{ field: "values", message: "Некорректный формат данных" }],
+    };
+  }
+
+  const normalized = normalizeBriefValues(values);
+  const issues = validateCommonFields(normalized, fieldKeys);
+  const fieldKeySet = new Set(fieldKeys);
+
+  if (fieldKeySet.has("website_url")) {
+    validateBriefUrls(normalized, issues);
+  }
+
+  if (
+    fieldKeySet.has("team_size") ||
+    fieldKeySet.has("preferred_start_mode") ||
+    fieldKeySet.has("timeline_priority") ||
+    fieldKeySet.has("budget_range") ||
+    fieldKeySet.has("preferred_contact_method") ||
+    fieldKeySet.has("business_type") ||
+    fieldKeySet.has("priority_use_case") ||
+    fieldKeySet.has("current_channels") ||
+    fieldKeySet.has("human_approval_required")
+  ) {
+    validateBriefSelects(normalized, issues, fieldKeySet);
+  }
+
+  if (fieldKeySet.has("contact_email") || fieldKeySet.has("contact_phone_or_whatsapp")) {
+    validateBriefContact(normalized, issues);
+  }
+
+  if (issues.length > 0) {
+    return { kind: "validation_error", issues };
+  }
+
+  return { kind: "ok", values: normalized };
+}
+
+export type BriefValuesInput = Partial<Record<BriefFieldKey, unknown>> & Record<string, unknown>;
+
+export function createInitialBriefValues(): BriefFormValues {
+  return {
+    company_name: "",
+    website_url: "",
+    business_type: "",
+    business_type_other: "",
+    target_market: "",
+    team_size: "",
+    main_goal: "",
+    main_problem: "",
+    desired_result: "",
+    priority_use_case: "",
+    priority_use_case_other: "",
+    why_now: "",
+    current_process_description: "",
+    current_channels: [],
+    current_channels_other: "",
+    current_owner_of_process: "",
+    main_bottleneck: "",
+    current_tools: "",
+    human_approval_required: [],
+    human_approval_required_notes: "",
+    sensitive_data_or_constraints: "",
+    what_must_not_happen: "",
+    preferred_start_mode: "",
+    timeline_priority: "",
+    budget_range: "",
+    contact_name: "",
+    contact_email: "",
+    contact_phone_or_whatsapp: "",
+    preferred_contact_method: "",
+  };
+}
+
+export function validateBriefStep(values: BriefValuesInput, stepIndex: number): BriefValidationResult {
+  const step = BRIEF_STEPS[stepIndex];
+  if (!step) {
+    return validateBriefValues(values);
+  }
+
+  const fieldKeys = step.fields.map((field) => field.key);
+  return validateBriefValuesInternal(values, fieldKeys);
+}
+
+export function validateBriefValues(values: BriefValuesInput): BriefValidationResult {
+  return validateBriefValuesInternal(values, BRIEF_STEPS.flatMap((step) => step.fields.map((field) => field.key)));
+}
+
+function summarizeControlNeeds(values: BriefFormValues): string {
+  const selected = values.human_approval_required
+    .map((value) => BRIEF_FIELDS.human_approval_required.options?.find((option) => option.value === value)?.label ?? value)
+    .join(", ");
+  const notes = values.human_approval_required_notes;
+
+  if (selected && notes) {
+    return `${selected}. ${notes}`;
+  }
+
+  return selected || notes || "Не указано";
+}
+
+function getRecommendedNextStep(values: BriefFormValues): BriefHandoff["recommended_next_step"] {
+  switch (values.preferred_start_mode) {
+    case "audit_review":
+      return "audit";
+    case "pilot_one_process":
+    case "ai_agent_incoming_requests":
+    case "ai_agent_customer_requests":
+      return "pilot_discussion";
+    case "document_automation":
+      return "discovery_call";
+    case "discovery_call_only":
+      return "discovery_call";
+    case "not_sure":
+      return "request_more_info";
+    default:
+      return "out_of_scope_review";
+  }
+}
+
+function buildBusinessTypeLabel(values: BriefFormValues): string {
+  const label = BRIEF_FIELDS.business_type.options?.find((option) => option.value === values.business_type)?.label;
+  if (!label) {
+    return "Не указано";
+  }
+
+  if (values.business_type === "other" && values.business_type_other) {
+    return `${label}: ${values.business_type_other}`;
+  }
+
+  return label;
+}
+
+function buildPriorityUseCaseLabel(values: BriefFormValues): string {
+  const label = BRIEF_FIELDS.priority_use_case.options?.find((option) => option.value === values.priority_use_case)?.label;
+  if (!label) {
+    return "Не указано";
+  }
+
+  if (values.priority_use_case === "other" && values.priority_use_case_other) {
+    return `${label}: ${values.priority_use_case_other}`;
+  }
+
+  return label;
+}
+
+function buildCurrentChannelsLabel(values: BriefFormValues): string {
+  const labels = values.current_channels.map((value) => {
+    const option = BRIEF_FIELDS.current_channels.options?.find((entry) => entry.value === value);
+    return option?.label ?? value;
+  });
+
+  if (values.current_channels.includes("other") && values.current_channels_other) {
+    const otherIndex = values.current_channels.indexOf("other");
+    if (otherIndex >= 0) {
+      labels[otherIndex] = `Другое: ${values.current_channels_other}`;
+    }
+  }
+
+  return labels.join(", ") || "Не указано";
+}
+
+function buildHumanApprovalLabel(values: BriefFormValues): string {
+  const selections = summarizeControlNeeds(values);
+  return selections;
+}
+
+export function createBriefHandoff(values: BriefFormValues): BriefHandoff {
+  const recommendedNextStep = getRecommendedNextStep(values);
+  const timelineLabel = BRIEF_FIELDS.timeline_priority.options?.find((option) => option.value === values.timeline_priority)?.label ?? "Не указано";
+  const budgetLabel = BRIEF_FIELDS.budget_range.options?.find((option) => option.value === values.budget_range)?.label ?? "Не указано";
+  const contactMethodLabel =
+    BRIEF_FIELDS.preferred_contact_method.options?.find((option) => option.value === values.preferred_contact_method)?.label;
+
+  const summaryParts = [
+    `Компания: ${values.company_name || "не указано"}`,
+    `Тип бизнеса: ${buildBusinessTypeLabel(values)}`,
+    `Цель: ${values.main_goal || "не указано"}`,
+    `Проблема: ${values.main_problem || "не указано"}`,
+    `Результат: ${values.desired_result || "не указано"}`,
+    `Сценарий: ${buildPriorityUseCaseLabel(values)}`,
+    `Текущий процесс: ${values.current_process_description || "не указано"}`,
+    `Каналы: ${buildCurrentChannelsLabel(values)}`,
+    `Узкое место: ${values.main_bottleneck || "не указано"}`,
+    `Контроль человека: ${buildHumanApprovalLabel(values)}`,
+    `Что не должно происходить: ${values.what_must_not_happen || "не указано"}`,
+    `Следующий шаг: ${BRIEF_FIELDS.preferred_start_mode.options?.find((option) => option.value === values.preferred_start_mode)?.label ?? "Не указано"}`,
+  ];
+
+  return {
+    company_name: values.company_name,
+    business_type: buildBusinessTypeLabel(values),
+    main_goal: values.main_goal,
+    main_problem: values.main_problem,
+    desired_result: values.desired_result,
+    priority_use_case: buildPriorityUseCaseLabel(values),
+    current_process_description: values.current_process_description,
+    current_channels: buildCurrentChannelsLabel(values),
+    main_bottleneck: values.main_bottleneck,
+    human_approval_required: buildHumanApprovalLabel(values),
+    what_must_not_happen: values.what_must_not_happen,
+    preferred_start_mode:
+      BRIEF_FIELDS.preferred_start_mode.options?.find((option) => option.value === values.preferred_start_mode)?.label ??
+      "Не указано",
+    timeline_priority: timelineLabel,
+    budget_range: budgetLabel,
+    contact: {
+      name: values.contact_name,
+      email: values.contact_email,
+      ...(values.contact_phone_or_whatsapp ? { phone: values.contact_phone_or_whatsapp } : {}),
+      ...(contactMethodLabel ? { preferred_contact_method: contactMethodLabel } : {}),
+    },
+    recommended_next_step: recommendedNextStep,
+    summary: summaryParts.join(" | "),
+  };
+}
+
+export function buildBriefSubmissionPayload(
+  values: BriefFormValues,
+  metadata: Partial<BriefSubmissionMetadata> & { created_at?: string } = {},
+): BriefSubmissionPayload {
+  const createdAt = metadata.created_at ?? new Date().toISOString();
+  const normalizedMetadata: BriefSubmissionMetadata = {
+    ai_assist_used: metadata.ai_assist_used ?? false,
+    assistant_interaction_count:
+      typeof metadata.assistant_interaction_count === "number" && Number.isFinite(metadata.assistant_interaction_count)
+        ? Math.max(0, Math.trunc(metadata.assistant_interaction_count))
+        : 0,
+  };
+
+  return {
+    schema_version: BRIEF_SCHEMA_VERSION,
+    source: BRIEF_SOURCE,
+    route: BRIEF_ROUTE,
+    locale: BRIEF_LOCALE,
+    created_at: createdAt,
+    brief: values,
+    metadata: normalizedMetadata,
+    crm_handoff: createBriefHandoff(values),
+  };
+}
+
+export function getBriefValidationIssues(values: BriefValuesInput): BriefValidationIssue[] {
+  const result = validateBriefValues(values);
+  return result.kind === "validation_error" ? result.issues : [];
+}
+
+export function getBriefFieldDefinition(key: BriefFieldKey): BriefFieldDefinition {
+  return BRIEF_FIELDS[key];
+}

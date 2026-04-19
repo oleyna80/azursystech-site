@@ -1,5 +1,198 @@
 # Progress Log - AzurSysTech
 
+## 2026-04-18: AZR-003-011 Accepted and Closed
+
+### Done
+
+- Accepted `AZR-003-011` after Verifier-stage review.
+- Marked `AZR-003-011` as `done` in `docs/tasklist/azr-003-tasklist.md`.
+- Confirmed accepted scope:
+  - `/api/chat` launch gate enforces `limited_live_intake`, unsafe `AI_ALLOW_*` rejection, non-legacy intake mode, and valid DeepSeek config;
+  - `/api/chat` honors `DEEPSEEK_BASE_URL` with default `https://api.deepseek.com`;
+  - widget handoff remains `/api/contact/submit` with `source=website_chat`;
+  - Telegram notification remains non-blocking for SQL-primary intake success;
+  - Telegram success/failure event recording remains in place;
+  - Telegram message includes status, urgency, lead id, source, client type, contact, city, service type, and summary.
+
+### Validation
+
+- `git diff --check -- web/src/app/api/chat/route.ts web/src/lib/telegram-notify.ts web/src/app/api/contact/submit/route.ts docs/tasklist/azr-003-tasklist.md memory_bank/progress.md` - pass.
+- `cd web && npm run check:types` - pass.
+- `cd web && npm run lint` - pass with unrelated existing warnings only.
+- `cd web && npm run build` - pass.
+
+### Notes
+
+- `npm run check:ci` was not run end-to-end because its `npm audit` step contacts the npm registry; local CI-equivalent parts were run separately.
+- No real Telegram or DeepSeek calls were made during verification.
+- Chat transcript persistence remains deferred and is not part of accepted AZR-003-011 scope.
+
+## 2026-04-18: Work Block Readiness and Verification Guardrails Added
+
+### Done
+
+- Extended `AGENTS.md` section `18) Subagent Model / Reasoning Policy` with model availability fallback rules:
+  - prefer stronger available model when the recommended model is unavailable;
+  - use a cheap read-only availability check when the environment supports it;
+  - otherwise treat failed subagent launch as the availability signal and retry once with the nearest stronger available model.
+- Added `AGENTS.md` section `20) Work Block Brief Template`.
+- Added `AGENTS.md` section `21) Definition of Ready`.
+- Added `AGENTS.md` section `22) Verifier Matrix`.
+- Added `ADR-024` documenting the process guardrails.
+
+### Validation
+
+- Markdown-only scoped review completed.
+- No runtime commands were required.
+
+### Notes
+
+- This is an operating-model update only; website/runtime code was not changed.
+
+## 2026-04-18: Work Block Confirmation Policy Added
+
+### Done
+
+- Added `AGENTS.md` section `19) Work Block Confirmation Policy`.
+- Replaced per-stage confirmation as the default operating unit with approved work blocks.
+- Defined when Control Tower may proceed internally through `Reviewer`, `Coder`, and `Verifier` stages without new confirmation.
+- Defined mandatory stop conditions for scope changes, new tickets, dangerous actions, external deploy/infra, secrets, production data, real client communication, destructive actions, blockers, and materially new verification fixes.
+- Added `ADR-023` documenting the process decision.
+
+### Validation
+
+- Markdown-only scoped review completed.
+- No runtime commands were required.
+
+### Notes
+
+- This is an operating-model update only; website/runtime code was not changed.
+
+## 2026-04-18: AZR-003-011 Scoped Implementation Pass
+
+### Done
+
+- Hardened the active `web` `/api/chat` live gate for launch policy:
+  - requires `AI_LAUNCH_MODE=limited_live_intake`;
+  - requires `AI_ALLOW_AUTONOMOUS_OUTBOUND=false`;
+  - requires `AI_ALLOW_PRICING_COMMITMENTS=false`;
+  - requires `AI_ALLOW_SCHEDULING_PROMISES=false`;
+  - preserves the existing non-legacy `INTAKE_STORAGE_MODE` requirement;
+  - requires valid DeepSeek API configuration.
+- Updated `/api/chat` to honor `DEEPSEEK_BASE_URL`, defaulting to `https://api.deepseek.com`.
+- Preserved active widget flow: `ChatWidget.jsx` via `ChatWidgetContainer`; handoff continues through `/api/contact/submit` with `source=website_chat`.
+- Confirmed the contact submit path already records `notification.telegram.sent` / `notification.telegram.failed` and keeps SQL-primary intake success independent from Telegram success/failure.
+- Updated Telegram notification content to include `status`, `urgency`, client type, contact details, city, service type, lead id, source, and short summary.
+- Updated AZR-003 tasklist status for this scoped implementation pass.
+
+### Validation
+
+- `cd web && npm run check:types` - pass.
+
+### Notes
+
+- No deploy was performed and no real secrets were touched.
+- Chat transcript persistence remains deferred; no schema/runtime refactor was introduced in this scoped pass.
+- AZR-003-011 remains `in_progress` pending a separate Verifier-stage acceptance pass.
+
+## 2026-04-18: Subagent Model / Reasoning Policy Added
+
+### Done
+
+- Added `AGENTS.md` section `18) Subagent Model / Reasoning Policy`.
+- Defined default inheritance for subagent model/reasoning settings.
+- Added override requirements for Control Tower:
+  - state stage, objective, role, override if any, and expected result before launch.
+- Added recommended presets for `Reviewer`, `Coder`, and `Verifier`.
+- Added current example model families for stronger review/planning, scoped coding, and narrow docs/checks.
+
+### Validation
+
+- Markdown-only scoped review completed.
+- No runtime commands were required.
+
+### Notes
+
+- This is a process/operating-model update; runtime behavior and website code were not changed.
+
+## 2026-04-18: Skills Added for Schema-Bound Route Work
+
+### Done
+
+- Reviewed the `/brief` implementation flow and identified two reusable future patterns:
+  - schema-bound route implementation across docs, UI, assistant, API, payload, and SSOT;
+  - hard verification against schema/UI/API drift before closeout.
+- Added project-local skills:
+  - `.agent/skills/azursystech-schema-route/SKILL.md`
+  - `.agent/skills/azursystech-contract-verifier/SKILL.md`
+- Registered both skills in `.agent/ROSTER.md`.
+
+### Validation
+
+- `python3 /home/dmitrii/.codex/skills/.system/skill-creator/scripts/quick_validate.py .agent/skills/azursystech-schema-route` - pass
+- `python3 /home/dmitrii/.codex/skills/.system/skill-creator/scripts/quick_validate.py .agent/skills/azursystech-contract-verifier` - pass
+
+### Notes
+
+- No new ADR was added; this is an operational skill-pack update, not an architecture/runtime decision.
+
+## 2026-04-17: `/brief` AI Automation Discovery Brief Implemented
+
+### Done
+
+- Added `/brief` to the active `web` site as a Russian multi-step discovery brief for AI automation requests.
+- Implemented the five-step form flow:
+  - business context;
+  - goal / problem / desired result;
+  - current workflow;
+  - constraints and human control;
+  - launch mode and contact.
+- Added shared brief schema/validation/payload builder in `web/src/lib/brief-submit.ts`.
+- Added dedicated `POST /api/brief/submit` endpoint returning a structured `brief.v1` payload and CRM-ready handoff.
+- Added deterministic field-oriented assistant helper for `/brief`:
+  - optional and visible;
+  - collapsed by default on mobile;
+  - visible on desktop;
+  - constrained to field explanation, concise drafting guidance, and scope narrowing.
+- Hard-review corrections completed:
+  - frontend now consumes the shared `brief-submit` schema instead of a duplicate local schema;
+  - submit response handling matches the API contract;
+  - `human_approval_required` is enforced as a required selection and notes cannot replace it.
+
+### Validation
+
+- `cd web && npm run check:types` - pass
+- `cd web && npx eslint src/app/brief/page.tsx src/components/brief/brief-form.tsx src/components/brief/brief-field.tsx src/components/brief/brief-progress.tsx src/components/brief/brief-assistant.tsx src/lib/brief-submit.ts src/lib/brief-assistant.ts src/app/api/brief/submit/route.ts` - pass
+- `cd web && npm run build` - pass; route output includes `/brief` and `/api/brief/submit`
+- API negative smoke: empty `human_approval_required` with notes returns validation error for `human_approval_required`
+- Browser smoke on `390x844`: no horizontal overflow, assistant starts collapsed, valid multi-step submit reaches success state
+- Browser smoke on desktop: no horizontal overflow, assistant visible
+
+### Notes
+
+- `/brief` submit currently produces a structured discovery payload and handoff response; durable PostgreSQL persistence for brief submissions is intentionally not part of this MVP pass.
+- Screenshots saved in `output/playwright/brief-desktop.png` and `output/playwright/brief-mobile.png`.
+
+## 2026-04-16: AZR-003-013 Closed (Public Phone/WhatsApp Consistency)
+
+### Done
+
+- Closed `AZR-003-013` with strict active-scope cleanup on commit `6895f4e` (`docs(contact): remove legacy phone refs in active docs`).
+- Removed legacy phone references from active docs in the approved write-set.
+- Applied privacy runtime consistency fix in `web/src/app/privacy/page.tsx`: use `whatsappDisplay` with `whatsappHref`.
+- Branch push completed for `6895f4e` on `integration/azr-002-023-handoff`.
+
+### Validation
+
+- Verifier pass: legacy phone patterns (`7 49 70 54 65`, `33749705465`) not found in active `web/docs` scope after delivery.
+- Commit scope check: only approved AZR-003-013 files included in `6895f4e`.
+- Remote sync check: `HEAD` and `origin/integration/azr-002-023-handoff` include `6895f4e`.
+
+### Notes
+
+- Historical ADR/progress records were intentionally not rewritten.
+- This closeout is SSOT sync for ticket status and delivery evidence.
+
 ## 2026-04-15: CI Lint + Next Security Unblock
 
 ### Done

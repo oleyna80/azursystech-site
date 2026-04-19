@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 
 const NAV_LINKS = [
   { href: "#business", label: "Для бизнеса" },
-  { href: "#automation", label: "Автоматизация и ИИ" },
+  { href: "/ai-automation", label: "Автоматизация и ИИ" },
   { href: "#pricing", label: "Цены" },
   { href: "#faq", label: "FAQ" },
   { href: "#contact", label: "Контакты" },
@@ -21,7 +21,9 @@ export function SiteHeader() {
   const pathname = usePathname();
   const navLinks = useMemo(() => {
     const prefix = pathname === "/" ? "" : "/";
-    return NAV_LINKS.map((link) => ({ ...link, href: `${prefix}${link.href}` }));
+    return NAV_LINKS.map((link) =>
+      link.href.startsWith("#") ? { ...link, href: `${prefix}${link.href}` } : link
+    );
   }, [pathname]);
 
   useEffect(() => {

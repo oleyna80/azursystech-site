@@ -25,6 +25,7 @@ data/*.csv
 
 # Model/indexing noise
 .git/
+docs/reports/git/stash-backups/*.patch
 
 # Build
 build/

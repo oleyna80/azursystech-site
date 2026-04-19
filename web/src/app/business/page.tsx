@@ -126,6 +126,13 @@ export default function BusinessPage() {
             Практичная помощь для небольших магазинов, кабинетов и офисов: рабочие места,
             Wi‑Fi, локальная сеть, принтеры, общие папки и выезд на место.
           </p>
+          <p className="mt-3 max-w-4xl text-sm leading-6 text-[#1F2A37]/80">
+            Если нужен отдельный сценарий по обработке заявок и первичному intake, посмотрите{" "}
+            <Link className="font-semibold text-[#1F6F78] underline" href="/ai-automation">
+              страницу AI-автоматизации
+            </Link>
+            .
+          </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href="/contact"

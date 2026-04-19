@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { HomeContactSection } from "@/components/sections/home-contact";
 
 const CONTACT = {
@@ -221,15 +222,15 @@ export default function HomePage() {
               </div>
 
               <div className="mt-10 flex flex-wrap items-center gap-4">
-                <a
-                  href="#contact"
+                <Link
+                  href="/ai-automation"
                   className="inline-flex items-center gap-2 rounded-full bg-graphite px-7 py-3.5 text-base font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-graphite/90"
                 >
-                  Обсудить автоматизацию
+                  Узнать об автоматизации с ИИ
                   <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
                     <path fill="currentColor" d="M5 11h11.2l-4.6-4.6L13 5l7 7-7 7-1.4-1.4 4.6-4.6H5v-2z" />
                   </svg>
-                </a>
+                </Link>
               </div>
             </div>
 

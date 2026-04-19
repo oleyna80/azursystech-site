@@ -81,6 +81,8 @@
 | Security Audit Triage | `.agent/skills/security-audit-triage/SKILL.md` | "проверь security аудит", "валидация findings" |
 | Security Hardening Pass | `.agent/skills/security-hardening-pass/SKILL.md` | "сделай hardening", "закрой P0/P1 security" |
 | Security Verification Gate | `.agent/skills/security-verification-gate/SKILL.md` | "security verifier", "ship verdict" |
+| AzurSysTech Schema Route | `.agent/skills/azursystech-schema-route/SKILL.md` | "schema-bound route", "форма + API + assistant", "новый route с payload" |
+| AzurSysTech Contract Verifier | `.agent/skills/azursystech-contract-verifier/SKILL.md` | "hard review", "schema/UI/API drift", "проверь route contract" |
 
 ## Core Workflow
 

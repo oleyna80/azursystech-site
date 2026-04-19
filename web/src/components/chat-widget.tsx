@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
 
 import ChatWidget from "@/ChatWidget";
 import { createTranslator, readStoredLocale } from "@/i18n";
@@ -31,11 +32,17 @@ function subscribeToLocaleChanges() {
 }
 
 export function ChatWidgetContainer() {
+  const pathname = usePathname();
   const locale = useSyncExternalStore(
     subscribeToLocaleChanges,
     resolveRuntimeLocale,
     () => FALLBACK_WIDGET_LOCALE,
   );
+  const routeClassName = pathname === "/ai-automation" ? "route-ai-automation-chat-widget" : undefined;
 
-  return <ChatWidget locale={locale} t={createTranslator(locale)} />;
+  return (
+    <div className={routeClassName}>
+      <ChatWidget locale={locale} t={createTranslator(locale)} />
+    </div>
+  );
 }

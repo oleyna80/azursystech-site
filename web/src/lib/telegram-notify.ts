@@ -3,6 +3,7 @@ import type { ContactSubmitPayload } from "@/lib/contact-submit";
 const DEFAULT_TELEGRAM_API_BASE_URL = "https://api.telegram.org";
 const TELEGRAM_REQUEST_TIMEOUT_MS = 4_000;
 const MAX_PROBLEM_SNIPPET_LENGTH = 180;
+const LOCAL_TELEGRAM_API_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 
 type TelegramConfig = {
   apiBaseUrl: string;
@@ -61,6 +62,16 @@ function resolveTelegramConfig(): TelegramConfigResolution {
     return { kind: "invalid", error: "invalid_api_base_url" };
   }
 
+  if (parsedBaseUrl.protocol !== "https:") {
+    const isLocalHttp =
+      process.env.NODE_ENV !== "production" &&
+      parsedBaseUrl.protocol === "http:" &&
+      LOCAL_TELEGRAM_API_HOSTS.has(parsedBaseUrl.hostname.toLowerCase());
+    if (!isLocalHttp) {
+      return { kind: "invalid", error: "invalid_api_base_url" };
+    }
+  }
+
   const threadIdRaw = process.env.AZURSYSTECH_TELEGRAM_THREAD_ID?.trim();
   let threadId: number | undefined;
   if (threadIdRaw) {
@@ -97,12 +108,15 @@ function buildLeadMessage(input: TelegramLeadNotificationInput): string {
     `request_id: ${input.requestId}`,
     `lead_id: ${input.leadId}`,
     `source: ${input.payload.source}`,
-    `segment: ${input.payload.segment}`,
+    `status: ${input.payload.status}`,
+    `client_type: ${input.payload.segment}`,
     `service_type: ${input.payload.service_type}`,
-    `name: ${input.payload.name}`,
-    `phone: ${input.payload.phone}`,
+    `urgency: ${input.payload.urgency ?? "not_provided"}`,
+    `contact_name: ${input.payload.name}`,
+    `contact_phone: ${input.payload.phone}`,
+    ...(input.payload.email ? [`contact_email: ${input.payload.email}`] : []),
     `city: ${input.payload.city}`,
-    `problem: ${buildProblemSnippet(input.payload.problem_description)}`,
+    `summary: ${buildProblemSnippet(input.payload.problem_description)}`,
     `integration: ${input.integrationOutcome}`,
   ].join("\n");
 }

@@ -1,0 +1,4 @@
+interface:
+  display_name: "AzurSysTech Contract Verifier"
+  short_description: "Verify schema/UI/API route contracts."
+  default_prompt: "Review an AzurSysTech schema-bound change for docs, shared schema, UI, API, assistant guardrails, payload, responsive UX, and SSOT closeout."

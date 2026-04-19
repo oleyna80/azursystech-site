@@ -18,6 +18,7 @@ const PROMPT_INJECTION_PATTERNS = [
   /reveal\s+(the\s+)?system\s+prompt/iu,
   /act\s+as\s+system/iu,
 ];
+const DEFAULT_DEEPSEEK_BASE_URL = "https://api.deepseek.com";
 const FORM_CTA_PATTERN = /\bформ(?:а|у|е|ой|ы)\b/iu;
 const WHATSAPP_CTA_PATTERN = /\bwhats\s*app\b|\bwhatsapp\b|ватсапп?/iu;
 const AUTONOMOUS_OUTBOUND_PATTERNS = [
@@ -33,6 +34,7 @@ const SCHEDULING_COMMITMENT_PATTERNS = [
   /\b(?:назнач(?:у|им)|запиш(?:у|ем)|приед(?:у|ем)|будем|начнем)\b.{0,40}\b(?:на\s*)?\d{1,2}[./-]\d{1,2}(?:[./-]\d{2,4})?\b/iu,
   /\b(?:завтра|сегодня|послезавтра)\s+(?:в\s*)?\d{1,2}[:.]\d{2}\b/iu,
 ];
+const LOCAL_DEEPSEEK_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 const SYSTEM_PROMPT = `Ты роль: IT-специалист компании AzurSysTech из Ниццы (Франция).
 Твоя задача помочь пользователю сформулировать его проблему перед тем, как он отправит заявку. Будь кратким, доброжелательным и компетентным.
 
@@ -131,8 +133,45 @@ function isLiveChatEnabled(): boolean {
   const launchMode = process.env.AI_LAUNCH_MODE?.trim();
   const intakeStorageMode = process.env.INTAKE_STORAGE_MODE?.trim().toLowerCase() ?? "legacy";
   const hasDeepseekApiKey = Boolean(process.env.DEEPSEEK_API_KEY?.trim());
+  const hasDeepseekBaseUrl = Boolean(getDeepseekChatCompletionsUrl());
+  const allowAutonomousOutbound = process.env.AI_ALLOW_AUTONOMOUS_OUTBOUND?.trim().toLowerCase();
+  const allowPricingCommitments = process.env.AI_ALLOW_PRICING_COMMITMENTS?.trim().toLowerCase();
+  const allowSchedulingPromises = process.env.AI_ALLOW_SCHEDULING_PROMISES?.trim().toLowerCase();
 
-  return launchMode === "limited_live_intake" && intakeStorageMode !== "legacy" && hasDeepseekApiKey;
+  return (
+    launchMode === "limited_live_intake" &&
+    allowAutonomousOutbound === "false" &&
+    allowPricingCommitments === "false" &&
+    allowSchedulingPromises === "false" &&
+    intakeStorageMode !== "legacy" &&
+    hasDeepseekApiKey &&
+    hasDeepseekBaseUrl
+  );
+}
+
+function getDeepseekChatCompletionsUrl(): string | null {
+  const rawBaseUrl = process.env.DEEPSEEK_BASE_URL?.trim() || DEFAULT_DEEPSEEK_BASE_URL;
+  const normalizedBaseUrl = rawBaseUrl.endsWith("/") ? rawBaseUrl : `${rawBaseUrl}/`;
+  const isProd = process.env.NODE_ENV === "production";
+
+  try {
+    const parsedUrl = new URL("chat/completions", normalizedBaseUrl);
+    if (parsedUrl.protocol === "https:") {
+      return parsedUrl.toString();
+    }
+
+    if (parsedUrl.protocol !== "http:") {
+      return null;
+    }
+
+    if (!isProd && LOCAL_DEEPSEEK_HOSTS.has(parsedUrl.hostname.toLowerCase())) {
+      return parsedUrl.toString();
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 export async function POST(request: Request) {
@@ -197,7 +236,8 @@ export async function POST(request: Request) {
   }
 
   const apiKey = process.env.DEEPSEEK_API_KEY?.trim();
-  if (!apiKey) {
+  const deepseekChatCompletionsUrl = getDeepseekChatCompletionsUrl();
+  if (!apiKey || !deepseekChatCompletionsUrl) {
     return NextResponse.json({ error: CHAT_UNAVAILABLE_MESSAGE }, { status: 503 });
   }
 
@@ -205,7 +245,7 @@ export async function POST(request: Request) {
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
-    const response = await fetch("https://api.deepseek.com/chat/completions", {
+    const response = await fetch(deepseekChatCompletionsUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

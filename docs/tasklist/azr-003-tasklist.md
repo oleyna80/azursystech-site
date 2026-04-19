@@ -10,12 +10,14 @@ Status: IN_PROGRESS
 2. `AZR-003-006` GBP and review readiness
 3. `AZR-003-007` go / no-go review
 
-### After intake activation and go / no-go
+### Completed after intake activation and go / no-go
 
 4. `AZR-003-012` frontend baseline parity / migration closure
-5. `AZR-003-013` sync public phone / WhatsApp across current `web` baseline and docs
-6. `AZR-003-011` add AI widget live integration + Telegram notification on `web` (backend events path)
-7. `AZR-003-008` deferred improvements separation
+5. `AZR-003-011` add AI widget live integration + Telegram notification on `web` (backend events path)
+
+### Remaining
+
+6. `AZR-003-008` deferred improvements separation
 
 ## Tasks
 
@@ -202,7 +204,7 @@ Status: IN_PROGRESS
   - AC2: Telegram notification is sent for new contact/intake events
   - AC3: no autonomous outbound, pricing, or scheduling behavior is introduced
   - AC4: primary launch path (`/contact`, phone, WhatsApp) remains usable if the widget is unavailable
-  Status: todo
+  Status: done
   Delivery notes (2026-04-15 security baseline):
   - chat/contact runtime hardening landed in `web` as readiness prerequisite:
     - request size guards, chat length limits, response sanitization
@@ -247,6 +249,50 @@ Status: IN_PROGRESS
   - cleared current CI lint blockers in `web/src/components/chat-widget.tsx` and `web/src/components/shell/site-header.tsx`.
   - updated `next` and `eslint-config-next` to `16.2.3`.
   - `npm run check:ci` and `npm audit --omit=dev --audit-level=high` pass locally on the branch.
+  Delivery notes (2026-04-18 scoped implementation):
+  - active widget path remains `ChatWidget.jsx` via `ChatWidgetContainer`; `ChatWidgetShell` was not changed in this stage.
+  - `/api/chat` live gate now requires:
+    - `AI_LAUNCH_MODE=limited_live_intake`;
+    - `AI_ALLOW_AUTONOMOUS_OUTBOUND=false`;
+    - `AI_ALLOW_PRICING_COMMITMENTS=false`;
+    - `AI_ALLOW_SCHEDULING_PROMISES=false`;
+    - non-legacy `INTAKE_STORAGE_MODE`;
+    - valid DeepSeek API configuration.
+  - `/api/chat` now honors `DEEPSEEK_BASE_URL`, defaulting to `https://api.deepseek.com`.
+  - widget handoff remains through `/api/contact/submit` with `source=website_chat`.
+  - Telegram notification content now includes `status` and `urgency` when available while preserving lead id, source, client type, contact, city, service type, and short summary.
+  - Existing Telegram success/failure event recording remains in place via `notification.telegram.sent` and `notification.telegram.failed`.
+  - SQL-primary intake success remains independent from optional Telegram delivery outcome.
+  - Chat transcript persistence remains deferred; no schema/runtime refactor was introduced in this scoped pass.
+  - Coder-stage type check passed.
+  Delivery notes (2026-04-18 verifier acceptance):
+  - Verifier accepted AZR-003-011 with all AC passing.
+  - Verification passed:
+    - `git diff --check` for changed chat/Telegram/tasklist/progress scope;
+    - `cd web && npm run check:types`;
+    - `cd web && npm run lint` with unrelated existing warnings only;
+    - `cd web && npm run build`.
+  - `npm run check:ci` was not run end-to-end because its `npm audit` step contacts the npm registry; local CI-equivalent parts were run separately.
+  - No real Telegram or DeepSeek call was made during verification.
+  - Chat transcript persistence remains deferred and is not part of the accepted AZR-003-011 scope.
+
+- AZR-003-015: Implement `/brief` discovery form for AI automation
+  Owner: Tech Lead / Control Tower
+  Priority: P1
+  Depends on: AZR-003-012
+  Acceptance Criteria:
+  - AC1: `/brief` exists in the current `web` site as a Russian multi-step form
+  - AC2: brief fields follow `03_leads/ai-automation-brief-schema.md`
+  - AC3: assistant helper follows `05_ai/brief-assistant-spec.md` and remains optional/non-consulting
+  - AC4: submit produces a structured discovery brief suitable for human review
+  - AC5: desktop/mobile checks pass without horizontal overflow
+  Status: done
+  Delivery notes (2026-04-17):
+  - implemented `/brief` route, five-step form, progress, validation, success state, and optional assistant helper in `web`
+  - added dedicated `POST /api/brief/submit` endpoint and shared `brief.v1` payload builder
+  - hard-review corrections closed schema/UI drift and required `human_approval_required` enforcement
+  - validation passed: targeted lint, `npm run check:types`, `npm run build`, API negative smoke, and Playwright mobile/desktop smoke
+  - durable SQL persistence for brief payloads remains future backend scope; current MVP produces structured payload/handoff for review
 
 - AZR-003-013: Sync public phone / WhatsApp across current `web` baseline and docs
   Owner: Tech Lead
@@ -257,7 +303,11 @@ Status: IN_PROGRESS
   - AC2: current `web` runtime/UI surfaces use that value consistently
   - AC3: current public docs use that value consistently
   - AC4: historical progress/ADR records are not rewritten as if they were current facts
-  Status: todo
+  Status: done
+  Delivery notes (2026-04-16):
+  - strict cleanup completed in active docs/runtime scope on commit `6895f4e` (`docs(contact): remove legacy phone refs in active docs`)
+  - legacy phone references removed from active docs write-set; runtime consistency fix applied in `web/src/app/privacy/page.tsx` (`whatsappDisplay` with `whatsappHref`)
+  - historical ADR/progress records were not rewritten; historical context remains intact
 
 - AZR-003-008: Separate deferred improvements from blockers
   Owner: Tech Lead

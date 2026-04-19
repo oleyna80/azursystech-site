@@ -499,3 +499,137 @@ Transport contract (ADR-016) was approved but the outbound hop could not proceed
 - Упрощается дальнейшая реализация чат-ассистента и WhatsApp-канала за счет единого backend contract.
 - ADR-018 сохраняется как historical launch sequencing reference, но его часть про `site -> n8n -> Google Sheets` как baseline intake path больше не актуальна для текущей primary architecture.
 - ADR-016 сохраняется как optional transport reference для случаев, когда backend явно использует n8n как secondary automation hop.
+
+---
+
+## ADR-021: `/brief` MVP Uses Dedicated Structured Payload Endpoint
+
+**Date:** 2026-04-17
+**Status:** Accepted for `/brief` MVP
+
+### Context
+Страница `/brief` собирает discovery brief по AI-автоматизации. Ее схема отличается от текущей support/contact intake model: там нет `service_type`, `segment`, city/device fields и других обязательных полей contact-flow. Принудительное сохранение brief в существующий contact contract создало бы fake values и schema drift.
+
+### Decision
+- `/brief` uses a separate endpoint:
+  - `POST /api/brief/submit`
+- Canonical payload:
+  - `schema_version: brief.v1`
+  - `source: brief_form`
+  - `route: /brief`
+  - `locale: ru`
+  - `brief`
+  - `metadata`
+  - `crm_handoff`
+- UI and API share the same schema/validation module:
+  - `web/src/lib/brief-submit.ts`
+- MVP behavior:
+  - validate and normalize the brief;
+  - return a structured discovery payload and handoff for human review;
+  - do not force the brief through the existing `/api/contact/submit` SQL/contact model.
+- Durable PostgreSQL persistence for brief submissions is deferred to a later backend pass with a dedicated table or generic intake entity model.
+
+### Consequences
+- `/brief` can ship without corrupting the existing contact lead schema.
+- Human review receives a clean, CRM-ready discovery brief object.
+- Production persistence/reporting for brief submissions remains a follow-up and must not be assumed complete until a dedicated storage migration lands.
+
+---
+
+## ADR-022: Subagent Model / Reasoning Selection Is Role- and Risk-Based
+
+**Date:** 2026-04-18
+**Status:** Accepted
+
+### Context
+Проект использует `Tech Lead / Control Tower / Orchestrator` режим с internal subagents и stage roles `Reviewer`, `Coder`, `Verifier`. Без явного правила выбора model/reasoning возникает риск случайно использовать слишком слабый режим для SSOT, runtime, deploy, legal/contact или AI policy решений, либо слишком дорогой режим для узких механических задач.
+
+### Decision
+- Subagents inherit parent session model/reasoning by default.
+- Model/reasoning override разрешен только при явном обосновании типом задачи, риском, стоимостью или скоростью.
+- Перед запуском subagent Control Tower фиксирует stage, objective, role, override если есть, и expected result.
+- Выбор model/reasoning задается по роли и риску:
+  - `Reviewer`: higher reasoning for architecture, planning, AC, risks, SSOT-impacting decisions; read-only.
+  - `Coder`: smaller/medium settings for narrow scoped changes, stronger coding model and higher reasoning for cross-layer or runtime-sensitive implementation.
+  - `Verifier`: medium reasoning for routine checks, high reasoning for release-critical, security, deploy/runtime, secrets, or SSOT validation; verification-only.
+- Для production behavior, secrets, legal/contact baseline, deploy/runtime assumptions, CRM contracts, AI runtime policy и SSOT нельзя оптимизировать за счет надежности.
+
+### Consequences
+- Multi-agent execution becomes more predictable and auditable.
+- Cost/speed can be optimized for narrow work without weakening high-risk decisions.
+- Handoff quality improves because role, model/reasoning choice, and expected result are explicit before execution.
+- Specific model names remain recommendations/examples, not a permanent architectural dependency.
+
+---
+
+## ADR-023: Confirmation Unit = Approved Work Block
+
+**Date:** 2026-04-18
+**Status:** Accepted
+
+### Context
+Multi-agent execution currently uses internal stage roles (`Reviewer`, `Coder`, `Verifier`) under `Tech Lead / Control Tower`. Requiring explicit confirmation between every internal stage creates unnecessary latency for a single approved task, especially when the objective and scope are unchanged.
+
+### Decision
+- The default confirmation unit is now an approved work block, not each internal stage.
+- A work block is one approved objective/scope and may include multiple internal stages such as `Reviewer -> Coder -> Verifier`.
+- Inside an approved work block, Control Tower may proceed between internal stages without additional confirmation if:
+  - objective and scope remain unchanged;
+  - no dangerous action is needed;
+  - each stage states `stage`, `objective`, `role`, and `expected result`;
+  - role constraints remain enforced.
+- Control Tower must request new confirmation for:
+  - scope/objective changes;
+  - new ticket or work package;
+  - files outside approved scope;
+  - deploy or infrastructure changes;
+  - secrets, production data, or real client communication;
+  - destructive actions;
+  - blockers requiring product/ops decisions;
+  - verification failures that require materially new scope.
+
+### Consequences
+- Approved tasks can run end-to-end with less interruption.
+- Stage discipline remains visible without forcing user confirmation on every role transition.
+- Risk controls stay explicit for deploy, infra, secrets, production data, client-facing actions, destructive actions, and scope expansion.
+- Final reporting must summarize internal stages, checks, risks, and follow-ups for the whole work block.
+
+---
+
+## ADR-024: Work Block Readiness, Model Fallback, and Verification Guardrails
+
+**Date:** 2026-04-18
+**Status:** Accepted
+
+### Context
+After adopting approved work blocks, the process needs stronger upfront framing and repeatable verification so fewer confirmations do not reduce control. The first subagent test also showed that recommended models can be unavailable in the current account/session, so model fallback must be explicit.
+
+### Decision
+- Every approved work block should start from a brief that states objective, scope, write-set, out-of-scope, AC, internal stages, model/reasoning plan, stop conditions, verification matrix, and expected final report.
+- Implementation should satisfy Definition of Ready before `Coder` starts:
+  - active baseline is known;
+  - SSOT/source documents are known;
+  - scope/write-set and AC are clear;
+  - dangerous-action and secrets/production/client-data boundaries are explicit;
+  - Memory Bank/tasklist update requirements are known.
+- Verifier uses a matrix based on change type:
+  - markdown/process;
+  - content/brand/legal/contact;
+  - frontend UI;
+  - API/runtime logic;
+  - DB/storage/intake;
+  - security/secrets/runtime policy;
+  - deploy/infra.
+- If a recommended model is unavailable, Control Tower should prefer upward fallback to a stronger available model:
+  - same family stronger model when available;
+  - strongest available general model for the role;
+  - inherited parent session model when it is safer than guessing a weaker model.
+- For high-risk work, model/reasoning downgrade requires explicit user confirmation.
+- If the environment supports a cheap read-only model availability check, Control Tower may use it before a critical work block. If not, failed subagent launch is treated as the availability signal and retried once with the nearest stronger available model.
+
+### Consequences
+- Work blocks become easier to launch end-to-end without losing scope control.
+- Coder stages start with clearer readiness criteria and fewer hidden assumptions.
+- Verifier stages become more consistent and less ad hoc.
+- Model availability failures become recoverable without weakening high-risk tasks.
+- The process stays flexible because exact model names remain examples rather than hard dependencies.
