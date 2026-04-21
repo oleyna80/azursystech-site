@@ -2641,3 +2641,45 @@ Residual risks / untested areas:
 ### Notes
 
 - Persistent limiter schema bootstrap is in-app (`CREATE TABLE IF NOT EXISTS api_rate_limits`), so immediate manual migration is not required for rollout.
+
+## 2026-04-20: `/brief` cleanup and visual alignment
+
+### Done
+
+- Cleaned up `/brief` navigation and copy after the `/ai-automation` review:
+  - removed stale `/contact` targets from the brief page flow and routed secondary contact actions to `/#contact`;
+  - replaced mixed English/Russian UI wording in the brief helper and API messages;
+  - softened the success copy so it confirms brief receipt without implying project acceptance.
+- Visually aligned the brief page, progress, form controls, and helper panel with the calmer premium direction used on `/ai-automation`.
+- Kept brief schema keys, enum values, validation rules, payload shape, and persistence behavior unchanged.
+
+### Validation
+
+- `git diff --check -- web/src/app/brief/page.tsx web/src/components/brief/brief-form.tsx web/src/components/brief/brief-assistant.tsx web/src/components/brief/brief-field.tsx web/src/components/brief/brief-progress.tsx web/src/app/api/brief/submit/route.ts web/src/lib/brief-assistant.ts web/src/lib/brief-submit.ts` - pass
+- `cd /home/dmitrii/azursystech/web && npm run check:types` - pass
+- Playwright smoke on `http://127.0.0.1:3001/brief` - pass: 1 H1, 1 form, no `/contact` href, `/#contact` present, no desktop/mobile horizontal overflow, no console errors.
+
+### Notes
+
+- Full `npm run build` was not run for this block.
+- Valid brief submission was not executed to avoid creating a test request; success/API copy was checked statically.
+
+## 2026-04-20: `/brief` inline field hints
+
+### Done
+
+- Replaced the persistent right-side `Помощник по брифу` panel with inline `?` help buttons next to brief fields.
+- Added a short form note explaining that `?` opens field-specific guidance.
+- Kept the future AI-assistant knowledge layer in `web/src/lib/brief-assistant.ts`, but removed the now-unused sidebar component.
+- Kept schema keys, validation rules, payload shape, and persistence behavior unchanged; static field hints do not mark `ai_assist_used`.
+
+### Validation
+
+- `git diff --check -- web/src/components/brief/brief-form.tsx web/src/components/brief/brief-field.tsx web/src/components/brief/brief-assistant.tsx web/src/lib/brief-assistant.ts` - pass
+- `cd /home/dmitrii/azursystech/web && npm run check:types` - pass
+- Playwright smoke on `http://127.0.0.1:3001/brief` - pass: 1 H1, 1 form, inline `?` buttons present, first help opens, old sidebar label absent, no `/contact` href, no desktop/mobile horizontal overflow, no console errors.
+
+### Notes
+
+- Full `npm run build` was not run for this block.
+- Real valid submit was not executed; this block only changed help UI placement.

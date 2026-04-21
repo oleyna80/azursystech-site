@@ -9,7 +9,7 @@ export function BriefProgress({ steps, currentStep }: BriefProgressProps) {
   const completion = Math.round(((currentStep + 1) / steps.length) * 100);
 
   return (
-    <div className="rounded-lg border border-[#D8D0C4] bg-[#FBF8F2] p-4">
+    <div className="rounded-[1.5rem] border border-[#D8D0C4] bg-[#FBF8F2] p-4 shadow-[0_14px_38px_rgba(23,35,49,0.05)]">
       <div className="flex items-center justify-between gap-3 text-xs font-medium text-[#5C6670]">
         <span>
           Шаг {currentStep + 1} из {steps.length}
@@ -26,7 +26,7 @@ export function BriefProgress({ steps, currentStep }: BriefProgressProps) {
             <div
               key={step.id}
               className={[
-                "rounded-md border px-3 py-2 text-left text-xs leading-5 transition-colors",
+                "rounded-2xl border px-3 py-2 text-left text-xs leading-5 transition-colors",
                 isActive
                   ? "border-[#1F6F78] bg-[#1F6F78] text-white"
                   : isDone

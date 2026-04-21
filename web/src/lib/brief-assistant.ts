@@ -32,27 +32,31 @@ export const BRIEF_ASSISTANT_ALL_FIELDS = [
 
 export type BriefAssistantFieldKey = (typeof BRIEF_ASSISTANT_ALL_FIELDS)[number];
 
-export type BriefAssistantInteraction =
-  | {
-      type: "panel_opened";
-      fieldKey?: BriefAssistantFieldKey | null;
-      stepTitle?: string;
-    }
-  | {
-      type: "panel_closed";
-      fieldKey?: BriefAssistantFieldKey | null;
-      stepTitle?: string;
-    }
-  | {
-      type: "field_selected";
-      fieldKey: BriefAssistantFieldKey;
-      source: "chip" | "external";
-    }
-  | {
-      type: "value_reviewed";
-      fieldKey: BriefAssistantFieldKey;
-      valueLength: number;
-    };
+export const BRIEF_INLINE_HELP_KEEP_FIELDS = [
+  "main_goal",
+  "main_problem",
+  "desired_result",
+  "current_process_description",
+  "main_bottleneck",
+  "human_approval_required",
+  "sensitive_data_or_constraints",
+  "what_must_not_happen",
+] as const satisfies readonly BriefAssistantFieldKey[];
+
+export const BRIEF_INLINE_HELP_SIMPLIFY_FIELDS = [
+  "business_type",
+  "priority_use_case",
+  "why_now",
+  "current_channels",
+  "preferred_start_mode",
+  "budget_range",
+  "contact_phone_or_whatsapp",
+] as const satisfies readonly BriefAssistantFieldKey[];
+
+const BRIEF_INLINE_HELP_FIELDS = [
+  ...BRIEF_INLINE_HELP_KEEP_FIELDS,
+  ...BRIEF_INLINE_HELP_SIMPLIFY_FIELDS,
+] as const satisfies readonly BriefAssistantFieldKey[];
 
 export type BriefAssistantGuidance = {
   fieldLabel: string;
@@ -94,8 +98,8 @@ const FIELD_LABELS: Record<BriefAssistantFieldKey, string> = {
 };
 
 const BASE_GUARDRAILS = [
-  "Не указывайте цену, сроки или гарантированный fit в этом поле.",
-  "Для первого brief-а не нужно вставлять лишние чувствительные данные.",
+  "Не указывайте цену, сроки или обещание точного соответствия в этом поле.",
+  "Для первого брифа не нужно вставлять лишние чувствительные данные.",
   "Сфокусируйтесь на одном процессе и одном основном узком месте.",
 ];
 
@@ -113,25 +117,31 @@ const FIELD_GUIDANCE: Partial<Record<BriefAssistantFieldKey, Omit<BriefAssistant
   },
   business_type: {
     title: "Как заполнить поле",
-    explanation: "Выберите наиболее близкий тип бизнеса без сложной классификации.",
-    answerStructure: [
-      "Возьмите самый близкий вариант.",
-      "Если не подходит, выберите «другое».",
-      "Не пытайтесь описать всю структуру компании.",
-    ],
+    explanation: "Выберите самый близкий вариант, не пытаясь идеально классифицировать бизнес.",
+    answerStructure: [],
     draftExample: "локальная сервисная компания / e-commerce / кабинет / агентство",
-    shortFollowUp: "Сейчас важнее практическая близость, а не идеальная taxonomy.",
+    shortFollowUp: "Сейчас важнее практическая близость, а не идеальная классификация.",
+  },
+  priority_use_case: {
+    title: "Как заполнить поле",
+    explanation: "Выберите тот сценарий, который полезнее автоматизировать первым.",
+    answerStructure: [],
+    draftExample: "обработка заявок с сайта / первичный приём из мессенджеров / маршрутизация обращений",
+    shortFollowUp: "Если сценариев несколько, выбирайте первый по бизнес-ценности.",
+  },
+  why_now: {
+    title: "Как заполнить поле",
+    explanation: "Коротко поясните, что изменилось и почему откладывать уже неудобно.",
+    answerStructure: [],
+    draftExample: "Поток обращений вырос, и ручная обработка уже тормозит ответы и продажи.",
+    shortFollowUp: "Достаточно одной ясной причины или одного триггера.",
   },
   current_channels: {
     title: "Как заполнить поле",
-    explanation: "Перечислите, откуда сейчас приходят обращения.",
-    answerStructure: [
-      "Сайт, WhatsApp, email, реклама, мессенджеры или другие каналы.",
-      "Если каналов несколько, перечислите основные.",
-      "Не нужно расписывать весь маркетинговый контур.",
-    ],
+    explanation: "Отметьте реальные каналы, через которые уже приходят обращения.",
+    answerStructure: [],
     draftExample: "Сайт, WhatsApp и входящие письма.",
-    shortFollowUp: "Это помогает понять, где именно начинается intake.",
+    shortFollowUp: "Это помогает понять, где именно начинается первый контакт.",
   },
   current_owner_of_process: {
     title: "Как заполнить поле",
@@ -142,7 +152,7 @@ const FIELD_GUIDANCE: Partial<Record<BriefAssistantFieldKey, Omit<BriefAssistant
       "Можно без фамилий.",
     ],
     draftExample: "Менеджер по продажам / администратор / владелец бизнеса.",
-    shortFollowUp: "Для первого brief-а достаточно роли, а не полного оргчарта.",
+    shortFollowUp: "Для первого брифа достаточно роли, а не полного оргчарта.",
   },
   current_tools: {
     title: "Как заполнить поле",
@@ -157,18 +167,14 @@ const FIELD_GUIDANCE: Partial<Record<BriefAssistantFieldKey, Omit<BriefAssistant
   },
   preferred_start_mode: {
     title: "Как заполнить поле",
-    explanation: "Если не хотите сразу большой проект, лучше выбрать аудиторский или пилотный старт.",
-    answerStructure: [
-      "Какой формат первого шага удобен.",
-      "Нужен ли сначала audit, pilot или discovery.",
-      "Без давления на полный запуск.",
-    ],
-    draftExample: "Сначала discovery или pilot discussion.",
+    explanation: "Выберите самый комфортный первый шаг, а не весь будущий проект.",
+    answerStructure: [],
+    draftExample: "Сначала короткий вводный разбор или обсуждение пилота.",
     shortFollowUp: "Для первого контакта обычно достаточно мягкого стартового режима.",
   },
   contact_name: {
     title: "Как заполнить поле",
-    explanation: "Укажите имя человека, с которым можно обсудить brief.",
+    explanation: "Укажите имя человека, с которым можно обсудить бриф.",
     answerStructure: ["Имя и, если нужно, фамилия.", "Можно указать контактное лицо проекта."],
     draftExample: "Анна / Иван Петров.",
     shortFollowUp: "Если проект ведёт не владелец, укажите ответственное контактное лицо.",
@@ -179,6 +185,20 @@ const FIELD_GUIDANCE: Partial<Record<BriefAssistantFieldKey, Omit<BriefAssistant
     answerStructure: ["Один актуальный email.", "Без лишних адресов, если это не нужно."],
     draftExample: "hello@company.com",
     shortFollowUp: "Проверьте, что адрес рабочий и без ошибок.",
+  },
+  budget_range: {
+    title: "Как заполнить поле",
+    explanation: "Дайте ориентир только если он уже есть; если нет, это тоже нормальный ответ.",
+    answerStructure: [],
+    draftExample: "сначала нужен аудит / до 1 000 € / предпочитаю обсудить",
+    shortFollowUp: "Поле нужно для калибровки следующего шага, а не для жёсткого коммита.",
+  },
+  contact_phone_or_whatsapp: {
+    title: "Как заполнить поле",
+    explanation: "Оставьте один номер, если по нему правда удобно быстро связаться.",
+    answerStructure: [],
+    draftExample: "+33 7 80 72 09 94",
+    shortFollowUp: "Если удобнее только email, это поле можно не заполнять.",
   },
   preferred_contact_method: {
     title: "Как заполнить поле",
@@ -220,7 +240,7 @@ const FIELD_GUIDANCE: Partial<Record<BriefAssistantFieldKey, Omit<BriefAssistant
       "Как выглядит хороший исход для команды и клиента.",
     ],
     draftExample:
-      "Обращения собираются в одну структуру, проходят первичную квалификацию и уходят человеку уже с кратким summary.",
+      "Обращения собираются в одну структуру, проходят первичную оценку и уходят человеку уже с краткой сводкой.",
     shortFollowUp: "Лучше описывать результат в практических словах, без архитектуры.",
   },
   current_process_description: {
@@ -260,6 +280,18 @@ const FIELD_GUIDANCE: Partial<Record<BriefAssistantFieldKey, Omit<BriefAssistant
     draftExample:
       "Человек должен подтверждать цену, сроки, нестандартные ответы и любые действия, которые меняют статус клиента.",
     shortFollowUp: "Если сомневаетесь, лучше поставить человека на все коммерчески значимые решения.",
+  },
+  sensitive_data_or_constraints: {
+    title: "Как заполнить поле",
+    explanation: "Перечислите только те ограничения, которые реально влияют на хранение данных, доступы или допустимые действия.",
+    answerStructure: [
+      "Какие данные считаются чувствительными.",
+      "Где есть ограничения по хранению, доступу или передаче.",
+      "Какие внутренние правила нельзя нарушать.",
+    ],
+    draftExample:
+      "Есть персональные данные клиентов, доступ к переписке только у менеджеров, а документы нельзя передавать во внешние сервисы без согласования.",
+    shortFollowUp: "Если ограничений немного, достаточно 1-2 самых важных пунктов.",
   },
   what_must_not_happen: {
     title: "Как заполнить поле",
@@ -303,6 +335,14 @@ function normalizeValue(value?: string | null): string {
   return value?.trim() ?? "";
 }
 
+function isInlineHelpField(fieldKey: BriefAssistantFieldKey): boolean {
+  return (BRIEF_INLINE_HELP_FIELDS as readonly string[]).includes(fieldKey);
+}
+
+function isSimplifiedInlineHelpField(fieldKey: BriefAssistantFieldKey): boolean {
+  return (BRIEF_INLINE_HELP_SIMPLIFY_FIELDS as readonly string[]).includes(fieldKey);
+}
+
 function isLowSignalAnswer(value: string): boolean {
   const normalized = value.toLowerCase();
   if (normalized.length < 18) {
@@ -326,15 +366,6 @@ function getStepHint(fieldLabel: string, stepTitle?: string): string {
   }
 
   return `Сейчас поле: ${fieldLabel}.`;
-}
-
-export function getBriefAssistantFieldLabel(fieldKey?: string | null): string {
-  const normalizedKey = normalizeFieldKey(fieldKey);
-  if (!normalizedKey) {
-    return "выбранное поле";
-  }
-
-  return FIELD_LABELS[normalizedKey];
 }
 
 export function getBriefAssistantGuidance(params: {
@@ -382,4 +413,25 @@ export function getBriefAssistantGuidance(params: {
   }
 
   return guidance;
+}
+
+export function getBriefInlineHelpGuidance(params: {
+  fieldKey?: string | null;
+  fieldValue?: string | null;
+  stepTitle?: string;
+}): BriefAssistantGuidance | null {
+  const normalizedKey = normalizeFieldKey(params.fieldKey);
+  if (!normalizedKey || !isInlineHelpField(normalizedKey)) {
+    return null;
+  }
+
+  const guidance = getBriefAssistantGuidance(params);
+  if (!isSimplifiedInlineHelpField(normalizedKey)) {
+    return guidance;
+  }
+
+  return {
+    ...guidance,
+    answerStructure: [],
+  };
 }

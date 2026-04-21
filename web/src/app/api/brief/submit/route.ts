@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   } catch {
     return jsonResult(400, {
       success: false,
-      message: "Не удалось прочитать данные brief. Проверьте заполнение и попробуйте ещё раз.",
+      message: "Не удалось прочитать данные брифа. Проверьте заполнение и попробуйте ещё раз.",
       issues: [{ field: "form", message: "Некорректный формат JSON" }],
     });
   }
@@ -43,8 +43,8 @@ export async function POST(request: Request) {
   if (!isPlainObject(body) || !isPlainObject(body.values)) {
     return jsonResult(400, {
       success: false,
-      message: "Проверьте данные brief и попробуйте ещё раз.",
-      issues: [{ field: "values", message: "Отсутствуют данные brief" }],
+      message: "Проверьте данные брифа и попробуйте ещё раз.",
+      issues: [{ field: "values", message: "Отсутствуют данные брифа" }],
     });
   }
 
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   if (validated.kind === "validation_error") {
     return jsonResult(400, {
       success: false,
-      message: "Проверьте обязательные поля и попробуйте отправить brief снова.",
+      message: "Проверьте обязательные поля и попробуйте отправить бриф снова.",
       issues: validated.issues,
     });
   }
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
 
   return jsonResult(200, {
     success: true,
-    message: "Бриф принят. Данные готовы для review.",
+    message: "Бриф получен. Данные готовы для ручной проверки.",
     payload,
     handoff: payload.crm_handoff,
   });

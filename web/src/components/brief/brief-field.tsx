@@ -1,5 +1,8 @@
 "use client";
 
+import { useId, useState } from "react";
+
+import { getBriefInlineHelpGuidance } from "@/lib/brief-assistant";
 import type { BriefFieldDefinition, BriefFormValues } from "@/lib/brief-submit";
 
 type BriefFieldProps = {
@@ -11,11 +14,10 @@ type BriefFieldProps = {
   otherError?: string;
   onValueChange: (key: keyof BriefFormValues, value: string) => void;
   onListToggle: (key: keyof BriefFormValues, optionValue: string) => void;
-  onFocusField: (key: keyof BriefFormValues) => void;
 };
 
 const controlBase =
-  "w-full rounded-md border border-[#D8D0C4] bg-white px-3 py-3 text-sm text-[#1F2A37] outline-none transition placeholder:text-[#7C8894] focus:border-[#1F6F78] focus:ring-2 focus:ring-[#1F6F78]/15";
+  "w-full rounded-2xl border border-[#D8D0C4] bg-white px-3 py-3 text-sm text-[#1F2A37] outline-none transition placeholder:text-[#7C8894] focus:border-[#1F6F78] focus:ring-2 focus:ring-[#1F6F78]/15";
 
 function inputTypeForField(type: BriefFieldDefinition["type"]) {
   if (type === "email" || type === "url") {
@@ -34,25 +36,73 @@ export function BriefField({
   otherError,
   onValueChange,
   onListToggle,
-  onFocusField,
 }: BriefFieldProps) {
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const helpId = useId();
   const isSelect = field.type === "select";
   const isMultiSelect = field.type === "multi_select";
   const showOtherInput =
     Boolean(field.allowOther && field.otherFieldKey) &&
     ((isSelect && value === "other") || (isMultiSelect && listValue.includes("other")));
+  const inlineHelp = getBriefInlineHelpGuidance({
+    fieldKey: String(field.key),
+    fieldValue: value,
+  });
+  const hasInlineHelp = Boolean(inlineHelp);
+  const describedBy = [
+    isHelpOpen && inlineHelp ? helpId : undefined,
+    error ? `${String(field.key)}-error` : undefined,
+  ]
+    .filter(Boolean)
+    .join(" ") || undefined;
 
   return (
     <div className="space-y-2" data-field-key={String(field.key)}>
-      <label
-        htmlFor={String(field.key)}
-        className="flex items-center gap-1 text-sm font-medium text-[#1F2A37]"
-      >
-        <span>{field.label}</span>
-        {field.required ? <span className="text-[#C96F4A]">*</span> : null}
-      </label>
+      <div className="flex items-start justify-between gap-3">
+        <label
+          htmlFor={String(field.key)}
+          className="flex min-w-0 items-center gap-1 text-sm font-medium text-[#1F2A37]"
+        >
+          <span>{field.label}</span>
+          {field.required ? <span className="text-[#C96F4A]">*</span> : null}
+        </label>
+        {hasInlineHelp ? (
+          <button
+            type="button"
+            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#B8D9DB] bg-[#EDF7F7] text-xs font-bold text-[#1F6F78] transition-colors hover:bg-[#DCEFF0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F6F78]/30"
+            aria-expanded={isHelpOpen}
+            aria-controls={helpId}
+            aria-label={`Показать подсказку: ${field.label}`}
+            onClick={() => setIsHelpOpen((previous) => !previous)}
+          >
+            ?
+          </button>
+        ) : null}
+      </div>
 
       {field.helperText ? <p className="text-sm leading-6 text-[#5C6670]">{field.helperText}</p> : null}
+
+      {isHelpOpen && inlineHelp ? (
+        <div
+          id={helpId}
+          className="rounded-2xl border border-[#B8D9DB] bg-[#EDF7F7] p-3 text-sm leading-6 text-[#1F2A37]"
+        >
+          <p className="font-semibold">{inlineHelp.fieldLabel}</p>
+          <p className="mt-1 text-[#1F2A37]/85">{inlineHelp.explanation}</p>
+          {inlineHelp.answerStructure.length ? (
+            <ul className="mt-2 list-disc space-y-1 pl-4 text-[#1F2A37]/85">
+              {inlineHelp.answerStructure.slice(0, 3).map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          ) : null}
+          {inlineHelp.draftExample ? (
+            <p className="mt-2 text-xs leading-5 text-[#53616E]">
+              Пример: {inlineHelp.draftExample}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       {field.type === "textarea" ? (
         <textarea
@@ -67,8 +117,7 @@ export function BriefField({
             error ? "border-[#B42318] focus:border-[#B42318] focus:ring-[#B42318]/15" : "",
           ].join(" ")}
           aria-invalid={Boolean(error)}
-          aria-describedby={error ? `${String(field.key)}-error` : undefined}
-          onFocus={() => onFocusField(field.key)}
+          aria-describedby={describedBy}
           onChange={(event) => onValueChange(field.key, event.target.value)}
         />
       ) : null}
@@ -83,8 +132,7 @@ export function BriefField({
             error ? "border-[#B42318] focus:border-[#B42318] focus:ring-[#B42318]/15" : "",
           ].join(" ")}
           aria-invalid={Boolean(error)}
-          aria-describedby={error ? `${String(field.key)}-error` : undefined}
-          onFocus={() => onFocusField(field.key)}
+          aria-describedby={describedBy}
           onChange={(event) => onValueChange(field.key, event.target.value)}
         >
           <option value="">Выберите вариант</option>
@@ -108,8 +156,7 @@ export function BriefField({
             error ? "border-[#B42318] focus:border-[#B42318] focus:ring-[#B42318]/15" : "",
           ].join(" ")}
           aria-invalid={Boolean(error)}
-          aria-describedby={error ? `${String(field.key)}-error` : undefined}
-          onFocus={() => onFocusField(field.key)}
+          aria-describedby={describedBy}
           onChange={(event) => onValueChange(field.key, event.target.value)}
         />
       ) : null}
@@ -123,7 +170,7 @@ export function BriefField({
               <label
                 key={option.value}
                 className={[
-                  "flex min-h-11 items-center gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors",
+                  "flex min-h-11 items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm transition-colors",
                   checked ? "border-[#1F6F78] bg-[#EAF4F4]" : "border-[#D8D0C4] bg-white",
                 ].join(" ")}
               >
@@ -131,7 +178,6 @@ export function BriefField({
                   type="checkbox"
                   checked={checked}
                   className="h-4 w-4 accent-[#1F6F78]"
-                  onFocus={() => onFocusField(field.key)}
                   onChange={() => onListToggle(field.key, option.value)}
                 />
                 <span className="text-[#1F2A37]">{option.label}</span>
@@ -161,7 +207,6 @@ export function BriefField({
             ].join(" ")}
             aria-invalid={Boolean(otherError)}
             aria-describedby={otherError ? `${String(field.otherFieldKey)}-error` : undefined}
-            onFocus={() => onFocusField(field.key)}
             onChange={(event) => onValueChange(field.otherFieldKey as keyof BriefFormValues, event.target.value)}
           />
         </div>
