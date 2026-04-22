@@ -191,6 +191,11 @@ Status: IN_PROGRESS
   - `docker-compose.vps.yml` includes internal `postgres` service + persistent volume
   - PostgreSQL backup/restore scripts added to `scripts/`
   - deployment runbooks updated for SQL backup/restore and env/runtime checks
+  Delivery notes (2026-04-22 db-connectivity hardening):
+  - VPS `postgres` host bind changed to loopback-only publish (`127.0.0.1:5432:5432`) for stable tunnel target without public DB exposure.
+  - WSL tunnel baseline switched from container IP forwarding to host loopback forwarding (`15432 -> 127.0.0.1:5432` on VPS).
+  - Added repo helper `scripts/vps-db-tunnel.sh` (`start|stop|status|test`) and deployment runbook section for repeatable operator flow.
+  - Verified connectivity from WSL through SSH tunnel and verified external `178.156.212.10:5432` remains closed/filtered.
 
 - AZR-003-012: Close `frontend_mvp -> web` baseline parity / migration
   Owner: Tech Lead

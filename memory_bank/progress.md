@@ -1,5 +1,33 @@
 # Progress Log - AzurSysTech
 
+## 2026-04-22: VPS PostgreSQL operator access hardened via loopback bind + SSH tunnel
+
+### Done
+
+- Updated VPS PostgreSQL operator-access baseline to use host loopback publish only:
+  - `127.0.0.1:5432:5432`
+- Standardized WSL access path through SSH local forwarding:
+  - local `15432 -> VPS 127.0.0.1:5432`
+- Added repeatable helper script:
+  - `scripts/vps-db-tunnel.sh`
+  - actions: `start|stop|status|test|restart`
+- Updated deployment docs, tasklist, and ADR set for the new operator baseline.
+- Registered a project-local skill for this workflow:
+  - `.agent/skills/vps-db-tunnel-ops/SKILL.md`
+  - `.agent/ROSTER.md`
+
+### Validation
+
+- Operator baseline verified as documented:
+  - VPS PostgreSQL remains non-public;
+  - tunnel target no longer depends on Docker container IP (`172.x`);
+  - WSL access path is stable and reproducible.
+
+### Notes
+
+- This block changes operator connectivity only.
+- It does not change public website behavior, lead flow, or public DB exposure policy.
+
 ## 2026-04-22: Chat assistant history pass for multi-turn context
 
 ### Done

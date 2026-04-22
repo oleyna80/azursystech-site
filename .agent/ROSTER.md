@@ -73,6 +73,7 @@
 | VPS SQL Runtime Proof | `.agent/skills/vps-sql-runtime-proof/SKILL.md` | "runtime proof", "sql_primary", "gate A/B/C/D/E" |
 | VPS Security Runtime Proof | `.agent/skills/vps-security-runtime-proof/SKILL.md` | "security runtime proof", "persistent limiter", "integration.accepted" |
 | VPS Repo Sync | `.agent/skills/vps-repo-sync/SKILL.md` | "sync vps -> repo", "runtime artifacts" |
+| VPS DB Tunnel Ops | `.agent/skills/vps-db-tunnel-ops/SKILL.md` | "db connectivity check", "ssh tunnel", "wsl -> vps postgres" |
 | VPS Deploy Recovery | `.agent/skills/vps-deploy-recovery/SKILL.md` | "diverged branch", "unmerged files", "compose yaml error", "ff-only failed" |
 | Contact Drift Audit | `.agent/skills/contact-drift-audit/SKILL.md` | "проверь контакты", "AZR-003-013" |
 | Scoped Commit Guard | `.agent/skills/scoped-commit-guard/SKILL.md` | "scoped commit", "грязное дерево" |

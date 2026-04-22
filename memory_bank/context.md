@@ -180,6 +180,10 @@ Current page-QA notes:
   - no scheduling promises
 - Do not treat `n8n` / Google Sheets as primary intake storage.
 - Do not use or expose real secrets in repo artifacts.
+- VPS PostgreSQL operator access baseline:
+  - host bind is loopback-only (`127.0.0.1:5432:5432`);
+  - WSL access goes only through SSH tunnel (`local 15432 -> VPS 127.0.0.1:5432`);
+  - external `VPS:5432` must stay closed unless explicitly approved.
 - `azursystech-site` placeholder history is preserved in branch `placeholder-backup`.
 
 **Last update:** 2026-04-21

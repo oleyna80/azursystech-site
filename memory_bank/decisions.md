@@ -633,3 +633,28 @@ After adopting approved work blocks, the process needs stronger upfront framing 
 - Verifier stages become more consistent and less ad hoc.
 - Model availability failures become recoverable without weakening high-risk tasks.
 - The process stays flexible because exact model names remain examples rather than hard dependencies.
+
+---
+
+## ADR-025: VPS PostgreSQL Operator Access Uses Loopback Bind + SSH Tunnel
+
+**Date:** 2026-04-22
+**Status:** Accepted
+
+### Context
+For operator access from WSL to production PostgreSQL on VPS, forwarding directly to Docker container IP (`172.x`) works but is fragile because container IP can change after recreate/redeploy. At the same time, DB port must not be publicly exposed.
+
+### Decision
+- VPS `postgres` service in `docker-compose.vps.yml` publishes only to host loopback:
+  - `127.0.0.1:5432:5432`
+- WSL access baseline is SSH local forwarding to VPS loopback:
+  - local `15432 -> VPS 127.0.0.1:5432`
+- Public DB exposure remains forbidden:
+  - no `0.0.0.0:5432` publish without explicit approval.
+- Operational helper script is added:
+  - `scripts/vps-db-tunnel.sh` with `start|stop|status|test`.
+
+### Consequences
+- Stable tunnel target independent of Docker container IP churn.
+- No external opening of PostgreSQL port while keeping operator connectivity.
+- Repeatable runbook and lower chance of manual connectivity mistakes during support/debug sessions.
