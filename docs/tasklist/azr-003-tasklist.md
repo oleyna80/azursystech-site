@@ -4,6 +4,13 @@ Status: IN_PROGRESS
 
 ## Remaining Execution Queue
 
+### Current post-launch work stream
+
+- Page-by-page QA and cleanup of the current public `web` site:
+  - current conversion-path order: `/`, `/ai-automation`, `/brief`, `/contact`
+  - then `/business`, `/services`, service pages, `/about`, `/faq`, `/pricing`, and legal/utility pages
+  - this is the active operational stream reflected in `memory_bank/context.md`
+
 ### Completed launch-critical path
 
 1. `AZR-003-001` legal identity and business data
@@ -18,6 +25,12 @@ Status: IN_PROGRESS
 ### Remaining
 
 6. `AZR-003-008` deferred improvements separation
+
+### Notes on scope state
+
+- Launch-critical implementation and runtime hardening are closed.
+- `/ai-automation` and `/brief` are implemented and are part of the current public conversion path.
+- CRM / HubSpot work remains deferred until the intake baseline and page-QA stream are considered stable.
 
 ## Tasks
 

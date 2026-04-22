@@ -1,5 +1,22 @@
 # PLAN: AZR-003 Go-Live Plan
 
+Status: HISTORICAL PLAN COMPLETED
+
+## Current Status Note
+
+The launch-critical go-live path described in this plan is complete.
+
+Current project phase has moved to:
+- post-launch / go-live hardening;
+- page-by-page QA and cleanup of the current public website;
+- deferred-work separation under `AZR-003-008`.
+
+Use this file as the historical launch plan and closure reference.
+For current execution priority, rely on:
+- `docs/tasklist/azr-003-tasklist.md`
+- `memory_bank/context.md`
+- `memory_bank/progress.md`
+
 ## Objective
 
 Move AzurSysTech from implementation-ready to launch-ready by closing only the blockers that are mandatory for first live operation.
@@ -121,9 +138,9 @@ Move AzurSysTech from implementation-ready to launch-ready by closing only the b
 
 ## Execution Checklist
 
-- [ ] Phase 1: Legal readiness closed
-- [ ] Phase 2: Contact readiness closed
-- [ ] Phase 3: Deployment readiness closed
-- [ ] Phase 4: AI runtime readiness closed
-- [ ] Phase 5: GBP / review / local presence readiness closed
-- [ ] Phase 6: Go / No-Go decision prepared
+- [x] Phase 1: Legal readiness closed
+- [x] Phase 2: Contact readiness closed
+- [x] Phase 3: Deployment readiness closed
+- [x] Phase 4: AI runtime readiness closed
+- [x] Phase 5: GBP / review / local presence readiness closed
+- [x] Phase 6: Go / No-Go decision prepared

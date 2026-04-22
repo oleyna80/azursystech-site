@@ -2761,3 +2761,24 @@ Residual risks / untested areas:
 ### Notes
 
 - Both files are treated as active project context, not archival noise, so they remain visible to git and to project indexing.
+
+## 2026-04-22: AZR-003 roadmap/tasklist sync to post-launch phase
+
+### Done
+
+- Updated `docs/plans/azr-003-go-live-plan.md` to mark the go-live plan as historically completed rather than still active.
+- Added an explicit current-status note in the go-live plan pointing active execution to the tasklist and Memory Bank.
+- Marked all six launch phases as completed in the historical go-live checklist.
+- Updated `docs/tasklist/azr-003-tasklist.md` so the top execution queue reflects the real current stream:
+  - page-by-page QA and cleanup of the public `web` site;
+  - remaining numbered work under `AZR-003-008`;
+  - CRM / HubSpot still deferred.
+
+### Validation
+
+- Docs-only sync pass; no runtime commands were required.
+- Reviewed updated roadmap/tasklist against `memory_bank/context.md` and recent `memory_bank/progress.md` entries.
+
+### Notes
+
+- This pass does not create a new AZR-003 ticket family item; it only aligns planning artifacts with the already accepted current phase.
