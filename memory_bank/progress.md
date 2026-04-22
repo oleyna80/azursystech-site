@@ -2746,3 +2746,18 @@ Residual risks / untested areas:
 ### Notes
 
 - `03_leads/contact-form.md` and `docs/specs/azr-003-012-frontend-mvp-parity-migration-plan.md` were intentionally not ignored because they are working project documents, not noise.
+
+## 2026-04-22: Track active baseline and backend-intake decision docs
+
+### Done
+
+- Added `docs/specs/azr-003-012-frontend-mvp-parity-migration-plan.md` to the repository as an active SSOT artifact for the accepted `web` baseline after the `frontend_mvp -> web` migration closure.
+- Added `03_leads/contact-form.md` to the repository as an active product/implementation artifact documenting the accepted move away from `n8n` toward backend-first intake handling.
+
+### Validation
+
+- Scoped docs tracking only; no runtime commands were required.
+
+### Notes
+
+- Both files are treated as active project context, not archival noise, so they remain visible to git and to project indexing.
