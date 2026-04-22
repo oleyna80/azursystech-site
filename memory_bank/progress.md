@@ -1,5 +1,85 @@
 # Progress Log - AzurSysTech
 
+## 2026-04-22: Chat assistant history pass for multi-turn context
+
+### Done
+
+- Extended the public chat widget payload to send recent conversation history together with the current user message.
+- Kept the history contract intentionally narrow:
+  - last `6` messages only;
+  - `user|assistant` roles only;
+  - no storage, no SQL transcript persistence, no state machine.
+- Updated `/api/chat` to accept optional `history`, sanitize it, and forward recent context to DeepSeek as:
+  - `system`
+  - recent `history`
+  - current `user` message
+- Tightened the system prompt for intake-style multi-turn behavior:
+  - keep the active topic;
+  - do not jump to adjacent scenarios without an explicit user signal;
+  - ask one next useful clarifying question;
+  - do not repeat greetings;
+  - do not force form/WhatsApp CTA on every early turn.
+- Adjusted server-side CTA policy:
+  - early turns no longer get forced CTA appended;
+  - later turns still get a canonical CTA when enough context has been collected;
+  - policy/security fallback branches still keep mandatory safe CTA.
+- Follow-up polish pass after local printer scenario review:
+  - moved forced CTA threshold later in the dialogue;
+  - improved trailing CTA cleanup to avoid duplicate CTA sentences;
+  - strengthened prompt guidance for ambiguous short replies so the assistant asks one clarifying question instead of reconstructing the setup too aggressively.
+
+### Validation
+
+- Pending Verifier-stage checks for:
+  - `git diff --check`
+  - `cd web && npm run check:types`
+  - targeted multi-turn chat request smoke
+
+### Notes
+
+- This pass does not add transcript persistence, chat slot memory, database schema, or VPS changes.
+- If multi-turn quality is still insufficient after history-aware prompting, the next layer should be lightweight slot memory rather than immediate broad state-machine refactor.
+
+## 2026-04-22: DB Connectivity Hardening (WSL -> VPS PostgreSQL via loopback tunnel)
+
+### Done
+
+- Confirmed non-interactive SSH access to VPS:
+  - host: `178.156.212.10`
+  - user/key: `dmitrii` + `~/.ssh/hardwarelab_deploy`
+- Verified PostgreSQL runtime on VPS:
+  - `azursystech-postgres` healthy
+  - SQL probe successful with runtime DB user/database
+- Switched VPS PostgreSQL operator access to stable loopback bind:
+  - `docker-compose.vps.yml` now publishes DB as `127.0.0.1:5432:5432`
+  - applied with `docker compose -f docker-compose.vps.yml up -d postgres`
+- Switched WSL tunnel target from container IP to VPS loopback:
+  - local `15432 -> 127.0.0.1:5432` over SSH
+  - WSL `psql` probe via tunnel passed.
+- Added reusable helper:
+  - `scripts/vps-db-tunnel.sh` (`start|stop|status|test|restart`)
+- Updated deployment docs/tasklist for this operator baseline and added ADR-025.
+- Added project-local skill:
+  - `.agent/skills/vps-db-tunnel-ops/SKILL.md`
+  - registered in `.agent/ROSTER.md`.
+
+### Validation
+
+- SSH preflight matrix for candidate users/keys (non-interactive).
+- VPS runtime checks:
+  - `docker compose -f docker-compose.vps.yml ps postgres`
+  - SQL probe in `postgres` container
+  - `ss -ltn` on VPS confirms loopback listener on `127.0.0.1:5432`
+- WSL checks:
+  - local tunnel listener on `127.0.0.1:15432`
+  - `psql -h 127.0.0.1 -p 15432 ...` query success
+  - external port test: `178.156.212.10:5432` remains closed/filtered.
+
+### Notes
+
+- During first remote patch attempt, compose syntax was corrupted by a bad substitution and was immediately restored from timestamped backup before reapplying a safe patch.
+- No secrets were committed into repository files.
+
 ## 2026-04-18: AZR-003-011 Accepted and Closed
 
 ### Done

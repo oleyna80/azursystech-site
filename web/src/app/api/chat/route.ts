@@ -4,10 +4,13 @@ import { isRateLimitedPersistent } from "@/lib/request-rate-limit";
 const REQUEST_TIMEOUT_MS = 15_000;
 const MAX_REQUEST_BODY_BYTES = 50_000;
 const MAX_MESSAGE_LENGTH = 1_000;
+const MAX_HISTORY_ITEM_LENGTH = 1_000;
+const MAX_HISTORY_ITEMS = 6;
 const MAX_REPLY_LENGTH = 2_000;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_MAX_KEYS = 10_000;
+const FORCED_CTA_USER_TURN_THRESHOLD = 5;
 const CHAT_UNAVAILABLE_MESSAGE =
   "Чат временно недоступен. Пожалуйста, отправьте заявку через форму на сайте или напишите в WhatsApp.";
 const CTA_MESSAGE = "Оставьте короткую заявку через форму на сайте или напишите в WhatsApp.";
@@ -47,9 +50,19 @@ const SYSTEM_PROMPT = `Ты роль: IT-специалист компании A
 ПРИНЦИПЫ ОТВЕТА:
 1. Кратко, 1-2 предложения, максимум 3.
 2. Не обещай точных цен, сроков, выезда или начала работ. Если нужно, говори, что после заявки мы посмотрим описание и уточним детали вручную.
-3. Не начинай каждый ответ с приветствия. Сразу переходи к сути вопроса.
-4. В конце предлагай оставить короткую заявку через форму на сайте или написать в WhatsApp, чтобы передать контакты и описание задачи.
-5. Отвечай только на русском языке.`;
+3. Учитывай предыдущие сообщения в текущем диалоге и не теряй активную тему.
+4. Не перескакивай на другой сценарий, если пользователь явно не сменил тему.
+5. Не начинай каждый ответ с приветствия. Сразу переходи к сути вопроса.
+6. Если данных еще мало, задай один следующий полезный уточняющий вопрос. Не повторяй уже известные факты.
+7. Если пользователь отвечает коротко, неполно или двусмысленно, не достраивай схему сам и не делай сильных выводов. Вместо этого задай один уточняющий вопрос.
+8. Не добавляй форму и WhatsApp в каждом ответе. Предлагай заявку или WhatsApp, когда контекст уже понятен или пользователь явно готов передать задачу.
+9. Отвечай только на русском языке.`;
+
+type ChatRole = "user" | "assistant";
+type ChatHistoryItem = {
+  role: ChatRole;
+  content: string;
+};
 
 function getClientIp(request: Request) {
   const forwardedFor = request.headers.get("x-forwarded-for");
@@ -70,6 +83,17 @@ function sanitizeReply(reply: string | undefined): string {
   }
 
   return cleaned.slice(0, MAX_REPLY_LENGTH);
+}
+
+function sanitizeConversationContent(value: unknown, maxLength: number): string {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .trim()
+    .slice(0, maxLength);
 }
 
 function hasPromptInjectionAttempt(message: string): boolean {
@@ -97,11 +121,10 @@ function stripLeadingGreeting(reply: string): string {
 }
 
 function stripTrailingCtaSentence(reply: string): string {
-  const sentences =
-    reply
-      .match(/[^.!?]+[.!?]?/gu)
-      ?.map((sentence) => sentence.trim())
-      .filter(Boolean) ?? [];
+  const sentences = reply
+    .split(/(?<=[.!?])\s+/u)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean);
 
   while (sentences.length > 0) {
     const lastSentence = sentences[sentences.length - 1] ?? "";
@@ -154,9 +177,20 @@ function ensureCta(reply: string): string {
   return prefix ? `${prefix} ${CTA_MESSAGE}` : CTA_MESSAGE;
 }
 
-function enforcePostGenerationPolicy(reply: string): string {
+function enforcePostGenerationPolicy(reply: string, forceCta: boolean): string {
   const guardedReply = hasForbiddenCommitment(reply) ? POLICY_FALLBACK_MESSAGE : reply;
-  return sanitizeReply(ensureCta(guardedReply));
+  const sanitizedGuardedReply = sanitizeReply(guardedReply);
+
+  if (guardedReply === POLICY_FALLBACK_MESSAGE) {
+    return sanitizeReply(ensureCta(sanitizedGuardedReply));
+  }
+
+  const normalizedReply = sanitizeReply(normalizeReply(sanitizedGuardedReply));
+  if (!forceCta) {
+    return normalizedReply;
+  }
+
+  return sanitizeReply(ensureCta(normalizedReply));
 }
 
 function isRequestBodyTooLarge(request: Request): boolean {
@@ -218,6 +252,33 @@ function getDeepseekChatCompletionsUrl(): string | null {
   }
 }
 
+function sanitizeHistory(history: unknown): ChatHistoryItem[] {
+  if (!Array.isArray(history)) {
+    return [];
+  }
+
+  return history
+    .map((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) {
+        return null;
+      }
+
+      const role = item.role;
+      if (role !== "user" && role !== "assistant") {
+        return null;
+      }
+
+      const content = sanitizeConversationContent(item.content, MAX_HISTORY_ITEM_LENGTH);
+      if (!content) {
+        return null;
+      }
+
+      return { role, content };
+    })
+    .filter((item): item is ChatHistoryItem => item !== null)
+    .slice(-MAX_HISTORY_ITEMS);
+}
+
 export async function POST(request: Request) {
   if (isRequestBodyTooLarge(request)) {
     return NextResponse.json({ error: "Request too large" }, { status: 413 });
@@ -255,11 +316,12 @@ export async function POST(request: Request) {
   }
 
   const keys = Object.keys(body);
-  if (keys.length !== 1 || keys[0] !== "message") {
+  const hasOnlyAllowedKeys = keys.every((key) => key === "message" || key === "history");
+  if (!hasOnlyAllowedKeys || !keys.includes("message")) {
     return NextResponse.json({ error: "Bad Request: invalid payload" }, { status: 400 });
   }
 
-  const payload = body as { message?: unknown };
+  const payload = body as { message?: unknown; history?: unknown };
   const message = typeof payload.message === "string" ? payload.message.trim() : "";
   if (!message) {
     return NextResponse.json({ error: "Message is required" }, { status: 400 });
@@ -275,6 +337,14 @@ export async function POST(request: Request) {
   if (hasPromptInjectionAttempt(message)) {
     return NextResponse.json({ error: SECURITY_REJECTION_MESSAGE }, { status: 400 });
   }
+
+  if ("history" in payload && payload.history !== undefined && !Array.isArray(payload.history)) {
+    return NextResponse.json({ error: "Bad Request: invalid payload" }, { status: 400 });
+  }
+
+  const history = sanitizeHistory(payload.history);
+  const userTurnCount = history.filter((item) => item.role === "user").length + 1;
+  const forceCta = userTurnCount >= FORCED_CTA_USER_TURN_THRESHOLD;
 
   const apiKey = process.env.DEEPSEEK_API_KEY?.trim();
   const deepseekChatCompletionsUrl = getDeepseekChatCompletionsUrl();
@@ -296,6 +366,7 @@ export async function POST(request: Request) {
         model: "deepseek-chat",
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
+          ...history,
           { role: "user", content: message },
         ],
         max_tokens: 200,
@@ -319,7 +390,7 @@ export async function POST(request: Request) {
       choices?: Array<{ message?: { content?: string } }>;
     };
     const rawReply = sanitizeReply(data.choices?.[0]?.message?.content);
-    const reply = enforcePostGenerationPolicy(rawReply);
+    const reply = enforcePostGenerationPolicy(rawReply, forceCta);
 
     return NextResponse.json({ reply });
   } catch (error) {

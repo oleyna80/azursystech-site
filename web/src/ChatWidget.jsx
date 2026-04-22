@@ -5,6 +5,7 @@ const CONTACT_PHONE_HREF = 'tel:+33780720994';
 const WHATSAPP_HREF = 'https://wa.me/33780720994';
 const MAX_INPUT_LENGTH = 1000;
 const MAX_RENDERED_MESSAGE_LENGTH = 2000;
+const MAX_HISTORY_ITEMS = 6;
 
 const sanitizeMessageContent = (content) => {
   if (typeof content !== 'string') {
@@ -61,6 +62,19 @@ export default function ChatWidget({ locale, t }) {
     return userMessages.join('\n').slice(0, 1500);
   };
 
+  const buildRequestHistory = () => {
+    const welcomeMessage = sanitizeMessageContent(t('chat.welcome'));
+
+    return messages
+      .map((msg) => ({
+        role: msg?.role === 'user' ? 'user' : msg?.role === 'assistant' ? 'assistant' : '',
+        content: sanitizeMessageContent(msg?.content),
+      }))
+      .filter((msg) => (msg.role === 'user' || msg.role === 'assistant') && Boolean(msg.content))
+      .filter((msg, index) => !(index === 0 && msg.role === 'assistant' && msg.content === welcomeMessage))
+      .slice(-MAX_HISTORY_ITEMS);
+  };
+
   useEffect(() => {
     if (isOpen) scrollToBottom();
   }, [messages, isOpen]);
@@ -102,6 +116,7 @@ export default function ChatWidget({ locale, t }) {
     if (!trimmedInput || isLoading || trimmedInput.length > MAX_INPUT_LENGTH) return;
 
     const userMsg = sanitizeMessageContent(trimmedInput).slice(0, MAX_INPUT_LENGTH);
+    const history = buildRequestHistory();
     setInput('');
     setChatErrorKey('');
     setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
@@ -111,7 +126,7 @@ export default function ChatWidget({ locale, t }) {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMsg })
+        body: JSON.stringify({ message: userMsg, history })
       });
 
       if (res.status === 429) {
