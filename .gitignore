@@ -26,6 +26,17 @@ data/*.csv
 # Model/indexing noise
 .git/
 docs/reports/git/stash-backups/*.patch
+.cache/
+.codex
+.npm-cache/
+.playwright-browsers/
+.playwright-cli/
+.qwen/
+output/
+web/.npm-cache/
+web/test-results/
+frontend_mvp/
+docs/reports/qwen/
 
 # Build
 build/

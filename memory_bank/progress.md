@@ -2715,3 +2715,34 @@ Residual risks / untested areas:
 ### Notes
 
 - Full `npm run build` was not run for this block.
+
+## 2026-04-22: Ignore rules and model indexing exclusions cleanup
+
+### Done
+
+- Added local tooling/runtime noise exclusions to `.gitignore`:
+  - `.cache/`
+  - `.codex`
+  - `.npm-cache/`
+  - `.playwright-browsers/`
+  - `.playwright-cli/`
+  - `.qwen/`
+  - `output/`
+  - `web/.npm-cache/`
+  - `web/test-results/`
+- Extended `.codexignore` with the same local noise exclusions.
+- Added model-only indexing exclusions for non-baseline context noise:
+  - `frontend_mvp/`
+  - `docs/reports/qwen/`
+- Promoted archival directories to git-ignored status as well:
+  - `frontend_mvp/`
+  - `docs/reports/qwen/`
+
+### Validation
+
+- `git status --short` - reduced to real working untracked files only.
+- Reviewed `.gitignore` and `.codexignore` to confirm that `docs/`, `memory_bank/`, and `web/src/` remain indexable.
+
+### Notes
+
+- `03_leads/contact-form.md` and `docs/specs/azr-003-012-frontend-mvp-parity-migration-plan.md` were intentionally not ignored because they are working project documents, not noise.
