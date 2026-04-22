@@ -55,6 +55,15 @@
   - moved forced CTA threshold later in the dialogue;
   - improved trailing CTA cleanup to avoid duplicate CTA sentences;
   - strengthened prompt guidance for ambiguous short replies so the assistant asks one clarifying question instead of reconstructing the setup too aggressively.
+- Production follow-up polish after deploy verification:
+  - tightened prompt wording for contradictory or ambiguous short replies;
+  - instructed the assistant to prefer neutral disambiguation questions over premature paraphrase of the user's setup.
+- Added a narrow server-side ambiguity guardrail for short corrective replies:
+  - if the user reply is short and corrective, and the model answers with an overconfident reconstruction,
+  - `/api/chat` replaces that answer with a neutral clarification template before returning it.
+- Added a prompt/policy guardrail for CTA quality:
+  - blocks fabricated placeholder links like `[ссылка на форму]`;
+  - downgrades overly strong promises such as `оперативно свяжемся` or `подготовим предложение` to a softer manual-review handoff message.
 
 ### Validation
 

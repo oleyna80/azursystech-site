@@ -16,6 +16,8 @@ const CHAT_UNAVAILABLE_MESSAGE =
 const CTA_MESSAGE = "Оставьте короткую заявку через форму на сайте или напишите в WhatsApp.";
 const POLICY_FALLBACK_MESSAGE =
   "Я не могу обещать точные цены, сроки или проактивные действия в чате. Оставьте короткую заявку через форму на сайте или напишите в WhatsApp.";
+const REVIEW_FALLBACK_MESSAGE =
+  "После заявки мы посмотрим описание и уточним детали вручную. Оставьте короткую заявку через форму на сайте или напишите в WhatsApp.";
 const SECURITY_REJECTION_MESSAGE =
   "Запрос отклонен по соображениям безопасности. Переформулируйте, пожалуйста, ваш технический вопрос. Если удобнее, оставьте короткую заявку через форму на сайте или напишите в WhatsApp.";
 const PROMPT_INJECTION_PATTERNS = [
@@ -30,6 +32,14 @@ const CTA_REFERENCE_PATTERN =
   /\b(?:форм(?:а|у|е|ой|ы)|заяв(?:к[ауеиой]|ка|ку)|сайт(?:е|а)?|whats\s*app|whatsapp|ватсапп?)\b/iu;
 const LEADING_GREETING_PATTERN =
   /^(?:здравствуйте|добрый\s+день|добрый\s+вечер|привет(?:ствую)?)\s*[!.,:\-–—]?\s*/iu;
+const SHORT_CORRECTION_PATTERN =
+  /^(?:нет\b|не\b|не\s+так\b|не\s+это\b|по\s+кабелю\b|на\s+пк\b|на\s+комп(?:ьютер)?\b|через\s+пк\b|через\s+комп(?:ьютер)?\b)/iu;
+const OVERCONFIDENT_RECONSTRUCTION_PATTERN =
+  /\b(?:вы\s+хотите|значит|то\s+есть|для\s+этого\s+нужно|будет\s+подключен|будет\s+доступен|принтер\s+будет)\b/iu;
+const FABRICATED_LINK_PATTERN =
+  /(вот\s+ссылка\s+на\s+форму\s*:?\s*\[[^\]]+\]|\[[^\]]*ссыл[^\]]*\])/iu;
+const OVERPROMISE_PATTERN =
+  /\b(?:оперативно\s+свяж(?:емся|усь|утся)|подготов(?:им|ить)\s+(?:точное\s+)?предложение|коммерческ(?:ое|ого)\s+предложени[ея])\b/iu;
 const AUTONOMOUS_OUTBOUND_PATTERNS = [
   /\b(?:я|мы)\s+(?:свяж(?:усь|емся)|позвон(?:ю|им)|напиш(?:у|ем)|отправ(?:лю|им)|вышл(?:ю|ем)|назнач(?:у|им)|запиш(?:у|ем)|заброниру(?:ю|ем)|организу(?:ю|ем)|приед(?:у|ем))\b/iu,
   /\b(?:наш|мой)\s+специалист\s+(?:свяжется|позвонит|приедет|напишет|назначит)\b/iu,
@@ -54,9 +64,13 @@ const SYSTEM_PROMPT = `Ты роль: IT-специалист компании A
 4. Не перескакивай на другой сценарий, если пользователь явно не сменил тему.
 5. Не начинай каждый ответ с приветствия. Сразу переходи к сути вопроса.
 6. Если данных еще мало, задай один следующий полезный уточняющий вопрос. Не повторяй уже известные факты.
-7. Если пользователь отвечает коротко, неполно или двусмысленно, не достраивай схему сам и не делай сильных выводов. Вместо этого задай один уточняющий вопрос.
-8. Не добавляй форму и WhatsApp в каждом ответе. Предлагай заявку или WhatsApp, когда контекст уже понятен или пользователь явно готов передать задачу.
-9. Отвечай только на русском языке.`;
+7. Если пользователь отвечает коротко, неполно, противоречиво или двусмысленно, не достраивай схему сам и не делай сильных выводов.
+8. В таких случаях формулируй нейтральный уточняющий вопрос. Не подменяй уточнение уже установленным фактом.
+9. Используй формулировки уровня: "Правильно ли я понимаю..." только если уверенность действительно высокая. Если уверенности нет, спроси нейтрально: "Как именно...", "Речь о...", "Нужно ли... или ...?"
+10. Не придумывай и не вставляй вымышленные ссылки, URL или плейсхолдеры вида "[ссылка на форму]". Если пользователь просит ссылку, просто направь его к форме заявки на сайте или к WhatsApp без фальшивого URL.
+11. Не обещай "оперативно свяжемся", "подготовим предложение" или другие коммерческие/временные обещания. Вместо этого говори: после заявки мы посмотрим описание и уточним детали вручную.
+12. Не добавляй форму и WhatsApp в каждом ответе. Предлагай заявку или WhatsApp, когда контекст уже понятен или пользователь явно готов передать задачу.
+13. Отвечай только на русском языке.`;
 
 type ChatRole = "user" | "assistant";
 type ChatHistoryItem = {
@@ -110,6 +124,14 @@ function hasForbiddenCommitment(reply: string): boolean {
     matchesAnyPattern(reply, PRICING_COMMITMENT_PATTERNS) ||
     matchesAnyPattern(reply, SCHEDULING_COMMITMENT_PATTERNS)
   );
+}
+
+function hasFabricatedLink(reply: string): boolean {
+  return FABRICATED_LINK_PATTERN.test(reply);
+}
+
+function hasOverpromise(reply: string): boolean {
+  return OVERPROMISE_PATTERN.test(reply);
 }
 
 function hasClearCta(reply: string): boolean {
@@ -178,10 +200,14 @@ function ensureCta(reply: string): string {
 }
 
 function enforcePostGenerationPolicy(reply: string, forceCta: boolean): string {
-  const guardedReply = hasForbiddenCommitment(reply) ? POLICY_FALLBACK_MESSAGE : reply;
+  const guardedReply = hasForbiddenCommitment(reply)
+    ? POLICY_FALLBACK_MESSAGE
+    : hasFabricatedLink(reply) || hasOverpromise(reply)
+      ? REVIEW_FALLBACK_MESSAGE
+      : reply;
   const sanitizedGuardedReply = sanitizeReply(guardedReply);
 
-  if (guardedReply === POLICY_FALLBACK_MESSAGE) {
+  if (guardedReply === POLICY_FALLBACK_MESSAGE || guardedReply === REVIEW_FALLBACK_MESSAGE) {
     return sanitizeReply(ensureCta(sanitizedGuardedReply));
   }
 
@@ -277,6 +303,58 @@ function sanitizeHistory(history: unknown): ChatHistoryItem[] {
     })
     .filter((item): item is ChatHistoryItem => item !== null)
     .slice(-MAX_HISTORY_ITEMS);
+}
+
+function isShortCorrectiveMessage(message: string): boolean {
+  return message.length <= 80 && SHORT_CORRECTION_PATTERN.test(message);
+}
+
+function looksOverconfidentForCorrection(reply: string): boolean {
+  return OVERCONFIDENT_RECONSTRUCTION_PATTERN.test(reply);
+}
+
+function buildClarifyingReply(message: string, history: ChatHistoryItem[]): string | null {
+  const combinedContext = [...history, { role: "user" as const, content: message }]
+    .map((item) => item.content.toLowerCase())
+    .join(" ");
+
+  const mentionsPrinter =
+    /\bпринтер\b/u.test(combinedContext) || /\bпечат/u.test(combinedContext);
+  const mentionsPc =
+    /\bпк\b/u.test(combinedContext) ||
+    /\bкомп(?:ьютер)?/u.test(combinedContext) ||
+    /\bноутбук/u.test(combinedContext);
+  const mentionsNetwork =
+    /\bсетев/u.test(combinedContext) || /\bсеть\b/u.test(combinedContext);
+  const mentionsCable = /\bкабел/u.test(combinedContext) || /\bethernet\b/u.test(combinedContext);
+
+  if (mentionsPrinter && mentionsPc && (mentionsNetwork || mentionsCable)) {
+    return "Уточните, пожалуйста: принтер нужно подключить кабелем к одному ПК и открыть общий доступ, или он должен работать как сетевой принтер напрямую для всех компьютеров?";
+  }
+
+  if (mentionsPrinter && mentionsPc) {
+    return "Уточните, пожалуйста: принтер нужно подключить к одному ПК или он должен быть доступен всем компьютерам напрямую?";
+  }
+
+  return "Уточните, пожалуйста, как именно должна быть устроена эта схема подключения?";
+}
+
+function applyAmbiguityGuardrail(
+  reply: string,
+  message: string,
+  history: ChatHistoryItem[],
+  forceCta: boolean,
+): string {
+  if (!isShortCorrectiveMessage(message)) {
+    return enforcePostGenerationPolicy(reply, forceCta);
+  }
+
+  if (!looksOverconfidentForCorrection(reply)) {
+    return enforcePostGenerationPolicy(reply, forceCta);
+  }
+
+  const replacement = buildClarifyingReply(message, history);
+  return enforcePostGenerationPolicy(replacement ?? reply, forceCta);
 }
 
 export async function POST(request: Request) {
@@ -390,7 +468,7 @@ export async function POST(request: Request) {
       choices?: Array<{ message?: { content?: string } }>;
     };
     const rawReply = sanitizeReply(data.choices?.[0]?.message?.content);
-    const reply = enforcePostGenerationPolicy(rawReply, forceCta);
+    const reply = applyAmbiguityGuardrail(rawReply, message, history, forceCta);
 
     return NextResponse.json({ reply });
   } catch (error) {
