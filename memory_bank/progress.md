@@ -2683,3 +2683,35 @@ Residual risks / untested areas:
 
 - Full `npm run build` was not run for this block.
 - Real valid submit was not executed; this block only changed help UI placement.
+
+## 2026-04-21: `/ai-automation` + footer + context sync
+
+### Done
+
+- Finalized the current `/ai-automation` conversion path:
+  - preserved main CTA `Обсудить задачу` to `/brief`;
+  - added a short clarifier that the next step is a compact brief for one process.
+- Restored footer conversion continuity for the AI page:
+  - added `Бриф` to footer navigation;
+  - kept route-safe links for `/#business`, `/#contact`, `/pricing`, `/faq`, `/ai-automation`.
+- Re-aligned global footer copy with current public positioning:
+  - footer brand line now mentions both small business and private clients.
+- Synced `memory_bank/context.md` with the actual current baseline:
+  - `/brief` now documented as using inline `?` hints instead of the old helper sidebar;
+  - page-QA notes added for `/ai-automation`, `/brief`, and the current homepage-anchor navigation baseline for `/contact` and `/business`.
+
+### Validation
+
+- `git diff --check -- web/src/app/ai-automation/page.tsx web/src/components/shell/site-footer.tsx memory_bank/context.md` - pass
+- `cd /home/dmitrii/azursystech/web && npm run check:types` - pass
+- Playwright smoke on `http://127.0.0.1:3001/ai-automation` - pass:
+  - `1 H1`
+  - footer contains `Бриф`
+  - footer brand line reflects small business + private clients
+  - brief clarifier visible near CTA
+  - no desktop/mobile horizontal overflow
+  - no console errors
+
+### Notes
+
+- Full `npm run build` was not run for this block.

@@ -2,150 +2,184 @@
 
 ## Что это за проект
 
-AzurSysTech - локальный IT-сервис для particuliers и TPE в зоне Nice + 30 km.
-Цель запуска: получить первые лиды через понятный сайт, простой contact flow и controlled launch operations.
+AzurSysTech - локальный IT-сервис для `particuliers` и TPE в зоне Nice + 30 km.
+Цель запуска: получать первые лиды через понятный сайт, надежный contact flow, SQL-first intake и controlled launch operations.
 
 ## Текущее состояние
 
-- Документация по слоям `00_strategy`-`07_ops` в основном заполнена и выровнена.
+- Активный тикет: `AZR-003` (`docs/.active_ticket`).
+- Текущая фаза: post-launch / go-live hardening + page-by-page QA.
 - Production baseline жив:
   - domain: `azursystech.fr`
   - deploy repo: `oleyna80/azursystech-site`
   - VPS app dir: `/home/dmitrii/projects/azursystech-site`
   - deploy path: `CI -> SSH -> git pull -> docker compose up -d --build`
-  - health endpoint `https://azursystech.fr/health` отвечает `200`
-- Launch AI mode зафиксирован как `limited_live_intake` and enforced via runtime env flags.
-- Website scope closure (`AZR-003-009`), intake activation (`AZR-003-010`), legal baseline (`AZR-003-001`), GBP/readiness (`AZR-003-006`), and go / no-go review (`AZR-003-007`) are completed.
-- Current live sequence now proceeds as:
-  1. keep `web` as the current website/design/runtime baseline after completed `frontend_mvp -> web` transfer (`AZR-003-012`)
-  2. keep backend-first SQL intake on `web` as confirmed runtime baseline (`AZR-003-014` completed)
-  3. add AI widget live integration + Telegram contact notification on `web` (`AZR-003-011`, backend events path)
-  4. separate deferred improvements from launch-ready baseline (`AZR-003-008`)
-  5. move CRM to a later phase
-- Existing site chat widget shell remains in the codebase, but live AI-agent handling is deferred until after go / no-go and stable intake operations.
-- Public MVP language is fixed as Russian for the russophone audience on the Côte d'Azur.
-- Intake architecture pivot is accepted: `web backend -> PostgreSQL` as primary system of record.
-- `n8n` and Google Sheets are no longer primary intake baseline; they are optional secondary automation/reporting contour.
-- CRM is deferred to phase 2.
-- Approved MVP visual direction is `Local Professional`.
-- Current operating model is `Tech Lead / Control Tower / Orchestrator` with internal subagents as the primary execution path.
-- `RooCode` is retained only as a fallback external coder stream for cases the control tower explicitly chooses.
-- Project-local skills may be created as needed; no active baseline depends on `.roo/skills/`.
+  - health endpoint: `https://azursystech.fr/health`
+- Current website/design/runtime baseline: `web`.
+- Historical/reference only: `frontend_mvp`.
+- Public MVP language: Russian for the russophone audience on the Cote d'Azur.
+- Approved visual direction: `Local Professional`.
+
+## Текущий этап AZR-003
+
+Launch-critical path is closed:
+
+- `AZR-003-001` legal identity and business data - done
+- `AZR-003-006` GBP and review readiness - done
+- `AZR-003-007` go / no-go review - done
+- `AZR-003-012` frontend baseline parity / migration closure - done
+- `AZR-003-013` public phone / WhatsApp consistency - done
+- `AZR-003-014` SQL-first intake runtime proof - done
+- `AZR-003-011` AI widget live integration + Telegram notification baseline - done
+- `/ai-automation` service/pillar page and `/brief` discovery flow are implemented in `web`
+
+Remaining AZR-003 queue:
+
+1. Page-by-page QA and cleanup of current public website.
+2. `AZR-003-008`: separate deferred improvements from launch-ready baseline.
+3. CRM / HubSpot phase remains deferred until launch intake is stable.
+
+## Intake / Runtime Baseline
+
+- Primary intake architecture: `web backend -> PostgreSQL`.
+- `INTAKE_STORAGE_MODE` supports:
+  - `legacy`
+  - `dual`
+  - `sql_primary`
+- Current accepted baseline: SQL-first / `sql_primary`.
+- `n8n` and Google Sheets are historical launch evidence and optional secondary automation/export layers, not the primary system of record.
+- `/api/contact/submit` is the main contact intake endpoint.
+- `/api/brief/submit` returns structured `brief.v1` discovery payload for human review; durable SQL persistence for brief submissions is future backend scope.
+- Telegram lead notifications are optional and non-blocking for SQL-primary intake success.
+- Chat live mode is gated by `AI_LAUNCH_MODE=limited_live_intake` and explicit safety flags.
+
+## Public Website Scope
+
+Current public routes in `web`:
+
+- `/`
+- `/business`
+- `/services`
+- `/ai-automation`
+- `/brief`
+- `/contact`
+- `/about`
+- `/faq`
+- `/pricing`
+- `/services/new-pc-setup`
+- `/services/wifi-printer`
+- `/services/tpe-setup`
+- `/services/onsite-support`
+- `/legal`
+- `/privacy`
+- `/terms`
+- `/thank-you`
+- `/home` exists and should be checked as potential legacy/alias route
+
+API/runtime routes:
+
+- `/health`
+- `/api/contact/submit`
+- `/api/brief/submit`
+- `/api/chat`
 
 ## Текущий рабочий режим
 
-- Роль текущего агента: `Tech Lead / Control Tower / Orchestrator`
-- Основной execution path: internal subagents with stage roles `Reviewer`, `Coder`, `Verifier`
-- Рабочий цикл:
-  1. Control Tower формулирует stage task
-  2. Internal subagent выполняет scoped work для своей роли
-  3. Control Tower делает review / acceptance
-  4. Follow-up corrections возвращаются через control tower к нужному subagent
-- Переход к следующему stage требует explicit user confirmation; внутри stage допускается несколько internal handoff
-- К пользователю обращаться только по product/ops decisions, которые нельзя безопасно вывести из SSOT.
-- Параллельные stream'ы разрешены:
-  - website build
-  - backend / SQL intake integration
-  - HubSpot CRM
-- Все финальные решения stream'ов должны возвращаться в control layer этого проекта.
+- Primary role: `Tech Lead / Control Tower / Orchestrator`.
+- Execution model: approved work blocks with internal stages.
+- Stage roles:
+  - `Reviewer`: read-only analysis, risks, AC, plan, verdict.
+  - `Coder`: scoped implementation only.
+  - `Verifier`: checks against goals, no code changes.
+- Every stage should state:
+  - `stage`
+  - `objective`
+  - `role`
+  - `expected result`
+- Inside an approved work block, Control Tower may proceed between internal stages if objective/scope do not change and no dangerous action is required.
+- New confirmation is required for scope changes, deploy/infra, secrets, production data, destructive actions, real client communication, or materially new work packages.
+- `RooCode` is retained only as a fallback external coder stream if explicitly chosen.
 
-## Текущий фокус
+## Что уже сделано
 
-1. Активный тикет: `AZR-003` (go-live readiness)
-2. Предыдущий тикет `AZR-002` (website MVP implementation) — **полностью закрыт** (25/25 задач done)
-3. Текущая фаза: post-intake-activation go-live preparation
-4. AZR-003 blockers:
-   - known P0 consistency risk before deploy verification: public phone / WhatsApp values drift across `web` and docs
-   - Current execution queue:
-     - AZR-003-013: phone/contact consistency sync for current `web` baseline
-     - AZR-003-011: AI widget + Telegram notification on `web` (todo; backend events path)
-     - AZR-003-008: deferred separation (todo, depends on 011)
+- Website scope closure completed:
+  - `/about`
+  - four SEO service pages
+  - legal/privacy readiness
+- `frontend_mvp -> web` migration closed:
+  - `web` is current baseline
+  - `frontend_mvp` retained only as historical/reference
+- SQL-first intake confirmed on VPS:
+  - self-hosted PostgreSQL in Docker Compose
+  - schema applied
+  - controlled submit verified in `intake_leads` + `intake_lead_events`
+  - backup/restore scripts and runbook verified
+- Contact consistency closed:
+  - current public phone / WhatsApp: `+33 7 80 72 09 94`
+- AI runtime hardening accepted:
+  - no autonomous outbound
+  - no pricing commitments
+  - no scheduling promises
+  - chat has policy gate and safe fallback
+- `/ai-automation` implemented:
+  - pillar/service page for AI automation
+  - realistic positioning for AI agents, intake, qualification, repeatable workflows
+  - links to `/brief`, `/contact`, `/business`, legal/privacy context
+- `/brief` implemented:
+  - Russian five-step discovery form
+  - shared schema/validation/payload builder
+  - inline `?` hints only on fields that actually need clarification
+  - dedicated `POST /api/brief/submit`
+- README hierarchy synced:
+  - root `README.md` as project map
+  - `web/README.md` as web-specific instructions
+  - `.agent/README.md` as agent workflow map
 
-## Что уже сделано в implementation
+## Page-by-Page QA Plan
 
-- Создан `docs/plans/azr-002-implementation-map.md`
-- Созданы RooCode skills:
-  - `azursystech-page-implementation`
-  - `azursystech-form-contract`
-  - `azursystech-doc-to-ui-review`
-  - `azursystech-safe-ai-runtime`
-  - `azursystech-route-mvp-implementation`
-  - `azursystech-visual-review`
-- Принят MVP route `/contact`:
-  - contact methods
-  - main lead form
-  - `particulier` / `tpe` branching
-  - hidden honeypot field
-  - public-facing copy cleaned from dev/internal wording
-- Site-side submit adapter для `/contact` реализован; исторический downstream path `site -> n8n -> Google Sheets` зафиксирован как previous baseline
-- Website scope closure (`AZR-003-009`) выполнен:
-  - `/about` trust/founder page completed
-  - 4 service landing pages completed: `/services/new-pc-setup`, `/services/wifi-printer`, `/services/tpe-setup`, `/services/onsite-support`
-  - legal/privacy readiness pass completed for real-data injection preparation
-- Intake activation (`AZR-003-010`) выполнена:
-  - live webhook `https://n8n.hardwarelab.org/webhook/azursystech/contact-submit` active
-  - Google Sheets sink connected (`intake_leads`)
-  - auth / duplicate / append behavior verified by live tests
-- Зафиксирован visual baseline для frontend:
-  - warm light background
-  - dark slate text
-  - restrained teal primary accent
-  - terracotta secondary accent
-  - calm `Local Professional` layout direction
-- Исторический `frontend_mvp` использовался как дизайн/template sandbox:
-  - business-first landing flow
-  - automation module direction
-  - Russian copy simplification
-  - mobile/header and TPE form simplification
-- `frontend_mvp` больше не является активным baseline:
-  - дизайн и релевантные наработки перенесены в `web`
-  - дальнейшая website product/UI/runtime работа ведется в `web`
-  - production/runtime/deploy path остается `web`
-- В рамках `AZR-003-012` выполнен и принят baseline-pass `A/A` на стороне `web`:
-  - canonical chat cleanup (`chat-widget-shell` как единственный активный shell)
-  - dual payload intake для `/api/contact/submit` (`FormData` + `JSON`)
-  - `n8n` env compatibility layer (`N8N_WEBHOOK_*` + legacy fallback) с required headers
-  - визуальные токены из `frontend_mvp` перенесены в Tailwind v4 `@theme` слой `web/src/app/globals.css`
-- В рамках `AZR-003-012` выполнен contact contract parity/sync pass (stages 27-35):
-  - contact UI flow в `web` приведен к текущему `frontend_mvp` business-first контру
-  - server-side validate/normalize очищены от неактуальных UI-полей; legacy fields оставлены как `null` compatibility layer
-  - `wifi -> reseau_local` закреплен как legacy-normalization rule на server-side
-  - `code vs docs` drift закрыт в `forms-spec`, `lead-intake-spec`, `azr-003-010-site-n8n-google-sheets`
-- Новый публичный телефон `+33 7 80 72 09 94` синхронизирован в рабочих frontend/runtime контурах и актуальных SSOT/docs.
-- Обновлен legal/privacy контур в `web`:
-  - `/privacy` синхронизирован с `02_website/privacy.md`, добавлен краткий блок про cookies/consent
-  - `/legal` синхронизирован с `02_website/mentions_légales.md`
-  - добавлена новая русская страница `/terms` (общие условия оказания услуг), ссылка в footer
-- В `web` добавлен SQL intake foundation:
-  - schema `web/sql/001_intake_schema.sql`
-  - storage adapter `web/src/lib/intake-storage.ts`
-  - `INTAKE_STORAGE_MODE` (`legacy` / `dual` / `sql_primary`)
-  - `contact-submit` route обновлен под SQL write + integration event logging
-- AZR-003-014 runtime proof выполнен на VPS:
-  - self-hosted PostgreSQL поднят в docker compose с внутренней сетью
-  - SQL schema применена, таблицы intake-контуров подтверждены
-  - controlled submit дал успешный ответ и подтвердил запись в `intake_leads` + `intake_lead_events`
-  - backup/restore runbook и smoke-restore проверены
-  - текущий intake runtime baseline подтвержден как `SQL-first`
+Core conversion path first:
 
-## Ближайшие шаги
+1. `/`
+2. `/ai-automation`
+3. `/brief`
+4. `/contact`
 
-1. AZR-003 go-live:
-   - launch blockers and formal `GO` decision are closed in control-layer tracking
-2. Next execution:
-   - close remaining phone/contact consistency drift in docs/UI where still present (`AZR-003-013`)
-   - backend notification/export path (Telegram/email/Sheets export policy)
-   - live AI widget integration on `web` against backend-first intake
-3. CRM phase 2:
-   - evaluate HubSpot or another CRM only after launch intake is stable
+Then:
+
+5. `/business`
+6. `/services`
+7. service pages
+8. `/about`, `/faq`, `/pricing`
+9. legal / utility pages
+10. API/runtime smoke checks
+
+For each page, check:
+
+- purpose and source of truth
+- visible copy and positioning
+- contact values and CTA targets
+- header/footer navigation
+- mobile layout at narrow widths
+- desktop layout
+- SEO basics: title, description, one H1, H2 structure
+- forms/interactions where applicable
+- verdict: `pass`, `needs fix`, or `defer`
+
+Current page-QA notes:
+
+- `/ai-automation`: near-final service/pillar page; main CTA leads to `/brief`.
+- `/brief`: helper sidebar removed; inline field hints are current baseline.
+- `/contact` and `/business`: routes still exist, but current public conversion/navigation leans on homepage anchors `/#contact` and `/#business` until those pages are re-reviewed.
 
 ## Важные операционные факты
 
-- Не возвращаться к GHCR path как к launch baseline без отдельного решения.
-- Не ослаблять AI runtime policy:
+- Do not return to GHCR path as launch baseline without a new decision.
+- Do not weaken AI runtime policy:
   - no autonomous outbound sending
   - no pricing commitments
   - no scheduling promises
-- `azursystech-site` placeholder history сохранена в branch `placeholder-backup`.
+- Do not treat `n8n` / Google Sheets as primary intake storage.
+- Do not use or expose real secrets in repo artifacts.
+- `azursystech-site` placeholder history is preserved in branch `placeholder-backup`.
 
-**Last update:** 2026-04-14
+**Last update:** 2026-04-21

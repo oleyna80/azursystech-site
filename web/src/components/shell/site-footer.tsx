@@ -1,10 +1,11 @@
 const FOOTER_LINKS = [
-  { href: "#business", label: "Для бизнеса" },
-  { href: "#automation", label: "Автоматизация и ИИ" },
-  { href: "#how-it-works", label: "Как мы работаем" },
-  { href: "#pricing", label: "Цены" },
-  { href: "#faq", label: "FAQ" },
-  { href: "#contact", label: "Контакты" },
+  { href: "/#business", label: "Для бизнеса" },
+  { href: "/ai-automation", label: "Автоматизация и ИИ" },
+  { href: "/brief", label: "Бриф" },
+  { href: "/#how-it-works", label: "Как мы работаем" },
+  { href: "/pricing", label: "Цены" },
+  { href: "/faq", label: "FAQ" },
+  { href: "/#contact", label: "Контакты" },
 ];
 
 const LEGAL_LINKS = [
@@ -29,7 +30,7 @@ export function SiteFooter() {
           <div className="max-w-sm">
             <span className="mb-4 block text-2xl font-bold text-white">AzurSysTech</span>
             <p className="text-sm leading-7 text-white/72">
-              Локальная техническая помощь для малого бизнеса в Ницце и рядом.
+              Локальная техническая помощь для малого бизнеса и частных клиентов в Ницце и рядом.
             </p>
           </div>
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
