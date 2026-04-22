@@ -2782,3 +2782,26 @@ Residual risks / untested areas:
 ### Notes
 
 - This pass does not create a new AZR-003 ticket family item; it only aligns planning artifacts with the already accepted current phase.
+
+## 2026-04-22: Chat assistant CTA and prompt polish
+
+### Done
+
+- Tightened `/api/chat` reply shaping in `web`:
+  - standardized the closing CTA around the same action pair: short site form + WhatsApp;
+  - reduced repeated greeting noise by stripping leading greeting formulas from generated replies;
+  - removed trailing model-generated CTA sentences before appending the canonical CTA, so endings stay consistent.
+- Updated the chat system prompt:
+  - asks the model not to start every answer with a greeting;
+  - reinforces the desired closing action.
+- Improved the security rejection message for prompt-injection attempts so it stays user-directed and preserves the same safe contact options.
+
+### Validation
+
+- `git diff --check -- web/src/app/api/chat/route.ts memory_bank/progress.md` - pass
+- `cd /home/dmitrii/azursystech/web && npm run check:types` - pass
+- Static review confirmed the updated policy path now normalizes greeting/CTA handling in one place (`ensureCta` / `normalizeReply`).
+
+### Notes
+
+- This pass changes backend reply-shaping only; no deploy was performed in this block.

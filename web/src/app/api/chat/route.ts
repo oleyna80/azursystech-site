@@ -10,9 +10,11 @@ const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_MAX_KEYS = 10_000;
 const CHAT_UNAVAILABLE_MESSAGE =
   "Чат временно недоступен. Пожалуйста, отправьте заявку через форму на сайте или напишите в WhatsApp.";
-const CTA_MESSAGE = "Оставьте заявку через форму на сайте или напишите в WhatsApp.";
+const CTA_MESSAGE = "Оставьте короткую заявку через форму на сайте или напишите в WhatsApp.";
 const POLICY_FALLBACK_MESSAGE =
-  "Я не могу обещать точные цены, сроки или проактивные действия в чате. Оставьте заявку через форму на сайте или напишите в WhatsApp.";
+  "Я не могу обещать точные цены, сроки или проактивные действия в чате. Оставьте короткую заявку через форму на сайте или напишите в WhatsApp.";
+const SECURITY_REJECTION_MESSAGE =
+  "Запрос отклонен по соображениям безопасности. Переформулируйте, пожалуйста, ваш технический вопрос. Если удобнее, оставьте короткую заявку через форму на сайте или напишите в WhatsApp.";
 const PROMPT_INJECTION_PATTERNS = [
   /ignore\s+(all\s+)?(previous|prior|above)\s+instructions/iu,
   /reveal\s+(the\s+)?system\s+prompt/iu,
@@ -21,6 +23,10 @@ const PROMPT_INJECTION_PATTERNS = [
 const DEFAULT_DEEPSEEK_BASE_URL = "https://api.deepseek.com";
 const FORM_CTA_PATTERN = /\bформ(?:а|у|е|ой|ы)\b/iu;
 const WHATSAPP_CTA_PATTERN = /\bwhats\s*app\b|\bwhatsapp\b|ватсапп?/iu;
+const CTA_REFERENCE_PATTERN =
+  /\b(?:форм(?:а|у|е|ой|ы)|заяв(?:к[ауеиой]|ка|ку)|сайт(?:е|а)?|whats\s*app|whatsapp|ватсапп?)\b/iu;
+const LEADING_GREETING_PATTERN =
+  /^(?:здравствуйте|добрый\s+день|добрый\s+вечер|привет(?:ствую)?)\s*[!.,:\-–—]?\s*/iu;
 const AUTONOMOUS_OUTBOUND_PATTERNS = [
   /\b(?:я|мы)\s+(?:свяж(?:усь|емся)|позвон(?:ю|им)|напиш(?:у|ем)|отправ(?:лю|им)|вышл(?:ю|ем)|назнач(?:у|им)|запиш(?:у|ем)|заброниру(?:ю|ем)|организу(?:ю|ем)|приед(?:у|ем))\b/iu,
   /\b(?:наш|мой)\s+специалист\s+(?:свяжется|позвонит|приедет|напишет|назначит)\b/iu,
@@ -41,8 +47,9 @@ const SYSTEM_PROMPT = `Ты роль: IT-специалист компании A
 ПРИНЦИПЫ ОТВЕТА:
 1. Кратко, 1-2 предложения, максимум 3.
 2. Не обещай точных цен, сроков, выезда или начала работ. Если нужно, говори, что после заявки мы посмотрим описание и уточним детали вручную.
-3. В конце предлагай перейти к форме на сайте или написать в WhatsApp, чтобы передать контакты и описание задачи.
-4. Отвечай только на русском языке.`;
+3. Не начинай каждый ответ с приветствия. Сразу переходи к сути вопроса.
+4. В конце предлагай оставить короткую заявку через форму на сайте или написать в WhatsApp, чтобы передать контакты и описание задачи.
+5. Отвечай только на русском языке.`;
 
 function getClientIp(request: Request) {
   const forwardedFor = request.headers.get("x-forwarded-for");
@@ -85,12 +92,49 @@ function hasClearCta(reply: string): boolean {
   return FORM_CTA_PATTERN.test(reply) && WHATSAPP_CTA_PATTERN.test(reply);
 }
 
-function ensureCta(reply: string): string {
-  if (hasClearCta(reply)) {
-    return reply;
+function stripLeadingGreeting(reply: string): string {
+  return reply.replace(LEADING_GREETING_PATTERN, "").trim();
+}
+
+function stripTrailingCtaSentence(reply: string): string {
+  const sentences =
+    reply
+      .match(/[^.!?]+[.!?]?/gu)
+      ?.map((sentence) => sentence.trim())
+      .filter(Boolean) ?? [];
+
+  while (sentences.length > 0) {
+    const lastSentence = sentences[sentences.length - 1] ?? "";
+    const mentionsFormOrWhatsapp =
+      CTA_REFERENCE_PATTERN.test(lastSentence) || WHATSAPP_CTA_PATTERN.test(lastSentence);
+    const looksLikeAction =
+      /\b(?:остав(?:ьте|ить)|перейд(?:ите|и)|напиш(?:ите|ите нам|ите в)|отправ(?:ьте|ить)|переда(?:йте|ть)|заполн(?:ите|ить))\b/iu.test(
+        lastSentence,
+      );
+
+    if (!mentionsFormOrWhatsapp || !looksLikeAction) {
+      break;
+    }
+
+    sentences.pop();
   }
 
-  const compact = reply.replace(/\s+/g, " ").trim();
+  return sentences.join(" ").trim();
+}
+
+function normalizeReply(reply: string): string {
+  const withoutGreeting = stripLeadingGreeting(reply);
+  const withoutTrailingCta = stripTrailingCtaSentence(withoutGreeting);
+  return withoutTrailingCta || withoutGreeting || reply;
+}
+
+function ensureCta(reply: string): string {
+  const normalizedReply = normalizeReply(reply);
+  if (hasClearCta(normalizedReply)) {
+    return normalizedReply;
+  }
+
+  const compact = normalizedReply.replace(/\s+/g, " ").trim();
   if (!compact) {
     return CTA_MESSAGE;
   }
@@ -229,10 +273,7 @@ export async function POST(request: Request) {
   }
 
   if (hasPromptInjectionAttempt(message)) {
-    return NextResponse.json(
-      { error: "Запрос отклонен по соображениям безопасности. Переформулируйте, пожалуйста, ваш технический вопрос." },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: SECURITY_REJECTION_MESSAGE }, { status: 400 });
   }
 
   const apiKey = process.env.DEEPSEEK_API_KEY?.trim();
