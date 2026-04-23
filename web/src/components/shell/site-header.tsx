@@ -21,11 +21,11 @@ const HEADER_COPY = {
     whatsappCta: "WhatsApp",
     submitCta: "Demander un devis",
     links: [
-      { href: "#business", label: "Pour les entreprises" },
+      { href: "/#business", label: "Pour les entreprises" },
       { href: "/ai-automation", label: "Automatisation et IA" },
-      { href: "#pricing", label: "Tarifs" },
-      { href: "#faq", label: "FAQ" },
-      { href: "#contact", label: "Contact" },
+      { href: "/#pricing", label: "Tarifs" },
+      { href: "/#faq", label: "FAQ" },
+      { href: "/#contact", label: "Contact" },
     ],
   },
   ru: {
@@ -35,11 +35,11 @@ const HEADER_COPY = {
     whatsappCta: "WhatsApp",
     submitCta: "Оставить заявку",
     links: [
-      { href: "#business", label: "Для бизнеса" },
+      { href: "/#business", label: "Для бизнеса" },
       { href: "/ai-automation", label: "Автоматизация и ИИ" },
-      { href: "#pricing", label: "Цены" },
-      { href: "#faq", label: "FAQ" },
-      { href: "#contact", label: "Контакты" },
+      { href: "/#pricing", label: "Цены" },
+      { href: "/#faq", label: "FAQ" },
+      { href: "/#contact", label: "Контакты" },
     ],
   },
 } as const;
@@ -51,12 +51,7 @@ export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
   const router = useRouter();
   const copy = HEADER_COPY[locale];
 
-  const navLinks = useMemo(() => {
-    const prefix = pathname === "/" ? "" : "/";
-    return copy.links.map((link) =>
-      link.href.startsWith("#") ? { ...link, href: `${prefix}${link.href}` } : link,
-    );
-  }, [copy.links, pathname]);
+  const navLinks = useMemo(() => copy.links, [copy.links]);
 
   useEffect(() => {
     setLocale(initialLocale);
@@ -153,7 +148,7 @@ export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
             {copy.whatsappCta}
           </a>
           <Link
-            href={pathname === "/" ? "#contact" : "/#contact"}
+            href="/#contact"
             className="inline-flex rounded-full bg-accent-teal px-4 py-2.5 text-xs font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-accent-teal/90 sm:px-5 sm:text-sm"
           >
             {copy.submitCta}

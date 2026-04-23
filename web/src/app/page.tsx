@@ -226,7 +226,7 @@ export default async function HomePage() {
 
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <a
-                href="#contact"
+                href="/#contact"
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-accent-teal px-7 py-3.5 text-base font-bold text-white shadow-premium-soft transition-transform duration-200 hover:-translate-y-0.5 hover:bg-accent-teal/90 active:scale-95"
               >
                 {copy.primaryCta}
@@ -290,7 +290,7 @@ export default async function HomePage() {
                 </div>
               </div>
 
-              <a href="#contact" className="mt-10 inline-flex items-center gap-2 text-base font-bold text-accent-teal hover:text-graphite">
+              <a href="/#contact" className="mt-10 inline-flex items-center gap-2 text-base font-bold text-accent-teal hover:text-graphite">
                 {copy.businessCta}
                 <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
                   <path fill="currentColor" d="M5 11h11.2l-4.6-4.6L13 5l7 7-7 7-1.4-1.4 4.6-4.6H5v-2z" />
@@ -394,7 +394,7 @@ export default async function HomePage() {
                 {copy.pricingIntro}
               </p>
               <a
-                href="#contact"
+                href="/#contact"
                 className="mt-8 inline-flex rounded-full bg-graphite px-7 py-3.5 text-base font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-graphite/90"
               >
                 {copy.pricingCta}
@@ -446,7 +446,7 @@ export default async function HomePage() {
           </div>
           <div className="flex justify-center">
             <a
-              href="#contact"
+              href="/#contact"
               className="flex justify-center rounded-full bg-graphite px-6 py-3 text-center font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-graphite/90"
             >
               {copy.faqCta}

@@ -1,5 +1,30 @@
 # Progress Log - AzurSysTech
 
+## 2026-04-23: Homepage anchor links normalized to absolute hash routes
+
+### Done
+
+- Normalized homepage and shared-header anchor links to absolute `/#...` form instead of bare `#...`.
+- Updated shared header nav links:
+  - `/#business`
+  - `/#pricing`
+  - `/#faq`
+  - `/#contact`
+- Updated homepage CTA links that previously used bare `#contact`.
+- Removed route-dependent hash prefixing logic from the header because shared nav links are now already canonical.
+
+### Validation
+
+- Pending Verifier-stage checks for:
+  - `git diff --check`
+  - `cd web && npm run check:types`
+  - repeated-click browser smoke for homepage hash links
+
+### Notes
+
+- This block only normalizes URL/hash behavior.
+- It does not change section IDs, route structure, footer links, or scroll behavior.
+
 ## 2026-04-23: Local dev API origin allowlist updated for port 3001
 
 ### Done
