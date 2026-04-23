@@ -2949,3 +2949,29 @@ Residual risks / untested areas:
 ### Notes
 
 - This remains a no-locale-route baseline. It adds a server-readable locale cookie for the homepage and shared shell, but still does not introduce locale-prefixed routes or full server-side locale negotiation.
+
+## 2026-04-23: FR localization pass for `/ai-automation`
+
+### Done
+
+- Reworked `web/src/app/ai-automation/page.tsx` into a cookie-aware RU/FR route-local localization layer instead of a Russian-only page.
+- Moved route metadata to `generateMetadata()` so `/ai-automation` now follows the active locale from the same server-readable locale cookie used by the homepage baseline.
+- Localized page content for both supported baseline locales in the route itself:
+  - hero
+  - practical scenarios
+  - realistic guardrails
+  - implementation steps
+  - FAQ
+  - final CTA
+- Localized JSON-LD fields (`WebPage`, `FAQPage`, `Service`) so visible language and `inLanguage` stay aligned with the active locale.
+
+### Validation
+
+- Pending verifier pass for:
+  - `git diff --check`
+  - `cd /home/dmitrii/azursystech/web && npm run check:types`
+  - local smoke for `/ai-automation` in FR
+
+### Notes
+
+- This pass stays route-local on purpose. It does not move `/ai-automation` content into the global site dictionary.
