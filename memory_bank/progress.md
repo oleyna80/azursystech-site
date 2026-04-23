@@ -1,5 +1,41 @@
 # Progress Log - AzurSysTech
 
+## 2026-04-23: FR/RU baseline added for FAQ and contact conversion path
+
+### Done
+
+- Added cookie-aware FR/RU localization baseline for:
+  - `/faq`
+  - `/contact`
+  - `/thank-you`
+- Converted `/contact` route into a server-readable locale entry point:
+  - moved client form and submit logic into `web/src/components/contact/contact-page-client.tsx`
+  - kept the existing contact payload contract and submit flow
+- Localized contact-form user-facing strings:
+  - field labels
+  - helper copy
+  - radio/checkbox/select labels
+  - quick actions and service-area notes
+- Localized contact submit messages end to end:
+  - validation issue text in `web/src/lib/contact-submit.ts`
+  - fallback message in `web/src/lib/contact-submit.ts`
+  - API route responses in `web/src/app/api/contact/submit/route.ts`
+- Added locale-aware metadata for `/faq`, `/contact`, and `/thank-you`.
+- Kept the contact submit payload shape, field keys, and enum values unchanged.
+
+### Validation
+
+- Pending Verifier-stage checks for:
+  - `git diff --check`
+  - `cd web && npm run check:types`
+  - local browser smoke for `/faq`, `/contact`, `/thank-you`
+  - localized contact submit probes
+
+### Notes
+
+- This pass localizes the FAQ + contact conversion path only.
+- It does not introduce a global site-wide forms i18n system.
+
 ## 2026-04-22: VPS PostgreSQL operator access hardened via loopback bind + SSH tunnel
 
 ### Done

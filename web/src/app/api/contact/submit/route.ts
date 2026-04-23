@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
+import { cookies } from "next/headers";
 
 import {
   type ContactSubmitPayload,
   type ContactSubmitApiResult,
+  getContactSubmitRouteCopy,
   getSubmitFallbackMessage,
+  resolveContactLocale,
   validateAndBuildContactPayload,
 } from "@/lib/contact-submit";
+import { LOCALE_COOKIE_KEY } from "@/i18n";
 import {
   getIntakeStorageMode,
   isSqlStorageEnabled,
@@ -286,10 +290,14 @@ async function sendTelegramNotificationForNewLead(context: NotificationDispatchC
 }
 
 export async function POST(request: Request) {
+  const cookieStore = await cookies();
+  const fallbackLocale = resolveContactLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const fallbackCopy = getContactSubmitRouteCopy(fallbackLocale);
+
   if (isRequestBodyTooLarge(request)) {
     return jsonResult(413, {
       status: "submit_failed",
-      userMessage: "Слишком большой запрос. Уточните заявку короче и попробуйте снова.",
+      userMessage: fallbackCopy.tooLarge,
     });
   }
 
@@ -304,7 +312,7 @@ export async function POST(request: Request) {
   if (isRateLimited) {
     return jsonResult(429, {
       status: "submit_failed",
-      userMessage: "Слишком много отправок подряд. Пожалуйста, подождите минуту и попробуйте снова.",
+      userMessage: fallbackCopy.rateLimited,
     });
   }
 
@@ -315,24 +323,30 @@ export async function POST(request: Request) {
   } catch {
     return jsonResult(400, {
       status: "validation_error",
-      userMessage: "Не удалось прочитать данные формы. Проверьте заполнение и попробуйте ещё раз.",
-      issues: [{ field: "form", message: "Некорректный формат формы" }],
+      userMessage: fallbackCopy.unreadableForm,
+      issues: [{ field: "form", message: fallbackCopy.unreadableFormIssue }],
     });
   }
 
-  const validated = validateAndBuildContactPayload(formData);
+  const requestLocale = resolveContactLocale(
+    typeof formData.get("locale") === "string"
+      ? (formData.get("locale") as string)
+      : cookieStore.get(LOCALE_COOKIE_KEY)?.value,
+  );
+  const copy = getContactSubmitRouteCopy(requestLocale);
+  const validated = validateAndBuildContactPayload(formData, requestLocale);
 
   if (validated.kind === "spam_detected") {
     return jsonResult(200, {
       status: "spam_detected",
-      userMessage: "Заявка отклонена системой анти-спам. Используйте телефон, WhatsApp или email для связи.",
+      userMessage: copy.spamDetected,
     });
   }
 
   if (validated.kind === "validation_error") {
     return jsonResult(400, {
       status: "validation_error",
-      userMessage: "Проверьте обязательные поля и попробуйте отправить заявку снова.",
+      userMessage: copy.validationFailed,
       issues: validated.issues,
     });
   }
@@ -359,7 +373,7 @@ export async function POST(request: Request) {
       console.error("Lead persistence failed");
       return jsonResult(502, {
         status: "submit_failed",
-        userMessage: getSubmitFallbackMessage(),
+        userMessage: getSubmitFallbackMessage(requestLocale),
       });
     }
   }
@@ -383,13 +397,13 @@ export async function POST(request: Request) {
     if (intakeStorageMode === "sql_primary") {
       return jsonResult(200, {
         status: "success",
-        userMessage: "Заявка отправлена.",
+        userMessage: copy.success,
       });
     }
 
     return jsonResult(503, {
       status: "integration_not_ready",
-      userMessage: getSubmitFallbackMessage(),
+      userMessage: getSubmitFallbackMessage(requestLocale),
     });
   }
 
@@ -409,13 +423,13 @@ export async function POST(request: Request) {
     if (intakeStorageMode === "sql_primary") {
       return jsonResult(200, {
         status: "success",
-        userMessage: "Заявка отправлена.",
+        userMessage: copy.success,
       });
     }
 
     return jsonResult(502, {
       status: "submit_failed",
-      userMessage: getSubmitFallbackMessage(),
+      userMessage: getSubmitFallbackMessage(requestLocale),
     });
   }
 
@@ -435,6 +449,6 @@ export async function POST(request: Request) {
 
   return jsonResult(200, {
     status: "success",
-    userMessage: "Заявка отправлена.",
+    userMessage: copy.success,
   });
 }

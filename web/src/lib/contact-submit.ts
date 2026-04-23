@@ -1,3 +1,5 @@
+import { resolveLocale } from "@/i18n";
+
 export const CONTACT_SUBMIT_SOURCE = "website_form" as const;
 export const CONTACT_CHAT_SOURCE = "website_chat" as const;
 export const CONTACT_WHATSAPP_SOURCE = "whatsapp_chat" as const;
@@ -56,13 +58,96 @@ export type ContactSubmitValidationIssue = {
   message: string;
 };
 
+export type ContactLocale = "fr" | "ru";
+
 type ValidationResult =
   | { kind: "ok"; payload: ContactSubmitPayload }
   | { kind: "spam_detected" }
   | { kind: "validation_error"; issues: ContactSubmitValidationIssue[] };
 
-const FALLBACK_MESSAGE =
-  "Сейчас не удалось отправить заявку через форму. Используйте резервные каналы: телефон +33 7 80 72 09 94, WhatsApp +33 7 80 72 09 94, email contact@azursystech.fr или страницу /contact.";
+const CONTACT_COPY = {
+  fr: {
+    fallbackMessage:
+      "L’envoi via le formulaire n’a pas abouti. Utilisez le téléphone +33 7 80 72 09 94, WhatsApp +33 7 80 72 09 94, l’email contact@azursystech.fr ou la page /contact.",
+    validation: {
+      nameRequired: "Indiquez votre nom",
+      phoneRequired: "Indiquez votre téléphone",
+      phoneFormat: "Vérifiez le format du téléphone",
+      emailFormat: "Vérifiez le format de l’email",
+      cityRequired: "Indiquez votre ville",
+      sourceInvalid: "Source de demande non valide",
+      segmentRequired: "Choisissez le type de demande",
+      serviceRequired: "Choisissez un service",
+      descriptionRequired: "Décrivez brièvement la demande",
+      descriptionLength: "La description doit contenir entre 15 et 1500 caractères",
+      deviceCountInvalid: "Valeur non valide pour le nombre d’appareils",
+      onsiteInvalid: "Valeur non valide pour le déplacement",
+      urgencyInvalid: "Valeur non valide pour l’urgence",
+      businessTypeInvalid: "Type de site non valide",
+      workstationCountInvalid: "Nombre de postes non valide",
+      businessNeedsInvalid: "Valeurs non valides dans les besoins entreprise",
+      homeDeviceTypeInvalid: "Valeurs non valides dans le type d’appareil",
+      deviceStateInvalid: "État de l’appareil non valide",
+      homeNeedTypeInvalid: "Valeurs non valides dans le type de besoin",
+    },
+    route: {
+      tooLarge: "La demande est trop volumineuse. Raccourcissez le texte et réessayez.",
+      rateLimited: "Trop d’envois à la suite. Attendez une minute puis réessayez.",
+      unreadableForm: "Impossible de lire les données du formulaire. Vérifiez les champs puis réessayez.",
+      unreadableFormIssue: "Format de formulaire invalide",
+      validationFailed: "Vérifiez les champs obligatoires puis renvoyez la demande.",
+      spamDetected:
+        "La demande a été bloquée par l’anti-spam. Utilisez le téléphone, WhatsApp ou l’email pour continuer.",
+      success: "Demande envoyée.",
+    },
+  },
+  ru: {
+    fallbackMessage:
+      "Сейчас не удалось отправить заявку через форму. Используйте резервные каналы: телефон +33 7 80 72 09 94, WhatsApp +33 7 80 72 09 94, email contact@azursystech.fr или страницу /contact.",
+    validation: {
+      nameRequired: "Укажите имя",
+      phoneRequired: "Укажите телефон",
+      phoneFormat: "Проверьте формат телефона",
+      emailFormat: "Проверьте формат email",
+      cityRequired: "Укажите город",
+      sourceInvalid: "Недопустимый источник обращения",
+      segmentRequired: "Выберите тип обращения",
+      serviceRequired: "Выберите услугу",
+      descriptionRequired: "Коротко опишите задачу",
+      descriptionLength: "Описание задачи должно быть от 15 до 1500 символов",
+      deviceCountInvalid: "Недопустимое значение количества устройств",
+      onsiteInvalid: "Недопустимое значение для выезда",
+      urgencyInvalid: "Недопустимое значение срочности",
+      businessTypeInvalid: "Недопустимый тип объекта",
+      workstationCountInvalid: "Недопустимое количество рабочих мест",
+      businessNeedsInvalid: "Недопустимые значения в нуждах бизнеса",
+      homeDeviceTypeInvalid: "Недопустимые значения в типе устройств",
+      deviceStateInvalid: "Недопустимое состояние устройства",
+      homeNeedTypeInvalid: "Недопустимые значения в типе домашней задачи",
+    },
+    route: {
+      tooLarge: "Слишком большой запрос. Уточните заявку короче и попробуйте снова.",
+      rateLimited: "Слишком много отправок подряд. Пожалуйста, подождите минуту и попробуйте снова.",
+      unreadableForm: "Не удалось прочитать данные формы. Проверьте заполнение и попробуйте ещё раз.",
+      unreadableFormIssue: "Некорректный формат формы",
+      validationFailed: "Проверьте обязательные поля и попробуйте отправить заявку снова.",
+      spamDetected:
+        "Заявка отклонена системой анти-спам. Используйте телефон, WhatsApp или email для связи.",
+      success: "Заявка отправлена.",
+    },
+  },
+} as const satisfies Record<
+  ContactLocale,
+  {
+    fallbackMessage: string;
+    validation: Record<string, string>;
+    route: Record<string, string>;
+  }
+>;
+
+export function resolveContactLocale(value?: string | null): ContactLocale {
+  return resolveLocale(value) === "ru" ? "ru" : "fr";
+}
 
 function readTextField(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -110,13 +195,21 @@ function hasPhoneLikeShape(value: string): boolean {
   return /\d/.test(value);
 }
 
-export function validateAndBuildContactPayload(formData: FormData): ValidationResult {
+export function getContactSubmitRouteCopy(locale: ContactLocale = "ru") {
+  return CONTACT_COPY[locale].route;
+}
+
+export function validateAndBuildContactPayload(
+  formData: FormData,
+  locale: ContactLocale = "ru",
+): ValidationResult {
   const honeypot = readTextField(formData, "website");
   if (honeypot.length > 0) {
     return { kind: "spam_detected" };
   }
 
   const issues: ContactSubmitValidationIssue[] = [];
+  const copy = CONTACT_COPY[locale].validation;
 
   const name = readTextField(formData, "name");
   const phone = readTextField(formData, "phone");
@@ -142,78 +235,78 @@ export function validateAndBuildContactPayload(formData: FormData): ValidationRe
   const homeNeedTypeRaw = readMultiField(formData, "home_need_type");
 
   if (!name) {
-    issues.push({ field: "name", message: "Укажите имя" });
+    issues.push({ field: "name", message: copy.nameRequired });
   }
 
   if (!phone) {
-    issues.push({ field: "phone", message: "Укажите телефон" });
+    issues.push({ field: "phone", message: copy.phoneRequired });
   } else if (!hasPhoneLikeShape(phone)) {
-    issues.push({ field: "phone", message: "Проверьте формат телефона" });
+    issues.push({ field: "phone", message: copy.phoneFormat });
   }
 
   if (email && !isEmail(email)) {
-    issues.push({ field: "email", message: "Проверьте формат email" });
+    issues.push({ field: "email", message: copy.emailFormat });
   }
 
   if (!city) {
-    issues.push({ field: "city", message: "Укажите город" });
+    issues.push({ field: "city", message: copy.cityRequired });
   }
 
   if (sourceRaw && !isOneOf(sourceRaw, SOURCES)) {
-    issues.push({ field: "source", message: "Недопустимый источник обращения" });
+    issues.push({ field: "source", message: copy.sourceInvalid });
   }
 
   if (!isOneOf(segmentRaw, SEGMENTS)) {
-    issues.push({ field: "segment", message: "Выберите тип обращения" });
+    issues.push({ field: "segment", message: copy.segmentRequired });
   }
 
   if (!isOneOf(serviceTypeRaw, SERVICE_TYPES)) {
-    issues.push({ field: "service_type", message: "Выберите услугу" });
+    issues.push({ field: "service_type", message: copy.serviceRequired });
   }
 
   if (!problemDescription) {
-    issues.push({ field: "problem_description", message: "Коротко опишите задачу" });
+    issues.push({ field: "problem_description", message: copy.descriptionRequired });
   } else if (problemDescription.length < 15 || problemDescription.length > 1500) {
     issues.push({
       field: "problem_description",
-      message: "Описание задачи должно быть от 15 до 1500 символов",
+      message: copy.descriptionLength,
     });
   }
 
   if (deviceCountRaw && !isOneOf(deviceCountRaw, DEVICE_COUNTS)) {
-    issues.push({ field: "device_count", message: "Недопустимое значение количества устройств" });
+    issues.push({ field: "device_count", message: copy.deviceCountInvalid });
   }
 
   if (onsiteRequiredRaw && !isOneOf(onsiteRequiredRaw, ONSITE_OPTIONS)) {
-    issues.push({ field: "onsite_required", message: "Недопустимое значение для выезда" });
+    issues.push({ field: "onsite_required", message: copy.onsiteInvalid });
   }
 
   if (urgencyRaw && !isOneOf(urgencyRaw, URGENCY_OPTIONS)) {
-    issues.push({ field: "urgency", message: "Недопустимое значение срочности" });
+    issues.push({ field: "urgency", message: copy.urgencyInvalid });
   }
 
   if (businessTypeRaw && !isOneOf(businessTypeRaw, BUSINESS_TYPES)) {
-    issues.push({ field: "business_type", message: "Недопустимый тип объекта" });
+    issues.push({ field: "business_type", message: copy.businessTypeInvalid });
   }
 
   if (workstationCountRaw && !isOneOf(workstationCountRaw, DEVICE_COUNTS)) {
-    issues.push({ field: "workstation_count", message: "Недопустимое количество рабочих мест" });
+    issues.push({ field: "workstation_count", message: copy.workstationCountInvalid });
   }
 
   if (businessNeedsRaw.length > 0 && !allInSet(businessNeedsRaw, BUSINESS_NEEDS)) {
-    issues.push({ field: "business_needs", message: "Недопустимые значения в нуждах бизнеса" });
+    issues.push({ field: "business_needs", message: copy.businessNeedsInvalid });
   }
 
   if (homeDeviceTypeRaw.length > 0 && !allInSet(homeDeviceTypeRaw, HOME_DEVICE_TYPES)) {
-    issues.push({ field: "home_device_type", message: "Недопустимые значения в типе устройств" });
+    issues.push({ field: "home_device_type", message: copy.homeDeviceTypeInvalid });
   }
 
   if (deviceStateRaw && !isOneOf(deviceStateRaw, DEVICE_STATES)) {
-    issues.push({ field: "device_state", message: "Недопустимое состояние устройства" });
+    issues.push({ field: "device_state", message: copy.deviceStateInvalid });
   }
 
   if (homeNeedTypeRaw.length > 0 && !allInSet(homeNeedTypeRaw, HOME_NEED_TYPES)) {
-    issues.push({ field: "home_need_type", message: "Недопустимые значения в типе домашней задачи" });
+    issues.push({ field: "home_need_type", message: copy.homeNeedTypeInvalid });
   }
 
   if (issues.length > 0) {
@@ -282,6 +375,6 @@ export type ContactSubmitApiResult =
   | { status: "integration_not_ready"; userMessage: string }
   | { status: "submit_failed"; userMessage: string };
 
-export function getSubmitFallbackMessage(): string {
-  return FALLBACK_MESSAGE;
+export function getSubmitFallbackMessage(locale: ContactLocale = "ru"): string {
+  return CONTACT_COPY[locale].fallbackMessage;
 }
