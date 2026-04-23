@@ -3007,3 +3007,31 @@ Residual risks / untested areas:
 
 - This pass keeps the existing field keys, enum values and payload shape unchanged.
 - The route now reads locale from the same baseline cookie contract and also accepts the locale supplied by the form body for submit-time response copy.
+
+## 2026-04-23: FR localization pass for `/pricing`
+
+### Done
+
+- Reworked `web/src/app/pricing/page.tsx` into a cookie-aware RU/FR route-local localization layer.
+- Added localized route metadata for `/pricing`, tied to the same server-readable locale cookie used by the homepage baseline.
+- Localized all page-local pricing content in the route itself:
+  - pricing logic
+  - business pricing block
+  - home-user pricing block
+  - cost factors
+  - included / not included
+  - estimate steps
+  - final CTA block
+- Aligned `/pricing` CTAs with the current primary conversion path by routing them to `/#contact` instead of the older `/contact` page.
+
+### Validation
+
+- Pending verifier pass for:
+  - `git diff --check`
+  - `cd /home/dmitrii/azursystech/web && npm run check:types`
+  - local smoke for `/pricing` in FR/RU
+
+### Notes
+
+- This pass is route-local only and does not move pricing content into the global dictionary.
+- Pricing framing remains limited to `à partir de / sur demande / dépend du volume` and does not introduce fixed-price promises.
