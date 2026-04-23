@@ -1,18 +1,21 @@
-import type { BriefStepDefinition } from "@/lib/brief-submit";
+import type { BriefLocale, BriefStepDefinition } from "@/lib/brief-submit";
 
 type BriefProgressProps = {
   steps: BriefStepDefinition[];
   currentStep: number;
+  locale: BriefLocale;
 };
 
-export function BriefProgress({ steps, currentStep }: BriefProgressProps) {
+export function BriefProgress({ steps, currentStep, locale }: BriefProgressProps) {
   const completion = Math.round(((currentStep + 1) / steps.length) * 100);
 
   return (
     <div className="rounded-[1.5rem] border border-[#D8D0C4] bg-[#FBF8F2] p-4 shadow-[0_14px_38px_rgba(23,35,49,0.05)]">
       <div className="flex items-center justify-between gap-3 text-xs font-medium text-[#5C6670]">
         <span>
-          Шаг {currentStep + 1} из {steps.length}
+          {locale === "fr"
+            ? `Étape ${currentStep + 1} sur ${steps.length}`
+            : `Шаг ${currentStep + 1} из ${steps.length}`}
         </span>
         <span>{completion}%</span>
       </div>

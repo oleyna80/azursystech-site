@@ -3,7 +3,7 @@
 import { useId, useState } from "react";
 
 import { getBriefInlineHelpGuidance } from "@/lib/brief-assistant";
-import type { BriefFieldDefinition, BriefFormValues } from "@/lib/brief-submit";
+import type { BriefFieldDefinition, BriefFormValues, BriefLocale } from "@/lib/brief-submit";
 
 type BriefFieldProps = {
   field: BriefFieldDefinition;
@@ -12,6 +12,7 @@ type BriefFieldProps = {
   otherValue?: string;
   error?: string;
   otherError?: string;
+  locale: BriefLocale;
   onValueChange: (key: keyof BriefFormValues, value: string) => void;
   onListToggle: (key: keyof BriefFormValues, optionValue: string) => void;
 };
@@ -34,6 +35,7 @@ export function BriefField({
   otherValue = "",
   error,
   otherError,
+  locale,
   onValueChange,
   onListToggle,
 }: BriefFieldProps) {
@@ -47,6 +49,7 @@ export function BriefField({
   const inlineHelp = getBriefInlineHelpGuidance({
     fieldKey: String(field.key),
     fieldValue: value,
+    locale,
   });
   const hasInlineHelp = Boolean(inlineHelp);
   const describedBy = [
@@ -72,7 +75,11 @@ export function BriefField({
             className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#B8D9DB] bg-[#EDF7F7] text-xs font-bold text-[#1F6F78] transition-colors hover:bg-[#DCEFF0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F6F78]/30"
             aria-expanded={isHelpOpen}
             aria-controls={helpId}
-            aria-label={`Показать подсказку: ${field.label}`}
+            aria-label={
+              locale === "fr"
+                ? `Afficher l’aide : ${field.label}`
+                : `Показать подсказку: ${field.label}`
+            }
             onClick={() => setIsHelpOpen((previous) => !previous)}
           >
             ?
@@ -98,7 +105,7 @@ export function BriefField({
           ) : null}
           {inlineHelp.draftExample ? (
             <p className="mt-2 text-xs leading-5 text-[#53616E]">
-              Пример: {inlineHelp.draftExample}
+              {locale === "fr" ? "Exemple" : "Пример"}: {inlineHelp.draftExample}
             </p>
           ) : null}
         </div>
@@ -135,7 +142,7 @@ export function BriefField({
           aria-describedby={describedBy}
           onChange={(event) => onValueChange(field.key, event.target.value)}
         >
-          <option value="">Выберите вариант</option>
+          <option value="">{locale === "fr" ? "Choisissez une option" : "Выберите вариант"}</option>
           {field.options?.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -193,14 +200,16 @@ export function BriefField({
             htmlFor={String(field.otherFieldKey)}
             className="text-sm font-medium text-[#1F2A37]"
           >
-            Уточните вариант
+            {locale === "fr" ? "Précisez la valeur" : "Уточните вариант"}
           </label>
           <input
             id={String(field.otherFieldKey)}
             name={String(field.otherFieldKey)}
             type="text"
             value={otherValue}
-            placeholder={field.otherPlaceholder ?? "Уточните свой вариант"}
+            placeholder={
+              field.otherPlaceholder ?? (locale === "fr" ? "Précisez votre variante" : "Уточните свой вариант")
+            }
             className={[
               controlBase,
               otherError ? "border-[#B42318] focus:border-[#B42318] focus:ring-[#B42318]/15" : "",
@@ -230,7 +239,8 @@ export function BriefField({
 
       {field.example ? (
         <p className="text-xs leading-5 text-[#7C8894]">
-          Пример: <span className="text-[#53616E]">{field.example}</span>
+          {locale === "fr" ? "Exemple" : "Пример"}:{" "}
+          <span className="text-[#53616E]">{field.example}</span>
         </p>
       ) : null}
     </div>

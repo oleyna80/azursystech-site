@@ -2975,3 +2975,35 @@ Residual risks / untested areas:
 ### Notes
 
 - This pass stays route-local on purpose. It does not move `/ai-automation` content into the global site dictionary.
+
+## 2026-04-23: FR localization pass for `/brief`
+
+### Done
+
+- Reworked `web/src/app/brief/page.tsx` into a cookie-aware RU/FR route with localized metadata, hero copy and trust note.
+- Updated the client form components so `/brief` now renders localized step copy and shared UI text in both baseline locales:
+  - `web/src/components/brief/brief-form.tsx`
+  - `web/src/components/brief/brief-field.tsx`
+  - `web/src/components/brief/brief-progress.tsx`
+- Replaced the Russian-only brief form copy layer in `web/src/lib/brief-submit.ts` with locale-aware builders for:
+  - field labels
+  - helper text
+  - placeholders and examples
+  - step titles and descriptions
+  - validation messages
+  - payload locale
+  - localized handoff summary labels
+- Reworked `web/src/lib/brief-assistant.ts` so inline `?` guidance follows the active locale instead of staying hardcoded in Russian.
+- Updated `web/src/app/api/brief/submit/route.ts` so submit responses and payload locale follow the same locale contract as the page.
+
+### Validation
+
+- Pending verifier pass for:
+  - `git diff --check`
+  - `cd /home/dmitrii/azursystech/web && npm run check:types`
+  - local smoke for `/brief` in FR including submit-path copy checks
+
+### Notes
+
+- This pass keeps the existing field keys, enum values and payload shape unchanged.
+- The route now reads locale from the same baseline cookie contract and also accepts the locale supplied by the form body for submit-time response copy.

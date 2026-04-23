@@ -1,7 +1,14 @@
+import { resolveLocale } from "@/i18n";
+
 export const BRIEF_SCHEMA_VERSION = "brief.v1" as const;
 export const BRIEF_SOURCE = "brief_form" as const;
 export const BRIEF_ROUTE = "/brief" as const;
-export const BRIEF_LOCALE = "ru" as const;
+
+export type BriefLocale = "fr" | "ru";
+
+export function resolveBriefLocale(value?: string | null): BriefLocale {
+  return resolveLocale(value ?? undefined) === "ru" ? "ru" : "fr";
+}
 
 const BRIEF_BUSINESS_TYPES = [
   "local_service_company",
@@ -163,7 +170,7 @@ export type BriefSubmissionPayload = {
   schema_version: typeof BRIEF_SCHEMA_VERSION;
   source: typeof BRIEF_SOURCE;
   route: typeof BRIEF_ROUTE;
-  locale: typeof BRIEF_LOCALE;
+  locale: BriefLocale;
   created_at: string;
   brief: BriefFormValues;
   metadata: BriefSubmissionMetadata;
@@ -197,6 +204,7 @@ export type BriefHandoff = {
 
 export type BriefSubmitRequestBody = {
   values?: unknown;
+  locale?: unknown;
   ai_assist_used?: unknown;
   assistant_interaction_count?: unknown;
 };
@@ -216,348 +224,701 @@ type BriefFieldRule = {
   maxLength?: number;
 };
 
-export const BRIEF_FIELDS: Record<BriefFieldKey, BriefFieldDefinition> = {
-  company_name: {
-    key: "company_name",
-    label: "Название компании / проекта",
-    type: "text",
-    required: true,
-    helperText: "Укажите, как называется бизнес или проект.",
-    placeholder: "AzurSysTech",
-    example: "AzurSysTech",
-  },
-  website_url: {
-    key: "website_url",
-    label: "Сайт компании",
-    type: "text",
-    required: false,
-    helperText: "Можно оставить пустым, если сайта ещё нет. Достаточно домена, например azursystech.fr.",
-    placeholder: "azursystech.fr",
-    example: "azursystech.fr",
-  },
-  business_type: {
-    key: "business_type",
-    label: "Тип бизнеса",
-    type: "select",
-    required: true,
-    helperText: "Выберите наиболее близкий тип бизнеса.",
-    assistantTrigger: true,
-    options: [
-      { value: "local_service_company", label: "Локальная сервисная компания" },
-      { value: "small_office_cabinet", label: "Небольшой офис / кабинет" },
-      { value: "ecommerce", label: "E-commerce" },
-      { value: "retail_store", label: "Розница / магазин" },
-      { value: "agency_studio", label: "Агентство / студия" },
-      { value: "consultant_expert_business", label: "Консультант / экспертный бизнес" },
-      { value: "other", label: "Другое" },
-    ],
-    allowOther: true,
-    otherFieldKey: "business_type_other",
-    otherPlaceholder: "Кратко опишите тип бизнеса",
-  },
-  target_market: {
-    key: "target_market",
-    label: "Основной рынок / география",
-    type: "text",
-    required: false,
-    helperText: "Можно указать страну, регион или несколько рынков.",
-    placeholder: "Франция, ЕС",
-    example: "Франция, ЕС",
-  },
-  team_size: {
-    key: "team_size",
-    label: "Размер команды",
-    type: "select",
-    required: false,
-    helperText: "Если точного числа нет, выберите ближайший диапазон.",
-    options: [
-      { value: "1", label: "1" },
-      { value: "2_5", label: "2–5" },
-      { value: "6_10", label: "6–10" },
-      { value: "11_25", label: "11–25" },
-      { value: "25_plus", label: "25+" },
-    ],
-  },
-  main_goal: {
-    key: "main_goal",
-    label: "Что вы хотите автоматизировать в первую очередь?",
-    type: "textarea",
-    required: true,
-    helperText: "Опишите один главный процесс, который нужно улучшить первым.",
-    placeholder: "Хочу автоматизировать первичную обработку заявок с сайта и WhatsApp.",
-    example: "Хочу автоматизировать первичную обработку заявок с сайта и WhatsApp.",
-    assistantTrigger: true,
-  },
-  main_problem: {
-    key: "main_problem",
-    label: "Какая проблема сейчас ощущается сильнее всего?",
-    type: "textarea",
-    required: true,
-    helperText: "Укажите, где сейчас теряется время, управляемость или заявки.",
-    placeholder: "Заявки приходят из разных каналов, часть теряется, а сотрудники тратят много времени на одинаковые уточнения.",
-    example: "Заявки приходят из разных каналов, часть теряется, а сотрудники тратят много времени на одинаковые уточнения.",
-    assistantTrigger: true,
-  },
-  desired_result: {
-    key: "desired_result",
-    label: "Какой результат вы хотите получить на выходе?",
-    type: "textarea",
-    required: true,
-    helperText: "Опишите результат через бизнес-эффект, а не через стек.",
-    placeholder: "Чтобы обращения автоматически собирались в одну структуру, оценивались и передавались дальше с краткой сводкой.",
-    example: "Чтобы обращения автоматически собирались в одну структуру, оценивались и передавались дальше с краткой сводкой.",
-    assistantTrigger: true,
-  },
-  priority_use_case: {
-    key: "priority_use_case",
-    label: "Какой сценарий сейчас самый важный?",
-    type: "select",
-    required: true,
-    helperText: "Если есть несколько сценариев, выберите главный первый шаг.",
-    assistantTrigger: true,
-    options: [
-      { value: "website_leads", label: "Обработка заявок с сайта" },
-      { value: "messenger_intake", label: "Первичный приём из чата / мессенджеров" },
-      { value: "qualification", label: "Первичная оценка запроса" },
-      { value: "customer_support", label: "Клиентская поддержка по типовым вопросам" },
-      { value: "routing", label: "Маршрутизация обращений" },
-      { value: "follow_up", label: "Повторные касания и напоминания" },
-      { value: "document_workflow", label: "Шаблонный документооборот" },
-      { value: "other", label: "Другое" },
-    ],
-    allowOther: true,
-    otherFieldKey: "priority_use_case_other",
-    otherPlaceholder: "Кратко опишите сценарий",
-  },
-  why_now: {
-    key: "why_now",
-    label: "Почему вы хотите заняться этим сейчас?",
-    type: "textarea",
-    required: false,
-    helperText: "Это поле не обязательное, но помогает понять срочность запроса.",
-    placeholder: "Количество обращений выросло, и ручная обработка уже тормозит продажи.",
-    example: "Количество обращений выросло, и ручная обработка уже тормозит продажи.",
-  },
-  current_process_description: {
-    key: "current_process_description",
-    label: "Как этот процесс выглядит сейчас?",
-    type: "textarea",
-    required: true,
-    helperText: "Опишите процесс простыми шагами: откуда приходит запрос, кто отвечает, что происходит дальше.",
-    placeholder: "Клиент оставляет заявку на сайте или пишет в WhatsApp, потом менеджер вручную уточняет детали и переносит всё в таблицу.",
-    example: "Клиент оставляет заявку на сайте или пишет в WhatsApp, потом менеджер вручную уточняет детали и переносит всё в таблицу.",
-    assistantTrigger: true,
-  },
-  current_channels: {
-    key: "current_channels",
-    label: "Через какие каналы сейчас приходят заявки и обращения?",
-    type: "multi_select",
-    required: true,
-    helperText: "Выберите все реальные каналы, которые уже работают сейчас.",
-    assistantTrigger: true,
-    options: [
-      { value: "website_form", label: "Сайт / форма" },
-      { value: "website_chat", label: "Чат на сайте" },
-      { value: "whatsapp", label: "WhatsApp" },
-      { value: "facebook_instagram", label: "Facebook / Instagram" },
-      { value: "email", label: "Email" },
-      { value: "phone", label: "Телефон" },
-      { value: "crm", label: "CRM" },
-      { value: "marketplace", label: "Маркетплейс" },
-      { value: "other", label: "Другое" },
-    ],
-    allowOther: true,
-    otherFieldKey: "current_channels_other",
-    otherPlaceholder: "Укажите другой канал",
-  },
-  current_owner_of_process: {
-    key: "current_owner_of_process",
-    label: "Кто сейчас обрабатывает этот процесс?",
-    type: "text",
-    required: false,
-    helperText: "Можно указать роль, а не конкретное имя.",
-    placeholder: "Владелец бизнеса, менеджер или администратор",
-    example: "Менеджер и владелец бизнеса",
-  },
-  main_bottleneck: {
-    key: "main_bottleneck",
-    label: "Где сейчас самый узкий участок процесса?",
-    type: "textarea",
-    required: true,
-    helperText: "Помогите выделить одно основное узкое место, а не весь список проблем.",
-    placeholder: "На этапе первого ответа и сбора информации: нужно вручную задавать одни и те же вопросы.",
-    example: "На этапе первого ответа и сбора информации: нужно вручную задавать одни и те же вопросы.",
-    assistantTrigger: true,
-  },
-  current_tools: {
-    key: "current_tools",
-    label: "Какие системы или инструменты уже используются сейчас?",
-    type: "textarea",
-    required: false,
-    helperText: "Достаточно базового перечисления: сайт, таблицы, CRM, мессенджеры.",
-    placeholder: "Сайт, Google Sheets, WhatsApp, CRM",
-    example: "Сайт, Google Sheets, WhatsApp, CRM",
-  },
-  human_approval_required: {
-    key: "human_approval_required",
-    label: "На каких этапах обязательно нужен контроль человека?",
-    type: "multi_select",
-    required: true,
-    helperText: "Это поле помогает понять, где автоматизация допустима, а где нужен контроль человека.",
-    assistantTrigger: true,
-    options: [
-      { value: "first_response", label: "Первый ответ" },
-      { value: "qualification", label: "Оценка запроса" },
-      { value: "handoff_to_work", label: "Передача в работу" },
-      { value: "price_quote", label: "Цена / коммерческое предложение" },
-      { value: "deadlines_booking", label: "Сроки / запись" },
-      { value: "documents", label: "Документы" },
-      { value: "final_client_reply", label: "Финальный ответ клиенту" },
-      { value: "not_sure", label: "Не уверен" },
-    ],
-    notesFieldKey: "human_approval_required_notes",
-    notesPlaceholder: "Можно коротко пояснить, где нужен ручной контроль и почему.",
-  },
-  sensitive_data_or_constraints: {
-    key: "sensitive_data_or_constraints",
-    label: "Есть ли чувствительные данные, ограничения или особенности, которые нужно учитывать?",
-    type: "textarea",
-    required: false,
-    helperText: "Если есть ограничения по данным, стране хранения или внутренним документам, укажите их здесь.",
-    placeholder: "Например: персональные данные клиентов, финансовая информация, внутренние документы.",
-    example: "Например: персональные данные клиентов, финансовая информация, внутренние документы.",
-  },
-  what_must_not_happen: {
-    key: "what_must_not_happen",
-    label: "Чего точно не должно происходить в такой автоматизации?",
-    type: "textarea",
-    required: true,
-    helperText: "Например: агент не должен обещать цену, сроки или писать без проверки.",
-    placeholder: "Например: нельзя отправлять сообщения без проверки, нельзя менять CRM без подтверждения.",
-    example: "Нельзя отправлять сообщения без проверки и нельзя менять CRM без подтверждения.",
-    assistantTrigger: true,
-  },
-  preferred_start_mode: {
-    key: "preferred_start_mode",
-    label: "С чего вы хотите начать?",
-    type: "select",
-    required: true,
-    helperText: "Если не уверены, безопаснее выбрать аудит, пилот или короткий вводный звонок.",
-    options: [
-      { value: "audit_review", label: "Аудит и разбор процесса" },
-      { value: "pilot_one_process", label: "Пилот на одном процессе" },
-      { value: "ai_agent_incoming_requests", label: "ИИ-агент для обработки заявок" },
-      { value: "ai_agent_customer_requests", label: "ИИ-агент для клиентских обращений" },
-      { value: "document_automation", label: "Автоматизация документооборота" },
-      { value: "discovery_call_only", label: "Пока нужен только вводный звонок" },
-      { value: "not_sure", label: "Не уверен" },
-    ],
-    assistantTrigger: true,
-  },
-  timeline_priority: {
-    key: "timeline_priority",
-    label: "Насколько срочно вы хотите начать?",
-    type: "select",
-    required: false,
-    helperText: "Можно выбрать ориентир, даже если дата пока не точная.",
-    options: [
-      { value: "asap", label: "Как можно скорее" },
-      { value: "2_4_weeks", label: "В ближайшие 2–4 недели" },
-      { value: "1_3_months", label: "В ближайшие 1–3 месяца" },
-      { value: "exploring", label: "Просто изучаю варианты" },
-    ],
-  },
-  budget_range: {
-    key: "budget_range",
-    label: "Есть ли ориентир по бюджету?",
-    type: "select",
-    required: false,
-    helperText: "Поле опциональное. Если пока без бюджета, это нормально.",
-    options: [
-      { value: "no_budget_yet", label: "Пока без бюджета" },
-      { value: "audit_first", label: "Сначала нужен аудит" },
-      { value: "up_to_1000", label: "До 1 000 €" },
-      { value: "1000_3000", label: "1 000–3 000 €" },
-      { value: "3000_10000", label: "3 000–10 000 €" },
-      { value: "10000_plus", label: "10 000 €+" },
-      { value: "prefer_to_discuss", label: "Предпочитаю обсудить" },
-    ],
-  },
-  contact_name: {
-    key: "contact_name",
-    label: "Имя",
-    type: "text",
-    required: true,
-    helperText: "Имя человека, с которым можно продолжить обсуждение.",
-    placeholder: "Иван",
-    example: "Иван",
-  },
-  contact_email: {
-    key: "contact_email",
-    label: "Email",
-    type: "email",
-    required: true,
-    helperText: "Главный канал для follow-up.",
-    placeholder: "ivan@example.com",
-    example: "ivan@example.com",
-  },
-  contact_phone_or_whatsapp: {
-    key: "contact_phone_or_whatsapp",
-    label: "Телефон / WhatsApp",
-    type: "text",
-    required: false,
-    helperText: "Можно указать один номер, если он удобен и для звонка, и для WhatsApp.",
-    placeholder: "+33 7 80 72 09 94",
-    example: "+33 7 80 72 09 94",
-  },
-  preferred_contact_method: {
-    key: "preferred_contact_method",
-    label: "Как с вами удобнее связаться?",
-    type: "select",
-    required: false,
-    helperText: "Если нет предпочтения, можно выбрать «Не важно».",
-    options: [
-      { value: "email", label: "Email" },
-      { value: "whatsapp", label: "WhatsApp" },
-      { value: "phone", label: "Телефон" },
-      { value: "meeting", label: "Созвон / meeting" },
-      { value: "no_matter", label: "Не важно" },
-    ],
-  },
-  business_type_other: {
-    key: "business_type_other",
-    label: "Уточнение типа бизнеса",
-    type: "text",
-    required: false,
-    helperText: "Заполните, если в типе бизнеса выбрано «Другое».",
-    placeholder: "Кратко опишите тип бизнеса",
-  },
-  priority_use_case_other: {
-    key: "priority_use_case_other",
-    label: "Уточнение сценария",
-    type: "text",
-    required: false,
-    helperText: "Заполните, если в сценарии выбрано «Другое».",
-    placeholder: "Кратко опишите сценарий",
-  },
-  current_channels_other: {
-    key: "current_channels_other",
-    label: "Другой канал",
-    type: "text",
-    required: false,
-    helperText: "Заполните, если в каналах выбрано «Другое».",
-    placeholder: "Укажите другой канал",
-  },
-  human_approval_required_notes: {
-    key: "human_approval_required_notes",
-    label: "Комментарий к ручному контролю",
-    type: "textarea",
-    required: false,
-    helperText: "Можно коротко пояснить, где именно нужен ручной контроль.",
-    placeholder: "Например: первый ответ можно автоматизировать, но цену и сроки должен подтверждать человек.",
-    example: "Первый ответ можно автоматизировать, но цену и сроки должен подтверждать человек.",
-  },
-};
+function createBriefFields(locale: BriefLocale): Record<BriefFieldKey, BriefFieldDefinition> {
+  if (locale === "fr") {
+    return {
+      company_name: {
+        key: "company_name",
+        label: "Nom de l’entreprise / du projet",
+        type: "text",
+        required: true,
+        helperText: "Indiquez le nom de l’entreprise, du service ou du projet.",
+        placeholder: "AzurSysTech",
+        example: "AzurSysTech",
+      },
+      website_url: {
+        key: "website_url",
+        label: "Site web",
+        type: "text",
+        required: false,
+        helperText: "Vous pouvez laisser vide s’il n’y a pas encore de site. Un simple domaine suffit, par exemple azursystech.fr.",
+        placeholder: "azursystech.fr",
+        example: "azursystech.fr",
+      },
+      business_type: {
+        key: "business_type",
+        label: "Type d’activité",
+        type: "select",
+        required: true,
+        helperText: "Choisissez la catégorie la plus proche de votre activité.",
+        assistantTrigger: true,
+        options: [
+          { value: "local_service_company", label: "Entreprise de services locale" },
+          { value: "small_office_cabinet", label: "Petit bureau / cabinet" },
+          { value: "ecommerce", label: "E-commerce" },
+          { value: "retail_store", label: "Commerce / magasin" },
+          { value: "agency_studio", label: "Agence / studio" },
+          { value: "consultant_expert_business", label: "Consultant / activité d’expertise" },
+          { value: "other", label: "Autre" },
+        ],
+        allowOther: true,
+        otherFieldKey: "business_type_other",
+        otherPlaceholder: "Décrivez brièvement l’activité",
+      },
+      target_market: {
+        key: "target_market",
+        label: "Marché / zone géographique",
+        type: "text",
+        required: false,
+        helperText: "Vous pouvez indiquer un pays, une région ou plusieurs marchés.",
+        placeholder: "France, UE",
+        example: "France, UE",
+      },
+      team_size: {
+        key: "team_size",
+        label: "Taille de l’équipe",
+        type: "select",
+        required: false,
+        helperText: "S’il n’y a pas de chiffre exact, choisissez la fourchette la plus proche.",
+        options: [
+          { value: "1", label: "1" },
+          { value: "2_5", label: "2–5" },
+          { value: "6_10", label: "6–10" },
+          { value: "11_25", label: "11–25" },
+          { value: "25_plus", label: "25+" },
+        ],
+      },
+      main_goal: {
+        key: "main_goal",
+        label: "Quel processus voulez-vous automatiser en premier ?",
+        type: "textarea",
+        required: true,
+        helperText: "Décrivez un seul processus prioritaire à améliorer en premier.",
+        placeholder: "Je veux automatiser le premier traitement des demandes qui arrivent depuis le site et WhatsApp.",
+        example: "Je veux automatiser le premier traitement des demandes qui arrivent depuis le site et WhatsApp.",
+        assistantTrigger: true,
+      },
+      main_problem: {
+        key: "main_problem",
+        label: "Quel est aujourd’hui le principal problème ?",
+        type: "textarea",
+        required: true,
+        helperText: "Indiquez où vous perdez du temps, de la visibilité ou des demandes.",
+        placeholder: "Les demandes arrivent par plusieurs canaux, une partie se perd et l’équipe répète toujours les mêmes questions.",
+        example: "Les demandes arrivent par plusieurs canaux, une partie se perd et l’équipe répète toujours les mêmes questions.",
+        assistantTrigger: true,
+      },
+      desired_result: {
+        key: "desired_result",
+        label: "Quel résultat concret voulez-vous obtenir ?",
+        type: "textarea",
+        required: true,
+        helperText: "Décrivez le résultat métier attendu, pas la stack technique.",
+        placeholder: "Je veux que les demandes soient regroupées, qualifiées puis transmises avec un résumé court.",
+        example: "Je veux que les demandes soient regroupées, qualifiées puis transmises avec un résumé court.",
+        assistantTrigger: true,
+      },
+      priority_use_case: {
+        key: "priority_use_case",
+        label: "Quel scénario est le plus important maintenant ?",
+        type: "select",
+        required: true,
+        helperText: "S’il y a plusieurs scénarios, choisissez le premier pas le plus utile.",
+        assistantTrigger: true,
+        options: [
+          { value: "website_leads", label: "Demandes venant du site" },
+          { value: "messenger_intake", label: "Premier traitement depuis le chat / les messageries" },
+          { value: "qualification", label: "Qualification initiale de la demande" },
+          { value: "customer_support", label: "Support client sur les questions récurrentes" },
+          { value: "routing", label: "Routage des demandes" },
+          { value: "follow_up", label: "Relances et rappels" },
+          { value: "document_workflow", label: "Flux documentaire standardisé" },
+          { value: "other", label: "Autre" },
+        ],
+        allowOther: true,
+        otherFieldKey: "priority_use_case_other",
+        otherPlaceholder: "Décrivez brièvement le scénario",
+      },
+      why_now: {
+        key: "why_now",
+        label: "Pourquoi traiter ce sujet maintenant ?",
+        type: "textarea",
+        required: false,
+        helperText: "Ce champ est facultatif, mais il aide à comprendre l’urgence.",
+        placeholder: "Le volume de demandes a augmenté et le traitement manuel ralentit déjà les ventes.",
+        example: "Le volume de demandes a augmenté et le traitement manuel ralentit déjà les ventes.",
+      },
+      current_process_description: {
+        key: "current_process_description",
+        label: "Comment ce processus fonctionne-t-il aujourd’hui ?",
+        type: "textarea",
+        required: true,
+        helperText: "Décrivez le flux en étapes simples : d’où vient la demande, qui répond, ce qui se passe ensuite.",
+        placeholder: "Le client remplit le formulaire du site ou écrit sur WhatsApp, puis un collaborateur clarifie les détails et reporte tout dans un tableau.",
+        example: "Le client remplit le formulaire du site ou écrit sur WhatsApp, puis un collaborateur clarifie les détails et reporte tout dans un tableau.",
+        assistantTrigger: true,
+      },
+      current_channels: {
+        key: "current_channels",
+        label: "Par quels canaux arrivent aujourd’hui les demandes et messages ?",
+        type: "multi_select",
+        required: true,
+        helperText: "Sélectionnez tous les canaux réellement utilisés aujourd’hui.",
+        assistantTrigger: true,
+        options: [
+          { value: "website_form", label: "Site / formulaire" },
+          { value: "website_chat", label: "Chat sur le site" },
+          { value: "whatsapp", label: "WhatsApp" },
+          { value: "facebook_instagram", label: "Facebook / Instagram" },
+          { value: "email", label: "Email" },
+          { value: "phone", label: "Téléphone" },
+          { value: "crm", label: "CRM" },
+          { value: "marketplace", label: "Marketplace" },
+          { value: "other", label: "Autre" },
+        ],
+        allowOther: true,
+        otherFieldKey: "current_channels_other",
+        otherPlaceholder: "Précisez l’autre canal",
+      },
+      current_owner_of_process: {
+        key: "current_owner_of_process",
+        label: "Qui gère ce processus aujourd’hui ?",
+        type: "text",
+        required: false,
+        helperText: "Vous pouvez indiquer un rôle plutôt qu’un nom précis.",
+        placeholder: "Dirigeant, manager ou administrateur",
+        example: "Manager commercial et dirigeant",
+      },
+      main_bottleneck: {
+        key: "main_bottleneck",
+        label: "Où se situe aujourd’hui le principal goulot ?",
+        type: "textarea",
+        required: true,
+        helperText: "Essayez d’isoler un point critique principal, pas toute la liste des problèmes.",
+        placeholder: "Le plus gros blocage se situe au premier traitement : il faut poser manuellement les mêmes questions à chaque demande.",
+        example: "Le plus gros blocage se situe au premier traitement : il faut poser manuellement les mêmes questions à chaque demande.",
+        assistantTrigger: true,
+      },
+      current_tools: {
+        key: "current_tools",
+        label: "Quels outils ou systèmes utilisez-vous déjà ?",
+        type: "textarea",
+        required: false,
+        helperText: "Une liste simple suffit : site, tableaux, CRM, messageries.",
+        placeholder: "Site, Google Sheets, WhatsApp, CRM",
+        example: "Site, Google Sheets, WhatsApp, CRM",
+      },
+      human_approval_required: {
+        key: "human_approval_required",
+        label: "À quelles étapes le contrôle humain reste obligatoire ?",
+        type: "multi_select",
+        required: true,
+        helperText: "Ce champ aide à distinguer ce qui peut être automatisé et ce qui doit rester validé par une personne.",
+        assistantTrigger: true,
+        options: [
+          { value: "first_response", label: "Premier message" },
+          { value: "qualification", label: "Qualification de la demande" },
+          { value: "handoff_to_work", label: "Transmission au travail" },
+          { value: "price_quote", label: "Prix / proposition commerciale" },
+          { value: "deadlines_booking", label: "Délais / prise de rendez-vous" },
+          { value: "documents", label: "Documents" },
+          { value: "final_client_reply", label: "Réponse finale au client" },
+          { value: "not_sure", label: "Je ne suis pas sûr" },
+        ],
+        notesFieldKey: "human_approval_required_notes",
+        notesPlaceholder: "Vous pouvez préciser brièvement où un contrôle manuel reste nécessaire et pourquoi.",
+      },
+      sensitive_data_or_constraints: {
+        key: "sensitive_data_or_constraints",
+        label: "Y a-t-il des données sensibles, des contraintes ou des particularités à respecter ?",
+        type: "textarea",
+        required: false,
+        helperText: "S’il existe des contraintes liées aux données, au pays d’hébergement ou aux documents internes, indiquez-les ici.",
+        placeholder: "Par exemple : données personnelles clients, informations financières, documents internes.",
+        example: "Par exemple : données personnelles clients, informations financières, documents internes.",
+      },
+      what_must_not_happen: {
+        key: "what_must_not_happen",
+        label: "Qu’est-ce qui ne doit surtout pas se produire dans cette automatisation ?",
+        type: "textarea",
+        required: true,
+        helperText: "Par exemple : l’agent ne doit pas promettre un prix, un délai ou répondre sans validation.",
+        placeholder: "Par exemple : il ne faut pas envoyer de message sans vérification, ni modifier le CRM sans validation.",
+        example: "Il ne faut pas envoyer de message sans vérification et il ne faut pas modifier le CRM sans validation.",
+        assistantTrigger: true,
+      },
+      preferred_start_mode: {
+        key: "preferred_start_mode",
+        label: "Par quoi voulez-vous commencer ?",
+        type: "select",
+        required: true,
+        helperText: "En cas d’hésitation, le plus sûr est souvent un audit, un pilote ou un court échange d’introduction.",
+        options: [
+          { value: "audit_review", label: "Audit et cadrage du processus" },
+          { value: "pilot_one_process", label: "Pilote sur un seul processus" },
+          { value: "ai_agent_incoming_requests", label: "Agent IA pour les demandes entrantes" },
+          { value: "ai_agent_customer_requests", label: "Agent IA pour les demandes clients" },
+          { value: "document_automation", label: "Automatisation documentaire" },
+          { value: "discovery_call_only", label: "Seulement un appel d’introduction pour l’instant" },
+          { value: "not_sure", label: "Je ne suis pas sûr" },
+        ],
+        assistantTrigger: true,
+      },
+      timeline_priority: {
+        key: "timeline_priority",
+        label: "À quel point est-ce urgent pour vous ?",
+        type: "select",
+        required: false,
+        helperText: "Vous pouvez choisir un repère, même si la date n’est pas encore fixée.",
+        options: [
+          { value: "asap", label: "Le plus vite possible" },
+          { value: "2_4_weeks", label: "Dans les 2 à 4 prochaines semaines" },
+          { value: "1_3_months", label: "Dans les 1 à 3 prochains mois" },
+          { value: "exploring", label: "Je regarde simplement les options" },
+        ],
+      },
+      budget_range: {
+        key: "budget_range",
+        label: "Avez-vous un ordre de budget ?",
+        type: "select",
+        required: false,
+        helperText: "Ce champ est facultatif. S’il n’y a pas encore de budget, c’est normal.",
+        options: [
+          { value: "no_budget_yet", label: "Pas encore de budget" },
+          { value: "audit_first", label: "Il faut d’abord un audit" },
+          { value: "up_to_1000", label: "Jusqu’à 1 000 €" },
+          { value: "1000_3000", label: "1 000–3 000 €" },
+          { value: "3000_10000", label: "3 000–10 000 €" },
+          { value: "10000_plus", label: "10 000 €+" },
+          { value: "prefer_to_discuss", label: "Je préfère en discuter" },
+        ],
+      },
+      contact_name: {
+        key: "contact_name",
+        label: "Nom",
+        type: "text",
+        required: true,
+        helperText: "Le nom de la personne avec qui poursuivre l’échange.",
+        placeholder: "Jean",
+        example: "Jean",
+      },
+      contact_email: {
+        key: "contact_email",
+        label: "Email",
+        type: "email",
+        required: true,
+        helperText: "Canal principal pour la suite.",
+        placeholder: "jean@example.com",
+        example: "jean@example.com",
+      },
+      contact_phone_or_whatsapp: {
+        key: "contact_phone_or_whatsapp",
+        label: "Téléphone / WhatsApp",
+        type: "text",
+        required: false,
+        helperText: "Vous pouvez indiquer un seul numéro s’il convient pour l’appel et pour WhatsApp.",
+        placeholder: "+33 7 80 72 09 94",
+        example: "+33 7 80 72 09 94",
+      },
+      preferred_contact_method: {
+        key: "preferred_contact_method",
+        label: "Quel canal préférez-vous pour la réponse ?",
+        type: "select",
+        required: false,
+        helperText: "Si vous n’avez pas de préférence, choisissez « Peu importe ».",
+        options: [
+          { value: "email", label: "Email" },
+          { value: "whatsapp", label: "WhatsApp" },
+          { value: "phone", label: "Téléphone" },
+          { value: "meeting", label: "Appel / meeting" },
+          { value: "no_matter", label: "Peu importe" },
+        ],
+      },
+      business_type_other: {
+        key: "business_type_other",
+        label: "Précision sur le type d’activité",
+        type: "text",
+        required: false,
+        helperText: "À remplir si vous avez choisi « Autre ».",
+        placeholder: "Décrivez brièvement l’activité",
+      },
+      priority_use_case_other: {
+        key: "priority_use_case_other",
+        label: "Précision sur le scénario",
+        type: "text",
+        required: false,
+        helperText: "À remplir si vous avez choisi « Autre ».",
+        placeholder: "Décrivez brièvement le scénario",
+      },
+      current_channels_other: {
+        key: "current_channels_other",
+        label: "Autre canal",
+        type: "text",
+        required: false,
+        helperText: "À remplir si vous avez choisi « Autre ».",
+        placeholder: "Précisez l’autre canal",
+      },
+      human_approval_required_notes: {
+        key: "human_approval_required_notes",
+        label: "Commentaire sur le contrôle humain",
+        type: "textarea",
+        required: false,
+        helperText: "Vous pouvez expliquer brièvement où un contrôle manuel reste nécessaire.",
+        placeholder: "Par exemple : le premier message peut être automatisé, mais le prix et les délais doivent être validés par une personne.",
+        example: "Le premier message peut être automatisé, mais le prix et les délais doivent être validés par une personne.",
+      },
+    };
+  }
+
+  return {
+    company_name: {
+      key: "company_name",
+      label: "Название компании / проекта",
+      type: "text",
+      required: true,
+      helperText: "Укажите, как называется бизнес или проект.",
+      placeholder: "AzurSysTech",
+      example: "AzurSysTech",
+    },
+    website_url: {
+      key: "website_url",
+      label: "Сайт компании",
+      type: "text",
+      required: false,
+      helperText: "Можно оставить пустым, если сайта ещё нет. Достаточно домена, например azursystech.fr.",
+      placeholder: "azursystech.fr",
+      example: "azursystech.fr",
+    },
+    business_type: {
+      key: "business_type",
+      label: "Тип бизнеса",
+      type: "select",
+      required: true,
+      helperText: "Выберите наиболее близкий тип бизнеса.",
+      assistantTrigger: true,
+      options: [
+        { value: "local_service_company", label: "Локальная сервисная компания" },
+        { value: "small_office_cabinet", label: "Небольшой офис / кабинет" },
+        { value: "ecommerce", label: "E-commerce" },
+        { value: "retail_store", label: "Розница / магазин" },
+        { value: "agency_studio", label: "Агентство / студия" },
+        { value: "consultant_expert_business", label: "Консультант / экспертный бизнес" },
+        { value: "other", label: "Другое" },
+      ],
+      allowOther: true,
+      otherFieldKey: "business_type_other",
+      otherPlaceholder: "Кратко опишите тип бизнеса",
+    },
+    target_market: {
+      key: "target_market",
+      label: "Основной рынок / география",
+      type: "text",
+      required: false,
+      helperText: "Можно указать страну, регион или несколько рынков.",
+      placeholder: "Франция, ЕС",
+      example: "Франция, ЕС",
+    },
+    team_size: {
+      key: "team_size",
+      label: "Размер команды",
+      type: "select",
+      required: false,
+      helperText: "Если точного числа нет, выберите ближайший диапазон.",
+      options: [
+        { value: "1", label: "1" },
+        { value: "2_5", label: "2–5" },
+        { value: "6_10", label: "6–10" },
+        { value: "11_25", label: "11–25" },
+        { value: "25_plus", label: "25+" },
+      ],
+    },
+    main_goal: {
+      key: "main_goal",
+      label: "Что вы хотите автоматизировать в первую очередь?",
+      type: "textarea",
+      required: true,
+      helperText: "Опишите один главный процесс, который нужно улучшить первым.",
+      placeholder: "Хочу автоматизировать первичную обработку заявок с сайта и WhatsApp.",
+      example: "Хочу автоматизировать первичную обработку заявок с сайта и WhatsApp.",
+      assistantTrigger: true,
+    },
+    main_problem: {
+      key: "main_problem",
+      label: "Какая проблема сейчас ощущается сильнее всего?",
+      type: "textarea",
+      required: true,
+      helperText: "Укажите, где сейчас теряется время, управляемость или заявки.",
+      placeholder: "Заявки приходят из разных каналов, часть теряется, а сотрудники тратят много времени на одинаковые уточнения.",
+      example: "Заявки приходят из разных каналов, часть теряется, а сотрудники тратят много времени на одинаковые уточнения.",
+      assistantTrigger: true,
+    },
+    desired_result: {
+      key: "desired_result",
+      label: "Какой результат вы хотите получить на выходе?",
+      type: "textarea",
+      required: true,
+      helperText: "Опишите результат через бизнес-эффект, а не через стек.",
+      placeholder: "Чтобы обращения автоматически собирались в одну структуру, оценивались и передавались дальше с краткой сводкой.",
+      example: "Чтобы обращения автоматически собирались в одну структуру, оценивались и передавались дальше с краткой сводкой.",
+      assistantTrigger: true,
+    },
+    priority_use_case: {
+      key: "priority_use_case",
+      label: "Какой сценарий сейчас самый важный?",
+      type: "select",
+      required: true,
+      helperText: "Если есть несколько сценариев, выберите главный первый шаг.",
+      assistantTrigger: true,
+      options: [
+        { value: "website_leads", label: "Обработка заявок с сайта" },
+        { value: "messenger_intake", label: "Первичный приём из чата / мессенджеров" },
+        { value: "qualification", label: "Первичная оценка запроса" },
+        { value: "customer_support", label: "Клиентская поддержка по типовым вопросам" },
+        { value: "routing", label: "Маршрутизация обращений" },
+        { value: "follow_up", label: "Повторные касания и напоминания" },
+        { value: "document_workflow", label: "Шаблонный документооборот" },
+        { value: "other", label: "Другое" },
+      ],
+      allowOther: true,
+      otherFieldKey: "priority_use_case_other",
+      otherPlaceholder: "Кратко опишите сценарий",
+    },
+    why_now: {
+      key: "why_now",
+      label: "Почему вы хотите заняться этим сейчас?",
+      type: "textarea",
+      required: false,
+      helperText: "Это поле не обязательное, но помогает понять срочность запроса.",
+      placeholder: "Количество обращений выросло, и ручная обработка уже тормозит продажи.",
+      example: "Количество обращений выросло, и ручная обработка уже тормозит продажи.",
+    },
+    current_process_description: {
+      key: "current_process_description",
+      label: "Как этот процесс выглядит сейчас?",
+      type: "textarea",
+      required: true,
+      helperText: "Опишите процесс простыми шагами: откуда приходит запрос, кто отвечает, что происходит дальше.",
+      placeholder: "Клиент оставляет заявку на сайте или пишет в WhatsApp, потом менеджер вручную уточняет детали и переносит всё в таблицу.",
+      example: "Клиент оставляет заявку на сайте или пишет в WhatsApp, потом менеджер вручную уточняет детали и переносит всё в таблицу.",
+      assistantTrigger: true,
+    },
+    current_channels: {
+      key: "current_channels",
+      label: "Через какие каналы сейчас приходят заявки и обращения?",
+      type: "multi_select",
+      required: true,
+      helperText: "Выберите все реальные каналы, которые уже работают сейчас.",
+      assistantTrigger: true,
+      options: [
+        { value: "website_form", label: "Сайт / форма" },
+        { value: "website_chat", label: "Чат на сайте" },
+        { value: "whatsapp", label: "WhatsApp" },
+        { value: "facebook_instagram", label: "Facebook / Instagram" },
+        { value: "email", label: "Email" },
+        { value: "phone", label: "Телефон" },
+        { value: "crm", label: "CRM" },
+        { value: "marketplace", label: "Маркетплейс" },
+        { value: "other", label: "Другое" },
+      ],
+      allowOther: true,
+      otherFieldKey: "current_channels_other",
+      otherPlaceholder: "Укажите другой канал",
+    },
+    current_owner_of_process: {
+      key: "current_owner_of_process",
+      label: "Кто сейчас обрабатывает этот процесс?",
+      type: "text",
+      required: false,
+      helperText: "Можно указать роль, а не конкретное имя.",
+      placeholder: "Владелец бизнеса, менеджер или администратор",
+      example: "Менеджер и владелец бизнеса",
+    },
+    main_bottleneck: {
+      key: "main_bottleneck",
+      label: "Где сейчас самый узкий участок процесса?",
+      type: "textarea",
+      required: true,
+      helperText: "Помогите выделить одно основное узкое место, а не весь список проблем.",
+      placeholder: "На этапе первого ответа и сбора информации: нужно вручную задавать одни и те же вопросы.",
+      example: "На этапе первого ответа и сбора информации: нужно вручную задавать одни и те же вопросы.",
+      assistantTrigger: true,
+    },
+    current_tools: {
+      key: "current_tools",
+      label: "Какие системы или инструменты уже используются сейчас?",
+      type: "textarea",
+      required: false,
+      helperText: "Достаточно базового перечисления: сайт, таблицы, CRM, мессенджеры.",
+      placeholder: "Сайт, Google Sheets, WhatsApp, CRM",
+      example: "Сайт, Google Sheets, WhatsApp, CRM",
+    },
+    human_approval_required: {
+      key: "human_approval_required",
+      label: "На каких этапах обязательно нужен контроль человека?",
+      type: "multi_select",
+      required: true,
+      helperText: "Это поле помогает понять, где автоматизация допустима, а где нужен контроль человека.",
+      assistantTrigger: true,
+      options: [
+        { value: "first_response", label: "Первый ответ" },
+        { value: "qualification", label: "Оценка запроса" },
+        { value: "handoff_to_work", label: "Передача в работу" },
+        { value: "price_quote", label: "Цена / коммерческое предложение" },
+        { value: "deadlines_booking", label: "Сроки / запись" },
+        { value: "documents", label: "Документы" },
+        { value: "final_client_reply", label: "Финальный ответ клиенту" },
+        { value: "not_sure", label: "Не уверен" },
+      ],
+      notesFieldKey: "human_approval_required_notes",
+      notesPlaceholder: "Можно коротко пояснить, где нужен ручной контроль и почему.",
+    },
+    sensitive_data_or_constraints: {
+      key: "sensitive_data_or_constraints",
+      label: "Есть ли чувствительные данные, ограничения или особенности, которые нужно учитывать?",
+      type: "textarea",
+      required: false,
+      helperText: "Если есть ограничения по данным, стране хранения или внутренним документам, укажите их здесь.",
+      placeholder: "Например: персональные данные клиентов, финансовая информация, внутренние документы.",
+      example: "Например: персональные данные клиентов, финансовая информация, внутренние документы.",
+    },
+    what_must_not_happen: {
+      key: "what_must_not_happen",
+      label: "Чего точно не должно происходить в такой автоматизации?",
+      type: "textarea",
+      required: true,
+      helperText: "Например: агент не должен обещать цену, сроки или писать без проверки.",
+      placeholder: "Например: нельзя отправлять сообщения без проверки, нельзя менять CRM без подтверждения.",
+      example: "Нельзя отправлять сообщения без проверки и нельзя менять CRM без подтверждения.",
+      assistantTrigger: true,
+    },
+    preferred_start_mode: {
+      key: "preferred_start_mode",
+      label: "С чего вы хотите начать?",
+      type: "select",
+      required: true,
+      helperText: "Если не уверены, безопаснее выбрать аудит, пилот или короткий вводный звонок.",
+      options: [
+        { value: "audit_review", label: "Аудит и разбор процесса" },
+        { value: "pilot_one_process", label: "Пилот на одном процессе" },
+        { value: "ai_agent_incoming_requests", label: "ИИ-агент для обработки заявок" },
+        { value: "ai_agent_customer_requests", label: "ИИ-агент для клиентских обращений" },
+        { value: "document_automation", label: "Автоматизация документооборота" },
+        { value: "discovery_call_only", label: "Пока нужен только вводный звонок" },
+        { value: "not_sure", label: "Не уверен" },
+      ],
+      assistantTrigger: true,
+    },
+    timeline_priority: {
+      key: "timeline_priority",
+      label: "Насколько срочно вы хотите начать?",
+      type: "select",
+      required: false,
+      helperText: "Можно выбрать ориентир, даже если дата пока не точная.",
+      options: [
+        { value: "asap", label: "Как можно скорее" },
+        { value: "2_4_weeks", label: "В ближайшие 2–4 недели" },
+        { value: "1_3_months", label: "В ближайшие 1–3 месяца" },
+        { value: "exploring", label: "Просто изучаю варианты" },
+      ],
+    },
+    budget_range: {
+      key: "budget_range",
+      label: "Есть ли ориентир по бюджету?",
+      type: "select",
+      required: false,
+      helperText: "Поле опциональное. Если пока без бюджета, это нормально.",
+      options: [
+        { value: "no_budget_yet", label: "Пока без бюджета" },
+        { value: "audit_first", label: "Сначала нужен аудит" },
+        { value: "up_to_1000", label: "До 1 000 €" },
+        { value: "1000_3000", label: "1 000–3 000 €" },
+        { value: "3000_10000", label: "3 000–10 000 €" },
+        { value: "10000_plus", label: "10 000 €+" },
+        { value: "prefer_to_discuss", label: "Предпочитаю обсудить" },
+      ],
+    },
+    contact_name: {
+      key: "contact_name",
+      label: "Имя",
+      type: "text",
+      required: true,
+      helperText: "Имя человека, с которым можно продолжить обсуждение.",
+      placeholder: "Иван",
+      example: "Иван",
+    },
+    contact_email: {
+      key: "contact_email",
+      label: "Email",
+      type: "email",
+      required: true,
+      helperText: "Главный канал для follow-up.",
+      placeholder: "ivan@example.com",
+      example: "ivan@example.com",
+    },
+    contact_phone_or_whatsapp: {
+      key: "contact_phone_or_whatsapp",
+      label: "Телефон / WhatsApp",
+      type: "text",
+      required: false,
+      helperText: "Можно указать один номер, если он удобен и для звонка, и для WhatsApp.",
+      placeholder: "+33 7 80 72 09 94",
+      example: "+33 7 80 72 09 94",
+    },
+    preferred_contact_method: {
+      key: "preferred_contact_method",
+      label: "Как с вами удобнее связаться?",
+      type: "select",
+      required: false,
+      helperText: "Если нет предпочтения, можно выбрать «Не важно».",
+      options: [
+        { value: "email", label: "Email" },
+        { value: "whatsapp", label: "WhatsApp" },
+        { value: "phone", label: "Телефон" },
+        { value: "meeting", label: "Созвон / meeting" },
+        { value: "no_matter", label: "Не важно" },
+      ],
+    },
+    business_type_other: {
+      key: "business_type_other",
+      label: "Уточнение типа бизнеса",
+      type: "text",
+      required: false,
+      helperText: "Заполните, если в типе бизнеса выбрано «Другое».",
+      placeholder: "Кратко опишите тип бизнеса",
+    },
+    priority_use_case_other: {
+      key: "priority_use_case_other",
+      label: "Уточнение сценария",
+      type: "text",
+      required: false,
+      helperText: "Заполните, если в сценарии выбрано «Другое».",
+      placeholder: "Кратко опишите сценарий",
+    },
+    current_channels_other: {
+      key: "current_channels_other",
+      label: "Другой канал",
+      type: "text",
+      required: false,
+      helperText: "Заполните, если в каналах выбрано «Другое».",
+      placeholder: "Укажите другой канал",
+    },
+    human_approval_required_notes: {
+      key: "human_approval_required_notes",
+      label: "Комментарий к ручному контролю",
+      type: "textarea",
+      required: false,
+      helperText: "Можно коротко пояснить, где именно нужен ручной контроль.",
+      placeholder: "Например: первый ответ можно автоматизировать, но цену и сроки должен подтверждать человек.",
+      example: "Первый ответ можно автоматизировать, но цену и сроки должен подтверждать человек.",
+    },
+  };
+}
+
+export function getBriefFields(locale: BriefLocale = "ru"): Record<BriefFieldKey, BriefFieldDefinition> {
+  return createBriefFields(locale);
+}
+
+export const BRIEF_FIELDS: Record<BriefFieldKey, BriefFieldDefinition> = getBriefFields("ru");
 
 const BRIEF_FIELD_RULES: BriefFieldRule[] = [
   { key: "company_name", required: true, minLength: 2, maxLength: 120 },
@@ -587,69 +948,222 @@ const BRIEF_FIELD_RULES: BriefFieldRule[] = [
   { key: "preferred_contact_method", required: false },
 ];
 
-export const BRIEF_STEPS: BriefStepDefinition[] = [
-  {
-    id: "business-context",
-    title: "О компании / бизнесе",
-    shortDescription: "Краткий контекст по компании и рынку.",
-    fields: [
-      BRIEF_FIELDS.company_name,
-      BRIEF_FIELDS.website_url,
-      BRIEF_FIELDS.business_type,
-      BRIEF_FIELDS.target_market,
-      BRIEF_FIELDS.team_size,
-    ],
+export function getBriefSteps(locale: BriefLocale = "ru"): BriefStepDefinition[] {
+  const fields = getBriefFields(locale);
+
+  if (locale === "fr") {
+    return [
+      {
+        id: "business-context",
+        title: "Entreprise et contexte",
+        shortDescription: "Contexte rapide sur l’entreprise et le marché.",
+        fields: [
+          fields.company_name,
+          fields.website_url,
+          fields.business_type,
+          fields.target_market,
+          fields.team_size,
+        ],
+      },
+      {
+        id: "goal-and-problem",
+        title: "Objectif et problème",
+        shortDescription: "Ce qu’il faut automatiser et pourquoi.",
+        fields: [
+          fields.main_goal,
+          fields.main_problem,
+          fields.desired_result,
+          fields.priority_use_case,
+          fields.why_now,
+        ],
+      },
+      {
+        id: "current-process",
+        title: "Processus actuel",
+        shortDescription: "Comment cela fonctionne aujourd’hui et où se trouve le blocage.",
+        fields: [
+          fields.current_process_description,
+          fields.current_channels,
+          fields.current_owner_of_process,
+          fields.main_bottleneck,
+        ],
+      },
+      {
+        id: "constraints-and-control",
+        title: "Contraintes et contrôle",
+        shortDescription: "Outils utilisés, limites et validation humaine.",
+        fields: [
+          fields.current_tools,
+          fields.human_approval_required,
+          fields.human_approval_required_notes,
+          fields.sensitive_data_or_constraints,
+          fields.what_must_not_happen,
+        ],
+      },
+      {
+        id: "launch-and-contact",
+        title: "Démarrage et contact",
+        shortDescription: "Quel prochain pas vous convient et comment vous recontacter.",
+        fields: [
+          fields.preferred_start_mode,
+          fields.timeline_priority,
+          fields.budget_range,
+          fields.contact_name,
+          fields.contact_email,
+          fields.contact_phone_or_whatsapp,
+          fields.preferred_contact_method,
+        ],
+      },
+    ];
+  }
+
+  return [
+    {
+      id: "business-context",
+      title: "О компании / бизнесе",
+      shortDescription: "Краткий контекст по компании и рынку.",
+      fields: [
+        fields.company_name,
+        fields.website_url,
+        fields.business_type,
+        fields.target_market,
+        fields.team_size,
+      ],
+    },
+    {
+      id: "goal-and-problem",
+      title: "О задаче и цели автоматизации",
+      shortDescription: "Что нужно автоматизировать и зачем.",
+      fields: [
+        fields.main_goal,
+        fields.main_problem,
+        fields.desired_result,
+        fields.priority_use_case,
+        fields.why_now,
+      ],
+    },
+    {
+      id: "current-process",
+      title: "О текущем процессе",
+      shortDescription: "Как всё устроено сейчас и где возникает узкое место.",
+      fields: [
+        fields.current_process_description,
+        fields.current_channels,
+        fields.current_owner_of_process,
+        fields.main_bottleneck,
+      ],
+    },
+    {
+      id: "constraints-and-control",
+      title: "Системы, ограничения и контроль",
+      shortDescription: "Какие инструменты используются и где нужен человек.",
+      fields: [
+        fields.current_tools,
+        fields.human_approval_required,
+        fields.human_approval_required_notes,
+        fields.sensitive_data_or_constraints,
+        fields.what_must_not_happen,
+      ],
+    },
+    {
+      id: "launch-and-contact",
+      title: "Запуск и контакт",
+      shortDescription: "Какой следующий шаг нужен и как удобнее связаться.",
+      fields: [
+        fields.preferred_start_mode,
+        fields.timeline_priority,
+        fields.budget_range,
+        fields.contact_name,
+        fields.contact_email,
+        fields.contact_phone_or_whatsapp,
+        fields.preferred_contact_method,
+      ],
+    },
+  ];
+}
+
+export const BRIEF_STEPS: BriefStepDefinition[] = getBriefSteps("ru");
+
+const BRIEF_COPY = {
+  fr: {
+    validation: {
+      selectAtLeastOneChannel: "Sélectionnez au moins un canal",
+      enterEmail: "Indiquez un email",
+      fillRequiredField: "Remplissez le champ obligatoire",
+      enterCompanyName: "Indiquez le nom de l’entreprise ou du projet",
+      addMoreDetails: "Ajoutez un peu plus de détails",
+      invalidPhone: "Vérifiez le numéro de téléphone",
+      answerTooLong: "Réponse trop longue",
+      selectValueFromList: "Choisissez une valeur dans la liste",
+      specifyBusinessType: "Précisez le type d’activité",
+      specifyUseCase: "Précisez le scénario",
+      specifyOtherChannel: "Précisez l’autre canal",
+      selectAtLeastOneStage: "Sélectionnez au moins une étape",
+      invalidEmailFormat: "Vérifiez le format de l’email",
+      invalidPhoneFormat: "Vérifiez le format du téléphone",
+      invalidUrlFormat: "Vérifiez le format de l’URL",
+      invalidDataFormat: "Format de données incorrect",
+    },
+    handoff: {
+      notSpecified: "Non indiqué",
+      labels: {
+        company: "Entreprise",
+        businessType: "Type d’activité",
+        goal: "Objectif",
+        problem: "Problème",
+        result: "Résultat",
+        useCase: "Scénario",
+        currentProcess: "Processus actuel",
+        channels: "Canaux",
+        bottleneck: "Goulot",
+        humanControl: "Contrôle humain",
+        forbidden: "À ne pas faire",
+        nextStep: "Prochaine étape",
+      },
+    },
   },
-  {
-    id: "goal-and-problem",
-    title: "О задаче и цели автоматизации",
-    shortDescription: "Что нужно автоматизировать и зачем.",
-    fields: [
-      BRIEF_FIELDS.main_goal,
-      BRIEF_FIELDS.main_problem,
-      BRIEF_FIELDS.desired_result,
-      BRIEF_FIELDS.priority_use_case,
-      BRIEF_FIELDS.why_now,
-    ],
+  ru: {
+    validation: {
+      selectAtLeastOneChannel: "Выберите хотя бы один канал",
+      enterEmail: "Укажите email",
+      fillRequiredField: "Заполните обязательное поле",
+      enterCompanyName: "Укажите название компании или проекта",
+      addMoreDetails: "Добавьте немного больше деталей",
+      invalidPhone: "Проверьте номер телефона",
+      answerTooLong: "Слишком длинный ответ",
+      selectValueFromList: "Выберите значение из списка",
+      specifyBusinessType: "Уточните тип бизнеса",
+      specifyUseCase: "Уточните сценарий",
+      specifyOtherChannel: "Уточните другой канал",
+      selectAtLeastOneStage: "Выберите хотя бы один этап",
+      invalidEmailFormat: "Проверьте формат email",
+      invalidPhoneFormat: "Проверьте формат телефона",
+      invalidUrlFormat: "Проверьте формат URL",
+      invalidDataFormat: "Некорректный формат данных",
+    },
+    handoff: {
+      notSpecified: "Не указано",
+      labels: {
+        company: "Компания",
+        businessType: "Тип бизнеса",
+        goal: "Цель",
+        problem: "Проблема",
+        result: "Результат",
+        useCase: "Сценарий",
+        currentProcess: "Текущий процесс",
+        channels: "Каналы",
+        bottleneck: "Узкое место",
+        humanControl: "Контроль человека",
+        forbidden: "Что не должно происходить",
+        nextStep: "Следующий шаг",
+      },
+    },
   },
-  {
-    id: "current-process",
-    title: "О текущем процессе",
-    shortDescription: "Как всё устроено сейчас и где возникает узкое место.",
-    fields: [
-      BRIEF_FIELDS.current_process_description,
-      BRIEF_FIELDS.current_channels,
-      BRIEF_FIELDS.current_owner_of_process,
-      BRIEF_FIELDS.main_bottleneck,
-    ],
-  },
-  {
-    id: "constraints-and-control",
-    title: "Системы, ограничения и контроль",
-    shortDescription: "Какие инструменты используются и где нужен человек.",
-    fields: [
-      BRIEF_FIELDS.current_tools,
-      BRIEF_FIELDS.human_approval_required,
-      BRIEF_FIELDS.human_approval_required_notes,
-      BRIEF_FIELDS.sensitive_data_or_constraints,
-      BRIEF_FIELDS.what_must_not_happen,
-    ],
-  },
-  {
-    id: "launch-and-contact",
-    title: "Запуск и контакт",
-    shortDescription: "Какой следующий шаг нужен и как удобнее связаться.",
-    fields: [
-      BRIEF_FIELDS.preferred_start_mode,
-      BRIEF_FIELDS.timeline_priority,
-      BRIEF_FIELDS.budget_range,
-      BRIEF_FIELDS.contact_name,
-      BRIEF_FIELDS.contact_email,
-      BRIEF_FIELDS.contact_phone_or_whatsapp,
-      BRIEF_FIELDS.preferred_contact_method,
-    ],
-  },
-];
+} as const;
+
+function getBriefCopy(locale: BriefLocale) {
+  return BRIEF_COPY[locale];
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -710,9 +1224,14 @@ function pickEnumValue<T extends readonly string[]>(value: unknown, options: T):
   return isOneOf(trimmed, options) ? trimmed : "";
 }
 
-function validateCommonFields(values: Record<string, unknown>, fieldKeys: BriefFieldKey[]): BriefValidationIssue[] {
+function validateCommonFields(
+  values: Record<string, unknown>,
+  fieldKeys: BriefFieldKey[],
+  locale: BriefLocale,
+): BriefValidationIssue[] {
   const issues: BriefValidationIssue[] = [];
   const fieldKeySet = new Set(fieldKeys);
+  const copy = getBriefCopy(locale).validation;
 
   for (const rule of BRIEF_FIELD_RULES) {
     if (!fieldKeySet.has(rule.key)) {
@@ -727,8 +1246,7 @@ function validateCommonFields(values: Record<string, unknown>, fieldKeys: BriefF
         if (!Array.isArray(fieldValue) || toTrimmedStringArray(fieldValue).length === 0) {
           issues.push({
             field: rule.key,
-            message:
-              "Выберите хотя бы один канал",
+            message: copy.selectAtLeastOneChannel,
           });
           continue;
         }
@@ -736,16 +1254,13 @@ function validateCommonFields(values: Record<string, unknown>, fieldKeys: BriefF
         continue;
       } else if (rule.key === "contact_email") {
         if (!trimmed) {
-          issues.push({ field: rule.key, message: "Укажите email" });
+          issues.push({ field: rule.key, message: copy.enterEmail });
           continue;
         }
       } else if (!trimmed) {
         issues.push({
           field: rule.key,
-          message:
-            rule.key === "company_name"
-              ? "Укажите название компании или проекта"
-              : "Заполните обязательное поле",
+          message: rule.key === "company_name" ? copy.enterCompanyName : copy.fillRequiredField,
         });
         continue;
       }
@@ -754,10 +1269,7 @@ function validateCommonFields(values: Record<string, unknown>, fieldKeys: BriefF
     if (trimmed && rule.minLength && trimmed.length < rule.minLength) {
       issues.push({
         field: rule.key,
-        message:
-          rule.key === "contact_phone_or_whatsapp"
-            ? "Проверьте номер телефона"
-            : "Добавьте немного больше деталей",
+        message: rule.key === "contact_phone_or_whatsapp" ? copy.invalidPhone : copy.addMoreDetails,
       });
       continue;
     }
@@ -765,7 +1277,7 @@ function validateCommonFields(values: Record<string, unknown>, fieldKeys: BriefF
     if (trimmed && rule.maxLength && trimmed.length > rule.maxLength) {
       issues.push({
         field: rule.key,
-        message: "Слишком длинный ответ",
+        message: copy.answerTooLong,
       });
     }
   }
@@ -824,39 +1336,41 @@ function validateEnumField<T extends readonly string[]>(
   value: string,
   allowed: T,
   issues: BriefValidationIssue[],
+  locale: BriefLocale,
 ) {
   if (value && !isOneOf(value, allowed)) {
-    issues.push({ field, message: "Выберите значение из списка" });
+    issues.push({ field, message: getBriefCopy(locale).validation.selectValueFromList });
   }
 }
 
-function validateBriefBusinessType(values: BriefFormValues, issues: BriefValidationIssue[]) {
-  validateEnumField("business_type", values.business_type, BRIEF_BUSINESS_TYPES, issues);
+function validateBriefBusinessType(values: BriefFormValues, issues: BriefValidationIssue[], locale: BriefLocale) {
+  validateEnumField("business_type", values.business_type, BRIEF_BUSINESS_TYPES, issues, locale);
   if (values.business_type === "other" && !hasMinLength(values.business_type_other, 2)) {
-    issues.push({ field: "business_type_other", message: "Уточните тип бизнеса" });
+    issues.push({ field: "business_type_other", message: getBriefCopy(locale).validation.specifyBusinessType });
   }
 }
 
-function validateBriefPriorityUseCase(values: BriefFormValues, issues: BriefValidationIssue[]) {
-  validateEnumField("priority_use_case", values.priority_use_case, BRIEF_PRIORITY_USE_CASES, issues);
+function validateBriefPriorityUseCase(values: BriefFormValues, issues: BriefValidationIssue[], locale: BriefLocale) {
+  validateEnumField("priority_use_case", values.priority_use_case, BRIEF_PRIORITY_USE_CASES, issues, locale);
   if (values.priority_use_case === "other" && !hasMinLength(values.priority_use_case_other, 2)) {
-    issues.push({ field: "priority_use_case_other", message: "Уточните сценарий" });
+    issues.push({ field: "priority_use_case_other", message: getBriefCopy(locale).validation.specifyUseCase });
   }
 }
 
-function validateBriefCurrentChannels(values: BriefFormValues, issues: BriefValidationIssue[]) {
+function validateBriefCurrentChannels(values: BriefFormValues, issues: BriefValidationIssue[], locale: BriefLocale) {
   if (values.current_channels.includes("other") && !hasMinLength(values.current_channels_other, 2)) {
-    issues.push({ field: "current_channels_other", message: "Уточните другой канал" });
+    issues.push({ field: "current_channels_other", message: getBriefCopy(locale).validation.specifyOtherChannel });
   }
 }
 
-function validateBriefHumanApproval(values: BriefFormValues, issues: BriefValidationIssue[]) {
+function validateBriefHumanApproval(values: BriefFormValues, issues: BriefValidationIssue[], locale: BriefLocale) {
   const hasNotes = values.human_approval_required_notes.length > 0;
+  const copy = getBriefCopy(locale).validation;
 
   if (values.human_approval_required.length === 0) {
     issues.push({
       field: "human_approval_required",
-      message: "Выберите хотя бы один этап",
+      message: copy.selectAtLeastOneStage,
     });
     return;
   }
@@ -864,24 +1378,25 @@ function validateBriefHumanApproval(values: BriefFormValues, issues: BriefValida
   if (hasNotes && values.human_approval_required_notes.length < 10) {
     issues.push({
       field: "human_approval_required_notes",
-      message: "Добавьте немного больше деталей",
+      message: copy.addMoreDetails,
     });
   }
 }
 
-function validateBriefContact(values: BriefFormValues, issues: BriefValidationIssue[]) {
+function validateBriefContact(values: BriefFormValues, issues: BriefValidationIssue[], locale: BriefLocale) {
+  const copy = getBriefCopy(locale).validation;
   if (values.contact_email && !isEmail(values.contact_email)) {
-    issues.push({ field: "contact_email", message: "Проверьте формат email" });
+    issues.push({ field: "contact_email", message: copy.invalidEmailFormat });
   }
 
   if (values.contact_phone_or_whatsapp && !hasPhoneLikeShape(values.contact_phone_or_whatsapp)) {
-    issues.push({ field: "contact_phone_or_whatsapp", message: "Проверьте формат телефона" });
+    issues.push({ field: "contact_phone_or_whatsapp", message: copy.invalidPhoneFormat });
   }
 }
 
-function validateBriefUrls(values: BriefFormValues, issues: BriefValidationIssue[]) {
+function validateBriefUrls(values: BriefFormValues, issues: BriefValidationIssue[], locale: BriefLocale) {
   if (values.website_url && !isSoftUrl(values.website_url)) {
-    issues.push({ field: "website_url", message: "Проверьте формат URL" });
+    issues.push({ field: "website_url", message: getBriefCopy(locale).validation.invalidUrlFormat });
   }
 }
 
@@ -889,58 +1404,63 @@ function validateBriefSelects(
   values: BriefFormValues,
   issues: BriefValidationIssue[],
   fieldKeySet: Set<BriefFieldKey>,
+  locale: BriefLocale,
 ) {
   if (fieldKeySet.has("team_size")) {
-    validateEnumField("team_size", values.team_size, BRIEF_TEAM_SIZES, issues);
+    validateEnumField("team_size", values.team_size, BRIEF_TEAM_SIZES, issues, locale);
   }
 
   if (fieldKeySet.has("preferred_start_mode")) {
-    validateEnumField("preferred_start_mode", values.preferred_start_mode, BRIEF_START_MODES, issues);
+    validateEnumField("preferred_start_mode", values.preferred_start_mode, BRIEF_START_MODES, issues, locale);
   }
 
   if (fieldKeySet.has("timeline_priority")) {
-    validateEnumField("timeline_priority", values.timeline_priority, BRIEF_TIMELINE_PRIORITIES, issues);
+    validateEnumField("timeline_priority", values.timeline_priority, BRIEF_TIMELINE_PRIORITIES, issues, locale);
   }
 
   if (fieldKeySet.has("budget_range")) {
-    validateEnumField("budget_range", values.budget_range, BRIEF_BUDGET_RANGES, issues);
+    validateEnumField("budget_range", values.budget_range, BRIEF_BUDGET_RANGES, issues, locale);
   }
 
   if (fieldKeySet.has("preferred_contact_method")) {
-    validateEnumField("preferred_contact_method", values.preferred_contact_method, BRIEF_CONTACT_METHODS, issues);
+    validateEnumField("preferred_contact_method", values.preferred_contact_method, BRIEF_CONTACT_METHODS, issues, locale);
   }
 
   if (fieldKeySet.has("business_type")) {
-    validateBriefBusinessType(values, issues);
+    validateBriefBusinessType(values, issues, locale);
   }
 
   if (fieldKeySet.has("priority_use_case")) {
-    validateBriefPriorityUseCase(values, issues);
+    validateBriefPriorityUseCase(values, issues, locale);
   }
 
   if (fieldKeySet.has("current_channels")) {
-    validateBriefCurrentChannels(values, issues);
+    validateBriefCurrentChannels(values, issues, locale);
   }
 
   if (fieldKeySet.has("human_approval_required")) {
-    validateBriefHumanApproval(values, issues);
+    validateBriefHumanApproval(values, issues, locale);
   }
 }
 
-function validateBriefValuesInternal(values: BriefValuesInput, fieldKeys: BriefFieldKey[]): BriefValidationResult {
+function validateBriefValuesInternal(
+  values: BriefValuesInput,
+  fieldKeys: BriefFieldKey[],
+  locale: BriefLocale,
+): BriefValidationResult {
   if (!isRecord(values)) {
     return {
       kind: "validation_error",
-      issues: [{ field: "values", message: "Некорректный формат данных" }],
+      issues: [{ field: "values", message: getBriefCopy(locale).validation.invalidDataFormat }],
     };
   }
 
   const normalized = normalizeBriefValues(values);
-  const issues = validateCommonFields(normalized, fieldKeys);
+  const issues = validateCommonFields(normalized, fieldKeys, locale);
   const fieldKeySet = new Set(fieldKeys);
 
   if (fieldKeySet.has("website_url")) {
-    validateBriefUrls(normalized, issues);
+    validateBriefUrls(normalized, issues, locale);
   }
 
   if (
@@ -954,11 +1474,11 @@ function validateBriefValuesInternal(values: BriefValuesInput, fieldKeys: BriefF
     fieldKeySet.has("current_channels") ||
     fieldKeySet.has("human_approval_required")
   ) {
-    validateBriefSelects(normalized, issues, fieldKeySet);
+    validateBriefSelects(normalized, issues, fieldKeySet, locale);
   }
 
   if (fieldKeySet.has("contact_email") || fieldKeySet.has("contact_phone_or_whatsapp")) {
-    validateBriefContact(normalized, issues);
+    validateBriefContact(normalized, issues, locale);
   }
 
   if (issues.length > 0) {
@@ -1004,23 +1524,32 @@ export function createInitialBriefValues(): BriefFormValues {
   };
 }
 
-export function validateBriefStep(values: BriefValuesInput, stepIndex: number): BriefValidationResult {
-  const step = BRIEF_STEPS[stepIndex];
+export function validateBriefStep(
+  values: BriefValuesInput,
+  stepIndex: number,
+  locale: BriefLocale = "ru",
+): BriefValidationResult {
+  const step = getBriefSteps(locale)[stepIndex];
   if (!step) {
-    return validateBriefValues(values);
+    return validateBriefValues(values, locale);
   }
 
   const fieldKeys = step.fields.map((field) => field.key);
-  return validateBriefValuesInternal(values, fieldKeys);
+  return validateBriefValuesInternal(values, fieldKeys, locale);
 }
 
-export function validateBriefValues(values: BriefValuesInput): BriefValidationResult {
-  return validateBriefValuesInternal(values, BRIEF_STEPS.flatMap((step) => step.fields.map((field) => field.key)));
+export function validateBriefValues(values: BriefValuesInput, locale: BriefLocale = "ru"): BriefValidationResult {
+  return validateBriefValuesInternal(
+    values,
+    getBriefSteps(locale).flatMap((step) => step.fields.map((field) => field.key)),
+    locale,
+  );
 }
 
-function summarizeControlNeeds(values: BriefFormValues): string {
+function summarizeControlNeeds(values: BriefFormValues, locale: BriefLocale): string {
+  const fields = getBriefFields(locale);
   const selected = values.human_approval_required
-    .map((value) => BRIEF_FIELDS.human_approval_required.options?.find((option) => option.value === value)?.label ?? value)
+    .map((value) => fields.human_approval_required.options?.find((option) => option.value === value)?.label ?? value)
     .join(", ");
   const notes = values.human_approval_required_notes;
 
@@ -1028,7 +1557,7 @@ function summarizeControlNeeds(values: BriefFormValues): string {
     return `${selected}. ${notes}`;
   }
 
-  return selected || notes || "Не указано";
+  return selected || notes || getBriefCopy(locale).handoff.notSpecified;
 }
 
 function getRecommendedNextStep(values: BriefFormValues): BriefHandoff["recommended_next_step"] {
@@ -1050,10 +1579,11 @@ function getRecommendedNextStep(values: BriefFormValues): BriefHandoff["recommen
   }
 }
 
-function buildBusinessTypeLabel(values: BriefFormValues): string {
-  const label = BRIEF_FIELDS.business_type.options?.find((option) => option.value === values.business_type)?.label;
+function buildBusinessTypeLabel(values: BriefFormValues, locale: BriefLocale): string {
+  const fields = getBriefFields(locale);
+  const label = fields.business_type.options?.find((option) => option.value === values.business_type)?.label;
   if (!label) {
-    return "Не указано";
+    return getBriefCopy(locale).handoff.notSpecified;
   }
 
   if (values.business_type === "other" && values.business_type_other) {
@@ -1063,10 +1593,11 @@ function buildBusinessTypeLabel(values: BriefFormValues): string {
   return label;
 }
 
-function buildPriorityUseCaseLabel(values: BriefFormValues): string {
-  const label = BRIEF_FIELDS.priority_use_case.options?.find((option) => option.value === values.priority_use_case)?.label;
+function buildPriorityUseCaseLabel(values: BriefFormValues, locale: BriefLocale): string {
+  const fields = getBriefFields(locale);
+  const label = fields.priority_use_case.options?.find((option) => option.value === values.priority_use_case)?.label;
   if (!label) {
-    return "Не указано";
+    return getBriefCopy(locale).handoff.notSpecified;
   }
 
   if (values.priority_use_case === "other" && values.priority_use_case_other) {
@@ -1076,64 +1607,74 @@ function buildPriorityUseCaseLabel(values: BriefFormValues): string {
   return label;
 }
 
-function buildCurrentChannelsLabel(values: BriefFormValues): string {
+function buildCurrentChannelsLabel(values: BriefFormValues, locale: BriefLocale): string {
+  const fields = getBriefFields(locale);
   const labels = values.current_channels.map((value) => {
-    const option = BRIEF_FIELDS.current_channels.options?.find((entry) => entry.value === value);
+    const option = fields.current_channels.options?.find((entry) => entry.value === value);
     return option?.label ?? value;
   });
 
   if (values.current_channels.includes("other") && values.current_channels_other) {
     const otherIndex = values.current_channels.indexOf("other");
     if (otherIndex >= 0) {
-      labels[otherIndex] = `Другое: ${values.current_channels_other}`;
+      labels[otherIndex] = `${locale === "fr" ? "Autre" : "Другое"}: ${values.current_channels_other}`;
     }
   }
 
-  return labels.join(", ") || "Не указано";
+  return labels.join(", ") || getBriefCopy(locale).handoff.notSpecified;
 }
 
-function buildHumanApprovalLabel(values: BriefFormValues): string {
-  const selections = summarizeControlNeeds(values);
+function buildHumanApprovalLabel(values: BriefFormValues, locale: BriefLocale): string {
+  const selections = summarizeControlNeeds(values, locale);
   return selections;
 }
 
-export function createBriefHandoff(values: BriefFormValues): BriefHandoff {
+export function createBriefHandoff(values: BriefFormValues, locale: BriefLocale = "ru"): BriefHandoff {
+  const fields = getBriefFields(locale);
+  const copy = getBriefCopy(locale).handoff;
   const recommendedNextStep = getRecommendedNextStep(values);
-  const timelineLabel = BRIEF_FIELDS.timeline_priority.options?.find((option) => option.value === values.timeline_priority)?.label ?? "Не указано";
-  const budgetLabel = BRIEF_FIELDS.budget_range.options?.find((option) => option.value === values.budget_range)?.label ?? "Не указано";
+  const timelineLabel =
+    fields.timeline_priority.options?.find((option) => option.value === values.timeline_priority)?.label ??
+    copy.notSpecified;
+  const budgetLabel =
+    fields.budget_range.options?.find((option) => option.value === values.budget_range)?.label ??
+    copy.notSpecified;
   const contactMethodLabel =
-    BRIEF_FIELDS.preferred_contact_method.options?.find((option) => option.value === values.preferred_contact_method)?.label;
+    fields.preferred_contact_method.options?.find((option) => option.value === values.preferred_contact_method)?.label;
 
   const summaryParts = [
-    `Компания: ${values.company_name || "не указано"}`,
-    `Тип бизнеса: ${buildBusinessTypeLabel(values)}`,
-    `Цель: ${values.main_goal || "не указано"}`,
-    `Проблема: ${values.main_problem || "не указано"}`,
-    `Результат: ${values.desired_result || "не указано"}`,
-    `Сценарий: ${buildPriorityUseCaseLabel(values)}`,
-    `Текущий процесс: ${values.current_process_description || "не указано"}`,
-    `Каналы: ${buildCurrentChannelsLabel(values)}`,
-    `Узкое место: ${values.main_bottleneck || "не указано"}`,
-    `Контроль человека: ${buildHumanApprovalLabel(values)}`,
-    `Что не должно происходить: ${values.what_must_not_happen || "не указано"}`,
-    `Следующий шаг: ${BRIEF_FIELDS.preferred_start_mode.options?.find((option) => option.value === values.preferred_start_mode)?.label ?? "Не указано"}`,
+    `${copy.labels.company}: ${values.company_name || copy.notSpecified}`,
+    `${copy.labels.businessType}: ${buildBusinessTypeLabel(values, locale)}`,
+    `${copy.labels.goal}: ${values.main_goal || copy.notSpecified}`,
+    `${copy.labels.problem}: ${values.main_problem || copy.notSpecified}`,
+    `${copy.labels.result}: ${values.desired_result || copy.notSpecified}`,
+    `${copy.labels.useCase}: ${buildPriorityUseCaseLabel(values, locale)}`,
+    `${copy.labels.currentProcess}: ${values.current_process_description || copy.notSpecified}`,
+    `${copy.labels.channels}: ${buildCurrentChannelsLabel(values, locale)}`,
+    `${copy.labels.bottleneck}: ${values.main_bottleneck || copy.notSpecified}`,
+    `${copy.labels.humanControl}: ${buildHumanApprovalLabel(values, locale)}`,
+    `${copy.labels.forbidden}: ${values.what_must_not_happen || copy.notSpecified}`,
+    `${copy.labels.nextStep}: ${
+      fields.preferred_start_mode.options?.find((option) => option.value === values.preferred_start_mode)?.label ??
+      copy.notSpecified
+    }`,
   ];
 
   return {
     company_name: values.company_name,
-    business_type: buildBusinessTypeLabel(values),
+    business_type: buildBusinessTypeLabel(values, locale),
     main_goal: values.main_goal,
     main_problem: values.main_problem,
     desired_result: values.desired_result,
-    priority_use_case: buildPriorityUseCaseLabel(values),
+    priority_use_case: buildPriorityUseCaseLabel(values, locale),
     current_process_description: values.current_process_description,
-    current_channels: buildCurrentChannelsLabel(values),
+    current_channels: buildCurrentChannelsLabel(values, locale),
     main_bottleneck: values.main_bottleneck,
-    human_approval_required: buildHumanApprovalLabel(values),
+    human_approval_required: buildHumanApprovalLabel(values, locale),
     what_must_not_happen: values.what_must_not_happen,
     preferred_start_mode:
-      BRIEF_FIELDS.preferred_start_mode.options?.find((option) => option.value === values.preferred_start_mode)?.label ??
-      "Не указано",
+      fields.preferred_start_mode.options?.find((option) => option.value === values.preferred_start_mode)?.label ??
+      copy.notSpecified,
     timeline_priority: timelineLabel,
     budget_range: budgetLabel,
     contact: {
@@ -1150,6 +1691,7 @@ export function createBriefHandoff(values: BriefFormValues): BriefHandoff {
 export function buildBriefSubmissionPayload(
   values: BriefFormValues,
   metadata: Partial<BriefSubmissionMetadata> & { created_at?: string } = {},
+  locale: BriefLocale = "ru",
 ): BriefSubmissionPayload {
   const createdAt = metadata.created_at ?? new Date().toISOString();
   const normalizedMetadata: BriefSubmissionMetadata = {
@@ -1164,19 +1706,22 @@ export function buildBriefSubmissionPayload(
     schema_version: BRIEF_SCHEMA_VERSION,
     source: BRIEF_SOURCE,
     route: BRIEF_ROUTE,
-    locale: BRIEF_LOCALE,
+    locale,
     created_at: createdAt,
     brief: values,
     metadata: normalizedMetadata,
-    crm_handoff: createBriefHandoff(values),
+    crm_handoff: createBriefHandoff(values, locale),
   };
 }
 
-export function getBriefValidationIssues(values: BriefValuesInput): BriefValidationIssue[] {
-  const result = validateBriefValues(values);
+export function getBriefValidationIssues(values: BriefValuesInput, locale: BriefLocale = "ru"): BriefValidationIssue[] {
+  const result = validateBriefValues(values, locale);
   return result.kind === "validation_error" ? result.issues : [];
 }
 
-export function getBriefFieldDefinition(key: BriefFieldKey): BriefFieldDefinition {
-  return BRIEF_FIELDS[key];
+export function getBriefFieldDefinition(
+  key: BriefFieldKey,
+  locale: BriefLocale = "ru",
+): BriefFieldDefinition {
+  return getBriefFields(locale)[key];
 }

@@ -3,8 +3,9 @@
 import { useState, type FormEvent } from "react";
 
 import {
-  BRIEF_STEPS,
   createInitialBriefValues,
+  getBriefSteps,
+  type BriefLocale,
   type BriefFormValues,
   type BriefValidationIssue,
   validateBriefStep,
@@ -41,11 +42,62 @@ function firstIssueField(
   return first.field as keyof BriefFormValues;
 }
 
-function findStepIndexForField(fieldKey: keyof BriefFormValues) {
-  return BRIEF_STEPS.findIndex((step) => step.fields.some((field) => field.key === fieldKey));
+const FORM_COPY = {
+  fr: {
+    successEyebrow: "Brief reçu",
+    successTitle: "Merci, le brief a été envoyé",
+    successIntro:
+      "Nous allons relire le brief manuellement et revenir vers vous avec le prochain pas. Cela ne signifie pas une acceptation automatique du projet, ni une garantie de prix, de délais ou de résultat.",
+    resetButton: "Remplir un autre brief",
+    directButton: "Contacter directement",
+    tip:
+      "Si une question n’est pas claire, cliquez sur le symbole ? à côté du champ. L’aide permet de formuler une réponse courte sans détail excessif.",
+    backButton: "Retour",
+    nextStepHint:
+      "Une fois l’étape remplie, vous pouvez continuer sans perdre les réponses déjà saisies.",
+    finalStepHint: "Avant l’envoi, vérifiez les coordonnées et les limites de l’automatisation.",
+    submitting: "Envoi en cours...",
+    continue: "Continuer",
+    submit: "Envoyer le brief",
+    footerNote:
+      "Le brief sert uniquement à une première revue. Le prix, les délais et l’acceptation du projet ne peuvent être discutés qu’après une revue manuelle.",
+    submitErrors: {
+      generic: "Impossible d’envoyer le brief. Vérifiez la connexion et réessayez.",
+    },
+  },
+  ru: {
+    successEyebrow: "Бриф получен",
+    successTitle: "Спасибо, бриф отправлен",
+    successIntro:
+      "Мы посмотрим бриф вручную и вернёмся со следующим шагом. Это не означает автоматическое принятие проекта, гарантию цены, сроков или результата.",
+    resetButton: "Заполнить ещё один бриф",
+    directButton: "Связаться напрямую",
+    tip:
+      "Если вопрос непонятен, нажмите ? рядом с полем. Подсказка поможет сформулировать короткий ответ без лишней детализации.",
+    backButton: "Назад",
+    nextStepHint: "После заполнения шага можно перейти дальше, не теряя уже введённые ответы.",
+    finalStepHint: "Перед отправкой проверьте контактные данные и границы автоматизации.",
+    submitting: "Отправляем...",
+    continue: "Продолжить",
+    submit: "Отправить бриф",
+    footerNote:
+      "Мы используем бриф только для первичной проверки. Цену, сроки и принятие проекта можно обсуждать только после ручной проверки.",
+    submitErrors: {
+      generic: "Не удалось отправить бриф. Проверьте соединение и попробуйте ещё раз.",
+    },
+  },
+} as const;
+
+function findStepIndexForField(
+  fieldKey: keyof BriefFormValues,
+  steps: ReturnType<typeof getBriefSteps>,
+) {
+  return steps.findIndex((step) => step.fields.some((field) => field.key === fieldKey));
 }
 
-export function BriefForm() {
+export function BriefForm({ locale }: { locale: BriefLocale }) {
+  const steps = getBriefSteps(locale);
+  const copy = FORM_COPY[locale];
   const [values, setValues] = useState<BriefFormValues>(() => createInitialBriefValues());
   const [currentStep, setCurrentStep] = useState(0);
   const [fieldErrors, setFieldErrors] = useState<BriefErrorMap>({});
@@ -53,7 +105,7 @@ export function BriefForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  const currentStepDefinition = BRIEF_STEPS[currentStep];
+  const currentStepDefinition = steps[currentStep];
 
   function setErrorMap(issues: BriefValidationIssue[]) {
     setFieldErrors(issuesToErrorMap(issues));
@@ -65,7 +117,7 @@ export function BriefForm() {
       return;
     }
 
-    const stepIndex = findStepIndexForField(firstField);
+    const stepIndex = findStepIndexForField(firstField, steps);
     if (stepIndex >= 0 && stepIndex !== currentStep) {
       setCurrentStep(stepIndex);
     }
@@ -105,7 +157,7 @@ export function BriefForm() {
   }
 
   function validateStep(stepIndex: number, nextValues: BriefFormValues) {
-    const result = validateBriefStep(nextValues, stepIndex);
+    const result = validateBriefStep(nextValues, stepIndex, locale);
 
     if (result.kind === "validation_error") {
       setErrorMap(result.issues);
@@ -129,6 +181,7 @@ export function BriefForm() {
         },
         body: JSON.stringify({
           values: nextValues,
+          locale,
           ai_assist_used: false,
           assistant_interaction_count: 0,
         }),
@@ -159,13 +212,13 @@ export function BriefForm() {
       }
 
       if (!response.ok) {
-        setSubmitMessage("Не удалось отправить бриф. Проверьте соединение и попробуйте ещё раз.");
+        setSubmitMessage(copy.submitErrors.generic);
         return;
       }
 
-      setSubmitMessage("Не удалось отправить бриф. Проверьте соединение и попробуйте ещё раз.");
+      setSubmitMessage(copy.submitErrors.generic);
     } catch {
-      setSubmitMessage("Не удалось отправить бриф. Проверьте соединение и попробуйте ещё раз.");
+      setSubmitMessage(copy.submitErrors.generic);
     } finally {
       setIsSubmitting(false);
     }
@@ -183,7 +236,7 @@ export function BriefForm() {
       return;
     }
 
-    if (currentStep < BRIEF_STEPS.length - 1) {
+    if (currentStep < steps.length - 1) {
       const nextStep = currentStep + 1;
       setCurrentStep(nextStep);
       setSubmitMessage("");
@@ -191,7 +244,7 @@ export function BriefForm() {
       return;
     }
 
-    const finalResult = validateBriefValues(stepValues);
+    const finalResult = validateBriefValues(stepValues, locale);
     if (finalResult.kind === "validation_error") {
       setErrorMap(finalResult.issues);
       focusIssue(finalResult.issues);
@@ -225,17 +278,16 @@ export function BriefForm() {
   return (
     <div className="mx-auto max-w-4xl space-y-4">
       <div className="space-y-4">
-        <BriefProgress steps={BRIEF_STEPS} currentStep={currentStep} />
+        <BriefProgress steps={steps} currentStep={currentStep} locale={locale} />
 
         {submitSuccess ? (
           <section className="rounded-[1.75rem] border border-[#D8D0C4] bg-[#FFFDF8] p-5 shadow-[0_18px_55px_rgba(23,35,49,0.08)] sm:p-6">
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#1F6F78]">
-              Бриф получен
+              {copy.successEyebrow}
             </p>
-            <h2 className="mt-2 text-2xl font-semibold text-[#1F2A37]">Спасибо, бриф отправлен</h2>
+            <h2 className="mt-2 text-2xl font-semibold text-[#1F2A37]">{copy.successTitle}</h2>
             <p className="mt-3 max-w-2xl text-base leading-7 text-[#5C6670]">
-              Мы посмотрим бриф вручную и вернёмся со следующим шагом. Это не означает
-              автоматическое принятие проекта, гарантию цены, сроков или результата.
+              {copy.successIntro}
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <button
@@ -243,13 +295,13 @@ export function BriefForm() {
                 className="inline-flex items-center justify-center rounded-full bg-[#1F6F78] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#18565D]"
                 onClick={resetBrief}
               >
-                Заполнить ещё один бриф
+                {copy.resetButton}
               </button>
               <a
                 href="/#contact"
                 className="inline-flex items-center justify-center rounded-full border border-[#D8D0C4] bg-white px-5 py-3 text-sm font-semibold text-[#1F2A37] transition-colors hover:bg-[#F6F1E8]"
               >
-                Связаться напрямую
+                {copy.directButton}
               </a>
             </div>
           </section>
@@ -267,9 +319,15 @@ export function BriefForm() {
                 {currentStepDefinition.shortDescription}
               </p>
               <p className="max-w-2xl rounded-2xl border border-[#D8D0C4] bg-white/70 px-3 py-2 text-sm leading-6 text-[#5C6670]">
-                Если вопрос непонятен, нажмите <span className="font-semibold text-[#1F6F78]">?</span>{" "}
-                рядом с полем. Подсказка поможет сформулировать короткий ответ без лишней
-                детализации.
+                {copy.tip.split("?").length > 1 ? (
+                  <>
+                    {copy.tip.split("?")[0]}
+                    <span className="font-semibold text-[#1F6F78]">?</span>
+                    {copy.tip.slice(copy.tip.indexOf("?") + 1)}
+                  </>
+                ) : (
+                  copy.tip
+                )}
               </p>
             </div>
 
@@ -288,6 +346,7 @@ export function BriefForm() {
                     otherValue={typeof otherFieldValue === "string" ? otherFieldValue : ""}
                     error={fieldErrors[field.key]}
                     otherError={otherFieldKey ? fieldErrors[otherFieldKey] : undefined}
+                    locale={locale}
                     onValueChange={updateField}
                     onListToggle={toggleListValue}
                   />
@@ -302,14 +361,12 @@ export function BriefForm() {
                 onClick={handleBack}
                 disabled={currentStep === 0 || isSubmitting}
               >
-                Назад
+                {copy.backButton}
               </button>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <p className="text-sm leading-6 text-[#5C6670] sm:max-w-sm">
-                  {currentStep < BRIEF_STEPS.length - 1
-                    ? "После заполнения шага можно перейти дальше, не теряя уже введённые ответы."
-                    : "Перед отправкой проверьте контактные данные и границы автоматизации."}
+                  {currentStep < steps.length - 1 ? copy.nextStepHint : copy.finalStepHint}
                 </p>
                 <button
                   type="submit"
@@ -317,10 +374,10 @@ export function BriefForm() {
                   disabled={isSubmitting}
                 >
                   {isSubmitting
-                    ? "Отправляем..."
-                    : currentStep < BRIEF_STEPS.length - 1
-                      ? "Продолжить"
-                      : "Отправить бриф"}
+                    ? copy.submitting
+                    : currentStep < steps.length - 1
+                      ? copy.continue
+                      : copy.submit}
                 </button>
               </div>
             </div>
@@ -339,8 +396,7 @@ export function BriefForm() {
             ) : null}
 
             <p className="mt-4 text-sm leading-6 text-[#5C6670]">
-              Мы используем бриф только для первичной проверки. Цену, сроки и принятие проекта
-              можно обсуждать только после ручной проверки.
+              {copy.footerNote}
             </p>
           </form>
         )}
