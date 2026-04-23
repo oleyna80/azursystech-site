@@ -1,5 +1,43 @@
 # Progress Log - AzurSysTech
 
+## 2026-04-23: Multilingual baseline for public chat assistant
+
+### Done
+
+- Extended chat-widget payload to send the active `locale` together with:
+  - current `message`
+  - recent `history`
+- Updated `/api/chat` to resolve the response language from:
+  - explicit widget locale first;
+  - current/recent user message language as fallback.
+- Replaced the hardcoded Russian-only chat prompt rule with a locale-aware system prompt.
+- Made chat fallback and policy messages locale-aware for `fr` and `ru`:
+  - unavailable
+  - rate limit
+  - security rejection
+  - policy/review fallback
+  - CTA
+  - ambiguity clarification templates
+- Extended post-generation guardrails so French replies are checked too for:
+  - fabricated links
+  - overpromises
+  - autonomous outbound
+  - pricing commitments
+  - scheduling commitments
+
+### Validation
+
+- Pending Verifier-stage checks for:
+  - `git diff --check`
+  - `cd web && npm run check:types`
+  - targeted local `/api/chat` probes for `fr` and `ru`
+  - history-aware multi-turn smoke
+
+### Notes
+
+- This block changes only chat language behavior.
+- It does not change chat handoff architecture, storage, transcript persistence, or widget locale reactivity.
+
 ## 2026-04-23: FR/RU baseline added for legal utility pages
 
 ### Done
