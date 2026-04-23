@@ -1,5 +1,32 @@
 # Progress Log - AzurSysTech
 
+## 2026-04-23: FR/RU baseline added for legal utility pages
+
+### Done
+
+- Added cookie-aware FR/RU localization baseline for:
+  - `/legal`
+  - `/privacy`
+  - `/terms`
+- Implemented route-local metadata for all three legal utility pages.
+- Kept legal facts and public contact values unchanged.
+- Avoided using the existing global legal/privacy dictionary as the content source, because it still contains outdated launch-baseline references.
+- Brought privacy copy in line with the current SSOT:
+  - no claim that `n8n` or `Google Sheets` are the current primary intake system of record;
+  - contact form and chat are described in a way that stays consistent with the current runtime baseline.
+
+### Validation
+
+- Pending Verifier-stage checks for:
+  - `git diff --check`
+  - `cd web && npm run check:types`
+  - local browser smoke for `/legal`, `/privacy`, `/terms`
+
+### Notes
+
+- This block localizes only the legal utility routes.
+- It does not refactor `web/src/i18n.js` legal dictionaries.
+
 ## 2026-04-23: FR/RU baseline added for FAQ and contact conversion path
 
 ### Done
