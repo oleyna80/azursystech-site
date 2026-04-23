@@ -2922,3 +2922,30 @@ Residual risks / untested areas:
 ### Notes
 
 - This pass changes backend reply-shaping only; no deploy was performed in this block.
+
+## 2026-04-23: FR localization baseline for homepage and shared shell
+
+### Done
+
+- Reworked the homepage `web/src/app/page.tsx` so visible copy now follows a client-side RU/FR locale baseline instead of staying hardcoded in Russian.
+- Localized the shared shell for the same baseline:
+  - `web/src/components/shell/site-header.tsx`
+  - `web/src/components/shell/site-footer.tsx`
+- Added a compact RU/FR language switcher in the header and persisted the selected locale through the existing storage key.
+- Updated homepage contact section copy in `web/src/components/sections/home-contact.tsx` so the visible form, helper text and success state follow the active RU/FR locale.
+- Updated `web/src/app/layout.tsx` so the default document language and homepage metadata align with the existing `fr` default locale.
+- Switched the baseline locale source of truth from client-only state to a server-readable cookie for the homepage and shared shell:
+  - the header writes the locale cookie and triggers a route refresh;
+  - `layout.tsx` now reads locale from cookie for `html lang`;
+  - homepage metadata is generated server-side from the same locale source.
+
+### Validation
+
+- Pending verifier pass for:
+  - final `git diff --check`
+  - final `cd /home/dmitrii/azursystech/web && npm run check:types`
+  - final local homepage smoke in RU/FR after the cookie-based metadata fix
+
+### Notes
+
+- This remains a no-locale-route baseline. It adds a server-readable locale cookie for the homepage and shared shell, but still does not introduce locale-prefixed routes or full server-side locale negotiation.

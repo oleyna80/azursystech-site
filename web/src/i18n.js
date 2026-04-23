@@ -1,5 +1,6 @@
 export const DEFAULT_LOCALE = 'fr';
 export const LOCALE_STORAGE_KEY = 'azursystech.locale';
+export const LOCALE_COOKIE_KEY = LOCALE_STORAGE_KEY;
 
 const SUPPORTED_LOCALES = ['fr', 'ru', 'en'];
 
@@ -1095,6 +1096,10 @@ function isSupportedLocale(value) {
     return SUPPORTED_LOCALES.includes(value);
 }
 
+export function resolveLocale(value) {
+    return isSupportedLocale(value) ? value : DEFAULT_LOCALE;
+}
+
 function getNestedValue(object, path) {
     return path.split('.').reduce((acc, key) => acc?.[key], object);
 }
@@ -1102,7 +1107,7 @@ function getNestedValue(object, path) {
 export function readStoredLocale() {
     try {
         const storedValue = window.localStorage.getItem(LOCALE_STORAGE_KEY);
-        return isSupportedLocale(storedValue) ? storedValue : DEFAULT_LOCALE;
+        return resolveLocale(storedValue);
     } catch {
         return DEFAULT_LOCALE;
     }
@@ -1136,7 +1141,7 @@ export function createTranslator(locale) {
 }
 
 export function getPageMeta(locale, pathname) {
-    const dictionary = dictionaries[locale] ?? dictionaries[DEFAULT_LOCALE];
+    const dictionary = dictionaries[resolveLocale(locale)] ?? dictionaries[DEFAULT_LOCALE];
 
     if (pathname === '/legal') {
         return dictionary.meta.legal;
