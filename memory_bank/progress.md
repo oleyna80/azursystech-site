@@ -1,5 +1,30 @@
 # Progress Log - AzurSysTech
 
+## 2026-04-23: Local dev API origin allowlist updated for port 3001
+
+### Done
+
+- Extended the default API origin allowlist in `web/src/proxy.ts` to include local dev origins on port `3001`:
+  - `http://localhost:3001`
+  - `http://127.0.0.1:3001`
+- Kept the existing production origins unchanged.
+- Kept the existing policy contract unchanged:
+  - `ALLOWED_ORIGINS` env still overrides defaults;
+  - requests without `Origin` still pass through;
+  - non-allowlisted browser origins still return `403`.
+
+### Validation
+
+- Pending Verifier-stage checks for:
+  - `git diff --check`
+  - `cd web && npm run check:types`
+  - browser-origin `/api/chat` probe from `http://127.0.0.1:3001`
+
+### Notes
+
+- This block fixes only the local dev port mismatch for API origin policy.
+- It does not change chat business logic, locale behavior, or production deploy state.
+
 ## 2026-04-23: Multilingual baseline for public chat assistant
 
 ### Done

@@ -6,6 +6,8 @@ const DEFAULT_ALLOWED_ORIGINS = [
   "https://www.azursystech.fr",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
+  "http://localhost:3001",
+  "http://127.0.0.1:3001",
 ];
 
 function getAllowedOrigins(): Set<string> {
