@@ -25,6 +25,21 @@ data/*.csv
 
 # Model/indexing noise
 .git/
+.agent/
+AGENTS.md
+Claude.md
+memory_bank/
+docs/.active_ticket
+docs/AGENT_MODEL_ROUTING.md
+docs/backlog.md
+docs/content-status.md
+docs/decisions-log.md
+docs/project-notes.md
+docs/plans/
+docs/reports/
+docs/sdd_templates/
+docs/specs/
+docs/tasklist/
 docs/reports/git/stash-backups/*.patch
 .cache/
 .codex

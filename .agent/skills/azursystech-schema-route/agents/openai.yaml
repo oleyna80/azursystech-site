@@ -1,4 +1,0 @@
-interface:
-  display_name: "AzurSysTech Schema Route"
-  short_description: "Build schema-bound AzurSysTech routes without UI/API drift."
-  default_prompt: "Implement a schema-bound AzurSysTech route with shared validation, payload, helper UI, and verification gates."
