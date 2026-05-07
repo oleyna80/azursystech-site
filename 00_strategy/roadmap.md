@@ -1,8 +1,8 @@
 # Roadmap: AzurSysTech (SSOT-aligned)
-_version: v1.0_
+_version: v1.1_
 _owner: Tech Lead / Control Tower_
 _execution model: stage-gated orchestration with internal subagents (`Reviewer` -> `Coder` -> `Verifier`)_
-_last sync: 2026-04-16_
+_last sync: 2026-05-07_
 
 ---
 
@@ -46,13 +46,18 @@ Business positioning в launch-контуре: business-first (TPE/малый б
 - `AZR-003-007` - done
 - `AZR-003-010` - done (historical launch activation path)
 - `AZR-003-012` - done
+- `AZR-003-013` - done (public phone / WhatsApp consistency sync)
 - `AZR-003-014` - done (SQL-first runtime proof confirmed on VPS)
+- `AZR-003-011` - done (AI widget live integration + Telegram notification baseline)
+- `/ai-automation` and `/brief` - implemented in `web` as the current AI automation conversion path
 
-### 3.2 Open queue (execution order)
+### 3.2 Current open queue (execution order)
 
-1. `AZR-003-013` - `todo` (contact/phone consistency sync across current `web` baseline and docs)
-2. `AZR-003-011` - `todo` (AI widget live integration + Telegram notification on `web`, backend events path)
-3. `AZR-003-008` - `todo` (deferred improvements separation; depends on `AZR-003-011`)
+1. Page-by-page QA and cleanup of the current public `web` site:
+   - core conversion path: `/`, `/ai-automation`, `/brief`, `/contact`;
+   - then `/business`, `/services`, service detail pages, `/about`, `/faq`, `/pricing`, and legal/utility pages.
+2. `AZR-003-008` - `todo` (separate deferred improvements from the launch-ready baseline).
+3. CRM / HubSpot remains deferred until intake and page-QA baseline are stable.
 
 ---
 
@@ -68,18 +73,19 @@ Acceptance:
 
 Status: completed.
 
-### Phase 1 - Post-launch execution (in progress)
+### Phase 1 - Post-launch QA and cleanup (in progress)
 
 Scope:
 
-- закрыть `AZR-003-013`;
-- выполнить `AZR-003-011`;
-- после этого закрыть `AZR-003-008`.
+- finish page-by-page QA for the current public `web` site;
+- fix QA/lint/browser-smoke findings that affect the active conversion path;
+- close `AZR-003-008` by separating deferred improvements from launch-ready baseline.
 
 Acceptance:
 
-- контактные данные консистентны в `web` и текущих docs;
-- AI widget/Telegram интегрированы без нарушения launch AI policy;
+- current public pages have explicit QA verdicts;
+- contact/brief paths keep SQL-first intake and manual-review constraints;
+- no launch-critical blocker is hidden in deferred backlog;
 - deferred backlog отделен от launch-critical queue.
 
 Status: in progress.
@@ -105,5 +111,5 @@ Status: deferred.
 
 - Не переключать deploy/runtime target с `web` без отдельного решения control layer.
 - Не возвращать `n8n`/Sheets в статус mandatory primary intake.
-- Не смешивать launch-critical и deferred scope в одном execution pass.
+- Не смешивать page-QA, launch-critical, deferred и `AZR-004` social automation scope в одном execution pass.
 - Не ослаблять AI runtime policy (no autonomous outbound, no pricing/scheduling commitments).

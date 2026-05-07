@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { LOCALE_COOKIE_KEY } from "@/i18n";
 
 type HeaderLocale = "fr" | "ru";
@@ -47,7 +47,7 @@ const HEADER_COPY = {
 export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [locale, setLocale] = useState<HeaderLocale>(initialLocale);
-  const pathname = usePathname();
+  const [pendingLocaleCookie, setPendingLocaleCookie] = useState<HeaderLocale | null>(null);
   const router = useRouter();
   const copy = HEADER_COPY[locale];
 
@@ -84,15 +84,24 @@ export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
     };
   }, [isMenuOpen]);
 
+  useEffect(() => {
+    if (!pendingLocaleCookie) {
+      return;
+    }
+
+    document.cookie = `${LOCALE_COOKIE_KEY}=${pendingLocaleCookie}; path=/; max-age=31536000; samesite=lax`;
+    router.refresh();
+    setPendingLocaleCookie(null);
+  }, [pendingLocaleCookie, router]);
+
   const handleLocaleChange = (nextLocale: HeaderLocale) => {
     if (nextLocale === locale) {
       return;
     }
 
-    document.cookie = `${LOCALE_COOKIE_KEY}=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
     setLocale(nextLocale);
     setIsMenuOpen(false);
-    router.refresh();
+    setPendingLocaleCookie(nextLocale);
   };
 
   return (
