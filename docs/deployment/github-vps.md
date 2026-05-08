@@ -31,7 +31,8 @@ npm run check:ci
 
 ## 2) Build and push image from WSL
 
-Login to the private registry before pushing:
+Login to the private registry before pushing. Use a dedicated classic GitHub
+PAT for WSL image publishing, not the VPS read-only token:
 
 ```bash
 docker login ghcr.io
@@ -62,11 +63,15 @@ Install on VPS:
 - Docker Engine
 - Docker Compose plugin
 
-Login to the private registry:
+Login to the private registry with a dedicated classic GitHub PAT that has only
+`read:packages`:
 
 ```bash
-docker login ghcr.io
+cd /home/dmitrii/azursystech
+./scripts/vps-ghcr-login.sh
 ```
+
+Credential runbook: `docs/deployment/ghcr-credentials-runbook.md`.
 
 Create a runtime-only app directory:
 

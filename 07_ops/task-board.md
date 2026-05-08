@@ -41,7 +41,8 @@
 ## Blocked
 
 - no active launch-critical blocker is recorded in the current SSOT
-- latest local changes are not deployed yet; commit, push, and deploy require explicit Owner approval
+- deploy now uses WSL-built GHCR images and VPS `docker compose pull`; future deploys still require explicit Owner approval
+- VPS GHCR credential should be rotated from the temporary broad login to a dedicated `read:packages` token
 - do not start new work in `frontend_mvp` unless explicitly opened as a sandbox/reference task
 - do not mix the dirty `AZR-004` social automation stream into `AZR-003` page QA
 
@@ -67,7 +68,7 @@
   - runtime adapter for `v1` transport contract `site → n8n` (ADR-016)
   - historical HubSpot MVP property mapping locked as phase-2 reference (ADR-017)
 - AI runtime MVP scaffolded and aligned with DeepSeek contract (ADR-007)
-- VPS delivery live with Docker and GitHub Actions
+- VPS delivery live with Docker registry-pull deploy; GitHub remains portfolio/source repo, not the production deploy source
 - deploy assumptions confirmed for `azursystech.fr`
 - multi-agent operating model standardized (ADR-012)
 - launch contact baseline confirmed (ADR-008): form + phone + WhatsApp + site chat
