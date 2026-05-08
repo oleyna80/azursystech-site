@@ -28,10 +28,7 @@ services:
         max-file: "3"
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: azursystech-app:vps
+    image: ${APP_IMAGE:?APP_IMAGE is required}
     container_name: azursystech-app
     environment:
       HOSTNAME: 0.0.0.0
