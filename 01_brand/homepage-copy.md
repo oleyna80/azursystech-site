@@ -315,8 +315,9 @@ AzurSysTech — это практичный локальный IT-сервис �
 
 ### Important note
 Номер телефона и WhatsApp для launch baseline:
-- `+33 7 80 72 09 94`
-- `https://wa.me/33780720994`
+- текущий: `+33 7 80 72 09 94`
+- текущий WhatsApp: `https://wa.me/33780720994`
+- устаревший / legacy reference: `+33 7 49 70 54 65`, `https://wa.me/33749705465`
 
 Tech Lead should use these values as current launch contact baseline.
 

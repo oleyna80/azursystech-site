@@ -20,10 +20,15 @@
 - [ ] Google Business Profile created
 - [ ] Facebook page published
 - [ ] Contact form tested end-to-end
+- [ ] SQL intake schema applied in runtime environment
+- [ ] SQL intake write verified with test lead
 - [ ] Analytics tracking verified
-- [ ] Google Sheets intake sheet ready
-- [ ] n8n intake workflow ready for live submit path
-- [ ] n8n write to Google Sheets verified with test lead
+
+## Optional Automation (Non-Blocking)
+
+- [x] Google Sheets intake sheet ready
+- [x] n8n intake workflow ready for live submit path
+- [x] n8n write to Google Sheets verified with test lead
 
 ## Post-Launch
 

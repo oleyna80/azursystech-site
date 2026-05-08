@@ -340,7 +340,7 @@ If email provided:
 Если задача срочная, можно дополнительно связаться через WhatsApp: `+33 7 80 72 09 94`.
 
 ### Important note
-Phone and WhatsApp are available for launch and should be supported as visible contact options.
+Phone and WhatsApp are available for launch and should be supported as visible contact options. Current public number: `+33 7 80 72 09 94`.
 
 ---
 

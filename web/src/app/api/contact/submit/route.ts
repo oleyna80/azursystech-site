@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
+import { cookies } from "next/headers";
 
 import {
   type ContactSubmitPayload,
   type ContactSubmitApiResult,
+  getContactSubmitRouteCopy,
   getSubmitFallbackMessage,
+  resolveContactLocale,
   validateAndBuildContactPayload,
 } from "@/lib/contact-submit";
+import { LOCALE_COOKIE_KEY } from "@/i18n";
 import {
   getIntakeStorageMode,
   isSqlStorageEnabled,
@@ -14,6 +18,7 @@ import {
   recordLeadEvent,
 } from "@/lib/intake-storage";
 import { isRateLimitedPersistent } from "@/lib/request-rate-limit";
+import { sendTelegramLeadNotification } from "@/lib/telegram-notify";
 
 type IntegrationResult =
   | { kind: "success"; requestId: string }
@@ -39,6 +44,15 @@ type UpstreamFailureResponse = {
 
 type IntegrationDispatchContext = {
   idempotencyKey: string;
+};
+
+type NotificationDispatchContext = {
+  leadId: string | null;
+  inserted: boolean;
+  payload: ContactSubmitPayload;
+  requestId: string;
+  storageMode: string;
+  integrationKind: "accepted" | "integration_not_ready" | "submit_failed";
 };
 
 const CONTRACT_VERSION = "1";
@@ -235,11 +249,55 @@ async function safeRecordLeadEvent(
   }
 }
 
+async function sendTelegramNotificationForNewLead(context: NotificationDispatchContext): Promise<void> {
+  if (!context.leadId || !context.inserted) {
+    return;
+  }
+
+  const telegramResult = await sendTelegramLeadNotification({
+    requestId: context.requestId,
+    leadId: context.leadId,
+    payload: context.payload,
+    integrationOutcome: context.integrationKind,
+  });
+
+  if (telegramResult.status === "skipped") {
+    return;
+  }
+
+  if (telegramResult.status === "sent") {
+    await safeRecordLeadEvent(context.leadId, "notification.telegram.sent", {
+      request_id: context.requestId,
+      storage_mode: context.storageMode,
+      integration_kind: context.integrationKind,
+      telegram_message_id: telegramResult.messageId,
+    });
+    return;
+  }
+
+  await safeRecordLeadEvent(context.leadId, "notification.telegram.failed", {
+    request_id: context.requestId,
+    storage_mode: context.storageMode,
+    integration_kind: context.integrationKind,
+    error: telegramResult.error,
+    ...(typeof telegramResult.httpStatus === "number"
+      ? { telegram_http_status: telegramResult.httpStatus }
+      : {}),
+    ...(typeof telegramResult.telegramErrorCode === "number"
+      ? { telegram_error_code: telegramResult.telegramErrorCode }
+      : {}),
+  });
+}
+
 export async function POST(request: Request) {
+  const cookieStore = await cookies();
+  const fallbackLocale = resolveContactLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const fallbackCopy = getContactSubmitRouteCopy(fallbackLocale);
+
   if (isRequestBodyTooLarge(request)) {
     return jsonResult(413, {
       status: "submit_failed",
-      userMessage: "Слишком большой запрос. Уточните заявку короче и попробуйте снова.",
+      userMessage: fallbackCopy.tooLarge,
     });
   }
 
@@ -254,7 +312,7 @@ export async function POST(request: Request) {
   if (isRateLimited) {
     return jsonResult(429, {
       status: "submit_failed",
-      userMessage: "Слишком много отправок подряд. Пожалуйста, подождите минуту и попробуйте снова.",
+      userMessage: fallbackCopy.rateLimited,
     });
   }
 
@@ -265,24 +323,30 @@ export async function POST(request: Request) {
   } catch {
     return jsonResult(400, {
       status: "validation_error",
-      userMessage: "Не удалось прочитать данные формы. Проверьте заполнение и попробуйте ещё раз.",
-      issues: [{ field: "form", message: "Некорректный формат формы" }],
+      userMessage: fallbackCopy.unreadableForm,
+      issues: [{ field: "form", message: fallbackCopy.unreadableFormIssue }],
     });
   }
 
-  const validated = validateAndBuildContactPayload(formData);
+  const requestLocale = resolveContactLocale(
+    typeof formData.get("locale") === "string"
+      ? (formData.get("locale") as string)
+      : cookieStore.get(LOCALE_COOKIE_KEY)?.value,
+  );
+  const copy = getContactSubmitRouteCopy(requestLocale);
+  const validated = validateAndBuildContactPayload(formData, requestLocale);
 
   if (validated.kind === "spam_detected") {
     return jsonResult(200, {
       status: "spam_detected",
-      userMessage: "Заявка отклонена системой анти-спам. Используйте телефон, WhatsApp или email для связи.",
+      userMessage: copy.spamDetected,
     });
   }
 
   if (validated.kind === "validation_error") {
     return jsonResult(400, {
       status: "validation_error",
-      userMessage: "Проверьте обязательные поля и попробуйте отправить заявку снова.",
+      userMessage: copy.validationFailed,
       issues: validated.issues,
     });
   }
@@ -293,6 +357,7 @@ export async function POST(request: Request) {
   const receivedAtUtc = new Date();
   const sqlStorageEnabled = isSqlStorageEnabled(intakeStorageMode);
   let leadId: string | null = null;
+  let inserted = false;
 
   if (sqlStorageEnabled) {
     try {
@@ -303,11 +368,12 @@ export async function POST(request: Request) {
         receivedAtUtc,
       });
       leadId = persistedLead.leadId;
+      inserted = persistedLead.inserted;
     } catch {
       console.error("Lead persistence failed");
       return jsonResult(502, {
         status: "submit_failed",
-        userMessage: getSubmitFallbackMessage(),
+        userMessage: getSubmitFallbackMessage(requestLocale),
       });
     }
   }
@@ -320,16 +386,24 @@ export async function POST(request: Request) {
       request_id: requestId,
       storage_mode: intakeStorageMode,
     });
+    await sendTelegramNotificationForNewLead({
+      leadId,
+      inserted,
+      payload: validated.payload,
+      requestId,
+      storageMode: intakeStorageMode,
+      integrationKind: "integration_not_ready",
+    });
     if (intakeStorageMode === "sql_primary") {
       return jsonResult(200, {
         status: "success",
-        userMessage: "Заявка отправлена.",
+        userMessage: copy.success,
       });
     }
 
     return jsonResult(503, {
       status: "integration_not_ready",
-      userMessage: getSubmitFallbackMessage(),
+      userMessage: getSubmitFallbackMessage(requestLocale),
     });
   }
 
@@ -338,16 +412,24 @@ export async function POST(request: Request) {
       request_id: requestId,
       storage_mode: intakeStorageMode,
     });
+    await sendTelegramNotificationForNewLead({
+      leadId,
+      inserted,
+      payload: validated.payload,
+      requestId,
+      storageMode: intakeStorageMode,
+      integrationKind: "submit_failed",
+    });
     if (intakeStorageMode === "sql_primary") {
       return jsonResult(200, {
         status: "success",
-        userMessage: "Заявка отправлена.",
+        userMessage: copy.success,
       });
     }
 
     return jsonResult(502, {
       status: "submit_failed",
-      userMessage: getSubmitFallbackMessage(),
+      userMessage: getSubmitFallbackMessage(requestLocale),
     });
   }
 
@@ -356,9 +438,17 @@ export async function POST(request: Request) {
     upstream_request_id: integrationResult.requestId,
     storage_mode: intakeStorageMode,
   });
+  await sendTelegramNotificationForNewLead({
+    leadId,
+    inserted,
+    payload: validated.payload,
+    requestId,
+    storageMode: intakeStorageMode,
+    integrationKind: "accepted",
+  });
 
   return jsonResult(200, {
     status: "success",
-    userMessage: "Заявка отправлена.",
+    userMessage: copy.success,
   });
 }

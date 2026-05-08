@@ -149,6 +149,58 @@ Script markers:
 - `DB_SSL_ROLLOUT_ROLLBACK ...`
 - `DB_SSL_ROLLOUT_OK ...`
 
+## 6.2) Secure PostgreSQL access from WSL via SSH tunnel
+
+`postgres` remains non-public. `docker-compose.vps.yml` binds DB only to VPS loopback:
+
+```yaml
+ports:
+  - "127.0.0.1:5432:5432"
+```
+
+Start tunnel from WSL:
+
+```bash
+VPS_HOST=178.156.212.10
+VPS_USER=dmitrii
+SSH_KEY=/home/dmitrii/.ssh/hardwarelab_deploy
+LOCAL_DB_PORT=15432
+
+ssh -fN -i "$SSH_KEY" \
+  -o ExitOnForwardFailure=yes \
+  -o ServerAliveInterval=30 \
+  -o ServerAliveCountMax=3 \
+  -L ${LOCAL_DB_PORT}:127.0.0.1:5432 \
+  ${VPS_USER}@${VPS_HOST}
+```
+
+Or use repo helper:
+
+```bash
+cd /home/dmitrii/azursystech
+./scripts/vps-db-tunnel.sh start
+./scripts/vps-db-tunnel.sh status
+./scripts/vps-db-tunnel.sh test
+```
+
+Verify from WSL:
+
+```bash
+psql -h 127.0.0.1 -p 15432 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "select now();"
+```
+
+Stop tunnel:
+
+```bash
+pkill -f "ssh .*15432:127.0.0.1:5432.*dmitrii@178.156.212.10"
+```
+
+Safety check (should stay closed externally):
+
+```bash
+timeout 3 bash -lc '</dev/tcp/178.156.212.10/5432' && echo OPEN || echo CLOSED
+```
+
 ## 7) Runtime contract
 
 - `app`: Next.js standalone runtime on `:3000`, health endpoint `GET /health`

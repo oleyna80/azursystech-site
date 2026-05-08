@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import { ChatWidgetContainer } from "@/components/chat-widget";
 import { SiteFooter } from "@/components/shell/site-footer";
 import { SiteHeader } from "@/components/shell/site-header";
+import { DEFAULT_LOCALE, getPageMeta, LOCALE_COOKIE_KEY, resolveLocale } from "@/i18n";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,25 +17,34 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const defaultMeta = getPageMeta(DEFAULT_LOCALE, "/");
+
 export const metadata: Metadata = {
-  title: "AzurSysTech",
-  description: "IT-помощь для малого бизнеса и частных клиентов в Nice и рядом.",
+  title: defaultMeta.title,
+  description: defaultMeta.description,
 };
 
-export default function RootLayout({
+function resolveShellLocale(value: string | undefined) {
+  return resolveLocale(value) === "ru" ? "ru" : "fr";
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const locale = resolveShellLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+
   return (
-    <html lang="ru">
+    <html lang={locale}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <div className="flex min-h-screen flex-col bg-[#F6F1E8] text-[#1F2A37]">
-          <SiteHeader />
+          <SiteHeader initialLocale={locale} />
           <div className="flex-1">{children}</div>
-          <SiteFooter />
+          <SiteFooter locale={locale} />
           <ChatWidgetContainer />
         </div>
       </body>

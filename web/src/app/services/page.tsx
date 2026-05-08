@@ -173,6 +173,13 @@ export default function ServicesPage() {
             локальная сеть, принтеры, новые компьютеры и выездная IT-помощь. Приоритет на
             старте - практичные задачи малого бизнеса и TPE.
           </p>
+          <p className="mt-3 max-w-4xl text-sm leading-6 text-[#1F2A37]/80">
+            Для задач по обработке входящих обращений и repeatable workflows доступна отдельная{" "}
+            <Link className="font-semibold text-[#1F6F78] underline" href="/ai-automation">
+              страница AI-автоматизации
+            </Link>
+            .
+          </p>
         </section>
 
         <section className="rounded-2xl border border-[#D8D0C4] bg-[#FFFDFC] p-8 shadow-sm">

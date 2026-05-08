@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AzurSysTech Web
 
-## Getting Started
+This directory contains the production website for AzurSysTech.
 
-First, run the development server:
+## Stack
+
+- Next.js `16.2.3`
+- React `19.2.3`
+- TypeScript
+- Tailwind CSS
+- PostgreSQL client via `pg`
+- Docker standalone build for VPS deployment
+
+## Local Development
 
 ```bash
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Checks
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Run before committing frontend/runtime changes:
 
-## Learn More
+```bash
+npm run lint
+npm run check:types
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+Full CI-style check:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run check:ci
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+`check:ci` includes `npm audit --omit=dev --audit-level=high`, which requires npm registry access.
 
-## Deploy on Vercel
+## Important Routes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Route | Purpose |
+| --- | --- |
+| `/` | Homepage |
+| `/contact` | Main contact/intake form |
+| `/ai-automation` | AI automation service/pillar page |
+| `/brief` | AI automation discovery brief |
+| `/api/contact/submit` | Contact/intake submit endpoint |
+| `/api/brief/submit` | Brief submit endpoint |
+| `/api/chat` | Website chat API |
+| `/health` | Runtime health check |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Runtime Notes
+
+- Contact intake storage mode is controlled by `INTAKE_STORAGE_MODE`.
+- SQL-primary intake requires `DATABASE_URL`.
+- Chat live mode is gated by `AI_LAUNCH_MODE` and safety flags.
+- Telegram lead notifications are optional and controlled by `AZURSYSTECH_TELEGRAM_*` variables.
+- Real production values must not be committed.
+
+Use `.env.vps.example` at the repository root as the public runtime template.
+
+## VPS / Docker
+
+The VPS build uses the repository-root files:
+
+- `Dockerfile`
+- `docker-compose.vps.yml`
+- `nginx.proxy.conf`
+
+Deployment and backup runbooks live in `docs/deployment/`.

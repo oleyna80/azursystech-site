@@ -3,6 +3,20 @@ import React, { useState, useRef, useEffect } from 'react';
 const CONTACT_PHONE = '+33 7 80 72 09 94';
 const CONTACT_PHONE_HREF = 'tel:+33780720994';
 const WHATSAPP_HREF = 'https://wa.me/33780720994';
+const MAX_INPUT_LENGTH = 1000;
+const MAX_RENDERED_MESSAGE_LENGTH = 2000;
+const MAX_HISTORY_ITEMS = 6;
+
+const sanitizeMessageContent = (content) => {
+  if (typeof content !== 'string') {
+    return '';
+  }
+
+  return content
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .trim()
+    .slice(0, MAX_RENDERED_MESSAGE_LENGTH);
+};
 
 export default function ChatWidget({ locale, t }) {
   const initialAssistantMessage = { role: 'assistant', content: t('chat.welcome') };
@@ -42,10 +56,23 @@ export default function ChatWidget({ locale, t }) {
   const buildChatSummary = () => {
     const userMessages = messages
       .filter((msg) => msg.role === 'user')
-      .map((msg) => msg.content.trim())
+      .map((msg) => sanitizeMessageContent(msg.content))
       .filter(Boolean);
 
     return userMessages.join('\n').slice(0, 1500);
+  };
+
+  const buildRequestHistory = () => {
+    const welcomeMessage = sanitizeMessageContent(t('chat.welcome'));
+
+    return messages
+      .map((msg) => ({
+        role: msg?.role === 'user' ? 'user' : msg?.role === 'assistant' ? 'assistant' : '',
+        content: sanitizeMessageContent(msg?.content),
+      }))
+      .filter((msg) => (msg.role === 'user' || msg.role === 'assistant') && Boolean(msg.content))
+      .filter((msg, index) => !(index === 0 && msg.role === 'assistant' && msg.content === welcomeMessage))
+      .slice(-MAX_HISTORY_ITEMS);
   };
 
   useEffect(() => {
@@ -85,9 +112,11 @@ export default function ChatWidget({ locale, t }) {
 
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    const trimmedInput = input.trim();
+    if (!trimmedInput || isLoading || trimmedInput.length > MAX_INPUT_LENGTH) return;
 
-    const userMsg = input.trim();
+    const userMsg = sanitizeMessageContent(trimmedInput).slice(0, MAX_INPUT_LENGTH);
+    const history = buildRequestHistory();
     setInput('');
     setChatErrorKey('');
     setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
@@ -97,7 +126,7 @@ export default function ChatWidget({ locale, t }) {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMsg })
+        body: JSON.stringify({ message: userMsg, history, locale })
       });
 
       if (res.status === 429) {
@@ -111,9 +140,10 @@ export default function ChatWidget({ locale, t }) {
       }
 
       const data = await res.json();
+      const safeReply = sanitizeMessageContent(data.reply || data.message || '...');
       setChatErrorKey('');
-      setMessages(prev => [...prev, { role: 'assistant', content: data.reply || data.message || '...' }]);
-    } catch (err) {
+      setMessages(prev => [...prev, { role: 'assistant', content: safeReply || '...' }]);
+    } catch {
       setChatErrorKey('unavailable');
       setMessages(prev => [...prev, { role: 'assistant', content: t('chat.unavailable') }]);
     } finally {
@@ -181,7 +211,7 @@ export default function ChatWidget({ locale, t }) {
         setHandoffErrorKey('submitError');
         return;
       }
-    } catch (err) {
+    } catch {
       setHandoffErrorKey('networkError');
     } finally {
       setHandoffLoading(false);
@@ -383,7 +413,7 @@ export default function ChatWidget({ locale, t }) {
                   ? 'bg-accent-teal text-white rounded-br-none'
                   : 'bg-base border border-graphite/5 text-graphite/80 rounded-bl-none'
                   }`}>
-                  {msg.content}
+                  {sanitizeMessageContent(msg.content)}
                 </div>
               </div>
             ))}
@@ -420,13 +450,14 @@ export default function ChatWidget({ locale, t }) {
               <input
                 type="text"
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => setInput(e.target.value.slice(0, MAX_INPUT_LENGTH))}
+                maxLength={MAX_INPUT_LENGTH}
                 placeholder={t('chat.inputPlaceholder')}
                 className="flex-1 bg-surface border border-graphite/10 rounded-xl px-4 py-2 text-sm text-graphite focus:outline-none focus:border-accent-teal"
               />
               <button
                 type="submit"
-                disabled={!input.trim() || isLoading}
+                disabled={!input.trim() || isLoading || input.trim().length > MAX_INPUT_LENGTH}
                 className="w-10 h-10 flex flex-shrink-0 items-center justify-center bg-accent-teal text-white rounded-xl disabled:opacity-50"
               >
                 <span className="text-base font-bold">&gt;</span>

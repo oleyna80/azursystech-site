@@ -1,85 +1,115 @@
-# Roadmap: система продвижения IT-услуг во Франции
-_version: v0.1_
-_owner: Marketing Lead (ChatGPT)
-_execution: Tech Lead in Google Antigravity
-_format: phased roadmap + deliverables + acceptance criteria
+# Roadmap: AzurSysTech (SSOT-aligned)
+_version: v1.1_
+_owner: Tech Lead / Control Tower_
+_execution model: stage-gated orchestration with internal subagents (`Reviewer` -> `Coder` -> `Verifier`)_
+_last sync: 2026-05-07_
 
 ---
 
-## 1. Цель проекта
+## 1. Цель и рамки
 
-Построить рабочую систему привлечения клиентов для услуг:
+Собрать и стабилизировать рабочий локальный lead engine для AzurSysTech на базе текущего production baseline:
 
-- dépannage informatique
-- installation et configuration PC / laptops
-- configuration réseau local / Wi-Fi
-- imprimantes réseau / dossiers partagés
-- maintenance postes de travail
-- installation OS / logiciels / base de données simple
-- réparation et upgrade PC / ноутбуков
-- support pour particuliers et petites entreprises
+- сайт и runtime baseline: `web` (Next.js);
+- intake baseline: backend-first SQL (`web -> PostgreSQL`);
+- `n8n` + Google Sheets: optional secondary automation/export contour;
+- CRM: deferred to phase 2.
 
-Система должна приводить лиды из:
-
-- Facebook Page / Facebook Groups
-- сайт-визитка
-- Google Business Profile
-- входящие сообщения / форма сайта
-
-И частично автоматизировать:
-
-- генерацию контента
-- первичную квалификацию лида
-- подготовку ответов
-- сбор лидов в CRM / pipeline
+Business positioning в launch-контуре: business-first (TPE/малый бизнес) с fallback intake для non-business запросов.
 
 ---
 
-## 2. Стратегическая модель
+## 2. Текущий baseline
 
-### 2.1. Основная гипотеза
-Для старта лучше всего зайдут 2 сегмента:
+### 2.1 Runtime и intake
 
-1. **Particuliers**
-   - dépannage PC
-   - Wi-Fi
-   - imprimantes
-   - installation nouveau PC
-   - sauvegarde / migration
+- Current deploy/runtime target: `web`.
+- Primary intake path: `/api/contact/submit` in `web` with SQL-first persistence.
+- System of record: PostgreSQL (`intake_leads`, `intake_lead_events`, `intake_conversations`, `intake_conversation_messages`).
+- `n8n`/Sheets не являются обязательным launch intake path; используются как secondary contour при необходимости.
 
-2. **TPE / petits commerces / indépendants**
-   - postes de travail
-   - réseau local
-   - Wi-Fi
-   - imprimantes
-   - partages réseau
-   - maintenance légère
-   - installation et mise en service
+### 2.2 Операционная модель выполнения
 
-### 2.2. Каналы acquisition
-Приоритет запуска:
+- Control layer: `Tech Lead / Control Tower`.
+- Execution path: internal subagents.
+- Обязательный stage gate: переход к следующему stage только после explicit approval.
+- Любой AI output считается draft до explicit approval.
 
-1. сайт-визитка
-2. Facebook Page
-3. Facebook Groups
-4. Google Business Profile
-5. локальные объявления / каталоги / Leboncoin Services
-6. AI-assisted lead handling
+---
 
-### 2.3. Логика воронки
-```text
-Контент / объявления
-    ↓
-Переход на сайт / Messenger / WhatsApp
-    ↓
-Форма / intake
-    ↓
-AI qualification
-    ↓
-Твоя проверка
-    ↓
-Devis / call / visite
-    ↓
-Intervention
-    ↓
-Avis client / testimonial / case
+## 3. Статус AZR-003 (на текущий момент)
+
+### 3.1 Completed launch-critical path
+
+- `AZR-003-001` - done
+- `AZR-003-006` - done
+- `AZR-003-007` - done
+- `AZR-003-010` - done (historical launch activation path)
+- `AZR-003-012` - done
+- `AZR-003-013` - done (public phone / WhatsApp consistency sync)
+- `AZR-003-014` - done (SQL-first runtime proof confirmed on VPS)
+- `AZR-003-011` - done (AI widget live integration + Telegram notification baseline)
+- `/ai-automation` and `/brief` - implemented in `web` as the current AI automation conversion path
+
+### 3.2 Current open queue (execution order)
+
+1. Page-by-page QA and cleanup of the current public `web` site:
+   - core conversion path: `/`, `/ai-automation`, `/brief`, `/contact`;
+   - then `/business`, `/services`, service detail pages, `/about`, `/faq`, `/pricing`, and legal/utility pages.
+2. `AZR-003-008` - `todo` (separate deferred improvements from the launch-ready baseline).
+3. CRM / HubSpot remains deferred until intake and page-QA baseline are stable.
+
+---
+
+## 4. Phased roadmap (practical)
+
+### Phase 0 - Stabilized launch baseline (completed)
+
+Acceptance:
+
+- `web` закреплен как unambiguous runtime baseline.
+- SQL-first intake работает и подтвержден runtime-proof.
+- Legal/privacy/terms и business-first copy baseline синхронизированы.
+
+Status: completed.
+
+### Phase 1 - Post-launch QA and cleanup (in progress)
+
+Scope:
+
+- finish page-by-page QA for the current public `web` site;
+- fix QA/lint/browser-smoke findings that affect the active conversion path;
+- close `AZR-003-008` by separating deferred improvements from launch-ready baseline.
+
+Acceptance:
+
+- current public pages have explicit QA verdicts;
+- contact/brief paths keep SQL-first intake and manual-review constraints;
+- no launch-critical blocker is hidden in deferred backlog;
+- deferred backlog отделен от launch-critical queue.
+
+Status: in progress.
+
+### Phase 2 - CRM and extended automation (deferred)
+
+Scope:
+
+- CRM onboarding (HubSpot or alternative) после стабилизации intake и AI widget path;
+- расширение automation/reporting поверх SQL baseline (включая optional n8n/Sheets scenarios).
+
+Acceptance:
+
+- CRM не блокирует primary intake path;
+- SQL baseline остается source of truth;
+- интеграции не нарушают stage-gated operating model.
+
+Status: deferred.
+
+---
+
+## 5. Constraints и non-goals
+
+- Не переключать deploy/runtime target с `web` без отдельного решения control layer.
+- Не возвращать `n8n`/Sheets в статус mandatory primary intake.
+- Не смешивать page-QA, launch-critical, deferred и `AZR-004` social automation scope в одном execution pass.
+- Не ослаблять AI runtime policy (no autonomous outbound, no pricing/scheduling commitments).

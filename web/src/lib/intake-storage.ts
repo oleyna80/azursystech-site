@@ -21,6 +21,8 @@ type PersistLeadSubmissionResult = {
 };
 
 let pool: Pool | null = null;
+const DATABASE_SSL_MODES = ["disable", "require", "verify-full"] as const;
+type DatabaseSslMode = (typeof DATABASE_SSL_MODES)[number];
 
 function isIntakeStorageMode(value: string): value is IntakeStorageMode {
   return (INTAKE_STORAGE_MODES as readonly string[]).includes(value);
@@ -48,10 +50,40 @@ function getDatabaseUrl(): string {
   return databaseUrl;
 }
 
+function getDatabaseSslMode(): DatabaseSslMode {
+  const rawMode = process.env.DATABASE_SSL_MODE?.trim().toLowerCase();
+  if (!rawMode) {
+    return "disable";
+  }
+
+  if ((DATABASE_SSL_MODES as readonly string[]).includes(rawMode)) {
+    return rawMode as DatabaseSslMode;
+  }
+
+  throw new Error(
+    `Invalid DATABASE_SSL_MODE: "${rawMode}". Supported values: ${DATABASE_SSL_MODES.join(", ")}`,
+  );
+}
+
+function getDatabaseSslConfig(): false | { rejectUnauthorized: boolean } {
+  const sslMode = getDatabaseSslMode();
+
+  if (sslMode === "disable") {
+    return false;
+  }
+
+  if (sslMode === "require") {
+    return { rejectUnauthorized: false };
+  }
+
+  return { rejectUnauthorized: true };
+}
+
 function getPool(): Pool {
   if (!pool) {
     pool = new Pool({
       connectionString: getDatabaseUrl(),
+      ssl: getDatabaseSslConfig(),
       max: 10,
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 5_000,

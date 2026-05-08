@@ -2,30 +2,48 @@
 
 ## Current Phase
 
-- `site closure + go-live preparation`
-- active ticket target: `AZR-003 go-live readiness`
+- `post-launch / go-live hardening + page-by-page QA`
+- active ticket target: `AZR-003 go-live readiness / post-launch QA`
 - previous ticket `AZR-002 website MVP implementation` — **closed** (25/25 tasks done)
+- launch-critical `AZR-003` path is closed; current work is QA cleanup and deferred-improvement separation
+- current website/design/runtime baseline: `web`
+- `frontend_mvp` is historical/reference only after design transfer to `web`
 
 ## Now
 
-- fully close the website scope before new integrations
-- keep remaining AZR-003 blockers visible (legal identity, GBP readiness)
-- prepare the next downstream step as `site -> n8n -> Google Sheets`
+- keep `web` as the canonical launch website baseline
+- prepare a clean release decision for the current local changes:
+  - publishable AZR-003 docs/QA sync and lint fixes are one scope
+  - AZR-004 social automation / VPS / schema changes are a separate scope
+- continue page-by-page QA after the core conversion path:
+  - `/`
+  - `/ai-automation`
+  - `/brief`
+  - `/contact`
+- verify that contact/brief paths keep the backend-first SQL intake and manual-review constraints documented in SSOT
+- keep launch-safe AI constraints enforced:
+  - no autonomous outbound
+  - no pricing commitments
+  - no scheduling promises
 
 ## Next
 
-- implement `/about` trust/founder page
-- implement SEO service landing pages: `/services/new-pc-setup`, `/services/wifi-printer`, `/services/tpe-setup`, `/services/onsite-support`
-- prepare legal/privacy pages for real data injection when founder closes `AZR-003-001`
-- enable live intake path `site -> n8n -> Google Sheets`
-- add AI widget live integration and Telegram notification after the intake path is stable
+- continue page-by-page QA after the core path:
+  - `/business`
+  - `/services` and service detail pages
+  - `/about`
+  - `/faq`
+  - `/pricing`
+  - legal and utility pages
+- close `AZR-003-008`: separate deferred improvements from launch-ready baseline
+- update tasklist and Memory Bank after accepted QA verdicts
 
 ## Blocked
 
-- public legal publishability depends on founder closing `AZR-003-001` (legal identity data)
-- GBP / reviews readiness open under `AZR-003-006` (founder)
-- end-to-end lead intake blocked until VPS/n8n stream configures webhook + Google Sheets write target
-- go/no-go review (`AZR-003-007`) depends on AZR-003-001 + AZR-003-006
+- no active launch-critical blocker is recorded in the current SSOT
+- latest local changes are not deployed yet; commit, push, and deploy require explicit Owner approval
+- do not start new work in `frontend_mvp` unless explicitly opened as a sandbox/reference task
+- do not mix the dirty `AZR-004` social automation stream into `AZR-003` page QA
 
 ## Later
 
@@ -34,6 +52,7 @@
 - broader service page expansion beyond MVP SEO set
 - CRM implementation and automation
 - broader AI runtime automation beyond draft-assist mode
+- social automation runtime work continues under separate `AZR-004` stream
 - cleanup of non-critical stale tails in legacy docs
 
 ## Done
@@ -53,4 +72,11 @@
 - multi-agent operating model standardized (ADR-012)
 - launch contact baseline confirmed (ADR-008): form + phone + WhatsApp + site chat
 - launch AI mode confirmed (ADR-010): `limited_live_intake`
-- launch intake baseline reset to `Google Sheets via n8n`; CRM deferred to a later phase (ADR-018)
+- historical launch intake activation `site -> n8n -> Google Sheets` completed (ADR-018)
+- current primary intake architecture fixed as backend-first SQL; `n8n` is optional automation/export layer (ADR-020)
+- `AZR-003-012` baseline closure: design/template work transferred from `frontend_mvp` to `web`; `web` remains canonical baseline (ADR-019)
+- `AZR-003-013` public phone / WhatsApp consistency sync completed; canonical public number is `+33 7 80 72 09 94`
+- `AZR-003-014` backend-first SQL intake hardening completed on `web`
+- `AZR-003-011` live intake path moved to SQL-primary behavior with optional external integration/notification fallback
+- `/ai-automation` and `/brief` are present in `web` as the current AI automation conversion path
+- core conversion-path lint blockers cleared for `/`, `/brief`, and shared header; `web` passes `npm run check:ci` with non-blocking image optimization/audit warnings
