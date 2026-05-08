@@ -39,9 +39,11 @@ Optional daily cron example:
 ## Restore procedure
 
 1. Restore `.env` from backup archive or recreate from `.env.vps.example`.
-2. Confirm that `APP_IMAGE` points to a known-good immutable image tag.
-3. Login to the private registry if the app image is not already present locally.
-4. Start compose stack:
+2. Confirm that `COMPOSE_PROJECT_NAME=azursystech-site` is present when using
+   `/home/dmitrii/apps/azursystech`.
+3. Confirm that `APP_IMAGE` points to a known-good immutable image tag.
+4. Login to the private registry if the app image is not already present locally.
+5. Start compose stack:
 
 ```bash
 cd /home/dmitrii/apps/azursystech
@@ -49,20 +51,20 @@ docker compose -f docker-compose.vps.yml pull app || true
 docker compose -f docker-compose.vps.yml up -d
 ```
 
-5. Restore SQL dump into a check database:
+6. Restore SQL dump into a check database:
 
 ```bash
 LATEST_BACKUP="$(ls -1t /home/dmitrii/backups/azursystech-postgres/*.dump | head -n 1)"
 ./scripts/postgres-restore.sh "$LATEST_BACKUP" azursystech_restore_check
 ```
 
-6. Validate restored data:
+7. Validate restored data:
 
 ```bash
 docker compose -f docker-compose.vps.yml exec -T postgres sh -lc 'export PGPASSWORD="$POSTGRES_PASSWORD"; psql -U "$POSTGRES_USER" -d azursystech_restore_check -c "select count(*) from intake_leads;"'
 ```
 
-7. Verify runtime health:
+8. Verify runtime health:
 
 ```bash
 docker compose -f docker-compose.vps.yml ps

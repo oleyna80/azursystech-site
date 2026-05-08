@@ -88,6 +88,9 @@ Current migration note:
 - `/home/dmitrii/projects/azursystech-site` still exists as the old git-backed runtime directory.
 - Keep it until the first registry-pull deploy and rollback test pass.
 - After that, production should use a runtime-only directory.
+- The runtime-only directory must keep `COMPOSE_PROJECT_NAME=azursystech-site`
+  in `.env` so Compose manages the existing production stack instead of
+  creating a second project.
 
 ## 4) VPS `.env` contract
 
@@ -96,6 +99,7 @@ Create `.env` from `.env.vps.example` and set production values.
 Required image setting:
 
 ```bash
+COMPOSE_PROJECT_NAME=azursystech-site
 APP_IMAGE=ghcr.io/oleyna80/azursystech-app:sha-<commit>-<timestamp>
 ```
 
@@ -148,7 +152,8 @@ Manual deploy without the script:
 
 ```bash
 cd /home/dmitrii/apps/azursystech
-APP_IMAGE=ghcr.io/oleyna80/azursystech-app:sha-<commit>-<timestamp>
+export COMPOSE_PROJECT_NAME=azursystech-site
+export APP_IMAGE=ghcr.io/oleyna80/azursystech-app:sha-<commit>-<timestamp>
 docker compose -f docker-compose.vps.yml pull app web
 docker compose -f docker-compose.vps.yml up -d app web
 ```
@@ -283,7 +288,8 @@ Manual rollback:
 
 ```bash
 cd /home/dmitrii/apps/azursystech
-APP_IMAGE=ghcr.io/oleyna80/azursystech-app:sha-<known-good>
+export COMPOSE_PROJECT_NAME=azursystech-site
+export APP_IMAGE=ghcr.io/oleyna80/azursystech-app:sha-<known-good>
 docker compose -f docker-compose.vps.yml pull app || true
 docker compose -f docker-compose.vps.yml up -d app web
 curl -sSI https://azursystech.fr/health
