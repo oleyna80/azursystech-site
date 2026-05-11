@@ -57,6 +57,7 @@ docs/reports/qwen/
 # Build
 build/
 out/
+*.tsbuildinfo
 
 # IDE
 .vscode/
