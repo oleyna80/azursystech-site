@@ -12,6 +12,12 @@
 ## Now
 
 - keep `web` as the canonical launch website baseline
+- run a separate `AI intake Phase 1 / backend foundation` stream:
+  - Task 1-3 implementation review verdict: `ACCEPT`
+  - local/test DB smoke passed for migration `001` + `002`, channel contact upsert, conversation resume, message idempotency, agent state update, brief persistence, and safe test lead linking
+  - `linkBriefToLead()` sanitized-error gap fixed in the shared intake storage layer
+  - `/api/chat` persistence wiring passed local runtime smoke: old `{ message, history, locale } -> { reply }` compatibility preserved, optional `conversationId` returned, and inbound/outbound messages persisted in the local smoke DB
+  - `/api/brief`, contact route, env, deploy, Telegram webhook, and WhatsApp webhook were not changed in this runtime gate
 - prepare a clean release decision for the current local changes:
   - publishable AZR-003 docs/QA sync and lint fixes are one scope
   - AZR-004 social automation / VPS / schema changes are a separate scope
@@ -25,9 +31,29 @@
   - no autonomous outbound
   - no pricing commitments
   - no scheduling promises
+- Meta deauthorize callback was added and committed as `ac3823f`:
+  - `/api/auth/facebook/deauthorize`
+  - purpose: Meta app registration callback URL check
+  - current behavior: inert `200/204` response only; no token deletion yet
+- record the `admin.azursystech.fr` MVP decisions for the separate social/admin track:
+  - separate Next.js admin surface for Facebook Page publishing through Meta Graph API
+  - implementation placement: `admin/` inside this repository, deployed as a separate app/container/subdomain
+  - auth gate: app-level owner password/session auth from the start
+  - Phase 1 local foundation accepted: `admin/` scaffold, owner auth gate, social SQL/domain/repository foundation, protected route contracts, local DB smoke, and local auth/API runtime smoke
+  - security patch gate completed: admin `next` / `eslint-config-next` updated to `16.2.6`; high/critical Next.js advisories cleared; residual moderate `postcss` advisory remains deferred because the forced audit fix is not acceptable
+  - local deploy wiring implemented, verified, and committed as `dc95746`: `Dockerfile.admin`, `/health`, registry build script, admin deploy script, compose `admin` profile, nginx `admin.azursystech.fr` routing, and VPS env template
+  - Meta tokens stay in env for MVP; encrypted DB storage is deferred hardening
+  - post status chain: `draft -> scheduled -> publishing -> published / failed`
+  - Telegram alerts on `published` and `failed`
+  - `n8n` may trigger protected scheduler APIs only; PostgreSQL/admin backend remains source of truth
+  - `moderation_queue` is deferred from Phase 1 until Messenger/public comments need review workflow
 
 ## Next
 
+- next `AI intake Phase 1` gate: production-readiness review for the accepted `/api/chat` persistence changes before any live DB apply or deploy
+- deploy `/api/auth/facebook/deauthorize` when the next approved website/admin release is performed so Meta can verify the deauthorization callback URL
+- next `AZR-004 social/admin` gate: plan production rollout as a separate approval-gated stack after the committed local admin deploy wiring
+- plan `/brief` persistence as the next backend route after live DB verification and review of the accepted chat persistence gate
 - continue page-by-page QA after the core path:
   - `/business`
   - `/services` and service detail pages
@@ -41,9 +67,14 @@
 ## Blocked
 
 - no active launch-critical blocker is recorded in the current SSOT
+- `AI intake Phase 1` production rollout still needs live DB schema verification before applying `web/sql/002_intake_agent_foundation.sql` outside local/test DB or deploying chat persistence
+- cleanup of the local smoke-test DB requires separate explicit approval because it is a destructive database operation
 - deploy now uses WSL-built GHCR images and VPS `docker compose pull`; future deploys still require explicit Owner approval
 - do not start new work in `frontend_mvp` unless explicitly opened as a sandbox/reference task
 - do not mix the dirty `AZR-004` social automation stream into `AZR-003` page QA
+- do not put Meta tokens, page access tokens, app secrets, or n8n scheduler secrets in git
+- `AZR-004 admin` production rollout still needs explicit approval for: live DB schema apply, immutable admin image push, VPS `.env` secret provisioning, compose/nginx update, DNS/proxy verification, and live health/auth smoke
+- local Docker image `azursystech-admin:local-smoke` exists from verification and can be removed later only with explicit cleanup approval if desired
 
 ## Later
 
@@ -53,6 +84,7 @@
 - CRM implementation and automation
 - broader AI runtime automation beyond draft-assist mode
 - social automation runtime work continues under separate `AZR-004` stream
+- encrypted DB storage for Meta tokens after the MVP env-token phase
 - cleanup of non-critical stale tails in legacy docs
 
 ## Done
@@ -79,5 +111,10 @@
 - `AZR-003-013` public phone / WhatsApp consistency sync completed; canonical public number is `+33 7 80 72 09 94`
 - `AZR-003-014` backend-first SQL intake hardening completed on `web`
 - `AZR-003-011` live intake path moved to SQL-primary behavior with optional external integration/notification fallback
+- `AI intake Phase 1 / backend foundation` Task 1-3 accepted locally: additive migration, intake contracts/statuses, and storage functions passed typecheck and local DB smoke; no route behavior changed
+- `AI intake Phase 1 / website chat persistence` accepted locally: runtime smoke confirmed `/api/chat` persists website chat conversations/messages while preserving legacy response compatibility
+- minimal Meta deauthorize callback endpoint added and committed as `ac3823f` for app registration: `/api/auth/facebook/deauthorize`
+- `AZR-004 admin` security patch gate completed locally and committed as `31252f6`
+- `AZR-004 admin` deploy wiring completed, verified, and committed as `dc95746`; no push/deploy/live DB apply performed
 - `/ai-automation` and `/brief` are present in `web` as the current AI automation conversion path
 - core conversion-path lint blockers cleared for `/`, `/brief`, and shared header; `web` passes `npm run check:ci` with non-blocking image optimization/audit warnings

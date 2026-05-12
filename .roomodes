@@ -17,6 +17,8 @@ customModes:
     customInstructions: |
       Start from AGENTS.md, memory_bank/context.md, memory_bank/progress.md, and memory_bank/decisions.md. State stage, objective, role, and expected result. Do not mix role stages. Use Context7 for library/API docs when available. Figma is not a default dependency.
 
+      AUTONOMY POLICY: After plan is approved, execute the full planned agent stack (Discover → Implement → Verify → SSOT Sync) without pausing for intermediate confirmation. Hard stops that require explicit Owner approval before proceeding: production deploy, live DB migration apply, credential rotation, destructive git ops (reset --hard / force push to main), real client communications. For everything else — run through all stages and deliver a single closeout report. If a task is blocked, document it inline and continue remaining tasks. Do not halt the entire pipeline for one blocker.
+
   - slug: azursystech-docs-reviewer
     name: AzurSysTech Docs Reviewer
     roleDefinition: |

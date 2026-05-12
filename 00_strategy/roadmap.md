@@ -2,7 +2,7 @@
 _version: v1.1_
 _owner: Tech Lead / Control Tower_
 _execution model: stage-gated orchestration with internal subagents (`Reviewer` -> `Coder` -> `Verifier`)_
-_last sync: 2026-05-07_
+_last sync: 2026-05-12_
 
 ---
 
@@ -27,6 +27,10 @@ Business positioning в launch-контуре: business-first (TPE/малый б
 - Primary intake path: `/api/contact/submit` in `web` with SQL-first persistence.
 - System of record: PostgreSQL (`intake_leads`, `intake_lead_events`, `intake_conversations`, `intake_conversation_messages`).
 - `n8n`/Sheets не являются обязательным launch intake path; используются как secondary contour при необходимости.
+- Parallel backend-intake track: `AI intake Phase 1` accepted locally through website chat persistence. Additive migration `002`, shared intake contracts/statuses, storage functions, `linkBriefToLead()` sanitization, and `/api/chat` persistence all passed local checks/smoke.
+- Next gate for the backend-intake track is production-readiness review: verify live DB schema before applying `002` outside local/test DB or deploying the accepted chat persistence changes.
+- PostgreSQL remains the system of record for contact, chat, brief, and future channel intake. `n8n` may orchestrate or notify later, but must not become the source of truth.
+- Parallel social/admin track: `admin.azursystech.fr` is planned as a separate Next.js admin surface for Facebook Page publishing via Meta Graph API. MVP decisions: implement it under `admin/` in this repository as a separate app/container/subdomain, start with app-level owner password/session auth, keep Meta tokens in env first, use post lifecycle `draft -> scheduled -> publishing -> published / failed`, send Telegram alerts for `published` and `failed`, let `n8n` trigger only protected admin scheduler APIs, and defer `moderation_queue` until Messenger/public comments need review workflow. Phase 1 local foundation is accepted locally and committed through admin deploy wiring: scaffold/auth, SQL/domain/repository layer, protected route contracts, local/test DB smoke, auth/API runtime smoke, clean install/build, security patch to Next.js `16.2.6`, `Dockerfile.admin`, compose `admin` profile, nginx host routing, admin `/health`, and registry/deploy scripts. Production approval remains a separate gate.
 
 ### 2.2 Операционная модель выполнения
 
@@ -56,8 +60,17 @@ Business positioning в launch-контуре: business-first (TPE/малый б
 1. Page-by-page QA and cleanup of the current public `web` site:
    - core conversion path: `/`, `/ai-automation`, `/brief`, `/contact`;
    - then `/business`, `/services`, service detail pages, `/about`, `/faq`, `/pricing`, and legal/utility pages.
-2. `AZR-003-008` - `todo` (separate deferred improvements from the launch-ready baseline).
-3. CRM / HubSpot remains deferred until intake and page-QA baseline are stable.
+2. AI intake backend track:
+   - review accepted local `/api/chat` persistence as one release scope;
+   - verify live DB schema before applying migration `002` outside local/test DB.
+   - plan `/brief` persistence only after live DB verification and chat persistence release review.
+3. Social/admin track (`AZR-004`):
+   - plan production rollout for `admin.azursystech.fr` after committed local deploy wiring;
+   - plan live DB schema apply separately from Docker/compose/nginx rollout;
+   - keep production deploy, Docker push, and live DB apply behind explicit Owner approval;
+   - keep Meta token handling, scheduler trigger, Telegram alerts, and status transitions behind backend-owned state.
+4. `AZR-003-008` - `todo` (separate deferred improvements from the launch-ready baseline).
+5. CRM / HubSpot remains deferred until intake and page-QA baseline are stable.
 
 ---
 
@@ -111,5 +124,7 @@ Status: deferred.
 
 - Не переключать deploy/runtime target с `web` без отдельного решения control layer.
 - Не возвращать `n8n`/Sheets в статус mandatory primary intake.
+- Не отдавать `n8n` ownership над business state, Meta tokens или прямой публикацией; только protected scheduler trigger при необходимости.
 - Не смешивать page-QA, launch-critical, deferred и `AZR-004` social automation scope в одном execution pass.
 - Не ослаблять AI runtime policy (no autonomous outbound, no pricing/scheduling commitments).
+- Не выполнять production rollout для `admin.azursystech.fr` без отдельного плана и approval: live DB apply, image push, VPS `.env` secrets, compose/nginx update, DNS/proxy verification, live health/auth smoke.
