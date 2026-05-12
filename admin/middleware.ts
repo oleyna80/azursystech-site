@@ -7,6 +7,7 @@ const SCHEDULER_PATHS = new Set(["/api/admin/social/posts/publish-due"]);
 function isPublicPath(pathname: string): boolean {
   return (
     pathname === "/login" ||
+    pathname === "/health" ||
     pathname.startsWith("/api/auth/") ||
     pathname.startsWith("/_next/") ||
     pathname === "/favicon.ico"
