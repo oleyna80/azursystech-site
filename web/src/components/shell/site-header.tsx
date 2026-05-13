@@ -109,6 +109,7 @@ export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
     setLocale(nextLocale);
     setIsMenuOpen(false);
     // Persist as UX preference cookie
+    // eslint-disable-next-line react-hooks/immutability
     document.cookie = `${LOCALE_COOKIE_KEY}=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
     // Navigate to localized version of current page
     router.push(buildLocalizedPath(pathname, nextLocale));
