@@ -71,6 +71,11 @@ export const HOME_CONTENT = {
       { q: "Vous faites seulement du dépannage ?", a: "Non. Nous configurons aussi des postes, le réseau, les imprimantes et l'environnement IT de base." },
     ],
     faqCta: "Poser une question",
+    localSeo: {
+      cities: ["Nice", "Cagnes-sur-Mer", "Antibes", "Vence"],
+      region: "Alpes-Maritimes",
+      tagline: "Déplacement sur site · Assistance en français et en russe.",
+    },
   },
   ru: {
     location: "Ницца и окрестности",
@@ -142,6 +147,11 @@ export const HOME_CONTENT = {
       { q: "Вы делаете только ремонт?", a: "Нет. Кроме ремонта и диагностики настраиваем рабочие места, сеть, принтеры и базовую техническую среду." },
     ],
     faqCta: "Задать свой вопрос",
+    localSeo: {
+      cities: ["Ницца", "Кань-сюр-Мер", "Антиб", "Ванс"],
+      region: "Приморские Альпы",
+      tagline: "Выезд на место · Поддержка на французском и русском языках.",
+    },
   },
 } as const;
 

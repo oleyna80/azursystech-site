@@ -57,12 +57,29 @@ export default async function LocaleHomePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(HOME_JSON_LD) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: copy.faqs.map((f) => ({
+              "@type": "Question",
+              name: f.q,
+              acceptedAnswer: { "@type": "Answer", text: f.a },
+            })),
+          }),
+        }}
+      />
 
       {/* Hero */}
       <section className="relative isolate min-h-[100svh] overflow-hidden bg-graphite text-white">
         <img
           src="/hero.png"
           alt={copy.heroTitle}
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(12,18,24,0.92)_0%,rgba(16,24,32,0.75)_45%,rgba(18,26,34,0.25)_100%)]" />
@@ -146,7 +163,7 @@ export default async function LocaleHomePage({
               </Link>
             </div>
             <div className="overflow-hidden rounded-[2rem] bg-surface shadow-premium-soft ring-1 ring-graphite/5">
-              <img src="/business.png" alt={copy.businessImageAlt} className="aspect-[4/3] w-full object-cover" />
+              <img src="/business.png" alt={copy.businessImageAlt} loading="lazy" decoding="async" className="aspect-[4/3] w-full object-cover" />
             </div>
           </div>
         </div>
@@ -188,7 +205,7 @@ export default async function LocaleHomePage({
             <div className="relative">
               <div className="absolute inset-0 -z-10 translate-x-5 translate-y-5 rounded-[2.5rem] bg-accent-terra/10 blur-2xl" />
               <div className="overflow-hidden rounded-[2rem] bg-surface shadow-premium-soft ring-1 ring-graphite/5">
-                <img src="/automation-illustration.svg" alt={copy.automationImageAlt} className="h-full w-full object-cover" />
+                <img src="/automation-illustration.svg" alt={copy.automationImageAlt} loading="lazy" decoding="async" className="h-full w-full object-cover" />
               </div>
             </div>
           </div>
@@ -270,6 +287,22 @@ export default async function LocaleHomePage({
               {copy.faqCta}
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Local SEO */}
+      <section className="border-t border-graphite/8 bg-surface py-10 md:py-12">
+        <div className="container mx-auto px-4 text-center md:px-8">
+          <p className="text-sm font-medium leading-7 text-graphite/55">
+            {copy.localSeo.cities.map((city, i) => (
+              <span key={city}>
+                <strong className="font-semibold text-graphite/70">{city}</strong>
+                {i < copy.localSeo.cities.length - 1 && ", "}
+              </span>
+            ))}
+            {" "}&amp; {copy.localSeo.region}
+          </p>
+          <p className="mt-1 text-sm font-medium text-graphite/45">{copy.localSeo.tagline}</p>
         </div>
       </section>
 
