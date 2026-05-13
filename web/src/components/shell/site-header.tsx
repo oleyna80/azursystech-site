@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { LOCALE_COOKIE_KEY } from "@/i18n";
 
 type HeaderLocale = "fr" | "ru";
@@ -12,6 +12,21 @@ const CONTACT = {
 };
 
 const LOCALE_OPTIONS: HeaderLocale[] = ["fr", "ru"];
+const LOCALE_SLUGS = new Set(["fr", "ru"]);
+
+function getLocaleFromPath(pathname: string): HeaderLocale | null {
+  const seg = pathname.split("/")[1];
+  return LOCALE_SLUGS.has(seg) ? (seg as HeaderLocale) : null;
+}
+
+function buildLocalizedPath(pathname: string, next: HeaderLocale): string {
+  const segs = pathname.split("/");
+  if (LOCALE_SLUGS.has(segs[1])) {
+    segs[1] = next;
+    return segs.join("/") || `/${next}`;
+  }
+  return `/${next}`;
+}
 
 const HEADER_COPY = {
   fr: {
@@ -20,13 +35,6 @@ const HEADER_COPY = {
     menuCloseLabel: "Fermer le menu",
     whatsappCta: "WhatsApp",
     submitCta: "Demander un devis",
-    links: [
-      { href: "/#business", label: "Pour les entreprises" },
-      { href: "/ai-automation", label: "Automatisation et IA" },
-      { href: "/#pricing", label: "Tarifs" },
-      { href: "/#faq", label: "FAQ" },
-      { href: "/#contact", label: "Contact" },
-    ],
   },
   ru: {
     navAriaLabel: "Основная навигация",
@@ -34,24 +42,36 @@ const HEADER_COPY = {
     menuCloseLabel: "Закрыть меню",
     whatsappCta: "WhatsApp",
     submitCta: "Оставить заявку",
-    links: [
-      { href: "/#business", label: "Для бизнеса" },
-      { href: "/ai-automation", label: "Автоматизация и ИИ" },
-      { href: "/#pricing", label: "Цены" },
-      { href: "/#faq", label: "FAQ" },
-      { href: "/#contact", label: "Контакты" },
-    ],
   },
 } as const;
+
+function buildNavLinks(locale: HeaderLocale) {
+  const t = {
+    fr: { business: "Pour les entreprises", automation: "Automatisation et IA", pricing: "Tarifs", faq: "FAQ", contact: "Contact" },
+    ru: { business: "Для бизнеса", automation: "Автоматизация и ИИ", pricing: "Цены", faq: "FAQ", contact: "Контакты" },
+  }[locale];
+  return [
+    { href: `/${locale}#business`, label: t.business },
+    { href: `/${locale}/ai-automation`, label: t.automation },
+    { href: `/${locale}#pricing`, label: t.pricing },
+    { href: `/${locale}#faq`, label: t.faq },
+    { href: `/${locale}#contact`, label: t.contact },
+  ];
+}
 
 export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [locale, setLocale] = useState<HeaderLocale>(initialLocale);
-  const [pendingLocaleCookie, setPendingLocaleCookie] = useState<HeaderLocale | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
   const copy = HEADER_COPY[locale];
+  const navLinks = useMemo(() => buildNavLinks(locale), [locale]);
 
-  const navLinks = useMemo(() => copy.links, [copy.links]);
+  // Sync locale from URL path (takes precedence)
+  useEffect(() => {
+    const urlLocale = getLocaleFromPath(pathname);
+    if (urlLocale && urlLocale !== locale) setLocale(urlLocale);
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setLocale(initialLocale);
@@ -84,30 +104,20 @@ export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
     };
   }, [isMenuOpen]);
 
-  useEffect(() => {
-    if (!pendingLocaleCookie) {
-      return;
-    }
-
-    document.cookie = `${LOCALE_COOKIE_KEY}=${pendingLocaleCookie}; path=/; max-age=31536000; samesite=lax`;
-    router.refresh();
-    setPendingLocaleCookie(null);
-  }, [pendingLocaleCookie, router]);
-
   const handleLocaleChange = (nextLocale: HeaderLocale) => {
-    if (nextLocale === locale) {
-      return;
-    }
-
+    if (nextLocale === locale) return;
     setLocale(nextLocale);
     setIsMenuOpen(false);
-    setPendingLocaleCookie(nextLocale);
+    // Persist as UX preference cookie
+    document.cookie = `${LOCALE_COOKIE_KEY}=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
+    // Navigate to localized version of current page
+    router.push(buildLocalizedPath(pathname, nextLocale));
   };
 
   return (
     <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-graphite/80 backdrop-blur-xl">
       <div className="container relative mx-auto flex items-center justify-between gap-2 px-4 py-4 md:gap-3 md:px-8">
-        <Link href="/" className="group flex items-center gap-2.5 md:gap-3">
+        <Link href={`/${locale}`} className="group flex items-center gap-2.5 md:gap-3">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-teal text-white transition-transform group-hover:scale-105">
             <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
               <path
@@ -157,7 +167,7 @@ export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
             {copy.whatsappCta}
           </a>
           <Link
-            href="/#contact"
+            href={`/${locale}#contact`}
             className="inline-flex rounded-full bg-accent-teal px-4 py-2.5 text-xs font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-accent-teal/90 sm:px-5 sm:text-sm"
           >
             {copy.submitCta}

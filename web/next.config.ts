@@ -4,6 +4,15 @@ const isProduction = process.env.NODE_ENV === "production";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  async redirects() {
+    return [
+      {
+        source: "/ai-automation",
+        destination: "/fr/ai-automation",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     const baseHeaders = [
       { key: "X-Content-Type-Options", value: "nosniff" },
