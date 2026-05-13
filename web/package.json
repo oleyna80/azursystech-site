@@ -12,7 +12,7 @@
     "check:ci": "npm run lint && npm run check:types && npm run build && npm run check:security"
   },
   "dependencies": {
-    "next": "16.2.3",
+    "next": "^16.2.6",
     "pg": "^8.20.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"
