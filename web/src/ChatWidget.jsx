@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 
 const CONTACT_PHONE = '+33 7 80 72 09 94';
 const CONTACT_PHONE_HREF = 'tel:+33780720994';
@@ -467,7 +468,7 @@ export default function ChatWidget({ locale, t }) {
         )}
         <p className="mt-3 text-[11px] leading-relaxed text-graphite/50 font-medium">
           {t('chat.privacyNoticePrefix')}
-          <a href="/privacy" className="text-accent-teal hover:underline">{t('common.privacyPolicy')}</a>
+          <Link href="/privacy" className="text-accent-teal hover:underline">{t('common.privacyPolicy')}</Link>
           {t('chat.privacyNoticeSuffix')}
         </p>
       </div>
