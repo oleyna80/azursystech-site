@@ -68,5 +68,3 @@ The VPS build uses the repository-root files:
 - `Dockerfile`
 - `docker-compose.vps.yml`
 - `nginx.proxy.conf`
-
-Deployment and backup runbooks live in `docs/deployment/`.
