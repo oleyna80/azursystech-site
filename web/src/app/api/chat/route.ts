@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { isRateLimitedPersistent } from "@/lib/request-rate-limit";
+import type { IntakeConversationState } from "@/lib/intake/types";
+import { runWebChatIntakeDryRun } from "@/lib/web-chat/dry-run";
 
 const REQUEST_TIMEOUT_MS = 15_000;
 const MAX_REQUEST_BODY_BYTES = 50_000;
@@ -363,6 +365,13 @@ function isRequestBodyTooLarge(request: Request): boolean {
   return parsed > MAX_REQUEST_BODY_BYTES;
 }
 
+function isWebChatDryRunRequest(request: Request): boolean {
+  return (
+    process.env.NODE_ENV !== "production" &&
+    request.headers.get("x-azursystech-dry-run")?.trim().toLowerCase() === "true"
+  );
+}
+
 function isLiveChatEnabled(): boolean {
   const launchMode = process.env.AI_LAUNCH_MODE?.trim();
   const intakeStorageMode = process.env.INTAKE_STORAGE_MODE?.trim().toLowerCase() ?? "legacy";
@@ -433,6 +442,26 @@ function sanitizeHistory(history: unknown): ChatHistoryItem[] {
     })
     .filter((item): item is ChatHistoryItem => item !== null)
     .slice(-MAX_HISTORY_ITEMS);
+}
+
+function extractIntakeConversationState(body: { state?: unknown }): IntakeConversationState | undefined {
+  if (!body.state || typeof body.state !== "object" || Array.isArray(body.state)) {
+    return undefined;
+  }
+
+  const state = body.state as { briefDraft?: unknown; seenIdempotencyKeys?: unknown };
+  const briefDraft =
+    state.briefDraft && typeof state.briefDraft === "object" && !Array.isArray(state.briefDraft)
+      ? state.briefDraft
+      : undefined;
+  const seenIdempotencyKeys = Array.isArray(state.seenIdempotencyKeys)
+    ? state.seenIdempotencyKeys.filter((key): key is string => typeof key === "string")
+    : undefined;
+
+  return {
+    ...(briefDraft ? { briefDraft } : {}),
+    ...(seenIdempotencyKeys ? { seenIdempotencyKeys } : {}),
+  };
 }
 
 function isShortCorrectiveMessage(message: string): boolean {
@@ -522,9 +551,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Bad Request: invalid payload" }, { status: 400 });
   }
 
+  const isDryRunRequest = isWebChatDryRunRequest(request);
   const keys = Object.keys(body);
   const hasOnlyAllowedKeys = keys.every(
-    (key) => key === "message" || key === "history" || key === "locale",
+    (key) =>
+      key === "message" ||
+      key === "history" ||
+      key === "locale" ||
+      (isDryRunRequest && (key === "conversationKey" || key === "senderKey" || key === "state")),
   );
   if (!hasOnlyAllowedKeys || !keys.includes("message")) {
     return NextResponse.json({ error: "Bad Request: invalid payload" }, { status: 400 });
@@ -551,6 +585,39 @@ export async function POST(request: Request) {
   const explicitLocale = sanitizeLocale(payload.locale);
   const responseLocale = resolveChatLocale(explicitLocale, message, history);
   const copy = CHAT_COPY[responseLocale];
+
+  if (isDryRunRequest) {
+    const dryRunResult = runWebChatIntakeDryRun({
+      message,
+      locale: responseLocale,
+      conversationKey:
+        typeof (body as { conversationKey?: unknown }).conversationKey === "string"
+          ? (body as { conversationKey: string }).conversationKey
+          : undefined,
+      senderKey:
+        typeof (body as { senderKey?: unknown }).senderKey === "string"
+          ? (body as { senderKey: string }).senderKey
+          : undefined,
+      state: extractIntakeConversationState(body as { state?: unknown }),
+    });
+
+    if (!dryRunResult.ok) {
+      return NextResponse.json(
+        {
+          ok: false,
+          mode: "dry_run",
+          adapter: dryRunResult.adapter,
+        },
+        { status: 400 },
+      );
+    }
+
+    return NextResponse.json({
+      ok: true,
+      mode: "dry_run",
+      decision: dryRunResult.decision,
+    });
+  }
 
   if (!isLiveChatEnabled()) {
     return NextResponse.json({ error: copy.chatUnavailable }, { status: 503 });
