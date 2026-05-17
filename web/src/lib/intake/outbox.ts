@@ -8,15 +8,55 @@ import type {
   IntakeOutboxMessage,
   IntakeOutboxStore,
   ListPendingOutboundDraftsInput,
+  ListQueuedOutboundMessagesInput,
+  MarkOutboundMessageSentInput,
   OutboundMessageTransitionResult,
   TransitionOutboundMessageInput,
 } from "@/lib/intake/persistence";
+import type { IntakeOutboundSender } from "@/lib/intake/sender";
 import { createSqlIntakeOutboxStore } from "@/lib/intake/sql-persistence";
 
 export type IntakeOutboxOperation =
   | "list_pending_outbound_drafts"
+  | "list_queued_outbound_messages"
   | "approve_outbound_draft_message"
-  | "queue_approved_outbound_message";
+  | "queue_approved_outbound_message"
+  | "mark_outbound_message_sent"
+  | "mark_outbound_message_failed";
+
+export type DispatchQueuedOutboundMessagesInput = ListQueuedOutboundMessagesInput & {
+  sender: IntakeOutboundSender;
+  liveSendingEnabled?: boolean;
+};
+
+export type DispatchQueuedOutboundMessageResult =
+  | {
+      ok: true;
+      messageId: string;
+      providerMessageId: string;
+      transition: OutboundMessageTransitionResult;
+    }
+  | {
+      ok: false;
+      messageId: string;
+      error: string;
+      retryable: boolean;
+      transition: OutboundMessageTransitionResult;
+    };
+
+export type DispatchQueuedOutboundMessagesResult =
+  | {
+      ok: false;
+      mode: "disabled";
+      attempted: 0;
+      results: [];
+    }
+  | {
+      ok: true;
+      mode: "enabled";
+      attempted: number;
+      results: DispatchQueuedOutboundMessageResult[];
+    };
 
 export class IntakeOutboxUnavailableError extends Error {
   constructor(
@@ -78,12 +118,88 @@ export function listPendingOutboundDrafts(
   );
 }
 
+export function listQueuedOutboundMessages(
+  input?: ListQueuedOutboundMessagesInput,
+): Promise<IntakeOutboxMessage[]> {
+  return runOutboxOperation("list_queued_outbound_messages", (store) =>
+    store.listQueuedOutboundMessages(input),
+  );
+}
+
 export function approveOutboundDraftMessage(
   input: TransitionOutboundMessageInput,
 ): Promise<OutboundMessageTransitionResult> {
   return runOutboxOperation("approve_outbound_draft_message", (store) =>
     store.approveOutboundDraftMessage(input),
   );
+}
+
+export function markOutboundMessageSent(
+  input: MarkOutboundMessageSentInput,
+): Promise<OutboundMessageTransitionResult> {
+  return runOutboxOperation("mark_outbound_message_sent", (store) =>
+    store.markOutboundMessageSent(input),
+  );
+}
+
+export function markOutboundMessageFailed(
+  input: TransitionOutboundMessageInput,
+): Promise<OutboundMessageTransitionResult> {
+  return runOutboxOperation("mark_outbound_message_failed", (store) =>
+    store.markOutboundMessageFailed(input),
+  );
+}
+
+export async function dispatchQueuedOutboundMessages(
+  input: DispatchQueuedOutboundMessagesInput,
+): Promise<DispatchQueuedOutboundMessagesResult> {
+  if (!input.liveSendingEnabled) {
+    return {
+      ok: false,
+      mode: "disabled",
+      attempted: 0,
+      results: [],
+    };
+  }
+
+  const messages = await listQueuedOutboundMessages(input);
+  const results: DispatchQueuedOutboundMessageResult[] = [];
+
+  for (const message of messages) {
+    if (message.providerMessageId) {
+      continue;
+    }
+
+    const sendResult = await input.sender.send(message);
+
+    if (sendResult.ok) {
+      results.push({
+        ok: true,
+        messageId: message.messageId,
+        providerMessageId: sendResult.providerMessageId,
+        transition: await markOutboundMessageSent({
+          messageId: message.messageId,
+          providerMessageId: sendResult.providerMessageId,
+        }),
+      });
+      continue;
+    }
+
+    results.push({
+      ok: false,
+      messageId: message.messageId,
+      error: sendResult.error,
+      retryable: sendResult.retryable,
+      transition: await markOutboundMessageFailed({ messageId: message.messageId }),
+    });
+  }
+
+  return {
+    ok: true,
+    mode: "enabled",
+    attempted: results.length,
+    results,
+  };
 }
 
 export function queueApprovedOutboundMessage(

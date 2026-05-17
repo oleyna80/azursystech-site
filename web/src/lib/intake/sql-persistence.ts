@@ -25,7 +25,10 @@ import {
   type IntakeBriefPersistenceStatus,
   type IntakeSheetsMirrorStatus,
   type ListPendingOutboundDraftsInput,
+  type ListQueuedOutboundMessagesInput,
   type LoadIntakeConversationInput,
+  type MarkOutboundMessageFailedInput,
+  type MarkOutboundMessageSentInput,
   type OutboundMessageTransitionResult,
   type PersistIntakeDecisionInput,
   type PersistIntakeDecisionResult,
@@ -265,6 +268,77 @@ export class SqlIntakeOutboxStore implements IntakeOutboxStore {
       alreadyStatus: "queued",
       transition: "queued",
       alreadyTransition: "already_queued",
+    });
+  }
+
+  async listQueuedOutboundMessages(
+    input: ListQueuedOutboundMessagesInput = {},
+  ): Promise<IntakeOutboxMessage[]> {
+    const limit = normalizeOutboxLimit(input.limit);
+    const params: Array<string | number> = [];
+    const channelFilter = input.channel ? "AND m.channel = $2" : "";
+
+    params.push(limit);
+    if (input.channel) {
+      params.push(input.channel);
+    }
+
+    const result = await this.pool.query<OutboxMessageRow>(
+      `
+        SELECT
+          m.id::text AS message_id,
+          m.conversation_id,
+          m.idempotency_key,
+          m.provider_message_id,
+          m.direction,
+          m.channel,
+          m.author_type,
+          m.status,
+          m.body,
+          m.created_at AS created_at_utc,
+          m.approved_at AS approved_at_utc,
+          m.sent_at AS sent_at_utc,
+          c.conversation_key,
+          c.sender_key
+        FROM intake_channel_messages m
+        JOIN intake_channel_conversations c ON c.id = m.conversation_id
+        WHERE m.direction = 'outbound'
+          AND m.author_type = 'assistant'
+          AND m.status = 'queued'
+          AND m.provider_message_id IS NULL
+          ${channelFilter}
+        ORDER BY m.created_at ASC
+        LIMIT $1
+      `,
+      params,
+    );
+
+    return result.rows.map(toOutboxMessage);
+  }
+
+  async markOutboundMessageSent(
+    input: MarkOutboundMessageSentInput,
+  ): Promise<OutboundMessageTransitionResult> {
+    return transitionOutboundMessage(this.pool, input.messageId, {
+      fromStatus: "queued",
+      toStatus: "sent",
+      alreadyStatus: "sent",
+      transition: "sent",
+      alreadyTransition: "already_sent",
+      timestampColumn: "sent_at",
+      providerMessageId: input.providerMessageId,
+    });
+  }
+
+  async markOutboundMessageFailed(
+    input: MarkOutboundMessageFailedInput,
+  ): Promise<OutboundMessageTransitionResult> {
+    return transitionOutboundMessage(this.pool, input.messageId, {
+      fromStatus: "queued",
+      toStatus: "failed",
+      alreadyStatus: "failed",
+      transition: "failed",
+      alreadyTransition: "already_failed",
     });
   }
 }
@@ -734,12 +808,17 @@ function toOutboxMessage(row: OutboxMessageRow): IntakeOutboxMessage {
 }
 
 type TransitionOptions = {
-  fromStatus: "draft" | "approved";
-  toStatus: "approved" | "queued";
-  alreadyStatus: "approved" | "queued";
-  transition: "approved" | "queued";
-  alreadyTransition: "already_approved" | "already_queued";
-  timestampColumn?: "approved_at";
+  fromStatus: "draft" | "approved" | "queued";
+  toStatus: "approved" | "queued" | "sent" | "failed";
+  alreadyStatus: "approved" | "queued" | "sent" | "failed";
+  transition: "approved" | "queued" | "sent" | "failed";
+  alreadyTransition:
+    | "already_approved"
+    | "already_queued"
+    | "already_sent"
+    | "already_failed";
+  timestampColumn?: "approved_at" | "sent_at";
+  providerMessageId?: string;
 };
 
 async function transitionOutboundMessage(
@@ -833,12 +912,19 @@ async function updateOutboxMessageStatus(
   options: TransitionOptions,
 ): Promise<OutboxMessageRow> {
   const timestampAssignment =
-    options.timestampColumn === "approved_at" ? ", approved_at = COALESCE(approved_at, NOW())" : "";
+    options.timestampColumn === "approved_at"
+      ? ", approved_at = COALESCE(approved_at, NOW())"
+      : options.timestampColumn === "sent_at"
+        ? ", sent_at = COALESCE(sent_at, NOW())"
+        : "";
+  const providerMessageAssignment = options.providerMessageId
+    ? ", provider_message_id = COALESCE(provider_message_id, $3)"
+    : "";
 
   const result = await client.query<OutboxMessageRow>(
     `
       UPDATE intake_channel_messages
-      SET status = $2${timestampAssignment}
+      SET status = $2${timestampAssignment}${providerMessageAssignment}
       WHERE id = $1
       RETURNING
         id::text AS message_id,
@@ -864,7 +950,9 @@ async function updateOutboxMessageStatus(
           WHERE id = intake_channel_messages.conversation_id
         ) AS sender_key
     `,
-    [messageId, options.toStatus],
+    options.providerMessageId
+      ? [messageId, options.toStatus, options.providerMessageId]
+      : [messageId, options.toStatus],
   );
 
   const updated = result.rows[0];

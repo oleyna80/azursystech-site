@@ -101,15 +101,30 @@ export type ListPendingOutboundDraftsInput = {
   limit?: number;
 };
 
+export type ListQueuedOutboundMessagesInput = {
+  channel?: NormalizedIntakeMessage["channel"];
+  limit?: number;
+};
+
 export type TransitionOutboundMessageInput = {
   messageId: string;
 };
 
+export type MarkOutboundMessageSentInput = TransitionOutboundMessageInput & {
+  providerMessageId: string;
+};
+
+export type MarkOutboundMessageFailedInput = TransitionOutboundMessageInput;
+
 export type OutboundMessageTransitionName =
   | "approved"
   | "queued"
+  | "sent"
+  | "failed"
   | "already_approved"
-  | "already_queued";
+  | "already_queued"
+  | "already_sent"
+  | "already_failed";
 
 export type OutboundMessageTransitionResult =
   | {
@@ -171,11 +186,20 @@ export type IntakeOutboxStore = {
   listPendingOutboundDrafts(
     input?: ListPendingOutboundDraftsInput,
   ): Promise<IntakeOutboxMessage[]>;
+  listQueuedOutboundMessages(
+    input?: ListQueuedOutboundMessagesInput,
+  ): Promise<IntakeOutboxMessage[]>;
   approveOutboundDraftMessage(
     input: TransitionOutboundMessageInput,
   ): Promise<OutboundMessageTransitionResult>;
   queueApprovedOutboundMessage(
     input: TransitionOutboundMessageInput,
+  ): Promise<OutboundMessageTransitionResult>;
+  markOutboundMessageSent(
+    input: MarkOutboundMessageSentInput,
+  ): Promise<OutboundMessageTransitionResult>;
+  markOutboundMessageFailed(
+    input: MarkOutboundMessageFailedInput,
   ): Promise<OutboundMessageTransitionResult>;
 };
 
