@@ -8,6 +8,7 @@ import {
   buildIntakeConversationSnapshot,
   buildIntakeDecisionEventRecord,
   buildIntakeMessageEventRecord,
+  buildIntakeOutboundDraftRecord,
   resolveAdminNotificationStatus,
   resolveBriefPersistenceStatus,
   resolveSheetsMirrorStatus,
@@ -128,7 +129,7 @@ export class SqlIntakePersistenceStore implements IntakePersistenceStore {
       `
         SELECT idempotency_key
         FROM intake_channel_messages
-        WHERE conversation_id = $1
+        WHERE conversation_id = $1 AND direction = 'inbound'
         ORDER BY received_at_utc DESC
         LIMIT 100
       `,
@@ -224,12 +225,17 @@ async function persistDecisionInTransaction(
         provider_message_id,
         direction,
         role,
+        channel,
+        author_type,
+        status,
         message_text,
+        body,
         raw_payload,
         normalized_payload,
-        received_at_utc
+        received_at_utc,
+        sent_at
       )
-      VALUES ($1, $2, $3, $4, $5, 'inbound', 'user', $6, $7::jsonb, $8::jsonb, $9)
+      VALUES ($1, $2, $3, $4, $5, $6, 'user', $7, $8, $9, $10, $10, $11::jsonb, $12::jsonb, $13, $13)
       ON CONFLICT (idempotency_key)
       DO NOTHING
       RETURNING id
@@ -240,7 +246,11 @@ async function persistDecisionInTransaction(
       messageRecord.idempotencyKey,
       messageRecord.providerUpdateId ?? null,
       messageRecord.providerMessageId ?? null,
-      messageRecord.text,
+      messageRecord.direction,
+      messageRecord.channel,
+      messageRecord.authorType,
+      messageRecord.status,
+      messageRecord.body,
       toJson(input.rawProviderPayload),
       toJson(messageRecord),
       messageRecord.receivedAtUtc,
@@ -304,6 +314,12 @@ async function persistDecisionInTransaction(
     ],
   );
 
+  await insertOutboundDraftMessage(
+    client,
+    persistedConversationId,
+    buildIntakeOutboundDraftRecord(message, decision),
+  );
+
   return {
     conversationKey: message.conversationKey,
     idempotencyKey: decision.idempotencyKey,
@@ -311,6 +327,50 @@ async function persistDecisionInTransaction(
     duplicateProviderEvent: decision.safety.duplicateProviderEvent,
     ...fallbackStatuses,
   };
+}
+
+async function insertOutboundDraftMessage(
+  client: PoolClient,
+  conversationId: string,
+  draftRecord: ReturnType<typeof buildIntakeOutboundDraftRecord>,
+): Promise<void> {
+  if (!draftRecord) {
+    return;
+  }
+
+  await client.query(
+    `
+      INSERT INTO intake_channel_messages (
+        schema_version,
+        conversation_id,
+        idempotency_key,
+        direction,
+        role,
+        channel,
+        author_type,
+        status,
+        message_text,
+        body,
+        raw_payload,
+        normalized_payload,
+        received_at_utc
+      )
+      VALUES ($1, $2, $3, $4, 'assistant', $5, $6, $7, $8, $8, '{}'::jsonb, $9::jsonb, NOW())
+      ON CONFLICT (idempotency_key)
+      DO NOTHING
+    `,
+    [
+      draftRecord.schemaVersion,
+      conversationId,
+      draftRecord.idempotencyKey,
+      draftRecord.direction,
+      draftRecord.channel,
+      draftRecord.authorType,
+      draftRecord.status,
+      draftRecord.body,
+      toJson(draftRecord),
+    ],
+  );
 }
 
 function resolvePersistenceStatuses(decision: PersistIntakeDecisionInput["decision"]): {

@@ -18,11 +18,28 @@ export const INTAKE_SHEETS_MIRROR_STATUSES = [
   "not_ready",
   "dry_run_stub",
 ] as const;
+export const INTAKE_MESSAGE_DIRECTIONS = ["inbound", "outbound"] as const;
+export const INTAKE_MESSAGE_AUTHOR_TYPES = [
+  "client",
+  "assistant",
+  "manager",
+  "system",
+] as const;
+export const INTAKE_MESSAGE_STATUSES = [
+  "draft",
+  "approved",
+  "queued",
+  "sent",
+  "failed",
+] as const;
 
 export type IntakeBriefPersistenceStatus = (typeof INTAKE_BRIEF_STATUSES)[number];
 export type IntakeAdminNotificationStatus =
   (typeof INTAKE_ADMIN_NOTIFICATION_STATUSES)[number];
 export type IntakeSheetsMirrorStatus = (typeof INTAKE_SHEETS_MIRROR_STATUSES)[number];
+export type IntakeMessageDirection = (typeof INTAKE_MESSAGE_DIRECTIONS)[number];
+export type IntakeMessageAuthorType = (typeof INTAKE_MESSAGE_AUTHOR_TYPES)[number];
+export type IntakeMessageStatus = (typeof INTAKE_MESSAGE_STATUSES)[number];
 
 export type IntakeConversationIdentity = {
   channel: NormalizedIntakeMessage["channel"];
@@ -47,10 +64,22 @@ export type IntakeMessageEventRecord = IntakeConversationIdentity & {
   idempotencyKey: string;
   providerUpdateId?: string;
   providerMessageId?: string;
+  direction: Extract<IntakeMessageDirection, "inbound">;
+  authorType: Extract<IntakeMessageAuthorType, "client">;
+  status: Extract<IntakeMessageStatus, "sent">;
   receivedAtUtc: string;
-  text: string;
+  body: string;
   decisionAction: IntakeDecision["action"];
   assistantReply: string | null;
+};
+
+export type IntakeOutboundDraftRecord = IntakeConversationIdentity & {
+  schemaVersion: typeof INTAKE_PERSISTENCE_SCHEMA_VERSION;
+  idempotencyKey: string;
+  direction: Extract<IntakeMessageDirection, "outbound">;
+  authorType: Extract<IntakeMessageAuthorType, "assistant">;
+  status: Extract<IntakeMessageStatus, "draft">;
+  body: string;
 };
 
 export type IntakeDecisionEventRecord = IntakeConversationIdentity & {
@@ -159,10 +188,34 @@ export function buildIntakeMessageEventRecord(
     idempotencyKey: decision.idempotencyKey,
     ...(message.providerUpdateId ? { providerUpdateId: message.providerUpdateId } : {}),
     ...(message.providerMessageId ? { providerMessageId: message.providerMessageId } : {}),
+    direction: "inbound",
+    authorType: "client",
+    status: "sent",
     receivedAtUtc: message.receivedAtUtc,
-    text: message.text,
+    body: message.text,
     decisionAction: decision.action,
     assistantReply: decision.assistantReply,
+  };
+}
+
+export function buildIntakeOutboundDraftRecord(
+  message: NormalizedIntakeMessage,
+  decision: IntakeDecision,
+): IntakeOutboundDraftRecord | null {
+  if (!decision.assistantReply) {
+    return null;
+  }
+
+  return {
+    schemaVersion: INTAKE_PERSISTENCE_SCHEMA_VERSION,
+    channel: message.channel,
+    conversationKey: message.conversationKey,
+    senderKey: message.senderKey,
+    idempotencyKey: `${decision.idempotencyKey}:assistant-draft`,
+    direction: "outbound",
+    authorType: "assistant",
+    status: "draft",
+    body: decision.assistantReply,
   };
 }
 
