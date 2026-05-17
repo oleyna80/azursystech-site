@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isRateLimitedPersistent } from "@/lib/request-rate-limit";
+import { isSqlStorageEnabled } from "@/lib/intake/config";
 import type { IntakeConversationState } from "@/lib/intake/types";
 import { runWebChatIntakeDryRun } from "@/lib/web-chat/dry-run";
 
@@ -374,7 +375,6 @@ function isWebChatDryRunRequest(request: Request): boolean {
 
 function isLiveChatEnabled(): boolean {
   const launchMode = process.env.AI_LAUNCH_MODE?.trim();
-  const intakeStorageMode = process.env.INTAKE_STORAGE_MODE?.trim().toLowerCase() ?? "legacy";
   const hasDeepseekApiKey = Boolean(process.env.DEEPSEEK_API_KEY?.trim());
   const hasDeepseekBaseUrl = Boolean(getDeepseekChatCompletionsUrl());
   const allowAutonomousOutbound = process.env.AI_ALLOW_AUTONOMOUS_OUTBOUND?.trim().toLowerCase();
@@ -386,7 +386,7 @@ function isLiveChatEnabled(): boolean {
     allowAutonomousOutbound === "false" &&
     allowPricingCommitments === "false" &&
     allowSchedulingPromises === "false" &&
-    intakeStorageMode !== "legacy" &&
+    isSqlStorageEnabled() &&
     hasDeepseekApiKey &&
     hasDeepseekBaseUrl
   );
@@ -587,7 +587,7 @@ export async function POST(request: Request) {
   const copy = CHAT_COPY[responseLocale];
 
   if (isDryRunRequest) {
-    const dryRunResult = runWebChatIntakeDryRun({
+    const dryRunResult = await runWebChatIntakeDryRun({
       message,
       locale: responseLocale,
       conversationKey:
@@ -602,6 +602,17 @@ export async function POST(request: Request) {
     });
 
     if (!dryRunResult.ok) {
+      if ("persistence" in dryRunResult) {
+        return NextResponse.json(
+          {
+            ok: false,
+            mode: "dry_run",
+            error: "Persistence unavailable",
+          },
+          { status: 503 },
+        );
+      }
+
       return NextResponse.json(
         {
           ok: false,

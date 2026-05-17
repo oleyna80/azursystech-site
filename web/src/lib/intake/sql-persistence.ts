@@ -32,7 +32,7 @@ type IdempotencyKeyRow = {
 };
 
 type InsertedMessageRow = {
-  id: number;
+  id: string;
 };
 
 type ConversationIdRow = {
@@ -257,7 +257,7 @@ async function persistDecisionInTransaction(
     ],
   );
   const messageId = messageResult.rows[0]?.id;
-  const insertedMessage = typeof messageId === "number";
+  const insertedMessage = typeof messageId === "string" && messageId.length > 0;
 
   if (!insertedMessage) {
     const currentStatuses = await findConversationStatusesById(

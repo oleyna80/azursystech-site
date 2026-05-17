@@ -74,12 +74,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Bad Request: invalid payload" }, { status: 400 });
   }
 
-  const result = runTelegramIntakeDryRun(
+  const result = await runTelegramIntakeDryRun(
     extractTelegramUpdate(body),
     extractConversationState(body),
   );
 
   if (!result.ok) {
+    if ("persistence" in result) {
+      return NextResponse.json(
+        {
+          ok: false,
+          mode: "dry_run",
+          error: "Persistence unavailable",
+        },
+        { status: 503 },
+      );
+    }
+
     return NextResponse.json(
       {
         ok: false,

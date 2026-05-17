@@ -1,11 +1,14 @@
 import { createHash, randomUUID } from "node:crypto";
-import { Pool } from "pg";
 
 import type { ContactSubmitPayload } from "@/lib/contact-submit";
+import {
+  getIntakeDatabasePool,
+  getIntakeStorageMode,
+  isSqlStorageEnabled,
+  type IntakeStorageMode,
+} from "@/lib/intake/config";
 
-const INTAKE_STORAGE_MODES = ["legacy", "dual", "sql_primary"] as const;
-
-export type IntakeStorageMode = (typeof INTAKE_STORAGE_MODES)[number];
+export { getIntakeStorageMode, isSqlStorageEnabled, type IntakeStorageMode };
 
 type PersistLeadSubmissionInput = {
   payload: ContactSubmitPayload;
@@ -19,79 +22,6 @@ type PersistLeadSubmissionResult = {
   inserted: boolean;
   dedupeKey: string;
 };
-
-let pool: Pool | null = null;
-const DATABASE_SSL_MODES = ["disable", "require", "verify-full"] as const;
-type DatabaseSslMode = (typeof DATABASE_SSL_MODES)[number];
-
-function isIntakeStorageMode(value: string): value is IntakeStorageMode {
-  return (INTAKE_STORAGE_MODES as readonly string[]).includes(value);
-}
-
-export function getIntakeStorageMode(): IntakeStorageMode {
-  const rawMode = process.env.INTAKE_STORAGE_MODE?.trim().toLowerCase();
-  if (!rawMode || !isIntakeStorageMode(rawMode)) {
-    return "legacy";
-  }
-
-  return rawMode;
-}
-
-export function isSqlStorageEnabled(mode = getIntakeStorageMode()): boolean {
-  return mode !== "legacy";
-}
-
-function getDatabaseUrl(): string {
-  const databaseUrl = process.env.DATABASE_URL?.trim();
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL is required when INTAKE_STORAGE_MODE is not legacy");
-  }
-
-  return databaseUrl;
-}
-
-function getDatabaseSslMode(): DatabaseSslMode {
-  const rawMode = process.env.DATABASE_SSL_MODE?.trim().toLowerCase();
-  if (!rawMode) {
-    return "disable";
-  }
-
-  if ((DATABASE_SSL_MODES as readonly string[]).includes(rawMode)) {
-    return rawMode as DatabaseSslMode;
-  }
-
-  throw new Error(
-    `Invalid DATABASE_SSL_MODE: "${rawMode}". Supported values: ${DATABASE_SSL_MODES.join(", ")}`,
-  );
-}
-
-function getDatabaseSslConfig(): false | { rejectUnauthorized: boolean } {
-  const sslMode = getDatabaseSslMode();
-
-  if (sslMode === "disable") {
-    return false;
-  }
-
-  if (sslMode === "require") {
-    return { rejectUnauthorized: false };
-  }
-
-  return { rejectUnauthorized: true };
-}
-
-function getPool(): Pool {
-  if (!pool) {
-    pool = new Pool({
-      connectionString: getDatabaseUrl(),
-      ssl: getDatabaseSslConfig(),
-      max: 10,
-      idleTimeoutMillis: 30_000,
-      connectionTimeoutMillis: 5_000,
-    });
-  }
-
-  return pool;
-}
 
 function buildDedupeKey(payload: ContactSubmitPayload): string {
   const stableInput = [
@@ -117,7 +47,7 @@ export async function persistLeadSubmission(
 ): Promise<PersistLeadSubmissionResult> {
   const dedupeKey = buildDedupeKey(input.payload);
   const leadId = randomUUID();
-  const db = getPool();
+  const db = getIntakeDatabasePool();
 
   const insertResult = await db.query<{ id: string }>(
     `
@@ -192,7 +122,7 @@ export async function recordLeadEvent(
   eventType: string,
   eventPayload: Record<string, unknown>,
 ): Promise<void> {
-  const db = getPool();
+  const db = getIntakeDatabasePool();
   await db.query(
     `
       INSERT INTO intake_lead_events (lead_id, event_type, event_payload)
