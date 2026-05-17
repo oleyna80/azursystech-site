@@ -1,6 +1,12 @@
 import type { Pool, PoolClient } from "pg";
 
 import {
+  INTAKE_CHANNELS,
+  type IntakeBriefDraft,
+  type IntakeChannel,
+  type IntakeConversationState,
+} from "@/lib/intake/types";
+import {
   INTAKE_ADMIN_NOTIFICATION_STATUSES,
   INTAKE_BRIEF_STATUSES,
   INTAKE_PERSISTENCE_SCHEMA_VERSION,
@@ -13,14 +19,18 @@ import {
   resolveBriefPersistenceStatus,
   resolveSheetsMirrorStatus,
   type IntakePersistenceStore,
+  type IntakeOutboxMessage,
+  type IntakeOutboxStore,
   type IntakeAdminNotificationStatus,
   type IntakeBriefPersistenceStatus,
   type IntakeSheetsMirrorStatus,
+  type ListPendingOutboundDraftsInput,
   type LoadIntakeConversationInput,
+  type OutboundMessageTransitionResult,
   type PersistIntakeDecisionInput,
   type PersistIntakeDecisionResult,
+  type TransitionOutboundMessageInput,
 } from "@/lib/intake/persistence";
-import type { IntakeBriefDraft, IntakeConversationState } from "@/lib/intake/types";
 
 type ConversationStateRow = {
   id: string;
@@ -47,6 +57,23 @@ type ConversationStatusRow = {
 
 type ExistingMessageRow = ConversationStatusRow & {
   conversation_id: string;
+};
+
+type OutboxMessageRow = {
+  message_id: string;
+  conversation_id: string;
+  idempotency_key: string;
+  provider_message_id: string | null;
+  direction: string;
+  channel: string;
+  author_type: string;
+  status: string;
+  body: string;
+  created_at_utc: Date;
+  approved_at_utc: Date | null;
+  sent_at_utc: Date | null;
+  conversation_key: string;
+  sender_key: string;
 };
 
 function buildConversationId(input: LoadIntakeConversationInput): string {
@@ -94,6 +121,10 @@ function isAdminNotificationStatus(value: string): value is IntakeAdminNotificat
 
 function isSheetsMirrorStatus(value: string): value is IntakeSheetsMirrorStatus {
   return INTAKE_SHEETS_MIRROR_STATUSES.includes(value as IntakeSheetsMirrorStatus);
+}
+
+function isIntakeChannel(value: string): value is IntakeChannel {
+  return (INTAKE_CHANNELS as readonly string[]).includes(value);
 }
 
 async function rollbackQuietly(client: PoolClient): Promise<void> {
@@ -163,6 +194,83 @@ export class SqlIntakePersistenceStore implements IntakePersistenceStore {
 
 export function createSqlIntakePersistenceStore(pool: Pool): IntakePersistenceStore {
   return new SqlIntakePersistenceStore(pool);
+}
+
+export class SqlIntakeOutboxStore implements IntakeOutboxStore {
+  constructor(private readonly pool: Pool) {}
+
+  async listPendingOutboundDrafts(
+    input: ListPendingOutboundDraftsInput = {},
+  ): Promise<IntakeOutboxMessage[]> {
+    const limit = normalizeOutboxLimit(input.limit);
+    const params: Array<string | number> = [];
+    const channelFilter = input.channel ? "AND m.channel = $2" : "";
+
+    params.push(limit);
+    if (input.channel) {
+      params.push(input.channel);
+    }
+
+    const result = await this.pool.query<OutboxMessageRow>(
+      `
+        SELECT
+          m.id::text AS message_id,
+          m.conversation_id,
+          m.idempotency_key,
+          m.provider_message_id,
+          m.direction,
+          m.channel,
+          m.author_type,
+          m.status,
+          m.body,
+          m.created_at AS created_at_utc,
+          m.approved_at AS approved_at_utc,
+          m.sent_at AS sent_at_utc,
+          c.conversation_key,
+          c.sender_key
+        FROM intake_channel_messages m
+        JOIN intake_channel_conversations c ON c.id = m.conversation_id
+        WHERE m.direction = 'outbound'
+          AND m.author_type = 'assistant'
+          AND m.status = 'draft'
+          ${channelFilter}
+        ORDER BY m.created_at ASC
+        LIMIT $1
+      `,
+      params,
+    );
+
+    return result.rows.map(toOutboxMessage);
+  }
+
+  async approveOutboundDraftMessage(
+    input: TransitionOutboundMessageInput,
+  ): Promise<OutboundMessageTransitionResult> {
+    return transitionOutboundMessage(this.pool, input.messageId, {
+      fromStatus: "draft",
+      toStatus: "approved",
+      alreadyStatus: "approved",
+      transition: "approved",
+      alreadyTransition: "already_approved",
+      timestampColumn: "approved_at",
+    });
+  }
+
+  async queueApprovedOutboundMessage(
+    input: TransitionOutboundMessageInput,
+  ): Promise<OutboundMessageTransitionResult> {
+    return transitionOutboundMessage(this.pool, input.messageId, {
+      fromStatus: "approved",
+      toStatus: "queued",
+      alreadyStatus: "queued",
+      transition: "queued",
+      alreadyTransition: "already_queued",
+    });
+  }
+}
+
+export function createSqlIntakeOutboxStore(pool: Pool): IntakeOutboxStore {
+  return new SqlIntakeOutboxStore(pool);
 }
 
 async function persistDecisionInTransaction(
@@ -562,4 +670,207 @@ async function updateConversationSnapshot(
       persistedConversationId,
     ],
   );
+}
+
+function normalizeOutboxLimit(limit: number | undefined): number {
+  if (typeof limit !== "number" || !Number.isFinite(limit)) {
+    return 50;
+  }
+
+  return Math.min(Math.max(Math.trunc(limit), 1), 100);
+}
+
+function toUtcIsoString(value: Date | string): string {
+  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
+}
+
+function toNullableUtcIsoString(value: Date | string | null): string | null {
+  return value === null ? null : toUtcIsoString(value);
+}
+
+function toOutboxMessage(row: OutboxMessageRow): IntakeOutboxMessage {
+  if (row.direction !== "outbound") {
+    throw new Error(`Unexpected intake outbox direction: ${row.direction}`);
+  }
+
+  if (
+    row.author_type !== "assistant" &&
+    row.author_type !== "manager" &&
+    row.author_type !== "system"
+  ) {
+    throw new Error(`Unexpected intake outbox author type: ${row.author_type}`);
+  }
+
+  if (
+    row.status !== "draft" &&
+    row.status !== "approved" &&
+    row.status !== "queued" &&
+    row.status !== "sent" &&
+    row.status !== "failed"
+  ) {
+    throw new Error(`Unexpected intake outbox status: ${row.status}`);
+  }
+
+  if (!isIntakeChannel(row.channel)) {
+    throw new Error(`Unexpected intake outbox channel: ${row.channel}`);
+  }
+
+  return {
+    messageId: row.message_id,
+    conversationId: row.conversation_id,
+    channel: row.channel,
+    conversationKey: row.conversation_key,
+    senderKey: row.sender_key,
+    idempotencyKey: row.idempotency_key,
+    ...(row.provider_message_id ? { providerMessageId: row.provider_message_id } : {}),
+    direction: row.direction,
+    authorType: row.author_type,
+    status: row.status,
+    body: row.body,
+    createdAtUtc: toUtcIsoString(row.created_at_utc),
+    approvedAtUtc: toNullableUtcIsoString(row.approved_at_utc),
+    sentAtUtc: toNullableUtcIsoString(row.sent_at_utc),
+  };
+}
+
+type TransitionOptions = {
+  fromStatus: "draft" | "approved";
+  toStatus: "approved" | "queued";
+  alreadyStatus: "approved" | "queued";
+  transition: "approved" | "queued";
+  alreadyTransition: "already_approved" | "already_queued";
+  timestampColumn?: "approved_at";
+};
+
+async function transitionOutboundMessage(
+  pool: Pool,
+  messageId: string,
+  options: TransitionOptions,
+): Promise<OutboundMessageTransitionResult> {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const current = await findOutboxMessageByIdForUpdate(client, messageId);
+    if (!current) {
+      await client.query("COMMIT");
+      return { ok: false, reason: "not_found" };
+    }
+
+    if (current.status === options.alreadyStatus) {
+      await client.query("COMMIT");
+      return {
+        ok: true,
+        transition: options.alreadyTransition,
+        message: toOutboxMessage(current),
+      };
+    }
+
+    if (current.status !== options.fromStatus) {
+      await client.query("COMMIT");
+      return {
+        ok: false,
+        reason: "invalid_transition",
+        currentStatus: toOutboxMessage(current).status,
+        message: toOutboxMessage(current),
+      };
+    }
+
+    const updated = await updateOutboxMessageStatus(client, messageId, options);
+    await client.query("COMMIT");
+
+    return {
+      ok: true,
+      transition: options.transition,
+      message: toOutboxMessage(updated),
+    };
+  } catch (error) {
+    await rollbackQuietly(client);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function findOutboxMessageByIdForUpdate(
+  client: PoolClient,
+  messageId: string,
+): Promise<OutboxMessageRow | null> {
+  const result = await client.query<OutboxMessageRow>(
+    `
+      SELECT
+        m.id::text AS message_id,
+        m.conversation_id,
+        m.idempotency_key,
+        m.provider_message_id,
+        m.direction,
+        m.channel,
+        m.author_type,
+        m.status,
+        m.body,
+        m.created_at AS created_at_utc,
+        m.approved_at AS approved_at_utc,
+        m.sent_at AS sent_at_utc,
+        c.conversation_key,
+        c.sender_key
+      FROM intake_channel_messages m
+      JOIN intake_channel_conversations c ON c.id = m.conversation_id
+      WHERE m.id = $1
+        AND m.direction = 'outbound'
+        AND m.author_type = 'assistant'
+      FOR UPDATE
+    `,
+    [messageId],
+  );
+
+  return result.rows[0] ?? null;
+}
+
+async function updateOutboxMessageStatus(
+  client: PoolClient,
+  messageId: string,
+  options: TransitionOptions,
+): Promise<OutboxMessageRow> {
+  const timestampAssignment =
+    options.timestampColumn === "approved_at" ? ", approved_at = COALESCE(approved_at, NOW())" : "";
+
+  const result = await client.query<OutboxMessageRow>(
+    `
+      UPDATE intake_channel_messages
+      SET status = $2${timestampAssignment}
+      WHERE id = $1
+      RETURNING
+        id::text AS message_id,
+        conversation_id,
+        idempotency_key,
+        provider_message_id,
+        direction,
+        channel,
+        author_type,
+        status,
+        body,
+        created_at AS created_at_utc,
+        approved_at AS approved_at_utc,
+        sent_at AS sent_at_utc,
+        (
+          SELECT conversation_key
+          FROM intake_channel_conversations
+          WHERE id = intake_channel_messages.conversation_id
+        ) AS conversation_key,
+        (
+          SELECT sender_key
+          FROM intake_channel_conversations
+          WHERE id = intake_channel_messages.conversation_id
+        ) AS sender_key
+    `,
+    [messageId, options.toStatus],
+  );
+
+  const updated = result.rows[0];
+  if (!updated) {
+    throw new Error("Failed to update intake outbox message status");
+  }
+
+  return updated;
 }

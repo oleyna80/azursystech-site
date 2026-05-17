@@ -82,6 +82,48 @@ export type IntakeOutboundDraftRecord = IntakeConversationIdentity & {
   body: string;
 };
 
+export type IntakeOutboxMessage = IntakeConversationIdentity & {
+  messageId: string;
+  conversationId: string;
+  idempotencyKey: string;
+  providerMessageId?: string;
+  direction: Extract<IntakeMessageDirection, "outbound">;
+  authorType: Extract<IntakeMessageAuthorType, "assistant" | "manager" | "system">;
+  status: IntakeMessageStatus;
+  body: string;
+  createdAtUtc: string;
+  approvedAtUtc: string | null;
+  sentAtUtc: string | null;
+};
+
+export type ListPendingOutboundDraftsInput = {
+  channel?: NormalizedIntakeMessage["channel"];
+  limit?: number;
+};
+
+export type TransitionOutboundMessageInput = {
+  messageId: string;
+};
+
+export type OutboundMessageTransitionName =
+  | "approved"
+  | "queued"
+  | "already_approved"
+  | "already_queued";
+
+export type OutboundMessageTransitionResult =
+  | {
+      ok: true;
+      transition: OutboundMessageTransitionName;
+      message: IntakeOutboxMessage;
+    }
+  | {
+      ok: false;
+      reason: "not_found" | "invalid_transition";
+      currentStatus?: IntakeMessageStatus;
+      message?: IntakeOutboxMessage;
+    };
+
 export type IntakeDecisionEventRecord = IntakeConversationIdentity & {
   schemaVersion: typeof INTAKE_PERSISTENCE_SCHEMA_VERSION;
   idempotencyKey: string;
@@ -123,6 +165,18 @@ export type IntakePersistenceStore = {
     input: LoadIntakeConversationInput,
   ): Promise<IntakeConversationState | null>;
   persistDecision(input: PersistIntakeDecisionInput): Promise<PersistIntakeDecisionResult>;
+};
+
+export type IntakeOutboxStore = {
+  listPendingOutboundDrafts(
+    input?: ListPendingOutboundDraftsInput,
+  ): Promise<IntakeOutboxMessage[]>;
+  approveOutboundDraftMessage(
+    input: TransitionOutboundMessageInput,
+  ): Promise<OutboundMessageTransitionResult>;
+  queueApprovedOutboundMessage(
+    input: TransitionOutboundMessageInput,
+  ): Promise<OutboundMessageTransitionResult>;
 };
 
 function getAdminNotification(
