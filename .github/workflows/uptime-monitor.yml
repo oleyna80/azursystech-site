@@ -212,7 +212,7 @@ jobs:
           curl --fail --show-error --silent \
             -X POST \
             -H "Content-Type: application/json" \
-            --data "{\"text\":\"${MESSAGE}\"}" \
+            --data "$(jq -n --arg text "${MESSAGE}" '{text: $text}')" \
             "${ALERT_WEBHOOK}"
 
       - name: Upload probe artifacts on failure

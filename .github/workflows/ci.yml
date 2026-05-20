@@ -13,6 +13,13 @@ concurrency:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - web
+          - admin
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,20 +29,29 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: web/package-lock.json
+          cache-dependency-path: ${{ matrix.project }}/package-lock.json
 
       - name: Install dependencies
-        working-directory: web
+        working-directory: ${{ matrix.project }}
         run: npm ci
 
       - name: Lint
-        working-directory: web
+        working-directory: ${{ matrix.project }}
         run: npm run lint
 
+      - name: Test
+        if: ${{ matrix.project == 'web' }}
+        working-directory: ${{ matrix.project }}
+        run: npm run test:ci
+
       - name: Type check
-        working-directory: web
+        working-directory: ${{ matrix.project }}
         run: npm run check:types
 
+      - name: Runtime dependency audit
+        working-directory: ${{ matrix.project }}
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Build
-        working-directory: web
+        working-directory: ${{ matrix.project }}
         run: npm run build

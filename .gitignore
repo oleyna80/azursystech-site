@@ -30,6 +30,7 @@ AGENTS.md
 Claude.md
 CLAUDE.md
 .codexignore
+.agentsignore
 .roo/
 .roomodes
 00_strategy/

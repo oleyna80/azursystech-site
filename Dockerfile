@@ -29,9 +29,12 @@ ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     PORT=3000
 
-COPY --from=build /app/web/.next/standalone ./
-COPY --from=build /app/web/.next/static ./.next/static
-COPY --from=build /app/web/public ./public
+COPY --from=build --chown=node:node /app/web/.next/standalone ./
+COPY --from=build --chown=node:node /app/web/.next/static ./.next/static
+COPY --from=build --chown=node:node /app/web/public ./public
+
+USER node
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/health || exit 1
 
 EXPOSE 3000
 

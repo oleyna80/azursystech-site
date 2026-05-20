@@ -1,37 +1,87 @@
 name: Deploy to VPS
 
 on:
-  workflow_run:
-    workflows:
-      - CI
-    types:
-      - completed
   workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Immutable image tag, for example sha-<full_commit_sha>"
+        required: true
+      include_admin:
+        description: "Deploy the admin profile too"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   deploy:
-    if: |
-      (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.head_branch == 'main') ||
-      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          GH_REPOSITORY: ${{ github.repository }}
+          IMAGE_TAG_INPUT: ${{ inputs.image_tag }}
+          INCLUDE_ADMIN_INPUT: ${{ inputs.include_admin }}
+          VPS_APP_DIR_INPUT: ${{ secrets.VPS_APP_DIR }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
           script_stop: true
+          envs: GH_REPOSITORY,IMAGE_TAG_INPUT,INCLUDE_ADMIN_INPUT,VPS_APP_DIR_INPUT
           script: |
             set -euo pipefail
-            cd "${{ secrets.VPS_APP_DIR }}"
-            git fetch origin main
-            git checkout main
-            git pull --ff-only origin main
-            docker compose -f docker-compose.vps.yml config > /tmp/azursystech-compose.rendered.yml
-            docker compose -f docker-compose.vps.yml up -d --build --remove-orphans
-            docker image prune -f
+            cd "${VPS_APP_DIR_INPUT}"
+
+            IMAGE_TAG="${IMAGE_TAG_INPUT}"
+            case "${IMAGE_TAG}" in
+              latest|main|*:latest|*:main|"")
+                echo "Use an immutable image tag, not ${IMAGE_TAG}" >&2
+                exit 1
+                ;;
+            esac
+            if ! printf '%s' "${IMAGE_TAG}" | grep -Eq '^sha-[0-9a-f]{40}$'; then
+              echo "Use an immutable image tag in the form sha-<full_commit_sha>: ${IMAGE_TAG}" >&2
+              exit 1
+            fi
+
+            export APP_IMAGE="ghcr.io/${GH_REPOSITORY}-app:${IMAGE_TAG}"
+            if [ "${INCLUDE_ADMIN_INPUT}" = "true" ]; then
+              export DEPLOY_ADMIN=1
+              export ADMIN_IMAGE="ghcr.io/${GH_REPOSITORY}-admin:${IMAGE_TAG}"
+            else
+              export DEPLOY_ADMIN=0
+            fi
+
+            ./deploy.sh "${APP_IMAGE}"
+
+            for container in azursystech-postgres azursystech-app azursystech-web; do
+              for attempt in $(seq 1 24); do
+                status="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$container")"
+                if [ "$status" = "healthy" ] || [ "$status" = "none" ]; then
+                  break
+                fi
+                if [ "$attempt" = "24" ]; then
+                  echo "$container is not healthy: $status" >&2
+                  exit 1
+                fi
+                sleep 5
+              done
+            done
+
+            if [ "${INCLUDE_ADMIN_INPUT}" = "true" ]; then
+              for attempt in $(seq 1 24); do
+                status="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' azursystech-admin)"
+                if [ "$status" = "healthy" ] || [ "$status" = "none" ]; then
+                  break
+                fi
+                if [ "$attempt" = "24" ]; then
+                  echo "azursystech-admin is not healthy: $status" >&2
+                  exit 1
+                fi
+                sleep 5
+              done
+            fi
+
             docker compose -f docker-compose.vps.yml ps

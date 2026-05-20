@@ -4,7 +4,7 @@ This directory contains the production website for AzurSysTech.
 
 ## Stack
 
-- Next.js `16.2.3`
+- Next.js `16.2.6`
 - React `19.2.3`
 - TypeScript
 - Tailwind CSS

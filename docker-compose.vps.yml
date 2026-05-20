@@ -30,6 +30,7 @@ services:
   app:
     image: ${APP_IMAGE:?APP_IMAGE is required}
     container_name: azursystech-app
+    init: true
     environment:
       HOSTNAME: 0.0.0.0
       HOST: 0.0.0.0
@@ -37,6 +38,9 @@ services:
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY is required}
       DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://azursystech.fr,https://www.azursystech.fr}
+      AZURSYSTECH_TRUST_PROXY_HEADERS: ${AZURSYSTECH_TRUST_PROXY_HEADERS:-true}
+      META_APP_SECRET: ${META_APP_SECRET:-}
+      FACEBOOK_APP_SECRET: ${FACEBOOK_APP_SECRET:-}
       AZURSYSTECH_CONTACT_SUBMIT_ENABLED: ${AZURSYSTECH_CONTACT_SUBMIT_ENABLED:-false}
       AZURSYSTECH_CONTACT_SUBMIT_BASE_URL: ${AZURSYSTECH_CONTACT_SUBMIT_BASE_URL}
       AZURSYSTECH_CONTACT_SUBMIT_ALLOWED_HOSTS: ${AZURSYSTECH_CONTACT_SUBMIT_ALLOWED_HOSTS:-}
@@ -74,11 +78,11 @@ services:
         max-file: "3"
     networks:
       - default
-      - npm_default
 
   admin:
     image: ${ADMIN_IMAGE:-ghcr.io/oleyna80/azursystech-admin:__unset__}
     container_name: azursystech-admin
+    init: true
     profiles:
       - admin
     environment:
@@ -114,7 +118,6 @@ services:
         max-file: "3"
     networks:
       - default
-      - npm_default
 
   web:
     image: nginx:1.27-alpine

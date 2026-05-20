@@ -7,42 +7,63 @@ on:
         description: "Git ref (branch/tag/SHA) to build"
         required: true
         default: "main"
+      publish_admin:
+        description: "Build and push the admin image"
+        required: false
+        default: true
+        type: boolean
 
 permissions:
+  actions: read
   contents: read
   packages: write
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Resolve build ref and immutable image tag
         id: meta
         shell: bash
+        env:
+          TARGET_REF_INPUT: ${{ github.event.inputs.ref }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_run" ]; then
-            TARGET_SHA="${{ github.event.workflow_run.head_sha }}"
-            TARGET_REF="$TARGET_SHA"
-          else
-            TARGET_REF="${{ github.event.inputs.ref }}"
-            TARGET_SHA="$(git ls-remote https://github.com/${{ github.repository }}.git "$TARGET_REF" | awk 'NR==1 {print $1}')"
-            if [ -z "$TARGET_SHA" ]; then
-              echo "Unable to resolve ref: $TARGET_REF" >&2
-              exit 1
-            fi
+          TARGET_REF="${TARGET_REF_INPUT}"
+          if ! printf '%s' "$TARGET_REF" | grep -Eq '^[A-Za-z0-9._/@+-]{1,200}$'; then
+            echo "Invalid ref format: $TARGET_REF" >&2
+            exit 1
+          fi
+
+          TARGET_SHA="$(git ls-remote https://github.com/${{ github.repository }}.git "$TARGET_REF" | awk 'NR==1 {print $1}')"
+          if [ -z "$TARGET_SHA" ]; then
+            echo "Unable to resolve ref: $TARGET_REF" >&2
+            exit 1
+          fi
+          if ! printf '%s' "$TARGET_SHA" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "Resolved ref is not a full commit SHA: $TARGET_SHA" >&2
+            exit 1
           fi
 
           echo "ref=$TARGET_REF" >> "$GITHUB_OUTPUT"
           echo "sha=$TARGET_SHA" >> "$GITHUB_OUTPUT"
           echo "immutable_tag=sha-$TARGET_SHA" >> "$GITHUB_OUTPUT"
 
+      - name: Require successful CI for build ref
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: ${{ steps.meta.outputs.sha }}
+        run: |
+          success_count="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?head_sha=${TARGET_SHA}&status=success&per_page=1" --jq '.total_count')"
+          if [ "${success_count}" = "0" ]; then
+            echo "No successful CI run found for ${TARGET_SHA}; refusing to publish images." >&2
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ steps.meta.outputs.ref }}
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -54,24 +75,57 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
-        id: build
+      - name: Build and push web image
+        id: build_web
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
           push: true
+          provenance: true
+          sbom: true
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
           tags: |
-            ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.immutable_tag }}
-            ghcr.io/${{ github.repository }}:main
+            ghcr.io/${{ github.repository }}-app:${{ steps.meta.outputs.immutable_tag }}
+
+      - name: Build and push admin image
+        id: build_admin
+        if: ${{ inputs.publish_admin }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.admin
+          push: true
+          provenance: true
+          sbom: true
+          cache-from: type=gha,scope=admin
+          cache-to: type=gha,mode=max,scope=admin
+          tags: |
+            ghcr.io/${{ github.repository }}-admin:${{ steps.meta.outputs.immutable_tag }}
 
       - name: Summary
+        env:
+          ADMIN_DIGEST: ${{ steps.build_admin.outputs.digest }}
+          ADMIN_PUBLISHED: ${{ inputs.publish_admin }}
+          IMMUTABLE_TAG: ${{ steps.meta.outputs.immutable_tag }}
+          REF_NAME: ${{ steps.meta.outputs.ref }}
+          REPOSITORY_NAME: ${{ github.repository }}
+          SHA: ${{ steps.meta.outputs.sha }}
+          WEB_DIGEST: ${{ steps.build_web.outputs.digest }}
         run: |
           {
             echo "### Docker Publish"
             echo ""
-            echo "- Ref: \`${{ steps.meta.outputs.ref }}\`"
-            echo "- Commit SHA: \`${{ steps.meta.outputs.sha }}\`"
-            echo "- Immutable tag: \`${{ steps.meta.outputs.immutable_tag }}\`"
-            echo "- Digest: \`${{ steps.build.outputs.digest }}\`"
+            echo "- Ref: \`${REF_NAME}\`"
+            echo "- Commit SHA: \`${SHA}\`"
+            echo "- Immutable tag: \`${IMMUTABLE_TAG}\`"
+            echo "- Web image: \`ghcr.io/${REPOSITORY_NAME}-app:${IMMUTABLE_TAG}\`"
+            echo "- Web digest: \`${WEB_DIGEST}\`"
+            if [ "${ADMIN_PUBLISHED}" = "true" ]; then
+              echo "- Admin image: \`ghcr.io/${REPOSITORY_NAME}-admin:${IMMUTABLE_TAG}\`"
+              echo "- Admin digest: \`${ADMIN_DIGEST}\`"
+            else
+              echo "- Admin image: skipped"
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
