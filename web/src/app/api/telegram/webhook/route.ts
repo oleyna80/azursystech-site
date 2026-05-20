@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { readJsonWithLimit } from "@/lib/api-security";
 import type { IntakeConversationState } from "@/lib/intake/types";
 import {
   runTelegramIntakeDryRun,
@@ -22,16 +23,6 @@ function isDryRunRequest(request: Request): boolean {
     process.env.NODE_ENV !== "production" &&
     request.headers.get("x-azursystech-dry-run")?.trim().toLowerCase() === "true"
   );
-}
-
-function isRequestBodyTooLarge(request: Request): boolean {
-  const contentLength = request.headers.get("content-length");
-  if (!contentLength) {
-    return false;
-  }
-
-  const parsed = Number.parseInt(contentLength, 10);
-  return Number.isFinite(parsed) && parsed > MAX_TELEGRAM_WEBHOOK_BODY_BYTES;
 }
 
 function extractTelegramUpdate(body: unknown): TelegramUpdate {
@@ -64,30 +55,6 @@ function extractConversationState(body: unknown): IntakeConversationState | unde
   };
 }
 
-async function readTelegramWebhookBody(request: Request): Promise<
-  | { ok: true; body: unknown }
-  | {
-      ok: false;
-      response: NextResponse;
-    }
-> {
-  if (isRequestBodyTooLarge(request)) {
-    return {
-      ok: false,
-      response: NextResponse.json({ error: "Request too large" }, { status: 413 }),
-    };
-  }
-
-  try {
-    return { ok: true, body: await request.json() };
-  } catch {
-    return {
-      ok: false,
-      response: NextResponse.json({ error: "Bad Request: invalid payload" }, { status: 400 }),
-    };
-  }
-}
-
 function notFound(): NextResponse {
   return NextResponse.json({ error: "Not Found" }, { status: 404 });
 }
@@ -97,14 +64,18 @@ function isTelegramSecretValid(request: Request, expectedSecret: string): boolea
 }
 
 async function handleDryRunWebhook(request: Request) {
-  const payload = await readTelegramWebhookBody(request);
-  if (!payload.ok) {
-    return payload.response;
+  const parsed = await readJsonWithLimit(request, MAX_TELEGRAM_WEBHOOK_BODY_BYTES);
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { error: parsed.reason === "too_large" ? "Request too large" : "Invalid payload" },
+      { status: parsed.reason === "too_large" ? 413 : 400 },
+    );
   }
 
+  const body = parsed.value;
   const result = await runTelegramIntakeDryRun(
-    extractTelegramUpdate(payload.body),
-    extractConversationState(payload.body),
+    extractTelegramUpdate(body),
+    extractConversationState(body),
   );
 
   if (!result.ok) {
@@ -147,12 +118,15 @@ async function handleLiveWebhook(request: Request) {
     return notFound();
   }
 
-  const payload = await readTelegramWebhookBody(request);
-  if (!payload.ok) {
-    return payload.response;
+  const parsed = await readJsonWithLimit(request, MAX_TELEGRAM_WEBHOOK_BODY_BYTES);
+  if (!parsed.ok) {
+    return NextResponse.json(
+      { ok: false, error: parsed.reason === "too_large" ? "Request too large" : "Invalid payload" },
+      { status: parsed.reason === "too_large" ? 413 : 400 },
+    );
   }
 
-  const result = await runTelegramIntakeLiveReceive(extractTelegramUpdate(payload.body));
+  const result = await runTelegramIntakeLiveReceive(extractTelegramUpdate(parsed.value));
 
   if (!result.ok) {
     if ("persistence" in result) {

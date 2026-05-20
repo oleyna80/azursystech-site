@@ -30,19 +30,27 @@ jobs:
           TARGET_REF_INPUT: ${{ github.event.inputs.ref }}
         run: |
           TARGET_REF="${TARGET_REF_INPUT}"
-          if ! printf '%s' "$TARGET_REF" | grep -Eq '^[A-Za-z0-9._/@+-]{1,200}$'; then
-            echo "Invalid ref format: $TARGET_REF" >&2
-            exit 1
-          fi
 
-          TARGET_SHA="$(git ls-remote https://github.com/${{ github.repository }}.git "$TARGET_REF" | awk 'NR==1 {print $1}')"
-          if [ -z "$TARGET_SHA" ]; then
-            echo "Unable to resolve ref: $TARGET_REF" >&2
-            exit 1
-          fi
-          if ! printf '%s' "$TARGET_SHA" | grep -Eq '^[0-9a-f]{40}$'; then
-            echo "Resolved ref is not a full commit SHA: $TARGET_SHA" >&2
-            exit 1
+          if printf '%s' "$TARGET_REF" | grep -Eq '^[0-9a-f]{40}$'; then
+            # Direct SHA input — no ls-remote needed. Validate after checkout.
+            echo "Treating input as a full commit SHA."
+            TARGET_SHA="${TARGET_REF}"
+          else
+            # Branch or tag — validate format, then resolve via ls-remote.
+            if ! printf '%s' "$TARGET_REF" | grep -Eq '^[A-Za-z0-9._/@+-]{1,200}$'; then
+              echo "Invalid ref format: $TARGET_REF" >&2
+              exit 1
+            fi
+
+            TARGET_SHA="$(git ls-remote https://github.com/${{ github.repository }}.git "$TARGET_REF" | awk 'NR==1 {print $1}')"
+            if [ -z "$TARGET_SHA" ]; then
+              echo "Unable to resolve ref: $TARGET_REF" >&2
+              exit 1
+            fi
+            if ! printf '%s' "$TARGET_SHA" | grep -Eq '^[0-9a-f]{40}$'; then
+              echo "Resolved ref is not a full commit SHA: $TARGET_SHA" >&2
+              exit 1
+            fi
           fi
 
           echo "ref=$TARGET_REF" >> "$GITHUB_OUTPUT"
@@ -63,7 +71,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.meta.outputs.ref }}
+          ref: ${{ steps.meta.outputs.sha }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
