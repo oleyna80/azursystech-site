@@ -3,11 +3,15 @@ import { runIntakeDryRun } from "@/lib/intake/runtime";
 import type { IntakeConversationState, IntakeDecision } from "@/lib/intake/types";
 import {
   normalizeTelegramDryRunUpdate,
+  normalizeTelegramUpdate,
   type TelegramAdapterResult,
   type TelegramDryRunUpdate,
+  type TelegramUpdate,
 } from "@/lib/telegram/intake-adapter";
 
-export type TelegramIntakeDryRunResult =
+type TelegramAdapterErrorResult = Extract<TelegramAdapterResult, { ok: false }>;
+
+type TelegramIntakeResult =
   | {
       ok: true;
       decision: IntakeDecision;
@@ -18,15 +22,17 @@ export type TelegramIntakeDryRunResult =
     }
   | {
       ok: false;
-      adapter: TelegramAdapterResult;
+      adapter: TelegramAdapterErrorResult;
     };
 
-export async function runTelegramIntakeDryRun(
-  update: TelegramDryRunUpdate,
-  state?: IntakeConversationState,
-): Promise<TelegramIntakeDryRunResult> {
-  const adapter = normalizeTelegramDryRunUpdate(update);
+export type TelegramIntakeDryRunResult = TelegramIntakeResult;
+export type TelegramIntakeLiveReceiveResult = TelegramIntakeResult;
 
+async function runTelegramIntake(
+  adapter: TelegramAdapterResult,
+  rawProviderPayload: TelegramUpdate,
+  state?: IntakeConversationState,
+): Promise<TelegramIntakeResult> {
   if (!adapter.ok) {
     return {
       ok: false,
@@ -57,7 +63,7 @@ export async function runTelegramIntakeDryRun(
       message: adapter.message,
       decision,
       previousState: conversationState,
-      rawProviderPayload: update as Record<string, unknown>,
+      rawProviderPayload: rawProviderPayload as Record<string, unknown>,
     });
   } catch {
     return {
@@ -70,4 +76,20 @@ export async function runTelegramIntakeDryRun(
     ok: true,
     decision,
   };
+}
+
+export async function runTelegramIntakeDryRun(
+  update: TelegramDryRunUpdate,
+  state?: IntakeConversationState,
+): Promise<TelegramIntakeDryRunResult> {
+  return runTelegramIntake(normalizeTelegramDryRunUpdate(update), update, state);
+}
+
+export async function runTelegramIntakeLiveReceive(
+  update: TelegramUpdate,
+): Promise<TelegramIntakeLiveReceiveResult> {
+  return runTelegramIntake(
+    normalizeTelegramUpdate(update, new Date(), { requirePrivateChat: true }),
+    update,
+  );
 }

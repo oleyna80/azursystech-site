@@ -2,7 +2,7 @@ import type { IntakeLocale, NormalizedIntakeMessage } from "@/lib/intake/types";
 
 const MAX_TELEGRAM_TEXT_LENGTH = 1_500;
 
-type TelegramDryRunUser = {
+type TelegramUser = {
   id?: number | string;
   username?: string;
   first_name?: string;
@@ -10,27 +10,33 @@ type TelegramDryRunUser = {
   language_code?: string;
 };
 
-type TelegramDryRunChat = {
+type TelegramChat = {
   id?: number | string;
   type?: string;
 };
 
-type TelegramDryRunMessage = {
+type TelegramMessage = {
   message_id?: number | string;
   date?: number;
   text?: string;
-  from?: TelegramDryRunUser;
-  chat?: TelegramDryRunChat;
+  from?: TelegramUser;
+  chat?: TelegramChat;
 };
 
-export type TelegramDryRunUpdate = {
+export type TelegramUpdate = {
   update_id?: number | string;
-  message?: TelegramDryRunMessage;
+  message?: TelegramMessage;
 };
+
+export type TelegramDryRunUpdate = TelegramUpdate;
 
 export type TelegramAdapterResult =
   | { ok: true; message: NormalizedIntakeMessage }
   | { ok: false; error: "invalid_update" | "missing_text" | "unsupported_update" };
+
+export type TelegramUpdateNormalizationOptions = {
+  requirePrivateChat?: boolean;
+};
 
 function normalizeTelegramLocale(languageCode: string | undefined): IntakeLocale {
   const normalized = languageCode?.trim().toLowerCase();
@@ -56,7 +62,7 @@ function normalizeTelegramText(value: string): string {
     .slice(0, MAX_TELEGRAM_TEXT_LENGTH);
 }
 
-function buildTelegramClientName(user: TelegramDryRunUser | undefined): string | undefined {
+function buildTelegramClientName(user: TelegramUser | undefined): string | undefined {
   const displayName = [user?.first_name, user?.last_name]
     .map((part) => part?.trim())
     .filter(Boolean)
@@ -69,9 +75,10 @@ function buildTelegramClientName(user: TelegramDryRunUser | undefined): string |
   return displayName || (username ? `@${username}` : undefined);
 }
 
-export function normalizeTelegramDryRunUpdate(
-  update: TelegramDryRunUpdate,
+export function normalizeTelegramUpdate(
+  update: TelegramUpdate,
   receivedAtUtc = new Date(),
+  options: TelegramUpdateNormalizationOptions = {},
 ): TelegramAdapterResult {
   if (!update || typeof update !== "object") {
     return { ok: false, error: "invalid_update" };
@@ -79,6 +86,10 @@ export function normalizeTelegramDryRunUpdate(
 
   const message = update.message;
   if (!message) {
+    return { ok: false, error: "unsupported_update" };
+  }
+
+  if (options.requirePrivateChat && message.chat?.type !== "private") {
     return { ok: false, error: "unsupported_update" };
   }
 
@@ -114,4 +125,11 @@ export function normalizeTelegramDryRunUpdate(
       ...(clientName ? { clientName } : {}),
     },
   };
+}
+
+export function normalizeTelegramDryRunUpdate(
+  update: TelegramDryRunUpdate,
+  receivedAtUtc = new Date(),
+): TelegramAdapterResult {
+  return normalizeTelegramUpdate(update, receivedAtUtc);
 }

@@ -20,6 +20,11 @@ export type TelegramWebhookRegistrationConfig = {
   registrationEnabled?: boolean;
 };
 
+export type TelegramWebhookReceiveConfig = {
+  webhookSecret?: string;
+  receiveEnabled?: boolean;
+};
+
 export type TelegramSenderReadinessStatus =
   | { ok: true; apiBaseUrl: string }
   | {
@@ -32,6 +37,13 @@ export type TelegramWebhookRegistrationReadinessStatus =
   | {
       ok: false;
       reason: "disabled" | "missing_webhook_url" | "missing_webhook_secret";
+    };
+
+export type TelegramWebhookReceiveReadinessStatus =
+  | { ok: true }
+  | {
+      ok: false;
+      reason: "disabled" | "missing_webhook_secret";
     };
 
 type TelegramSendMessageResponse = {
@@ -128,6 +140,15 @@ export function getTelegramWebhookRegistrationConfigFromEnv(
   };
 }
 
+export function getTelegramWebhookReceiveConfigFromEnv(
+  env: NodeJS.ProcessEnv = process.env,
+): TelegramWebhookReceiveConfig {
+  return {
+    webhookSecret: env.TELEGRAM_WEBHOOK_SECRET,
+    receiveEnabled: isEnabled(env.TELEGRAM_WEBHOOK_RECEIVE_ENABLED),
+  };
+}
+
 export function getTelegramSenderReadinessStatus(
   config: TelegramSenderConfig,
 ): TelegramSenderReadinessStatus {
@@ -161,6 +182,19 @@ export function getTelegramWebhookRegistrationReadinessStatus(
     ok: true,
     webhookUrl: config.webhookUrl.trim(),
   };
+}
+
+export function getTelegramWebhookReceiveReadinessStatus(
+  config: TelegramWebhookReceiveConfig,
+): TelegramWebhookReceiveReadinessStatus {
+  if (!config.receiveEnabled) {
+    return { ok: false, reason: "disabled" };
+  }
+  if (!config.webhookSecret?.trim()) {
+    return { ok: false, reason: "missing_webhook_secret" };
+  }
+
+  return { ok: true };
 }
 
 export function createTelegramOutboundSender(
