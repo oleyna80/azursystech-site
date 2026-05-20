@@ -17,6 +17,11 @@ import {
   persistLeadSubmission,
   recordLeadEvent,
 } from "@/lib/intake-storage";
+import {
+  getRateLimitKey,
+  isAllowedMutationOrigin,
+  readFormDataWithLimit,
+} from "@/lib/api-security";
 import { isRateLimitedPersistent } from "@/lib/request-rate-limit";
 import { sendTelegramLeadNotification } from "@/lib/telegram-notify";
 
@@ -61,29 +66,6 @@ const MAX_REQUEST_BODY_BYTES = 200_000;
 const CONTACT_RATE_LIMIT_WINDOW_MS = 60_000;
 const CONTACT_RATE_LIMIT_MAX = 10;
 const CONTACT_RATE_LIMIT_MAX_KEYS = 10_000;
-
-function getClientIp(request: Request) {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) {
-    return forwardedFor.split(",")[0]?.trim() || "unknown";
-  }
-
-  return request.headers.get("x-real-ip")?.trim() || "unknown";
-}
-
-function isRequestBodyTooLarge(request: Request): boolean {
-  const contentLength = request.headers.get("content-length");
-  if (!contentLength) {
-    return false;
-  }
-
-  const parsed = Number.parseInt(contentLength, 10);
-  if (!Number.isFinite(parsed) || parsed < 0) {
-    return false;
-  }
-
-  return parsed > MAX_REQUEST_BODY_BYTES;
-}
 
 function normalizeAllowedHosts(rawHosts: string | undefined): string[] {
   if (!rawHosts) {
@@ -294,17 +276,16 @@ export async function POST(request: Request) {
   const fallbackLocale = resolveContactLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
   const fallbackCopy = getContactSubmitRouteCopy(fallbackLocale);
 
-  if (isRequestBodyTooLarge(request)) {
-    return jsonResult(413, {
+  if (!isAllowedMutationOrigin(request)) {
+    return jsonResult(403, {
       status: "submit_failed",
-      userMessage: fallbackCopy.tooLarge,
+      userMessage: fallbackCopy.unreadableForm,
     });
   }
 
-  const clientIp = getClientIp(request);
   const isRateLimited = await isRateLimitedPersistent({
     scope: "contact_submit",
-    key: clientIp,
+    key: getRateLimitKey(request),
     maxRequests: CONTACT_RATE_LIMIT_MAX,
     windowMs: CONTACT_RATE_LIMIT_WINDOW_MS,
     maxMemoryKeys: CONTACT_RATE_LIMIT_MAX_KEYS,
@@ -316,17 +297,22 @@ export async function POST(request: Request) {
     });
   }
 
-  let formData: FormData;
+  const parsedFormData = await readFormDataWithLimit(request, MAX_REQUEST_BODY_BYTES);
+  if (!parsedFormData.ok) {
+    if (parsedFormData.reason === "too_large") {
+      return jsonResult(413, {
+        status: "submit_failed",
+        userMessage: fallbackCopy.tooLarge,
+      });
+    }
 
-  try {
-    formData = await request.formData();
-  } catch {
     return jsonResult(400, {
       status: "validation_error",
       userMessage: fallbackCopy.unreadableForm,
       issues: [{ field: "form", message: fallbackCopy.unreadableFormIssue }],
     });
   }
+  const formData = parsedFormData.value;
 
   const requestLocale = resolveContactLocale(
     typeof formData.get("locale") === "string"

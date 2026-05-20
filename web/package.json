@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest",
+    "test:ci": "vitest run",
     "check:types": "tsc --noEmit",
     "check:security": "npm audit --omit=dev --audit-level=high",
-    "check:ci": "npm run lint && npm run check:types && npm run build && npm run check:security"
+    "check:ci": "npm run lint && npm run test:ci && npm run check:types && npm run build && npm run check:security"
   },
   "dependencies": {
     "next": "^16.2.6",
@@ -26,6 +28,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.6"
   }
 }

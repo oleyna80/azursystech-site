@@ -10,6 +10,17 @@ import {
   type BriefSubmitRequestBody,
   validateBriefValues,
 } from "@/lib/brief-submit";
+import {
+  getRateLimitKey,
+  isAllowedMutationOrigin,
+  readJsonWithLimit,
+} from "@/lib/api-security";
+import { isRateLimitedPersistent } from "@/lib/request-rate-limit";
+
+const MAX_REQUEST_BODY_BYTES = 200_000;
+const BRIEF_RATE_LIMIT_WINDOW_MS = 60_000;
+const BRIEF_RATE_LIMIT_MAX = 5;
+const BRIEF_RATE_LIMIT_MAX_KEYS = 10_000;
 
 function jsonResult(statusCode: number, result: BriefSubmitApiResult) {
   return NextResponse.json(result, { status: statusCode });
@@ -39,6 +50,9 @@ function getRouteCopy(locale: BriefLocale) {
       invalidBrief: "Vérifiez les données du brief puis réessayez.",
       missingBrief: "Les données du brief sont absentes",
       requiredFields: "Vérifiez les champs obligatoires puis réessayez l’envoi.",
+      tooLarge: "La demande est trop volumineuse. Raccourcissez le brief et réessayez.",
+      rateLimited: "Trop d’envois à la suite. Attendez une minute puis réessayez.",
+      forbidden: "La demande a été refusée. Rechargez la page puis réessayez.",
       success: "Le brief a bien été reçu. Les données sont prêtes pour une revue manuelle.",
     };
   }
@@ -49,12 +63,14 @@ function getRouteCopy(locale: BriefLocale) {
     invalidBrief: "Проверьте данные брифа и попробуйте ещё раз.",
     missingBrief: "Отсутствуют данные брифа",
     requiredFields: "Проверьте обязательные поля и попробуйте отправить бриф снова.",
+    tooLarge: "Слишком большой запрос. Сократите бриф и попробуйте снова.",
+    rateLimited: "Слишком много отправок подряд. Пожалуйста, подождите минуту и попробуйте снова.",
+    forbidden: "Запрос отклонен. Обновите страницу и попробуйте снова.",
     success: "Бриф получен. Данные готовы для ручной проверки.",
   };
 }
 
 export async function POST(request: Request) {
-  let body: BriefSubmitRequestBody;
   const cookieStore = await cookies();
   const locale = resolveBriefLocale(
     typeof request.headers.get("x-azursystech-locale") === "string"
@@ -63,15 +79,39 @@ export async function POST(request: Request) {
   );
   const copy = getRouteCopy(locale);
 
-  try {
-    body = (await request.json()) as BriefSubmitRequestBody;
-  } catch {
-    return jsonResult(400, {
+  if (!isAllowedMutationOrigin(request)) {
+    return jsonResult(403, {
       success: false,
-      message: copy.unreadable,
-      issues: [{ field: "form", message: copy.invalidJson }],
+      message: copy.forbidden,
+      issues: [{ field: "form", message: copy.forbidden }],
     });
   }
+
+  const isRateLimited = await isRateLimitedPersistent({
+    scope: "brief_submit",
+    key: getRateLimitKey(request),
+    maxRequests: BRIEF_RATE_LIMIT_MAX,
+    windowMs: BRIEF_RATE_LIMIT_WINDOW_MS,
+    maxMemoryKeys: BRIEF_RATE_LIMIT_MAX_KEYS,
+  });
+  if (isRateLimited) {
+    return jsonResult(429, {
+      success: false,
+      message: copy.rateLimited,
+      issues: [{ field: "form", message: copy.rateLimited }],
+    });
+  }
+
+  const parsedBody = await readJsonWithLimit<BriefSubmitRequestBody>(request, MAX_REQUEST_BODY_BYTES);
+  if (!parsedBody.ok) {
+    const isTooLarge = parsedBody.reason === "too_large";
+    return jsonResult(isTooLarge ? 413 : 400, {
+      success: false,
+      message: isTooLarge ? copy.tooLarge : copy.unreadable,
+      issues: [{ field: "form", message: isTooLarge ? copy.tooLarge : copy.invalidJson }],
+    });
+  }
+  const body = parsedBody.value;
 
   const bodyLocale = resolveBriefLocale(typeof body.locale === "string" ? body.locale : locale);
   const localizedCopy = getRouteCopy(bodyLocale);
@@ -93,11 +133,15 @@ export async function POST(request: Request) {
     });
   }
 
-  const payload = buildBriefSubmissionPayload(validated.values, {
-    ai_assist_used: toSafeBoolean(body.ai_assist_used),
-    assistant_interaction_count: toSafeNonNegativeInteger(body.assistant_interaction_count),
-    created_at: new Date().toISOString(),
-  }, bodyLocale);
+  const payload = buildBriefSubmissionPayload(
+    validated.values,
+    {
+      ai_assist_used: toSafeBoolean(body.ai_assist_used),
+      assistant_interaction_count: toSafeNonNegativeInteger(body.assistant_interaction_count),
+      created_at: new Date().toISOString(),
+    },
+    bodyLocale,
+  );
 
   return jsonResult(200, {
     success: true,

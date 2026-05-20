@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+import {
+  getRateLimitKey,
+  isAllowedMutationOrigin,
+  readJsonWithLimit,
+} from "@/lib/api-security";
 import { isRateLimitedPersistent } from "@/lib/request-rate-limit";
 import { isSqlStorageEnabled } from "@/lib/intake/config";
 import type { IntakeConversationState } from "@/lib/intake/types";
@@ -145,15 +150,6 @@ const BASE_SYSTEM_PROMPT = `Ты роль: IT-специалист компан�
 11. Не обещай "оперативно свяжемся", "подготовим предложение" или другие коммерческие/временные обещания. Вместо этого говори: после заявки мы посмотрим описание и уточним детали вручную.
 12. Не добавляй форму и WhatsApp в каждом ответе. Предлагай заявку или WhatsApp, когда контекст уже понятен или пользователь явно готов передать задачу.
 13. Следуй указанию по языку ответа ниже и не переключайся самовольно на другой язык.`;
-
-function getClientIp(request: Request) {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) {
-    return forwardedFor.split(",")[0]?.trim() || "unknown";
-  }
-
-  return request.headers.get("x-real-ip")?.trim() || "unknown";
-}
 
 function sanitizeReply(reply: string | undefined, locale: ChatLocale): string {
   const cleaned = (reply ?? "")
@@ -352,20 +348,6 @@ function enforcePostGenerationPolicy(reply: string, forceCta: boolean, locale: C
   return sanitizeReply(ensureCta(normalizedReply, locale), locale);
 }
 
-function isRequestBodyTooLarge(request: Request): boolean {
-  const contentLength = request.headers.get("content-length");
-  if (!contentLength) {
-    return false;
-  }
-
-  const parsed = Number.parseInt(contentLength, 10);
-  if (!Number.isFinite(parsed) || parsed < 0) {
-    return false;
-  }
-
-  return parsed > MAX_REQUEST_BODY_BYTES;
-}
-
 function isWebChatDryRunRequest(request: Request): boolean {
   return (
     process.env.NODE_ENV !== "production" &&
@@ -534,18 +516,18 @@ function applyAmbiguityGuardrail(
 }
 
 export async function POST(request: Request) {
-  if (isRequestBodyTooLarge(request)) {
-    return NextResponse.json({ error: "Request too large" }, { status: 413 });
+  if (!isAllowedMutationOrigin(request)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const clientIp = getClientIp(request);
-  let body: unknown = null;
-
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Bad Request: invalid payload" }, { status: 400 });
+  const parsedBody = await readJsonWithLimit<unknown>(request, MAX_REQUEST_BODY_BYTES);
+  if (!parsedBody.ok) {
+    return NextResponse.json(
+      { error: parsedBody.reason === "too_large" ? "Request too large" : "Bad Request: invalid payload" },
+      { status: parsedBody.reason === "too_large" ? 413 : 400 },
+    );
   }
+  const body = parsedBody.value;
 
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     return NextResponse.json({ error: "Bad Request: invalid payload" }, { status: 400 });
@@ -636,7 +618,7 @@ export async function POST(request: Request) {
 
   const isRateLimited = await isRateLimitedPersistent({
     scope: "chat",
-    key: clientIp,
+    key: getRateLimitKey(request),
     maxRequests: RATE_LIMIT_MAX,
     windowMs: RATE_LIMIT_WINDOW_MS,
     maxMemoryKeys: RATE_LIMIT_MAX_KEYS,
