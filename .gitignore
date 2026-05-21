@@ -68,6 +68,8 @@ web/.npm-cache/
 web/test-results/
 frontend_mvp/
 docs/reports/qwen/
+codex-orchestration-skills/
+08_showcase/
 
 # Build
 build/
