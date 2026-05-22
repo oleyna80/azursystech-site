@@ -59,12 +59,19 @@ async function runTelegramIntake(
   const decision = runIntakeDryRun(adapter.message, conversationState);
 
   try {
-    await persistIntakeDecision({
+    const persistence = await persistIntakeDecision({
       message: adapter.message,
       decision,
       previousState: conversationState,
       rawProviderPayload: rawProviderPayload as Record<string, unknown>,
     });
+
+    if (persistence.status === "failed_open_dual") {
+      return {
+        ok: false,
+        persistence: "unavailable",
+      };
+    }
   } catch {
     return {
       ok: false,

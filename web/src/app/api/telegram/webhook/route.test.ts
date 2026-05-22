@@ -12,8 +12,10 @@ vi.mock("@/lib/telegram/dry-run", () => ({
 }));
 
 import { POST } from "./route";
+import { runTelegramIntakeLiveReceive } from "@/lib/telegram/dry-run";
 
 afterEach(() => {
+  vi.clearAllMocks();
   vi.unstubAllEnvs();
 });
 
@@ -58,5 +60,52 @@ describe("POST /api/telegram/webhook", () => {
     );
 
     expect(response.status).toBe(413);
+  });
+
+  it("rejects live webhook requests with a missing or wrong secret before intake", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("TELEGRAM_WEBHOOK_RECEIVE_ENABLED", "true");
+    vi.stubEnv("TELEGRAM_WEBHOOK_SECRET", "expected-secret");
+
+    const response = await POST(
+      new Request("https://azursystech.fr/api/telegram/webhook", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-telegram-bot-api-secret-token": "wrong",
+        },
+        body: JSON.stringify({
+          update_id: 1,
+          message: { text: "hello", chat: { id: 1, type: "private" }, from: { id: 2 } },
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(404);
+    expect(runTelegramIntakeLiveReceive).not.toHaveBeenCalled();
+  });
+
+  it("accepts live webhook requests with the exact configured secret", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("TELEGRAM_WEBHOOK_RECEIVE_ENABLED", "true");
+    vi.stubEnv("TELEGRAM_WEBHOOK_SECRET", "expected-secret");
+
+    const response = await POST(
+      new Request("https://azursystech.fr/api/telegram/webhook", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-telegram-bot-api-secret-token": "expected-secret",
+        },
+        body: JSON.stringify({
+          update_id: 1,
+          message: { text: "hello", chat: { id: 1, type: "private" }, from: { id: 2 } },
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true });
+    expect(runTelegramIntakeLiveReceive).toHaveBeenCalledTimes(1);
   });
 });

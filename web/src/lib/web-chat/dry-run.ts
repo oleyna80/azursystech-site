@@ -52,7 +52,7 @@ export async function runWebChatIntakeDryRun(
   const decision = runIntakeDryRun(adapter.message, conversationState);
 
   try {
-    await persistIntakeDecision({
+    const persistence = await persistIntakeDecision({
       message: adapter.message,
       decision,
       previousState: conversationState,
@@ -63,6 +63,13 @@ export async function runWebChatIntakeDryRun(
         senderKey: input.senderKey,
       },
     });
+
+    if (persistence.status === "failed_open_dual") {
+      return {
+        ok: false,
+        persistence: "unavailable",
+      };
+    }
   } catch {
     return {
       ok: false,

@@ -14,6 +14,18 @@ import type {
 import { createSqlIntakePersistenceStore } from "@/lib/intake/sql-persistence";
 import type { IntakeConversationState } from "@/lib/intake/types";
 
+export type PersistIntakeDecisionOutcome =
+  | {
+      status: "persisted";
+      result: PersistIntakeDecisionResult;
+    }
+  | {
+      status: "skipped_legacy";
+    }
+  | {
+      status: "failed_open_dual";
+    };
+
 export class IntakePersistenceUnavailableError extends Error {
   constructor(
     readonly operation: "load_conversation_state" | "persist_decision",
@@ -70,20 +82,20 @@ export async function loadIntakeConversationState(
 
 export async function persistIntakeDecision(
   input: PersistIntakeDecisionInput,
-): Promise<PersistIntakeDecisionResult | null> {
+): Promise<PersistIntakeDecisionOutcome> {
   const mode = getIntakeStorageMode();
 
   if (!isSqlStorageEnabled(mode)) {
-    return null;
+    return { status: "skipped_legacy" };
   }
 
   try {
-    return await getPersistenceStore().persistDecision(input);
+    return { status: "persisted", result: await getPersistenceStore().persistDecision(input) };
   } catch (error) {
     logPersistenceFailure("persist_decision", mode, error);
     if (shouldFailClosed(mode)) {
       throw new IntakePersistenceUnavailableError("persist_decision", mode);
     }
-    return null;
+    return { status: "failed_open_dual" };
   }
 }

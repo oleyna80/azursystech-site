@@ -1,3 +1,5 @@
+import crypto from "node:crypto";
+
 import { NextResponse } from "next/server";
 
 import { readJsonWithLimit } from "@/lib/api-security";
@@ -59,8 +61,20 @@ function notFound(): NextResponse {
   return NextResponse.json({ error: "Not Found" }, { status: 404 });
 }
 
+function timingSafeEqualText(left: string, right: string): boolean {
+  const leftDigest = crypto.createHash("sha256").update(left).digest();
+  const rightDigest = crypto.createHash("sha256").update(right).digest();
+  return crypto.timingSafeEqual(leftDigest, rightDigest);
+}
+
 function isTelegramSecretValid(request: Request, expectedSecret: string): boolean {
-  return request.headers.get("x-telegram-bot-api-secret-token") === expectedSecret.trim();
+  const providedSecret = request.headers.get("x-telegram-bot-api-secret-token")?.trim();
+  const normalizedExpectedSecret = expectedSecret.trim();
+  if (!providedSecret || !normalizedExpectedSecret) {
+    return false;
+  }
+
+  return timingSafeEqualText(providedSecret, normalizedExpectedSecret);
 }
 
 async function handleDryRunWebhook(request: Request) {
