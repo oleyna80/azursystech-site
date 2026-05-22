@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-VPS_HOST="${VPS_HOST:-178.156.212.10}"
+VPS_HOST="${VPS_HOST:?VPS_HOST is required}"
 VPS_USER="${VPS_USER:-dmitrii}"
 SSH_KEY="${SSH_KEY:-/home/dmitrii/.ssh/hardwarelab_deploy}"
 REGISTRY="${REGISTRY:-ghcr.io}"

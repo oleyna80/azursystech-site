@@ -3,7 +3,7 @@ set -euo pipefail
 
 ACTION="${1:-status}"
 
-VPS_HOST="${VPS_HOST:-178.156.212.10}"
+VPS_HOST="${VPS_HOST:?VPS_HOST is required}"
 VPS_USER="${VPS_USER:-dmitrii}"
 SSH_KEY="${SSH_KEY:-/home/dmitrii/.ssh/hardwarelab_deploy}"
 LOCAL_DB_PORT="${LOCAL_DB_PORT:-15432}"
