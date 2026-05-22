@@ -24,10 +24,25 @@ export type LoginRateLimitResult =
   | { allowed: true }
   | { allowed: false; retryAfterSeconds: number };
 
+function trustProxyHeaders(): boolean {
+  return process.env.AZURSYSTECH_TRUST_PROXY_HEADERS?.trim().toLowerCase() === "true";
+}
+
 export function getLoginRateLimitKey(request: Request): string {
-  const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const realIp = request.headers.get("x-real-ip")?.trim();
-  return forwardedFor || realIp || "unknown";
+  if (trustProxyHeaders()) {
+    const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+    const realIp = request.headers.get("x-real-ip")?.trim();
+    if (forwardedFor) {
+      return `ip:${forwardedFor}`;
+    }
+    if (realIp) {
+      return `ip:${realIp}`;
+    }
+  }
+
+  const userAgent = request.headers.get("user-agent")?.trim() || "unknown";
+  const acceptLanguage = request.headers.get("accept-language")?.trim() || "unknown";
+  return `request:${userAgent.slice(0, 120)}:${acceptLanguage.slice(0, 80)}`;
 }
 
 export function checkLoginRateLimit(key: string): LoginRateLimitResult {

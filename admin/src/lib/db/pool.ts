@@ -5,10 +5,23 @@ const DATABASE_SSL_MODES = ["disable", "require", "verify-full"] as const;
 type DatabaseSslMode = (typeof DATABASE_SSL_MODES)[number];
 
 export class AdminDbError extends Error {
-  constructor(message = "admin_db_error") {
+  constructor(message = "admin_db_error", options: { cause?: unknown } = {}) {
     super(message);
     this.name = "AdminDbError";
+    this.cause = options.cause;
   }
+}
+
+function toAdminDbError(error: unknown): AdminDbError {
+  if (error instanceof AdminDbError) {
+    return error;
+  }
+
+  const message =
+    error instanceof Error && error.message
+      ? `admin_db_error: ${error.message}`
+      : "admin_db_error";
+  return new AdminDbError(message, { cause: error });
 }
 
 function readPoolMax(): number {
@@ -72,8 +85,8 @@ export async function queryAdminDb<T extends QueryResultRow = QueryResultRow>(
 ): Promise<QueryResult<T>> {
   try {
     return await getAdminDbPool().query<T>(text, [...values]);
-  } catch {
-    throw new AdminDbError();
+  } catch (error) {
+    throw toAdminDbError(error);
   }
 }
 
@@ -86,11 +99,7 @@ export async function withAdminDbClient<T>(
     client = await getAdminDbPool().connect();
     return await callback(client);
   } catch (error) {
-    if (error instanceof AdminDbError) {
-      throw error;
-    }
-
-    throw new AdminDbError();
+    throw toAdminDbError(error);
   } finally {
     client?.release();
   }

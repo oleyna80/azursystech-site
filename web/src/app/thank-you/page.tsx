@@ -117,7 +117,13 @@ export async function generateMetadata(): Promise<Metadata> {
   const cookieStore = await cookies();
   const locale = resolveThankYouLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
 
-  return THANK_YOU_COPY[locale].meta;
+  return {
+    ...THANK_YOU_COPY[locale].meta,
+    robots: {
+      index: false,
+      follow: false,
+    },
+  };
 }
 
 export default async function ThankYouPage() {
