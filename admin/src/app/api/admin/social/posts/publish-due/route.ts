@@ -3,6 +3,9 @@ import { NextResponse } from "next/server";
 import { requireAdminOrSchedulerRequest } from "@/lib/auth/require-admin";
 import { getDuePosts, SocialApplicationError } from "@/modules/social/application/posts";
 
+const PUBLISH_DUE_CONTRACT =
+  "dry_run_only: this route lists due posts for scheduler/admin review and does not publish to external channels";
+
 export async function POST(request: Request): Promise<NextResponse> {
   const auth = requireAdminOrSchedulerRequest(request);
 
@@ -17,7 +20,9 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     return NextResponse.json({
       ok: true,
+      contract: PUBLISH_DUE_CONTRACT,
       dryRun: true,
+      publishEnabled: false,
       actor: auth.actor,
       dueCount: duePosts.length,
       posts: duePosts,

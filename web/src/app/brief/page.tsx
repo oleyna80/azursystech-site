@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 
 import { BriefForm } from "@/components/brief/brief-form";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { LOCALE_COOKIE_KEY } from "@/i18n";
 import { resolveBriefLocale, type BriefLocale } from "@/lib/brief-submit";
 
@@ -27,6 +28,8 @@ const PAGE_COPY = {
     ],
     footerNote:
       "Après l’envoi, le brief part en revue manuelle. Cela ne vaut pas promesse de prix, de délai ou d’acceptation du projet.",
+    formError:
+      "Le formulaire est temporairement indisponible. Contactez-nous directement via la page contact.",
   },
   ru: {
     meta: {
@@ -48,6 +51,7 @@ const PAGE_COPY = {
     ],
     footerNote:
       "После отправки бриф попадёт на ручную проверку. Это не обещание цены, сроков или принятия проекта.",
+    formError: "Форма временно недоступна. Свяжитесь с нами напрямую через страницу контактов.",
   },
 } as const satisfies Record<BriefLocale, {
   meta: { title: string; description: string };
@@ -59,6 +63,7 @@ const PAGE_COPY = {
   noteTitle: string;
   noteItems: string[];
   footerNote: string;
+  formError: string;
 }>;
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -119,7 +124,16 @@ export default async function BriefPage() {
 
       <section id="brief-form" className="px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
         <div className="mx-auto max-w-6xl">
-          <BriefForm locale={locale} />
+          <ErrorBoundary
+            label="brief-form"
+            fallback={
+              <div className="rounded-[1.75rem] border border-[#D8D0C4] bg-[#FFFDF8] p-5 text-sm leading-6 text-[#5C6670] shadow-[0_18px_55px_rgba(23,35,49,0.08)] sm:p-6">
+                {copy.formError}
+              </div>
+            }
+          >
+            <BriefForm locale={locale} />
+          </ErrorBoundary>
         </div>
       </section>
 

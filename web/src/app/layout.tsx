@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import Script from "next/script";
 import { ChatWidgetContainer } from "@/components/chat-widget";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { SiteFooter } from "@/components/shell/site-footer";
 import { SiteHeader } from "@/components/shell/site-header";
 import { DEFAULT_LOCALE, getPageMeta, LOCALE_COOKIE_KEY, resolveLocale } from "@/i18n";
@@ -64,7 +65,9 @@ export default async function RootLayout({
           <SiteHeader initialLocale={locale} />
           <div className="flex-1">{children}</div>
           <SiteFooter locale={locale} />
-          <ChatWidgetContainer />
+          <ErrorBoundary label="chat-widget">
+            <ChatWidgetContainer />
+          </ErrorBoundary>
         </div>
       </body>
     </html>
