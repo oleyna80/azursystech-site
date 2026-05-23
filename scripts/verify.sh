@@ -11,6 +11,10 @@ run_shell_checks() {
   done < <(find "${ROOT_DIR}/scripts" -maxdepth 1 -type f -name '*.sh' | sort)
 }
 
+run_secret_scan() {
+  "${ROOT_DIR}/scripts/secret-scan.sh" tracked
+}
+
 run_project_check() {
   project="$1"
   (
@@ -48,6 +52,7 @@ case "${MODE}" in
     ;;
   standard)
     run_shell_checks
+    run_secret_scan
     run_project_check web
     run_project_check admin
     ;;
@@ -57,6 +62,7 @@ case "${MODE}" in
     ;;
   full)
     run_shell_checks
+    run_secret_scan
     run_project_check web
     run_project_check admin
     run_compose_check

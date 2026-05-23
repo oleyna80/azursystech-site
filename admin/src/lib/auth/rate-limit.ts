@@ -7,6 +7,7 @@ const attempts = new Map<string, RateLimitEntry>();
 
 const WINDOW_MS = 15 * 60 * 1000;
 const MAX_ATTEMPTS = 8;
+const MAX_RATE_LIMIT_KEYS = 5_000;
 
 function nowMs(): number {
   return Date.now();
@@ -17,6 +18,18 @@ function cleanupExpired(now: number): void {
     if (entry.resetAt <= now) {
       attempts.delete(key);
     }
+  }
+}
+
+function trimOldestEntries(maxEntries: number): void {
+  while (attempts.size > maxEntries) {
+    const oldest = attempts.keys().next();
+
+    if (oldest.done) {
+      break;
+    }
+
+    attempts.delete(oldest.value);
   }
 }
 
@@ -56,6 +69,7 @@ export function checkLoginRateLimit(key: string): LoginRateLimitResult {
       count: 1,
       resetAt: now + WINDOW_MS,
     });
+    trimOldestEntries(MAX_RATE_LIMIT_KEYS);
     return { allowed: true };
   }
 
