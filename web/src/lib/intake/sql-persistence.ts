@@ -659,51 +659,41 @@ async function saveBriefInTransaction(
   );
   const briefId = `brief:${randomUUID()}`;
 
-  const result = await client.query<BriefIdRow>(
+  const insertedResult = await client.query<BriefIdRow>(
     `
-      WITH inserted AS (
-        INSERT INTO intake_briefs (
-          id,
-          schema_version,
-          idempotency_key,
-          source,
-          status,
-          locale,
-          conversation_id,
-          lead_id,
-          payload,
-          handoff,
-          summary,
-          metadata,
-          submitted_at
-        )
-        VALUES (
-          $1,
-          'brief.v1',
-          $2,
-          $3,
-          $4,
-          $5,
-          $6,
-          $7,
-          $8::jsonb,
-          $9::jsonb,
-          $10,
-          $11::jsonb,
-          $12
-        )
-        ON CONFLICT (idempotency_key)
-        DO NOTHING
-        RETURNING id, status, TRUE AS inserted
+      INSERT INTO intake_briefs (
+        id,
+        schema_version,
+        idempotency_key,
+        source,
+        status,
+        locale,
+        conversation_id,
+        lead_id,
+        payload,
+        handoff,
+        summary,
+        metadata,
+        submitted_at
       )
-      SELECT id, status, inserted
-      FROM inserted
-      UNION ALL
-      SELECT id, status, FALSE AS inserted
-      FROM intake_briefs
-      WHERE idempotency_key = $2
-        AND NOT EXISTS (SELECT 1 FROM inserted)
-      LIMIT 1
+      VALUES (
+        $1,
+        'brief.v1',
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8::jsonb,
+        $9::jsonb,
+        $10,
+        $11::jsonb,
+        $12
+      )
+      ON CONFLICT (idempotency_key)
+      DO NOTHING
+      RETURNING id, status, TRUE AS inserted
     `,
     [
       briefId,
@@ -721,7 +711,30 @@ async function saveBriefInTransaction(
     ],
   );
 
-  const row = result.rows[0];
+  const insertedRow = insertedResult.rows[0];
+  if (insertedRow) {
+    if (!isBriefRecordStatus(insertedRow.status)) {
+      throw new Error("Failed to persist intake brief");
+    }
+
+    return {
+      briefId: insertedRow.id,
+      status: insertedRow.status,
+      inserted: insertedRow.inserted,
+    };
+  }
+
+  const existingResult = await client.query<BriefIdRow>(
+    `
+      SELECT id, status, FALSE AS inserted
+      FROM intake_briefs
+      WHERE idempotency_key = $1
+      LIMIT 1
+    `,
+    [input.idempotencyKey],
+  );
+
+  const row = existingResult.rows[0];
   if (!row || !isBriefRecordStatus(row.status)) {
     throw new Error("Failed to persist intake brief");
   }

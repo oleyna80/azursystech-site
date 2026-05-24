@@ -22,6 +22,7 @@ BEGIN
     SELECT 1
     FROM pg_constraint
     WHERE conname = 'uq_intake_briefs_idempotency_key'
+      AND conrelid = 'intake_briefs'::regclass
   ) THEN
     ALTER TABLE intake_briefs
       ADD CONSTRAINT uq_intake_briefs_idempotency_key UNIQUE (idempotency_key);
@@ -31,6 +32,7 @@ BEGIN
     SELECT 1
     FROM pg_constraint
     WHERE conname = 'chk_intake_briefs_schema_version'
+      AND conrelid = 'intake_briefs'::regclass
   ) THEN
     ALTER TABLE intake_briefs
       ADD CONSTRAINT chk_intake_briefs_schema_version
@@ -41,6 +43,7 @@ BEGIN
     SELECT 1
     FROM pg_constraint
     WHERE conname = 'chk_intake_briefs_source'
+      AND conrelid = 'intake_briefs'::regclass
   ) THEN
     ALTER TABLE intake_briefs
       ADD CONSTRAINT chk_intake_briefs_source
@@ -51,6 +54,7 @@ BEGIN
     SELECT 1
     FROM pg_constraint
     WHERE conname = 'chk_intake_briefs_status'
+      AND conrelid = 'intake_briefs'::regclass
   ) THEN
     ALTER TABLE intake_briefs
       ADD CONSTRAINT chk_intake_briefs_status
@@ -61,6 +65,7 @@ BEGIN
     SELECT 1
     FROM pg_constraint
     WHERE conname = 'chk_intake_briefs_locale'
+      AND conrelid = 'intake_briefs'::regclass
   ) THEN
     ALTER TABLE intake_briefs
       ADD CONSTRAINT chk_intake_briefs_locale
@@ -71,6 +76,7 @@ BEGIN
     SELECT 1
     FROM pg_constraint
     WHERE conname = 'chk_intake_briefs_payload_object'
+      AND conrelid = 'intake_briefs'::regclass
   ) THEN
     ALTER TABLE intake_briefs
       ADD CONSTRAINT chk_intake_briefs_payload_object
@@ -81,6 +87,7 @@ BEGIN
     SELECT 1
     FROM pg_constraint
     WHERE conname = 'chk_intake_briefs_handoff_object'
+      AND conrelid = 'intake_briefs'::regclass
   ) THEN
     ALTER TABLE intake_briefs
       ADD CONSTRAINT chk_intake_briefs_handoff_object
@@ -91,6 +98,7 @@ BEGIN
     SELECT 1
     FROM pg_constraint
     WHERE conname = 'chk_intake_briefs_metadata_object'
+      AND conrelid = 'intake_briefs'::regclass
   ) THEN
     ALTER TABLE intake_briefs
       ADD CONSTRAINT chk_intake_briefs_metadata_object
