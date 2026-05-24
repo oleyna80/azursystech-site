@@ -207,6 +207,8 @@ export type BriefSubmitRequestBody = {
   locale?: unknown;
   ai_assist_used?: unknown;
   assistant_interaction_count?: unknown;
+  conversationId?: unknown;
+  conversation_id?: unknown;
 };
 
 export type BriefSubmitApiResult =

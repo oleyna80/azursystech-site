@@ -16,6 +16,12 @@ import {
   readJsonWithLimit,
 } from "@/lib/api-security";
 import { isRateLimitedPersistent } from "@/lib/request-rate-limit";
+import { buildBriefFormIdempotencyKey } from "@/lib/intake/briefs";
+import {
+  IntakeBriefPersistenceUnavailableError,
+  saveIntakeBrief,
+} from "@/lib/intake/brief-persistence";
+import { IntakeBriefConversationNotFoundError } from "@/lib/intake/briefs";
 
 const MAX_REQUEST_BODY_BYTES = 200_000;
 const BRIEF_RATE_LIMIT_WINDOW_MS = 60_000;
@@ -53,6 +59,9 @@ function getRouteCopy(locale: BriefLocale) {
       tooLarge: "La demande est trop volumineuse. Raccourcissez le brief et réessayez.",
       rateLimited: "Trop d’envois à la suite. Attendez une minute puis réessayez.",
       forbidden: "La demande a été refusée. Rechargez la page puis réessayez.",
+      invalidConversation: "Impossible de relier ce brief à la conversation indiquée.",
+      persistenceUnavailable:
+        "Impossible d’enregistrer le brief pour le moment. Réessayez dans quelques instants.",
       success: "Le brief a bien été reçu. Les données sont prêtes pour une revue manuelle.",
     };
   }
@@ -66,8 +75,20 @@ function getRouteCopy(locale: BriefLocale) {
     tooLarge: "Слишком большой запрос. Сократите бриф и попробуйте снова.",
     rateLimited: "Слишком много отправок подряд. Пожалуйста, подождите минуту и попробуйте снова.",
     forbidden: "Запрос отклонен. Обновите страницу и попробуйте снова.",
+    invalidConversation: "Не удалось связать бриф с указанной беседой.",
+    persistenceUnavailable:
+      "Не удалось сохранить бриф прямо сейчас. Пожалуйста, попробуйте ещё раз чуть позже.",
     success: "Бриф получен. Данные готовы для ручной проверки.",
   };
+}
+
+function toOptionalNonEmptyString(value: unknown): string | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
 }
 
 export async function POST(request: Request) {
@@ -133,15 +154,68 @@ export async function POST(request: Request) {
     });
   }
 
+  const now = new Date();
+  const conversationId =
+    toOptionalNonEmptyString(body.conversationId) ??
+    toOptionalNonEmptyString(body.conversation_id);
   const payload = buildBriefSubmissionPayload(
     validated.values,
     {
       ai_assist_used: toSafeBoolean(body.ai_assist_used),
       assistant_interaction_count: toSafeNonNegativeInteger(body.assistant_interaction_count),
-      created_at: new Date().toISOString(),
+      created_at: now.toISOString(),
     },
     bodyLocale,
   );
+
+  try {
+    const persistence = await saveIntakeBrief({
+      idempotencyKey: buildBriefFormIdempotencyKey({
+        values: validated.values,
+        locale: bodyLocale,
+        ...(conversationId ? { conversationId } : {}),
+        now,
+      }),
+      source: "brief_form",
+      status: "submitted",
+      locale: bodyLocale,
+      payload,
+      handoff: payload.crm_handoff,
+      ...(conversationId ? { conversationId } : {}),
+      summary: payload.crm_handoff.summary,
+      metadata: {
+        completeness: "form_validated",
+        idempotency_source: "backend_derived",
+      },
+      submittedAtUtc: payload.created_at,
+    });
+
+    if (persistence.status === "failed_open_dual") {
+      return jsonResult(503, {
+        success: false,
+        message: localizedCopy.persistenceUnavailable,
+        issues: [{ field: "form", message: localizedCopy.persistenceUnavailable }],
+      });
+    }
+  } catch (error) {
+    if (error instanceof IntakeBriefConversationNotFoundError) {
+      return jsonResult(400, {
+        success: false,
+        message: localizedCopy.invalidConversation,
+        issues: [{ field: "conversationId", message: localizedCopy.invalidConversation }],
+      });
+    }
+
+    if (error instanceof IntakeBriefPersistenceUnavailableError) {
+      return jsonResult(503, {
+        success: false,
+        message: localizedCopy.persistenceUnavailable,
+        issues: [{ field: "form", message: localizedCopy.persistenceUnavailable }],
+      });
+    }
+
+    throw error;
+  }
 
   return jsonResult(200, {
     success: true,

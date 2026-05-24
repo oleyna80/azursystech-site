@@ -74,6 +74,8 @@ function getCopy(locale: IntakeLocale) {
         "Коротко опишите задачу: что нужно автоматизировать или какую проблему должен решить ассистент?",
       askContact: "Как удобнее связаться с вами после ручного просмотра брифа?",
       askCity: "В каком городе или регионе это нужно сделать?",
+      contactFormCta:
+        "Контекста уже достаточно для первого шага. Лучше заполнить контактную форму, а если останутся вопросы — я помогу с брифом.",
       ready: "Бриф собран для ручного просмотра администратором.",
     };
   }
@@ -85,6 +87,8 @@ function getCopy(locale: IntakeLocale) {
       "Décrivez brièvement le besoin : que faut-il automatiser ou quel problème l'assistant doit-il résoudre ?",
     askContact: "Quel contact utiliser après la revue manuelle du brief ?",
     askCity: "Dans quelle ville ou région faut-il intervenir ?",
+    contactFormCta:
+      "Le contexte suffit pour une première étape. Le mieux est de remplir le formulaire de contact ; s'il reste des questions, je peux aider avec le brief.",
     ready: "Le brief est prêt pour une revue manuelle par l'administrateur.",
   };
 }
@@ -115,12 +119,27 @@ function resolveBriefDraft(
     missingFields.push("city");
   }
 
+  const previousContactCtaState = state?.briefDraft?.contactCtaState ?? "not_offered";
+  const nextStep =
+    missingFields.length > 0
+      ? "clarify"
+      : previousContactCtaState === "offered" ||
+          previousContactCtaState === "insufficient"
+        ? "brief"
+        : "contact_form";
+  const contactCtaState =
+    nextStep === "contact_form" && previousContactCtaState === "not_offered"
+      ? "offered"
+      : previousContactCtaState;
+
   return {
     ...(problemStatement ? { problemStatement } : {}),
     ...(contactHint ? { contactHint } : {}),
     ...(city ? { city } : {}),
     preferredLanguage,
     missingFields,
+    contactCtaState,
+    nextStep,
   };
 }
 
@@ -137,6 +156,9 @@ function buildFollowup(briefDraft: IntakeBriefDraft, safety: IntakeSafetyFlags):
   }
   if (nextMissingField === "city") {
     return `${prefix}${copy.askCity}`.trim();
+  }
+  if (briefDraft.nextStep === "contact_form") {
+    return `${prefix}${copy.contactFormCta}`.trim();
   }
 
   return `${prefix}${copy.ready}`.trim();
@@ -190,6 +212,17 @@ export function runIntakeDryRun(
   }
 
   if (briefDraft.missingFields.length > 0 || safety.deflectedCommitment) {
+    return {
+      action: "ask_followup",
+      idempotencyKey,
+      assistantReply: buildFollowup(briefDraft, safety),
+      briefDraft,
+      safety,
+      rateLimit,
+    };
+  }
+
+  if (briefDraft.nextStep === "contact_form") {
     return {
       action: "ask_followup",
       idempotencyKey,

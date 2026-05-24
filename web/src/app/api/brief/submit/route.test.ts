@@ -12,6 +12,13 @@ vi.mock("@/lib/request-rate-limit", () => ({
   isRateLimitedPersistent: vi.fn(async () => false),
 }));
 
+vi.mock("@/lib/intake/brief-persistence", () => ({
+  IntakeBriefPersistenceUnavailableError: class IntakeBriefPersistenceUnavailableError extends Error {},
+  saveIntakeBrief: vi.fn(async () => ({ status: "skipped_legacy" })),
+}));
+
+import { IntakeBriefConversationNotFoundError } from "@/lib/intake/briefs";
+import { saveIntakeBrief } from "@/lib/intake/brief-persistence";
 import { POST } from "./route";
 
 function createValidBriefValues(): BriefFormValues {
@@ -40,6 +47,7 @@ function createValidBriefValues(): BriefFormValues {
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.clearAllMocks();
 });
 
 describe("POST /api/brief/submit", () => {
@@ -81,5 +89,99 @@ describe("POST /api/brief/submit", () => {
     });
     expect(result.handoff).toEqual(result.payload.crm_handoff);
     expect(result.handoff.contact.email).toBe("dmitrii@example.com");
+    expect(saveIntakeBrief).toHaveBeenCalledWith(
+      expect.objectContaining({
+        idempotencyKey: expect.stringMatching(/^brief_form:[a-f0-9]{32}$/),
+        source: "brief_form",
+        status: "submitted",
+        locale: "fr",
+        payload: result.payload,
+        handoff: result.handoff,
+        summary: result.handoff.summary,
+        metadata: {
+          completeness: "form_validated",
+          idempotency_source: "backend_derived",
+        },
+        submittedAtUtc: result.payload.created_at,
+      }),
+    );
+  });
+
+  it("does not persist invalid submissions", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("ALLOWED_ORIGINS", "https://azursystech.fr");
+
+    const response = await POST(
+      new Request("https://azursystech.fr/api/brief/submit", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          origin: "https://azursystech.fr",
+        },
+        body: JSON.stringify({
+          values: {},
+          locale: "fr",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(saveIntakeBrief).not.toHaveBeenCalled();
+  });
+
+  it("returns a sanitized client error when linked conversation is missing", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("ALLOWED_ORIGINS", "https://azursystech.fr");
+    vi.mocked(saveIntakeBrief).mockRejectedValueOnce(
+      new IntakeBriefConversationNotFoundError("missing-conversation"),
+    );
+
+    const response = await POST(
+      new Request("https://azursystech.fr/api/brief/submit", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          origin: "https://azursystech.fr",
+        },
+        body: JSON.stringify({
+          values: createValidBriefValues(),
+          locale: "fr",
+          conversationId: "missing-conversation",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    const result = await response.json();
+    expect(result).toMatchObject({
+      success: false,
+      issues: [{ field: "conversationId" }],
+    });
+  });
+
+  it("fails visibly when dual SQL brief persistence fails open", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("ALLOWED_ORIGINS", "https://azursystech.fr");
+    vi.mocked(saveIntakeBrief).mockResolvedValueOnce({ status: "failed_open_dual" });
+
+    const response = await POST(
+      new Request("https://azursystech.fr/api/brief/submit", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          origin: "https://azursystech.fr",
+        },
+        body: JSON.stringify({
+          values: createValidBriefValues(),
+          locale: "fr",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({
+      success: false,
+      issues: [{ field: "form" }],
+    });
   });
 });

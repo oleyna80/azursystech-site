@@ -1,5 +1,17 @@
+import { randomUUID } from "crypto";
 import type { Pool, PoolClient } from "pg";
 
+import type { BriefHandoff, BriefSubmissionPayload } from "@/lib/brief-submit";
+import {
+  IntakeBriefConversationNotFoundError,
+  buildAgentBriefIdempotencyKey,
+  buildIntakeBriefDraftSnapshot,
+  type IntakeBriefDraftSnapshot,
+  type IntakeBriefRecordStatus,
+  type IntakeBriefStore,
+  type SaveIntakeBriefInput,
+  type SaveIntakeBriefResult,
+} from "@/lib/intake/briefs";
 import {
   INTAKE_CHANNELS,
   type IntakeBriefDraft,
@@ -52,6 +64,12 @@ type ConversationIdRow = {
   id: string;
 };
 
+type BriefIdRow = {
+  id: string;
+  status: string;
+  inserted: boolean;
+};
+
 type ConversationStatusRow = {
   brief_status: string;
   admin_notification_status: string;
@@ -100,6 +118,19 @@ function parseBriefDraft(value: unknown): IntakeConversationState["briefDraft"] 
     draft.preferredLanguage === "ru" ||
     draft.preferredLanguage === "unknown"
       ? { preferredLanguage: draft.preferredLanguage }
+      : {}),
+    ...(draft.contactCtaState === "not_offered" ||
+    draft.contactCtaState === "offered" ||
+    draft.contactCtaState === "accepted" ||
+    draft.contactCtaState === "insufficient" ||
+    draft.contactCtaState === "skipped"
+      ? { contactCtaState: draft.contactCtaState }
+      : {}),
+    ...(draft.nextStep === "clarify" ||
+    draft.nextStep === "contact_form" ||
+    draft.nextStep === "brief" ||
+    draft.nextStep === "handoff"
+      ? { nextStep: draft.nextStep }
       : {}),
   };
 }
@@ -197,6 +228,30 @@ export class SqlIntakePersistenceStore implements IntakePersistenceStore {
 
 export function createSqlIntakePersistenceStore(pool: Pool): IntakePersistenceStore {
   return new SqlIntakePersistenceStore(pool);
+}
+
+export class SqlIntakeBriefStore implements IntakeBriefStore {
+  constructor(private readonly pool: Pool) {}
+
+  async saveBrief(input: SaveIntakeBriefInput): Promise<SaveIntakeBriefResult> {
+    const client = await this.pool.connect();
+
+    try {
+      await client.query("BEGIN");
+      const result = await saveBriefInTransaction(client, input);
+      await client.query("COMMIT");
+      return result;
+    } catch (error) {
+      await rollbackQuietly(client);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+}
+
+export function createSqlIntakeBriefStore(pool: Pool): IntakeBriefStore {
+  return new SqlIntakeBriefStore(pool);
 }
 
 export class SqlIntakeOutboxStore implements IntakeOutboxStore {
@@ -502,12 +557,179 @@ async function persistDecisionInTransaction(
     buildIntakeOutboundDraftRecord(message, decision),
   );
 
+  await saveAgentCreatedBriefSnapshotInTransaction(
+    client,
+    persistedConversationId,
+    message,
+    decision,
+  );
+
   return {
     conversationKey: message.conversationKey,
     idempotencyKey: decision.idempotencyKey,
     insertedMessage: true,
     duplicateProviderEvent: decision.safety.duplicateProviderEvent,
     ...fallbackStatuses,
+  };
+}
+
+async function saveAgentCreatedBriefSnapshotInTransaction(
+  client: PoolClient,
+  conversationId: string,
+  message: PersistIntakeDecisionInput["message"],
+  decision: PersistIntakeDecisionInput["decision"],
+): Promise<void> {
+  if (decision.action !== "mark_brief_ready") {
+    return;
+  }
+
+  const snapshot = buildIntakeBriefDraftSnapshot(decision.briefDraft);
+  await saveBriefInTransaction(client, {
+    idempotencyKey: buildAgentBriefIdempotencyKey({
+      channel: message.channel,
+      conversationKey: message.conversationKey,
+      decisionIdempotencyKey: decision.idempotencyKey,
+    }),
+    source: message.channel,
+    status: "draft",
+    locale: decision.briefDraft.preferredLanguage,
+    conversationId,
+    payload: snapshot,
+    summary: decision.briefDraft.problemStatement ?? message.text.slice(0, 240),
+    metadata: {
+      created_by: "intake_runtime",
+      completeness: "minimal",
+      missing_fields: decision.briefDraft.missingFields,
+    },
+  });
+}
+
+function toJsonValue(
+  value:
+    | BriefSubmissionPayload
+    | IntakeBriefDraftSnapshot
+    | BriefHandoff
+    | Record<string, unknown>
+    | undefined,
+): string {
+  return JSON.stringify(value ?? {});
+}
+
+function isBriefRecordStatus(value: string): value is IntakeBriefRecordStatus {
+  return (
+    value === "draft" ||
+    value === "submitted" ||
+    value === "reviewed" ||
+    value === "archived"
+  );
+}
+
+async function resolveLinkedConversationId(
+  client: PoolClient,
+  conversationId: string | undefined,
+): Promise<string | null> {
+  if (!conversationId) {
+    return null;
+  }
+
+  const result = await client.query<ConversationIdRow>(
+    `
+      SELECT id
+      FROM intake_channel_conversations
+      WHERE id = $1
+      LIMIT 1
+    `,
+    [conversationId],
+  );
+
+  if (!result.rows[0]?.id) {
+    throw new IntakeBriefConversationNotFoundError(conversationId);
+  }
+
+  return result.rows[0].id;
+}
+
+async function saveBriefInTransaction(
+  client: PoolClient,
+  input: SaveIntakeBriefInput,
+): Promise<SaveIntakeBriefResult> {
+  const linkedConversationId = await resolveLinkedConversationId(
+    client,
+    input.conversationId,
+  );
+  const briefId = `brief:${randomUUID()}`;
+
+  const result = await client.query<BriefIdRow>(
+    `
+      WITH inserted AS (
+        INSERT INTO intake_briefs (
+          id,
+          schema_version,
+          idempotency_key,
+          source,
+          status,
+          locale,
+          conversation_id,
+          lead_id,
+          payload,
+          handoff,
+          summary,
+          metadata,
+          submitted_at
+        )
+        VALUES (
+          $1,
+          'brief.v1',
+          $2,
+          $3,
+          $4,
+          $5,
+          $6,
+          $7,
+          $8::jsonb,
+          $9::jsonb,
+          $10,
+          $11::jsonb,
+          $12
+        )
+        ON CONFLICT (idempotency_key)
+        DO NOTHING
+        RETURNING id, status, TRUE AS inserted
+      )
+      SELECT id, status, inserted
+      FROM inserted
+      UNION ALL
+      SELECT id, status, FALSE AS inserted
+      FROM intake_briefs
+      WHERE idempotency_key = $2
+        AND NOT EXISTS (SELECT 1 FROM inserted)
+      LIMIT 1
+    `,
+    [
+      briefId,
+      input.idempotencyKey,
+      input.source,
+      input.status,
+      input.locale,
+      linkedConversationId,
+      input.leadId ?? null,
+      toJsonValue(input.payload),
+      toJsonValue(input.handoff),
+      input.summary ?? null,
+      toJsonValue(input.metadata),
+      input.submittedAtUtc ?? null,
+    ],
+  );
+
+  const row = result.rows[0];
+  if (!row || !isBriefRecordStatus(row.status)) {
+    throw new Error("Failed to persist intake brief");
+  }
+
+  return {
+    briefId: row.id,
+    status: row.status,
+    inserted: row.inserted,
   };
 }
 

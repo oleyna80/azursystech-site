@@ -9,6 +9,8 @@ const decision: IntakeDecision = {
   briefDraft: {
     preferredLanguage: "fr",
     missingFields: ["contact_hint"],
+    contactCtaState: "not_offered",
+    nextStep: "clarify",
   },
   safety: {
     deflectedCommitment: false,

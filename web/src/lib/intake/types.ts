@@ -22,9 +22,18 @@ export type IntakeBriefDraft = {
   city?: string;
   preferredLanguage: IntakeLocale;
   missingFields: IntakeBriefField[];
+  contactCtaState: ContactCtaState;
+  nextStep: AgentNextStep;
 };
 
 export type IntakeBriefField = "problem_statement" | "contact_hint" | "city";
+export type AgentNextStep = "clarify" | "contact_form" | "brief" | "handoff";
+export type ContactCtaState =
+  | "not_offered"
+  | "offered"
+  | "accepted"
+  | "insufficient"
+  | "skipped";
 
 export type IntakeConversationState = {
   briefDraft?: Partial<Omit<IntakeBriefDraft, "missingFields">>;
