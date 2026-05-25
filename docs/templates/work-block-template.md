@@ -13,6 +13,14 @@
 - End-to-end autonomous / staged with Owner checkpoints / discussion only
 - Continue through approved stages without Owner confirmation unless a Stop condition occurs.
 
+## Skill routing
+
+- Skills checked:
+- Skills matched:
+- Skills used:
+- Skills skipped and why:
+- Project-local skill fallback used: yes / no / not needed
+
 ## Subagent authorization
 
 - Native subagents authorized when the Orchestrator determines they improve speed, quality, or context hygiene.

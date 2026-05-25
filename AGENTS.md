@@ -322,6 +322,35 @@ For non-trivial work, read these files before planning edits:
 Read additional specs, plans, tasklists, skills, or code only when they are relevant
 to the approved objective.
 
+### Skill Routing Gate
+
+Before any non-trivial, Hard Stop, ops, DB, deploy, security, runtime,
+multi-domain, or subagent-delegated Work Block, Control Tower must perform
+Skill Routing Gate before planning or executing actions.
+
+Skill Routing Gate requires:
+
+1. Inspect `.agent/ROSTER.md` for routing-critical skills.
+2. Search or inspect `.agent/skills/*/SKILL.md` for matching `description`,
+   `## Triggers`, or `## When to Use`.
+3. Read only the matching skill files; do not bulk-read every skill.
+4. State in the Work Block:
+   - `Skills checked`
+   - `Skills matched`
+   - `Skills used`
+   - `Skills skipped and why`
+
+If a project-local skill matches the current Work Block or stage, use that
+skill's workflow. If the runtime exposes a formal Skill invocation mechanism,
+invoke the skill there. If the runtime does not expose project-local skills,
+read `.agent/skills/<name>/SKILL.md`, state
+`Project-local skill used: <name>`, and follow its workflow manually.
+
+Skipping a matching skill is allowed only with a recorded reason:
+`not relevant after inspection`, `blocked`, or `superseded by stricter gate`.
+Hard Stop skills still require explicit Owner approval before any production,
+credential, deploy, live DB, destructive, or client-facing action.
+
 ---
 
 ## SSOT Hierarchy
@@ -462,6 +491,10 @@ reduce recurring work. Prefer existing skills first. New or adapted skills stay
 local unless the Owner explicitly approves publication. Do not install packages,
 use credentials, call production APIs, or add external runtime dependencies for
 a skill without Owner approval.
+
+Skill artifacts are operational instructions, not optional notes. Recurring
+project experience converted into a skill must be routed through Skill Routing
+Gate on future matching Work Blocks.
 
 See `.agent/README.md` for navigation guide.
 

@@ -6,6 +6,11 @@
 
 ## Skill(s)
 
+- Required project-local skills:
+- Optional project-local skills:
+- Skills explicitly out of scope:
+- If a required skill is unavailable, report `skill-blocked:<reason>` and do not silently replace it with memory-derived steps.
+
 ## Objective
 
 ## Context
