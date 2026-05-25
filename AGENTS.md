@@ -125,6 +125,12 @@ infra, secrets, and production state unless explicitly approved. Verifier may
 write approved verification artifacts only when the Work Block scopes that
 artifact path.
 
+Agent operations reviews are optional local-only retrospectives for permission
+friction, approval waits, tooling failures, and outcomes after large Work
+Blocks or sprint closeouts. They produce recommendations only: no automatic
+permission changes, no raw private transcript parsing by default, and no
+weakening of Hard Stops.
+
 ### Temporary Specializations
 
 Roles define authority, not expertise. Expertise is expressed through temporary
