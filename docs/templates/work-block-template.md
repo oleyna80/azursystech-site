@@ -13,13 +13,28 @@
 - End-to-end autonomous / staged with Owner checkpoints / discussion only
 - Continue through approved stages without Owner confirmation unless a Stop condition occurs.
 
-## Skill routing
+## Stage 0 Routing Preflight
+
+- Work Block type: trivial quick-fix / non-trivial Work Block / Hard Stop gate
+- Side-effect class:
+- DB action mode:
+- Hard Stops in scope:
+- Write gate: READY / BLOCKED
+
+### Skill Routing Gate
 
 - Skills checked:
 - Skills matched:
 - Skills used:
 - Skills skipped and why:
 - Project-local skill fallback used: yes / no / not needed
+
+### Subagent Topology
+
+- Classification: Subagent-Required / Subagent-Optional / Control-Tower-Only
+- Subagents planned/dispatched:
+- Skip reason, if any: trivial / blocked / hard-stop / user-disabled
+- Blocker category, if blocked: tool-unavailable / thread-limit / usage-limit / model-unavailable / sandbox / other
 
 ## Subagent authorization
 

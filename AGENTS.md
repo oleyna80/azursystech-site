@@ -322,11 +322,31 @@ For non-trivial work, read these files before planning edits:
 Read additional specs, plans, tasklists, skills, or code only when they are relevant
 to the approved objective.
 
-### Skill Routing Gate
+### Stage 0 Routing Preflight Write Gate
 
-Before any non-trivial, Hard Stop, ops, DB, deploy, security, runtime,
-multi-domain, or subagent-delegated Work Block, Control Tower must perform
-Skill Routing Gate before planning or executing actions.
+For any non-trivial Work Block, **Stage 0 Routing Preflight is the write gate**.
+Before any edit/write-capable tool is used, the Work Block or active tasklist
+must visibly record:
+
+- Work Block type;
+- side-effect class;
+- DB action mode;
+- Skill Routing Gate result;
+- Subagent Topology classification and dispatch/skip decision;
+- Hard Stops in scope;
+- `Write gate: READY` or `Write gate: BLOCKED`.
+
+If this evidence is missing or `Write gate` is not `READY`, implementation,
+documentation edits, staging, commit, push, deploy, DB, env/secret, and
+client-facing actions are blocked. Trivial quick-fix tasks may use the
+lightweight path, but must still report why full Stage 0 was skipped.
+
+The preflight includes Skill Routing Gate. Before any non-trivial, Hard Stop,
+ops, DB, deploy, security, runtime, multi-domain, or subagent-delegated Work
+Block, Control Tower must perform Skill Routing Gate before planning or
+executing actions.
+
+### Skill Routing Gate
 
 Skill Routing Gate requires:
 
