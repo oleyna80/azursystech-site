@@ -123,4 +123,61 @@ describe("telegram sender", () => {
     });
     expect(called).toBe(false);
   });
+
+  it("rejects empty message bodies without calling fetch", async () => {
+    let called = false;
+    const fetchImpl: TelegramFetch = async () => {
+      called = true;
+      return Response.json({ ok: true });
+    };
+    const sender = createTelegramOutboundSender(
+      {
+        liveSendingEnabled: true,
+        botToken: "token",
+      },
+      fetchImpl,
+    );
+
+    await expect(sender.send(createOutboxMessage({ body: "   " }))).resolves.toEqual({
+      ok: false,
+      error: "telegram_sender_missing_body",
+      retryable: false,
+    });
+    expect(called).toBe(false);
+  });
+
+  it("returns a retryable failure when Telegram HTTP or API status fails", async () => {
+    const fetchImpl: TelegramFetch = async () =>
+      Response.json({ ok: false, description: "retry later" }, { status: 429 });
+    const sender = createTelegramOutboundSender(
+      {
+        liveSendingEnabled: true,
+        botToken: "token",
+      },
+      fetchImpl,
+    );
+
+    await expect(sender.send(createOutboxMessage())).resolves.toEqual({
+      ok: false,
+      error: "telegram_send_failed",
+      retryable: true,
+    });
+  });
+
+  it("treats a missing Telegram provider message id as a retryable failure", async () => {
+    const fetchImpl: TelegramFetch = async () => Response.json({ ok: true, result: {} });
+    const sender = createTelegramOutboundSender(
+      {
+        liveSendingEnabled: true,
+        botToken: "token",
+      },
+      fetchImpl,
+    );
+
+    await expect(sender.send(createOutboxMessage())).resolves.toEqual({
+      ok: false,
+      error: "telegram_send_failed",
+      retryable: true,
+    });
+  });
 });

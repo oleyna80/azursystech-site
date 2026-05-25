@@ -162,7 +162,15 @@ export async function dispatchQueuedOutboundMessages(
     };
   }
 
-  const messages = await listQueuedOutboundMessages(input);
+  const listInput: ListQueuedOutboundMessagesInput = {};
+  if (input.channel) {
+    listInput.channel = input.channel;
+  }
+  if (typeof input.limit === "number") {
+    listInput.limit = input.limit;
+  }
+
+  const messages = await listQueuedOutboundMessages(listInput);
   const results: DispatchQueuedOutboundMessageResult[] = [];
 
   for (const message of messages) {
