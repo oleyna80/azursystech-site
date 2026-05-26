@@ -89,14 +89,21 @@ describe("POST /api/chat", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
       reply: "Заполните контактную форму, потом я помогу с брифом.",
+      ui: {
+        nextStep: "contact_form",
+        contactFormVisible: true,
+        briefVisible: false,
+      },
     });
     expect(runWebChatIntake).toHaveBeenCalledWith(
       expect.objectContaining({
         message: "Нужно автоматизировать обработку заявок с сайта и Telegram.",
+        history: [{ role: "user", content: "Здравствуйте" }],
         locale: "ru",
         conversationKey: expect.stringMatching(/^web_chat:[a-f0-9]{48}$/),
         senderKey: expect.stringMatching(/^web_chat:[a-f0-9]{48}$/),
         providerMessageId: expect.stringMatching(/^web_chat:[a-f0-9]{48}$/),
+        llmMode: "enabled",
       }),
     );
   });

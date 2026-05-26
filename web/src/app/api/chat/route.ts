@@ -6,7 +6,7 @@ import {
   readJsonWithLimit,
 } from "@/lib/api-security";
 import { isSqlStorageEnabled } from "@/lib/intake/config";
-import type { IntakeConversationState } from "@/lib/intake/types";
+import type { AgentNextStep, IntakeConversationState } from "@/lib/intake/types";
 import { isRateLimitedPersistent } from "@/lib/request-rate-limit";
 import { runWebChatIntake } from "@/lib/web-chat/intake";
 import { runWebChatIntakeDryRun } from "@/lib/web-chat/dry-run";
@@ -14,7 +14,7 @@ import { runWebChatIntakeDryRun } from "@/lib/web-chat/dry-run";
 const MAX_REQUEST_BODY_BYTES = 50_000;
 const MAX_MESSAGE_LENGTH = 1_000;
 const MAX_HISTORY_ITEM_LENGTH = 1_000;
-const MAX_HISTORY_ITEMS = 6;
+const MAX_HISTORY_ITEMS = 12;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_MAX_KEYS = 10_000;
@@ -30,6 +30,11 @@ type ChatRole = "user" | "assistant";
 type ChatHistoryItem = {
   role: ChatRole;
   content: string;
+};
+type ChatUiState = {
+  nextStep: AgentNextStep;
+  contactFormVisible: boolean;
+  briefVisible: boolean;
 };
 
 const CHAT_COPY: Record<
@@ -222,6 +227,14 @@ function buildProviderMessageId(conversationKey: string, message: string, histor
   return `web_chat:${hashForKey(`${conversationKey}:${userTurnCount}:${message}`)}`;
 }
 
+function buildChatUiState(nextStep: AgentNextStep): ChatUiState {
+  return {
+    nextStep,
+    contactFormVisible: nextStep === "contact_form" || nextStep === "brief" || nextStep === "handoff",
+    briefVisible: nextStep === "brief",
+  };
+}
+
 export async function POST(request: Request) {
   if (!isAllowedMutationOrigin(request)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -279,6 +292,7 @@ export async function POST(request: Request) {
   if (isDryRunRequest) {
     const dryRunResult = await runWebChatIntakeDryRun({
       message,
+      history,
       locale: responseLocale,
       conversationKey:
         typeof (body as { conversationKey?: unknown }).conversationKey === "string"
@@ -342,10 +356,12 @@ export async function POST(request: Request) {
   const conversationKey = resolveLiveConversationKey(request, body as { conversationId?: unknown });
   const intakeResult = await runWebChatIntake({
     message,
+    history,
     locale: responseLocale,
     conversationKey,
     senderKey: conversationKey,
     providerMessageId: buildProviderMessageId(conversationKey, message, history),
+    llmMode: "enabled",
   });
 
   if (!intakeResult.ok) {
@@ -358,5 +374,6 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     reply: intakeResult.decision.assistantReply ?? copy.duplicateFallback ?? copy.emptyReply,
+    ui: buildChatUiState(intakeResult.decision.briefDraft.nextStep),
   });
 }

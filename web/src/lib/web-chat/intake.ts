@@ -6,6 +6,7 @@ import {
   type WebChatAdapterResult,
   type WebChatIntakeInput,
 } from "@/lib/web-chat/intake-adapter";
+import { generateWebChatLlmReply } from "@/lib/web-chat/llm";
 
 export type WebChatIntakeResult =
   | {
@@ -47,7 +48,23 @@ export async function runWebChatIntake(input: WebChatIntakeInput): Promise<WebCh
     };
   }
 
-  const decision = runIntakeDryRun(adapter.message, conversationState);
+  const runtimeDecision = runIntakeDryRun(adapter.message, conversationState);
+  let decision = runtimeDecision;
+
+  if (input.llmMode === "enabled" && runtimeDecision.action !== "duplicate_ignored") {
+    const llm = await generateWebChatLlmReply({
+      message: adapter.message,
+      decision: runtimeDecision,
+      history: input.history ?? [],
+    });
+
+    if (llm.ok) {
+      decision = {
+        ...runtimeDecision,
+        assistantReply: llm.reply,
+      };
+    }
+  }
 
   try {
     const persistence = await persistIntakeDecision({

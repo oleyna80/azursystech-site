@@ -9,14 +9,21 @@ const MAX_WEB_CHAT_TEXT_LENGTH = 1_000;
 export type WebChatIntakeInput = {
   message: string;
   locale: IntakeLocale;
+  history?: WebChatConversationItem[];
   conversationKey?: string;
   senderKey?: string;
   providerUpdateId?: string;
   providerMessageId?: string;
   receivedAtUtc?: Date;
   state?: IntakeConversationState;
+  llmMode?: "disabled" | "enabled";
 };
 export type WebChatDryRunInput = WebChatIntakeInput;
+
+export type WebChatConversationItem = {
+  role: "user" | "assistant";
+  content: string;
+};
 
 export type WebChatAdapterResult =
   | { ok: true; message: NormalizedIntakeMessage; state?: IntakeConversationState }

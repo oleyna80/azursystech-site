@@ -10,16 +10,16 @@ const baseMessage = {
 };
 
 describe("intake runtime", () => {
-  it("asks one diagnostic question before offering the contact form", () => {
+  it("keeps vague answers in conversation instead of rushing to the contact form", () => {
     const firstDecision = runIntakeDryRun({
       ...baseMessage,
-      text: "Здравствуйте, хочу AI-автоматизацию.",
+      text: "Здравствуйте",
       locale: "ru",
     });
 
     expect(firstDecision.action).toBe("ask_followup");
     expect(firstDecision.briefDraft).toMatchObject({
-      diagnosticTurnCount: 1,
+      diagnosticTurnCount: 0,
       contactCtaState: "not_offered",
       nextStep: "clarify",
       missingFields: ["problem_statement"],
@@ -30,7 +30,7 @@ describe("intake runtime", () => {
       {
         ...baseMessage,
         receivedAtUtc: "2026-05-24T10:01:00.000Z",
-        text: "Пока не знаю, нужно понять что можно автоматизировать.",
+        text: "ничем",
         locale: "ru",
       },
       {
@@ -40,10 +40,11 @@ describe("intake runtime", () => {
 
     expect(secondDecision.action).toBe("ask_followup");
     expect(secondDecision.briefDraft).toMatchObject({
-      contactCtaState: "offered",
-      nextStep: "contact_form",
+      diagnosticTurnCount: 0,
+      contactCtaState: "not_offered",
+      nextStep: "clarify",
     });
-    expect(secondDecision.assistantReply).toContain("контактную форму");
+    expect(secondDecision.assistantReply).toContain("Чем занимается ваш бизнес");
   });
 
   it("offers the contact form before the optional brief when context is useful", () => {
@@ -62,7 +63,8 @@ describe("intake runtime", () => {
     expect(decision.briefDraft.contactHint).toBeUndefined();
     expect("adminNotification" in decision).toBe(false);
     expect("sheetsMirror" in decision).toBe(false);
-    expect(decision.assistantReply).toContain("Если хотите продолжить");
+    expect(decision.assistantReply).toContain("контактную форму");
+    expect(decision.assistantReply).not.toContain("бриф");
   });
 
   it("does not collect pasted contact data in chat", () => {

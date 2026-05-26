@@ -6,7 +6,7 @@ const CONTACT_PHONE_HREF = 'tel:+33780720994';
 const WHATSAPP_HREF = 'https://wa.me/33780720994';
 const MAX_INPUT_LENGTH = 1000;
 const MAX_RENDERED_MESSAGE_LENGTH = 2000;
-const MAX_HISTORY_ITEMS = 6;
+const MAX_HISTORY_ITEMS = 12;
 
 const sanitizeMessageContent = (content) => {
   if (typeof content !== 'string') {
@@ -26,6 +26,7 @@ export default function ChatWidget({ locale, t }) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [chatErrorKey, setChatErrorKey] = useState('');
+  const [chatUi, setChatUi] = useState({ contactFormVisible: false, briefVisible: false });
   const [isHandoffOpen, setIsHandoffOpen] = useState(false);
   const [handoffSubmitted, setHandoffSubmitted] = useState(false);
   const [handoffLoading, setHandoffLoading] = useState(false);
@@ -42,7 +43,7 @@ export default function ChatWidget({ locale, t }) {
   const contactCopy = t('contact');
   const contactFormCopy = t('contact.form');
   const hasUserMessages = messages.some((msg) => msg.role === 'user');
-  const canOpenHandoff = hasUserMessages || Boolean(chatErrorKey);
+  const canOpenHandoff = Boolean(chatUi.contactFormVisible) || Boolean(chatErrorKey);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -52,6 +53,12 @@ export default function ChatWidget({ locale, t }) {
     setIsOpen(false);
     setIsHandoffOpen(false);
     window.location.href = '/contact';
+  };
+
+  const openBrief = () => {
+    setIsOpen(false);
+    setIsHandoffOpen(false);
+    window.location.href = '/brief';
   };
 
   const buildChatSummary = () => {
@@ -97,6 +104,7 @@ export default function ChatWidget({ locale, t }) {
     setInput('');
     setIsLoading(false);
     setChatErrorKey('');
+    setChatUi({ contactFormVisible: false, briefVisible: false });
     setIsHandoffOpen(false);
     setHandoffSubmitted(false);
     setHandoffLoading(false);
@@ -142,6 +150,11 @@ export default function ChatWidget({ locale, t }) {
 
       const data = await res.json();
       const safeReply = sanitizeMessageContent(data.reply || data.message || '...');
+      const ui = data && typeof data.ui === 'object' && data.ui !== null ? data.ui : {};
+      setChatUi({
+        contactFormVisible: Boolean(ui.contactFormVisible),
+        briefVisible: Boolean(ui.briefVisible),
+      });
       setChatErrorKey('');
       setMessages(prev => [...prev, { role: 'assistant', content: safeReply || '...' }]);
     } catch {
@@ -442,7 +455,15 @@ export default function ChatWidget({ locale, t }) {
                 {t('chat.wrapUp')} <span aria-hidden="true">&gt;</span>
               </button>
             )}
-            {hasUserMessages && !chatErrorKey && (
+            {chatUi.briefVisible && !chatErrorKey && (
+              <button
+                onClick={openBrief}
+                className="w-full mb-3 flex items-center justify-center gap-1 py-2 text-xs font-bold text-graphite bg-graphite/5 hover:bg-graphite/10 rounded-lg transition-colors"
+              >
+                {t('chat.briefCta')} <span aria-hidden="true">&gt;</span>
+              </button>
+            )}
+            {canOpenHandoff && !chatErrorKey && (
               <p className="mb-3 text-[11px] leading-relaxed text-graphite/60 font-medium">
                 {t('chat.handoffHint')}
               </p>

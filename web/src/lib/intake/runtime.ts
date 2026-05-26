@@ -13,9 +13,11 @@ import type {
 const MAX_INTAKE_TEXT_LENGTH = 1_500;
 const MIN_PROBLEM_SIGNAL_LENGTH = 30;
 const MAX_DIAGNOSTIC_TURNS_BEFORE_CONTACT_CTA = 2;
+const MIN_DIAGNOSTIC_SIGNAL_LENGTH = 8;
 
 const COMMITMENT_PATTERNS = [
   /(?:цен[ауые]|стоимост[ьи]|price|prix|tarif|devis)/iu,
+  /(?:сколько\s+(?:будет\s+)?сто(?:ит|ить)?|сто(?:ит|ить))/iu,
   /(?:срок(?:и|ов)?|deadline|d[eé]lai|duree|durée)/iu,
   /\b(?:стек|stack|framework|technolog(?:y|ie)|технологи[ия])\b/iu,
   /\b(?:запиш(?:ите|и|у|ем)|назнач(?:ьте|им|у)|appointment|rendez-vous|rdv)\b/iu,
@@ -90,8 +92,35 @@ function hasUsefulProblemSignal(text: string): boolean {
     return false;
   }
 
-  return /(?:заявк|клиент|процесс|обработ|сайт|crm|telegram|телеграм|email|менеджер|demande|client|process|site|outil|canal|leads?|requests?)/iu.test(
+  return /(?:ai|ии|автоматизац|автоматизир|бизнес|заявк|клиент|процесс|обработ|сайт|crm|telegram|телеграм|email|менеджер|demande|client|process|site|outil|canal|automat|automatis|leads?|requests?)/iu.test(
     text,
+  );
+}
+
+function hasMeaningfulDiagnosticSignal(text: string): boolean {
+  const normalized = text.toLowerCase().trim();
+  if (normalized.length < MIN_DIAGNOSTIC_SIGNAL_LENGTH) {
+    return false;
+  }
+
+  if (
+    /^(?:здравствуйте|привет|добрый день|добрый вечер|bonjour|bonsoir|salut|hello|hi)[!. ]*$/iu.test(
+      normalized,
+    )
+  ) {
+    return false;
+  }
+
+  if (
+    /^(?:ничем|не знаю|пока не знаю|не уверен|не уверена|aucune idee|je ne sais pas|pas encore|nothing|not sure)[!. ]*$/iu.test(
+      normalized,
+    )
+  ) {
+    return false;
+  }
+
+  return /(?:ai|ии|автоматизац|автоматизир|бизнес|компан|заявк|клиент|процесс|сайт|crm|telegram|телеграм|whatsapp|ватсап|email|канал|demande|client|process|site|outil|canal|automat|automatis|business|leads?|requests?)/iu.test(
+    normalized,
   );
 }
 
@@ -117,7 +146,7 @@ function getCopy(locale: IntakeLocale) {
       askProcessAndChannels:
         "Какие каналы или системы уже есть: сайт, CRM, Telegram, email или другие рабочие инструменты?",
       contactFormCta:
-        "Этого достаточно для первого шага. Заполните контактную форму: там можно оставить имя и удобный канал связи. Если хотите продолжить, я помогу подготовить необязательный бриф.",
+        "Этого достаточно для первого шага. Заполните контактную форму: там можно оставить имя и удобный канал связи.",
       briefCta:
         "Контактную форму лучше заполнить отдельно. Если хотите, дальше я помогу сформулировать необязательный бриф: чем занимается бизнес, что автоматизировать и какие каналы уже используются.",
     };
@@ -135,7 +164,7 @@ function getCopy(locale: IntakeLocale) {
     askProcessAndChannels:
       "Quels canaux ou outils utilisez-vous deja : site web, CRM, Telegram, email ou autres outils de travail ?",
     contactFormCta:
-      "C'est suffisant pour une premiere etape. Remplissez le formulaire de contact : vous pourrez y laisser votre nom et le canal de contact prefere. Si besoin, je peux ensuite aider a preparer un brief optionnel.",
+      "C'est suffisant pour une premiere etape. Remplissez le formulaire de contact : vous pourrez y laisser votre nom et le canal de contact prefere.",
     briefCta:
       "Le formulaire de contact doit etre rempli separement. Si vous le souhaitez, je peux maintenant vous aider a formuler un brief optionnel : activite, processus a automatiser et canaux deja utilises.",
   };
@@ -157,6 +186,10 @@ function resolveBriefDraft(
     hasUsefulProblemSignal(text) &&
     !safety.detectedConfidentialInput &&
     !safety.deflectedUnsafeRequest;
+  const currentHasDiagnosticSignal =
+    hasMeaningfulDiagnosticSignal(text) &&
+    !safety.detectedConfidentialInput &&
+    !safety.deflectedUnsafeRequest;
   const problemStatement =
     state?.briefDraft?.problemStatement ?? (currentHasProblemSignal ? text : undefined);
   const contactHint = state?.briefDraft?.contactHint ?? (message.clientName ? message.clientName : undefined);
@@ -164,7 +197,9 @@ function resolveBriefDraft(
   const diagnosticTurnCount =
     problemStatement || previousContactCtaState !== "not_offered"
       ? previousDiagnosticTurnCount
-      : Math.min(previousDiagnosticTurnCount + 1, MAX_DIAGNOSTIC_TURNS_BEFORE_CONTACT_CTA);
+      : currentHasDiagnosticSignal
+        ? Math.min(previousDiagnosticTurnCount + 1, MAX_DIAGNOSTIC_TURNS_BEFORE_CONTACT_CTA)
+        : previousDiagnosticTurnCount;
   const missingFields: IntakeBriefField[] = [];
 
   if (!problemStatement) {
