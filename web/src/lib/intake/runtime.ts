@@ -12,23 +12,36 @@ import type {
 
 const MAX_INTAKE_TEXT_LENGTH = 1_500;
 const MIN_PROBLEM_SIGNAL_LENGTH = 30;
+const MAX_DIAGNOSTIC_TURNS_BEFORE_CONTACT_CTA = 2;
+
 const COMMITMENT_PATTERNS = [
-  /\b(?:цен[ауые]|стоимост[ьи]|price|prix|tarif|devis)\b/iu,
-  /\b(?:срок(?:и|ов)?|deadline|d[eé]lai|duree|durée)\b/iu,
+  /(?:цен[ауые]|стоимост[ьи]|price|prix|tarif|devis)/iu,
+  /(?:срок(?:и|ов)?|deadline|d[eé]lai|duree|durée)/iu,
   /\b(?:стек|stack|framework|technolog(?:y|ie)|технологи[ия])\b/iu,
   /\b(?:запиш(?:ите|и|у|ем)|назнач(?:ьте|им|у)|appointment|rendez-vous|rdv)\b/iu,
   /\b(?:гарантир(?:уйте|у|уем)|promise|promesse)\b/iu,
 ];
 
-const CITY_PATTERNS = [
-  /\b(nice|ницца|cagnes-sur-mer|cagnes|antibes|cannes|monaco|menton|grasse)\b/iu,
-  /\b(?:город|ville|commune)\s*[:\-]?\s*([a-zа-яё -]{2,40})/iu,
-];
-
 const CONTACT_PATTERNS = [
   /(?:\+|00)\d[\d\s().-]{6,}/u,
   /\b[\w.%+-]+@[\w.-]+\.[a-z]{2,}\b/iu,
-  /\b(?:telegram|телеграм|whatsapp|ватсап|email|почта|t[eé]l[ée]phone|телефон)\b/iu,
+  /(?:мой|моя|me joindre|contactez|contact\s+me|write\s+me|напишите|свяжитесь).{0,40}(?:telegram|телеграм|whatsapp|ватсап|email|почта|e-mail|t[eé]l[ée]phone|телефон)/iu,
+];
+
+const CONFIDENTIAL_PATTERNS = [
+  /(?:парол[ья]|password|mot\s+de\s+passe|secret|token|api\s*key|ключ\s+api)/iu,
+  /\b(?:iban|bic|swift|карта|card\s+number|num[eé]ro\s+de\s+carte)\b/iu,
+  /\b(?:паспорт|passport|ssn|social\s+security|num[eé]ro\s+de\s+s[eé]curit[eé])\b/iu,
+];
+
+const UNSAFE_REQUEST_PATTERNS = [
+  /(?:сер[аы]я|нелегальн|обход\s+закона|отмыв|скам|фрод|fraud|scam|illegal|ill[eé]gal|blanchiment)/iu,
+  /(?:спам|spam|mass\s+dm|массов(?:ая|ую)\s+рассылк|phishing|фишинг|взлом|hack|piratage)/iu,
+];
+
+const CITY_PATTERNS = [
+  /\b(nice|ницца|cagnes-sur-mer|cagnes|antibes|cannes|monaco|menton|grasse)\b/iu,
+  /\b(?:город|ville|commune)\s*[:\-]?\s*([a-zа-яё -]{2,40})/iu,
 ];
 
 function sanitizeIntakeText(value: string): string {
@@ -37,6 +50,13 @@ function sanitizeIntakeText(value: string): string {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, MAX_INTAKE_TEXT_LENGTH);
+}
+
+function redactSensitiveText(value: string): string {
+  return sanitizeIntakeText(value)
+    .replace(/\b[\w.%+-]+@[\w.-]+\.[a-z]{2,}\b/giu, "[contact]")
+    .replace(/(?:\+|00)\d[\d\s().-]{6,}/gu, "[contact]")
+    .replace(/\b(?:парол[ья]|password|mot\s+de\s+passe|secret|token|api\s*key|ключ\s+api)\b/giu, "[sensitive]");
 }
 
 function buildIdempotencyKey(message: NormalizedIntakeMessage): string {
@@ -50,11 +70,29 @@ function hasCommitmentRequest(text: string): boolean {
 }
 
 function hasContactSignal(text: string): boolean {
-  return CONTACT_PATTERNS.some((pattern) => pattern.test(text));
+  return text.includes("[contact]") || CONTACT_PATTERNS.some((pattern) => pattern.test(text));
+}
+
+function hasConfidentialSignal(text: string): boolean {
+  return text.includes("[sensitive]") || CONFIDENTIAL_PATTERNS.some((pattern) => pattern.test(text));
+}
+
+function hasUnsafeRequestSignal(text: string): boolean {
+  return UNSAFE_REQUEST_PATTERNS.some((pattern) => pattern.test(text));
 }
 
 function hasCitySignal(text: string): boolean {
   return CITY_PATTERNS.some((pattern) => pattern.test(text));
+}
+
+function hasUsefulProblemSignal(text: string): boolean {
+  if (text.length < MIN_PROBLEM_SIGNAL_LENGTH) {
+    return false;
+  }
+
+  return /(?:заявк|клиент|процесс|обработ|сайт|crm|telegram|телеграм|email|менеджер|demande|client|process|site|outil|canal|leads?|requests?)/iu.test(
+    text,
+  );
 }
 
 function resolveLocale(messageLocale: IntakeLocale, draftLocale?: IntakeLocale): IntakeLocale {
@@ -69,64 +107,81 @@ function getCopy(locale: IntakeLocale) {
   if (locale === "ru") {
     return {
       commitmentDeflection:
-        "Я могу помочь только собрать бриф. Цены, сроки, стек и договоренности определяются отдельно после ручного просмотра.",
-      askProblem:
-        "Коротко опишите задачу: что нужно автоматизировать или какую проблему должен решить ассистент?",
-      askContact: "Как удобнее связаться с вами после ручного просмотра брифа?",
-      askCity: "В каком городе или регионе это нужно сделать?",
+        "Стоимость и сроки зависят от задачи; специалист сможет уточнить это после заявки. В чате я не называю цену, сроки и не обещаю решение.",
+      privacyNotice:
+        "Пожалуйста, не указывайте в чате контакты, пароли, токены, финансовые данные или другую конфиденциальную информацию. Для связи используйте контактную форму.",
+      unsafeDeflection:
+        "С серыми или нелегальными задачами мы не работаем. Если речь о легальной AI-автоматизации бизнес-процессов, опишите бизнес и процесс, который хотите улучшить.",
+      askBusiness:
+        "Чем занимается ваш бизнес и какой процесс вы хотите автоматизировать в первую очередь?",
+      askProcessAndChannels:
+        "Какие каналы или системы уже есть: сайт, CRM, Telegram, email или другие рабочие инструменты?",
       contactFormCta:
-        "Контекста уже достаточно для первого шага. Лучше заполнить контактную форму, а если останутся вопросы — я помогу с брифом.",
-      ready: "Бриф собран для ручного просмотра администратором.",
+        "Этого достаточно для первого шага. Заполните контактную форму: там можно оставить имя и удобный канал связи. Если хотите продолжить, я помогу подготовить необязательный бриф.",
+      briefCta:
+        "Контактную форму лучше заполнить отдельно. Если хотите, дальше я помогу сформулировать необязательный бриф: чем занимается бизнес, что автоматизировать и какие каналы уже используются.",
     };
   }
 
   return {
     commitmentDeflection:
-      "Je peux seulement aider à préparer le brief. Les prix, délais, stack et accords sont définis séparément après une revue manuelle.",
-    askProblem:
-      "Décrivez brièvement le besoin : que faut-il automatiser ou quel problème l'assistant doit-il résoudre ?",
-    askContact: "Quel contact utiliser après la revue manuelle du brief ?",
-    askCity: "Dans quelle ville ou région faut-il intervenir ?",
+      "Le prix et les delais dependent du besoin ; un specialiste pourra les preciser apres la demande. Dans le chat, je ne donne pas de prix, de delais ni de promesse de solution.",
+    privacyNotice:
+      "Merci de ne pas indiquer dans le chat vos contacts, mots de passe, tokens, donnees financieres ou autres informations confidentielles. Utilisez le formulaire de contact pour etre recontacte.",
+    unsafeDeflection:
+      "Nous ne travaillons pas sur des activites grises ou illegales. Si votre demande concerne une automatisation IA legale de processus business, decrivez l'activite et le processus a ameliorer.",
+    askBusiness:
+      "Quelle est votre activite, et quel processus souhaitez-vous automatiser en premier ?",
+    askProcessAndChannels:
+      "Quels canaux ou outils utilisez-vous deja : site web, CRM, Telegram, email ou autres outils de travail ?",
     contactFormCta:
-      "Le contexte suffit pour une première étape. Le mieux est de remplir le formulaire de contact ; s'il reste des questions, je peux aider avec le brief.",
-    ready: "Le brief est prêt pour une revue manuelle par l'administrateur.",
+      "C'est suffisant pour une premiere etape. Remplissez le formulaire de contact : vous pourrez y laisser votre nom et le canal de contact prefere. Si besoin, je peux ensuite aider a preparer un brief optionnel.",
+    briefCta:
+      "Le formulaire de contact doit etre rempli separement. Si vous le souhaitez, je peux maintenant vous aider a formuler un brief optionnel : activite, processus a automatiser et canaux deja utilises.",
   };
 }
 
 function resolveBriefDraft(
   message: NormalizedIntakeMessage,
   state: IntakeConversationState | undefined,
+  safety: Pick<
+    IntakeSafetyFlags,
+    "detectedContactInChat" | "detectedConfidentialInput" | "deflectedUnsafeRequest"
+  >,
 ): IntakeBriefDraft {
-  const text = sanitizeIntakeText(message.text);
+  const text = redactSensitiveText(message.text);
   const preferredLanguage = resolveLocale(message.locale, state?.briefDraft?.preferredLanguage);
+  const previousDiagnosticTurnCount = state?.briefDraft?.diagnosticTurnCount ?? 0;
+  const previousContactCtaState = state?.briefDraft?.contactCtaState ?? "not_offered";
+  const currentHasProblemSignal =
+    hasUsefulProblemSignal(text) &&
+    !safety.detectedConfidentialInput &&
+    !safety.deflectedUnsafeRequest;
   const problemStatement =
-    state?.briefDraft?.problemStatement ??
-    (text.length >= MIN_PROBLEM_SIGNAL_LENGTH ? text : undefined);
-  const contactHint =
-    state?.briefDraft?.contactHint ??
-    (message.clientName ? message.clientName : undefined) ??
-    (hasContactSignal(text) ? text : undefined);
+    state?.briefDraft?.problemStatement ?? (currentHasProblemSignal ? text : undefined);
+  const contactHint = state?.briefDraft?.contactHint ?? (message.clientName ? message.clientName : undefined);
   const city = state?.briefDraft?.city ?? (hasCitySignal(text) ? text : undefined);
+  const diagnosticTurnCount =
+    problemStatement || previousContactCtaState !== "not_offered"
+      ? previousDiagnosticTurnCount
+      : Math.min(previousDiagnosticTurnCount + 1, MAX_DIAGNOSTIC_TURNS_BEFORE_CONTACT_CTA);
   const missingFields: IntakeBriefField[] = [];
 
   if (!problemStatement) {
     missingFields.push("problem_statement");
   }
-  if (!contactHint) {
-    missingFields.push("contact_hint");
-  }
-  if (!city) {
-    missingFields.push("city");
-  }
 
-  const previousContactCtaState = state?.briefDraft?.contactCtaState ?? "not_offered";
+  const shouldOfferContactForm =
+    safety.detectedContactInChat ||
+    safety.detectedConfidentialInput ||
+    (diagnosticTurnCount >= MAX_DIAGNOSTIC_TURNS_BEFORE_CONTACT_CTA && previousContactCtaState === "not_offered") ||
+    (Boolean(problemStatement) && previousContactCtaState === "not_offered");
   const nextStep =
-    missingFields.length > 0
-      ? "clarify"
-      : previousContactCtaState === "offered" ||
-          previousContactCtaState === "insufficient"
-        ? "brief"
-        : "contact_form";
+    previousContactCtaState === "offered" || previousContactCtaState === "accepted"
+      ? "brief"
+      : shouldOfferContactForm
+        ? "contact_form"
+        : "clarify";
   const contactCtaState =
     nextStep === "contact_form" && previousContactCtaState === "not_offered"
       ? "offered"
@@ -136,6 +191,7 @@ function resolveBriefDraft(
     ...(problemStatement ? { problemStatement } : {}),
     ...(contactHint ? { contactHint } : {}),
     ...(city ? { city } : {}),
+    diagnosticTurnCount,
     preferredLanguage,
     missingFields,
     contactCtaState,
@@ -145,27 +201,31 @@ function resolveBriefDraft(
 
 function buildFollowup(briefDraft: IntakeBriefDraft, safety: IntakeSafetyFlags): string {
   const copy = getCopy(briefDraft.preferredLanguage);
-  const prefix = safety.deflectedCommitment ? `${copy.commitmentDeflection} ` : "";
-  const nextMissingField = briefDraft.missingFields[0];
+  const prefix = [
+    safety.deflectedUnsafeRequest ? copy.unsafeDeflection : "",
+    safety.deflectedCommitment ? copy.commitmentDeflection : "",
+    safety.detectedContactInChat || safety.detectedConfidentialInput ? copy.privacyNotice : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
-  if (nextMissingField === "problem_statement") {
-    return `${prefix}${copy.askProblem}`.trim();
-  }
-  if (nextMissingField === "contact_hint") {
-    return `${prefix}${copy.askContact}`.trim();
-  }
-  if (nextMissingField === "city") {
-    return `${prefix}${copy.askCity}`.trim();
-  }
-  if (briefDraft.nextStep === "contact_form") {
-    return `${prefix}${copy.contactFormCta}`.trim();
-  }
+  const nextMessage =
+    briefDraft.nextStep === "contact_form"
+      ? copy.contactFormCta
+      : briefDraft.nextStep === "brief"
+        ? copy.briefCta
+        : (briefDraft.diagnosticTurnCount ?? 0) >= MAX_DIAGNOSTIC_TURNS_BEFORE_CONTACT_CTA
+          ? copy.askProcessAndChannels
+          : copy.askBusiness;
 
-  return `${prefix}${copy.ready}`.trim();
+  return `${prefix} ${nextMessage}`.replace(/\s+/g, " ").trim();
 }
 
-function buildAdminNotificationDraft(message: NormalizedIntakeMessage, briefDraft: IntakeBriefDraft): IntakeAdminNotificationDraft {
-  const summary = (briefDraft.problemStatement ?? message.text).slice(0, 240);
+function buildAdminNotificationDraft(
+  message: NormalizedIntakeMessage,
+  briefDraft: IntakeBriefDraft,
+): IntakeAdminNotificationDraft {
+  const summary = (briefDraft.problemStatement ?? redactSensitiveText(message.text)).slice(0, 240);
 
   return {
     status: "dry_run_pending",
@@ -192,12 +252,15 @@ export function runIntakeDryRun(
     ...message,
     text: sanitizeIntakeText(message.text),
   };
-  const briefDraft = resolveBriefDraft(sanitizedMessage, state);
   const safety: IntakeSafetyFlags = {
     deflectedCommitment: hasCommitmentRequest(sanitizedMessage.text),
+    detectedContactInChat: hasContactSignal(sanitizedMessage.text),
+    detectedConfidentialInput: hasConfidentialSignal(sanitizedMessage.text),
+    deflectedUnsafeRequest: hasUnsafeRequestSignal(sanitizedMessage.text),
     duplicateProviderEvent,
     sanitizedForLogs: true,
   };
+  const briefDraft = resolveBriefDraft(sanitizedMessage, state, safety);
   const rateLimit = buildRateLimitBoundary(sanitizedMessage);
 
   if (duplicateProviderEvent) {
@@ -211,18 +274,14 @@ export function runIntakeDryRun(
     };
   }
 
-  if (briefDraft.missingFields.length > 0 || safety.deflectedCommitment) {
-    return {
-      action: "ask_followup",
-      idempotencyKey,
-      assistantReply: buildFollowup(briefDraft, safety),
-      briefDraft,
-      safety,
-      rateLimit,
-    };
-  }
-
-  if (briefDraft.nextStep === "contact_form") {
+  if (
+    briefDraft.missingFields.length > 0 ||
+    briefDraft.nextStep === "contact_form" ||
+    safety.deflectedCommitment ||
+    safety.detectedContactInChat ||
+    safety.detectedConfidentialInput ||
+    safety.deflectedUnsafeRequest
+  ) {
     return {
       action: "ask_followup",
       idempotencyKey,

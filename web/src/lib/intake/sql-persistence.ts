@@ -114,6 +114,11 @@ function parseBriefDraft(value: unknown): IntakeConversationState["briefDraft"] 
       : {}),
     ...(typeof draft.contactHint === "string" ? { contactHint: draft.contactHint } : {}),
     ...(typeof draft.city === "string" ? { city: draft.city } : {}),
+    ...(typeof draft.diagnosticTurnCount === "number" &&
+    Number.isInteger(draft.diagnosticTurnCount) &&
+    draft.diagnosticTurnCount >= 0
+      ? { diagnosticTurnCount: draft.diagnosticTurnCount }
+      : {}),
     ...(draft.preferredLanguage === "fr" ||
     draft.preferredLanguage === "ru" ||
     draft.preferredLanguage === "unknown"

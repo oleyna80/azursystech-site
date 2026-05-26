@@ -31,12 +31,15 @@ const persistInput = {
     assistantReply: "Tell me more.",
     briefDraft: {
       preferredLanguage: "fr",
-      missingFields: ["contact_hint"],
+      missingFields: ["problem_statement"],
       contactCtaState: "not_offered",
       nextStep: "clarify",
     },
     safety: {
       deflectedCommitment: false,
+      detectedContactInChat: false,
+      detectedConfidentialInput: false,
+      deflectedUnsafeRequest: false,
       duplicateProviderEvent: false,
       sanitizedForLogs: true,
     },

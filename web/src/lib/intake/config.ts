@@ -88,3 +88,13 @@ export function getIntakeDatabasePool(): Pool {
 
   return pool;
 }
+
+export async function closeIntakeDatabasePoolForTests(): Promise<void> {
+  if (!pool) {
+    return;
+  }
+
+  const currentPool = pool;
+  pool = null;
+  await currentPool.end();
+}

@@ -1,11 +1,9 @@
-import { loadIntakeConversationState, persistIntakeDecision } from "@/lib/intake/storage";
-import { runIntakeDryRun } from "@/lib/intake/runtime";
 import type { IntakeDecision } from "@/lib/intake/types";
 import {
-  normalizeWebChatDryRunMessage,
   type WebChatAdapterResult,
   type WebChatDryRunInput,
 } from "@/lib/web-chat/intake-adapter";
+import { runWebChatIntake } from "@/lib/web-chat/intake";
 
 export type WebChatIntakeDryRunResult =
   | {
@@ -24,61 +22,5 @@ export type WebChatIntakeDryRunResult =
 export async function runWebChatIntakeDryRun(
   input: WebChatDryRunInput,
 ): Promise<WebChatIntakeDryRunResult> {
-  const adapter = normalizeWebChatDryRunMessage(input);
-
-  if (!adapter.ok) {
-    return {
-      ok: false,
-      adapter,
-    };
-  }
-
-  let conversationState = adapter.state;
-  try {
-    conversationState = await loadIntakeConversationState(
-      {
-        channel: adapter.message.channel,
-        conversationKey: adapter.message.conversationKey,
-      },
-      adapter.state,
-    );
-  } catch {
-    return {
-      ok: false,
-      persistence: "unavailable",
-    };
-  }
-
-  const decision = runIntakeDryRun(adapter.message, conversationState);
-
-  try {
-    const persistence = await persistIntakeDecision({
-      message: adapter.message,
-      decision,
-      previousState: conversationState,
-      rawProviderPayload: {
-        message: input.message,
-        locale: input.locale,
-        conversationKey: input.conversationKey,
-        senderKey: input.senderKey,
-      },
-    });
-
-    if (persistence.status === "failed_open_dual") {
-      return {
-        ok: false,
-        persistence: "unavailable",
-      };
-    }
-  } catch {
-    return {
-      ok: false,
-      persistence: "unavailable",
-    };
-  }
-
-  return {
-    ok: true,
-    decision,
-  };
+  return runWebChatIntake(input);
 }

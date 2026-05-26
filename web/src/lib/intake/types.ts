@@ -20,6 +20,7 @@ export type IntakeBriefDraft = {
   problemStatement?: string;
   contactHint?: string;
   city?: string;
+  diagnosticTurnCount?: number;
   preferredLanguage: IntakeLocale;
   missingFields: IntakeBriefField[];
   contactCtaState: ContactCtaState;
@@ -42,6 +43,9 @@ export type IntakeConversationState = {
 
 export type IntakeSafetyFlags = {
   deflectedCommitment: boolean;
+  detectedContactInChat: boolean;
+  detectedConfidentialInput: boolean;
+  deflectedUnsafeRequest: boolean;
   duplicateProviderEvent: boolean;
   sanitizedForLogs: boolean;
 };

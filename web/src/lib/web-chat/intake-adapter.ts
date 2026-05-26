@@ -6,14 +6,17 @@ import type {
 
 const MAX_WEB_CHAT_TEXT_LENGTH = 1_000;
 
-export type WebChatDryRunInput = {
+export type WebChatIntakeInput = {
   message: string;
   locale: IntakeLocale;
   conversationKey?: string;
   senderKey?: string;
+  providerUpdateId?: string;
+  providerMessageId?: string;
   receivedAtUtc?: Date;
   state?: IntakeConversationState;
 };
+export type WebChatDryRunInput = WebChatIntakeInput;
 
 export type WebChatAdapterResult =
   | { ok: true; message: NormalizedIntakeMessage; state?: IntakeConversationState }
@@ -27,6 +30,19 @@ function normalizeWebChatText(value: string): string {
     .slice(0, MAX_WEB_CHAT_TEXT_LENGTH);
 }
 
+function redactWebChatStoredText(value: string): string {
+  return normalizeWebChatText(value)
+    .replace(/\b[\w.%+-]+@[\w.-]+\.[a-z]{2,}\b/giu, "[contact]")
+    .replace(/(?:\+|00)\d[\d\s().-]{6,}/gu, "[contact]")
+    .replace(
+      /(?:парол[ья]|password|mot\s+de\s+passe|secret|token|api\s*key|ключ\s+api)\s*[:=]?\s*[^,.;\s]*/giu,
+      "[sensitive]",
+    )
+    .replace(/\b(?:iban|bic|swift|passport|ssn)\s*[:=]?\s*[^,.;\s]*/giu, "[sensitive]")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function normalizeKey(value: string | undefined, fallback: string): string {
   const normalized = value
     ?.trim()
@@ -36,16 +52,21 @@ function normalizeKey(value: string | undefined, fallback: string): string {
   return normalized || fallback;
 }
 
-export function normalizeWebChatDryRunMessage(
-  input: WebChatDryRunInput,
-): WebChatAdapterResult {
-  const text = normalizeWebChatText(input.message);
+function normalizeOptionalKey(value: string | undefined): string | undefined {
+  const normalized = normalizeKey(value, "");
+  return normalized || undefined;
+}
+
+export function normalizeWebChatMessage(input: WebChatIntakeInput): WebChatAdapterResult {
+  const text = redactWebChatStoredText(input.message);
   if (!text) {
     return { ok: false, error: "missing_text" };
   }
 
   const conversationKey = normalizeKey(input.conversationKey, "web_chat:dry_run");
   const senderKey = normalizeKey(input.senderKey, conversationKey);
+  const providerUpdateId = normalizeOptionalKey(input.providerUpdateId);
+  const providerMessageId = normalizeOptionalKey(input.providerMessageId);
   if (!conversationKey || !senderKey) {
     return { ok: false, error: "invalid_conversation" };
   }
@@ -54,6 +75,8 @@ export function normalizeWebChatDryRunMessage(
     ok: true,
     message: {
       channel: "web_chat",
+      ...(providerUpdateId ? { providerUpdateId } : {}),
+      ...(providerMessageId ? { providerMessageId } : {}),
       conversationKey,
       senderKey,
       receivedAtUtc: (input.receivedAtUtc ?? new Date()).toISOString(),
@@ -62,4 +85,8 @@ export function normalizeWebChatDryRunMessage(
     },
     ...(input.state ? { state: input.state } : {}),
   };
+}
+
+export function normalizeWebChatDryRunMessage(input: WebChatDryRunInput): WebChatAdapterResult {
+  return normalizeWebChatMessage(input);
 }
