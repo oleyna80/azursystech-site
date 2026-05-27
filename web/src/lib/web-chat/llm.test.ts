@@ -43,6 +43,27 @@ afterEach(() => {
 });
 
 describe("web chat LLM advisory layer", () => {
+  it("prioritizes the contact form and blocks brief promotion for contact-form turns", () => {
+    const messages = buildWebChatLlmMessages({
+      message: {
+        ...baseMessage,
+        text: "А сколько это будет стоить?",
+      },
+      decision: {
+        ...baseDecision,
+        briefDraft: {
+          ...baseDecision.briefDraft,
+          nextStep: "contact_form",
+        },
+      },
+      history: [],
+    });
+
+    expect(messages[0]?.role).toBe("system");
+    expect(messages[0]?.content).toContain("Prioritize the contact form link /contact");
+    expect(messages[0]?.content).toContain("Do not mention /brief unless the user explicitly asks");
+  });
+
   it("builds expanded sanitized context for brief-form assistance", () => {
     const messages = buildWebChatLlmMessages({
       message: baseMessage,

@@ -122,12 +122,42 @@ describe("intake runtime", () => {
     expect(decision.assistantReply).toContain("С серыми или нелегальными задачами");
   });
 
-  it("moves to optional brief guidance only after the contact form was already offered", () => {
+  it("keeps the contact form as the next step after follow-up questions", () => {
     const decision = runIntakeDryRun(
       {
         ...baseMessage,
         receivedAtUtc: "2026-05-24T10:02:00.000Z",
-        text: "I want help describing how the assistant should qualify leads from the site and Telegram.",
+        text: "А когда специалист свяжется и сколько займет времени работа?",
+        locale: "ru",
+      },
+      {
+        briefDraft: {
+          problemStatement: "Я страховой агент, хочу чат для WhatsApp, чтобы отвечать на вопросы и собирать заявки.",
+          preferredLanguage: "ru",
+          contactCtaState: "offered",
+          nextStep: "contact_form",
+        },
+      },
+    );
+
+    expect(decision.action).toBe("ask_followup");
+    expect(decision.briefDraft).toMatchObject({
+      contactCtaState: "offered",
+      nextStep: "contact_form",
+      missingFields: [],
+    });
+    expect(decision.assistantReply).toContain("Стоимость и сроки зависят");
+    expect(decision.assistantReply).toContain("контактную форму");
+    expect(decision.assistantReply).not.toContain("бриф");
+    expect("adminNotification" in decision).toBe(false);
+  });
+
+  it("moves to optional brief guidance only when the user explicitly asks about the brief", () => {
+    const decision = runIntakeDryRun(
+      {
+        ...baseMessage,
+        receivedAtUtc: "2026-05-24T10:02:00.000Z",
+        text: "I want help describing what to write in the brief about lead qualification from the site and Telegram.",
         locale: "fr",
       },
       {

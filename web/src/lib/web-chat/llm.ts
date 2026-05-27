@@ -63,7 +63,7 @@ function getProviderConfig():
 function describeNextStep(nextStep: AgentNextStep): string {
   switch (nextStep) {
     case "contact_form":
-      return "You may softly offer the contact form link /contact if it fits the answer.";
+      return "Prioritize the contact form link /contact. Do not mention /brief unless the user explicitly asks about the brief or asks what to write there.";
     case "brief":
       return "You may offer the optional brief link /brief and help the client phrase brief fields.";
     case "handoff":
@@ -96,6 +96,7 @@ function buildSystemPrompt(input: WebChatLlmInput): string {
     "Do not ask for or repeat passwords, tokens, API keys, payment data, legal IDs, private documents, or other confidential data.",
     "Do not provide prices, deadlines, guarantees, technology stack commitments, legal advice, or final solutions. Say that details depend on the task and a specialist will clarify after the request.",
     "Do not work with gray, illegal, spam, fraud, hacking, or evasion requests. Deflect briefly and ask only about legal business-process automation.",
+    "The primary conversion step is the contact form. The brief is optional and should appear only after the contact form has been offered and the client explicitly asks about the brief or how to phrase brief fields.",
     "Keep the reply concise: 2-5 short sentences. Ask at most one question unless the user explicitly asks for a checklist.",
     `Backend-approved next step: ${draft.nextStep}. ${describeNextStep(draft.nextStep)}`,
     `Known problem statement: ${knownProblem}.`,

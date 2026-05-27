@@ -18,6 +18,8 @@ const MIN_DIAGNOSTIC_SIGNAL_LENGTH = 8;
 const COMMITMENT_PATTERNS = [
   /(?:цен[ауые]|стоимост[ьи]|price|prix|tarif|devis)/iu,
   /(?:сколько\s+(?:будет\s+)?сто(?:ит|ить)?|сто(?:ит|ить))/iu,
+  /(?:сколько\s+(?:это\s+)?(?:займ[её]т|занимает|времени)|сколько\s+времени)/iu,
+  /(?:когда|через\s+сколько).{0,80}(?:свяж(?:ется|етесь|емся)|ответ(?:ит|ите|им)|готов[оы]?|запуст(?:ите|им|ят)|начн(?:ете|ёте|ем|ём))/iu,
   /(?:срок(?:и|ов)?|deadline|d[eé]lai|duree|durée)/iu,
   /\b(?:стек|stack|framework|technolog(?:y|ie)|технологи[ия])\b/iu,
   /\b(?:запиш(?:ите|и|у|ем)|назнач(?:ьте|им|у)|appointment|rendez-vous|rdv)\b/iu,
@@ -124,6 +126,12 @@ function hasMeaningfulDiagnosticSignal(text: string): boolean {
   );
 }
 
+function hasBriefGuidanceSignal(text: string): boolean {
+  return /(?:бриф|brief|что\s+(?:писать|указать|заполнить)|как\s+(?:описать|сформулировать|заполнить)|помогите\s+(?:с\s+)?(?:описать|сформулировать)|que\s+(?:mettre|indiquer|ecrire)|comment\s+(?:decrire|formuler|remplir))/iu.test(
+    text,
+  );
+}
+
 function resolveLocale(messageLocale: IntakeLocale, draftLocale?: IntakeLocale): IntakeLocale {
   if (messageLocale !== "unknown") {
     return messageLocale;
@@ -211,10 +219,18 @@ function resolveBriefDraft(
     safety.detectedConfidentialInput ||
     (diagnosticTurnCount >= MAX_DIAGNOSTIC_TURNS_BEFORE_CONTACT_CTA && previousContactCtaState === "not_offered") ||
     (Boolean(problemStatement) && previousContactCtaState === "not_offered");
+  const shouldKeepContactFormVisible =
+    previousContactCtaState === "offered" || previousContactCtaState === "accepted";
+  const shouldOfferBrief =
+    shouldKeepContactFormVisible &&
+    hasBriefGuidanceSignal(text) &&
+    !safety.detectedContactInChat &&
+    !safety.detectedConfidentialInput &&
+    !safety.deflectedUnsafeRequest;
   const nextStep =
-    previousContactCtaState === "offered" || previousContactCtaState === "accepted"
+    shouldOfferBrief
       ? "brief"
-      : shouldOfferContactForm
+      : shouldOfferContactForm || shouldKeepContactFormVisible
         ? "contact_form"
         : "clarify";
   const contactCtaState =
