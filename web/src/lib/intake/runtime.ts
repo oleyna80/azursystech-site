@@ -89,14 +89,24 @@ function hasCitySignal(text: string): boolean {
   return CITY_PATTERNS.some((pattern) => pattern.test(text));
 }
 
+function hasAutomationIntentSignal(text: string): boolean {
+  return /(?:ai|ии|автоматизац|автоматизир|чат-?бот|заявк|лид|lead|crm|интеграц|процесс|воронк|квалификац|pipeline|workflow|automat|automatis|requests?|demandes?)/iu.test(
+    text,
+  );
+}
+
+function hasServiceIntentSignal(text: string): boolean {
+  return /(?:обслуживан|поддержк|сопровожд|консультац|консультир|отвечать\s+на\s+вопрос|ответы\s+на\s+вопрос|service\s+client|support|assistance|maintenance|accompagnement)/iu.test(
+    text,
+  );
+}
+
 function hasUsefulProblemSignal(text: string): boolean {
   if (text.length < MIN_PROBLEM_SIGNAL_LENGTH) {
     return false;
   }
 
-  return /(?:ai|ии|автоматизац|автоматизир|бизнес|заявк|клиент|процесс|обработ|сайт|crm|telegram|телеграм|email|менеджер|demande|client|process|site|outil|canal|automat|automatis|leads?|requests?)/iu.test(
-    text,
-  );
+  return hasAutomationIntentSignal(text) || hasServiceIntentSignal(text);
 }
 
 function hasMeaningfulDiagnosticSignal(text: string): boolean {
@@ -150,13 +160,13 @@ function getCopy(locale: IntakeLocale) {
       unsafeDeflection:
         "С серыми или нелегальными задачами мы не работаем. Если речь о легальной AI-автоматизации бизнес-процессов, опишите бизнес и процесс, который хотите улучшить.",
       askBusiness:
-        "Чем занимается ваш бизнес и какой процесс вы хотите автоматизировать в первую очередь?",
+        "Коротко уточните, какой вопрос хотите решить: обслуживание клиентов, сбор заявок или автоматизация процесса?",
       askProcessAndChannels:
-        "Какие каналы или системы уже есть: сайт, CRM, Telegram, email или другие рабочие инструменты?",
+        "Что важнее на первом этапе: отвечать клиентам, собирать заявки или автоматизировать внутренний процесс?",
       contactFormCta:
-        "Этого достаточно для первого шага. Заполните контактную форму: там можно оставить имя и удобный канал связи.",
+        "По такому вопросу лучше начать с контактной формы. Нажмите ссылку в чате или откройте раздел «Контакты» в меню сайта.",
       briefCta:
-        "Контактную форму лучше заполнить отдельно. Если хотите, дальше я помогу сформулировать необязательный бриф: чем занимается бизнес, что автоматизировать и какие каналы уже используются.",
+        "Для задачи автоматизации можно выбрать удобный путь: оставить контакт через форму или заполнить необязательный бриф. В брифе можно описать бизнес, процесс и текущие инструменты.",
     };
   }
 
@@ -168,13 +178,13 @@ function getCopy(locale: IntakeLocale) {
     unsafeDeflection:
       "Nous ne travaillons pas sur des activites grises ou illegales. Si votre demande concerne une automatisation IA legale de processus business, decrivez l'activite et le processus a ameliorer.",
     askBusiness:
-      "Quelle est votre activite, et quel processus souhaitez-vous automatiser en premier ?",
+      "Precisez brievement le sujet a traiter : service client, collecte de demandes ou automatisation d'un processus ?",
     askProcessAndChannels:
-      "Quels canaux ou outils utilisez-vous deja : site web, CRM, Telegram, email ou autres outils de travail ?",
+      "Qu'est-ce qui compte d'abord : repondre aux clients, collecter des demandes ou automatiser un processus interne ?",
     contactFormCta:
-      "C'est suffisant pour une premiere etape. Remplissez le formulaire de contact : vous pourrez y laisser votre nom et le canal de contact prefere.",
+      "Pour ce type de question, commencez par le formulaire de contact. Cliquez sur le lien dans le chat ou ouvrez la rubrique Contact dans le menu du site.",
     briefCta:
-      "Le formulaire de contact doit etre rempli separement. Si vous le souhaitez, je peux maintenant vous aider a formuler un brief optionnel : activite, processus a automatiser et canaux deja utilises.",
+      "Pour une demande d'automatisation, vous pouvez choisir : laisser un contact via le formulaire ou remplir le brief optionnel. Le brief peut decrire l'activite, le processus et les outils actuels.",
   };
 }
 
@@ -198,6 +208,15 @@ function resolveBriefDraft(
     hasMeaningfulDiagnosticSignal(text) &&
     !safety.detectedConfidentialInput &&
     !safety.deflectedUnsafeRequest;
+  const currentHasAutomationIntent =
+    hasAutomationIntentSignal(text) &&
+    !safety.detectedConfidentialInput &&
+    !safety.deflectedUnsafeRequest;
+  const currentHasServiceIntent =
+    hasServiceIntentSignal(text) &&
+    !currentHasAutomationIntent &&
+    !safety.detectedConfidentialInput &&
+    !safety.deflectedUnsafeRequest;
   const problemStatement =
     state?.briefDraft?.problemStatement ?? (currentHasProblemSignal ? text : undefined);
   const contactHint = state?.briefDraft?.contactHint ?? (message.clientName ? message.clientName : undefined);
@@ -217,16 +236,24 @@ function resolveBriefDraft(
   const shouldOfferContactForm =
     safety.detectedContactInChat ||
     safety.detectedConfidentialInput ||
-    (diagnosticTurnCount >= MAX_DIAGNOSTIC_TURNS_BEFORE_CONTACT_CTA && previousContactCtaState === "not_offered") ||
-    (Boolean(problemStatement) && previousContactCtaState === "not_offered");
+    currentHasServiceIntent ||
+    (diagnosticTurnCount >= MAX_DIAGNOSTIC_TURNS_BEFORE_CONTACT_CTA &&
+      previousContactCtaState === "not_offered" &&
+      !currentHasAutomationIntent);
   const shouldKeepContactFormVisible =
     previousContactCtaState === "offered" || previousContactCtaState === "accepted";
-  const shouldOfferBrief =
-    shouldKeepContactFormVisible &&
-    hasBriefGuidanceSignal(text) &&
+  const shouldOfferAutomationChoice =
+    currentHasAutomationIntent &&
     !safety.detectedContactInChat &&
     !safety.detectedConfidentialInput &&
     !safety.deflectedUnsafeRequest;
+  const shouldOfferBrief =
+    shouldOfferAutomationChoice ||
+    (shouldKeepContactFormVisible &&
+      hasBriefGuidanceSignal(text) &&
+      !safety.detectedContactInChat &&
+      !safety.detectedConfidentialInput &&
+      !safety.deflectedUnsafeRequest);
   const nextStep =
     shouldOfferBrief
       ? "brief"
@@ -234,7 +261,7 @@ function resolveBriefDraft(
         ? "contact_form"
         : "clarify";
   const contactCtaState =
-    nextStep === "contact_form" && previousContactCtaState === "not_offered"
+    (nextStep === "contact_form" || nextStep === "brief") && previousContactCtaState === "not_offered"
       ? "offered"
       : previousContactCtaState;
 
@@ -313,6 +340,7 @@ export function runIntakeDryRun(
   };
   const briefDraft = resolveBriefDraft(sanitizedMessage, state, safety);
   const rateLimit = buildRateLimitBoundary(sanitizedMessage);
+  const requestedBriefGuidance = hasBriefGuidanceSignal(sanitizedMessage.text);
 
   if (duplicateProviderEvent) {
     return {
@@ -328,6 +356,7 @@ export function runIntakeDryRun(
   if (
     briefDraft.missingFields.length > 0 ||
     briefDraft.nextStep === "contact_form" ||
+    (briefDraft.nextStep === "brief" && !requestedBriefGuidance) ||
     safety.deflectedCommitment ||
     safety.detectedContactInChat ||
     safety.detectedConfidentialInput ||

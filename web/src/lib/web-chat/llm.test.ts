@@ -60,8 +60,31 @@ describe("web chat LLM advisory layer", () => {
     });
 
     expect(messages[0]?.role).toBe("system");
-    expect(messages[0]?.content).toContain("Prioritize the contact form link /contact");
+    expect(messages[0]?.content).toContain("Offer the contact form link /contact");
     expect(messages[0]?.content).toContain("Do not mention /brief unless the user explicitly asks");
+  });
+
+  it("instructs clarification turns to ask intent before channel details", () => {
+    const messages = buildWebChatLlmMessages({
+      message: {
+        ...baseMessage,
+        text: "Я хочу сайт с чатом как у вас.",
+      },
+      decision: {
+        ...baseDecision,
+        briefDraft: {
+          preferredLanguage: "ru",
+          missingFields: ["problem_statement"],
+          contactCtaState: "not_offered",
+          nextStep: "clarify",
+        },
+      },
+      history: [],
+    });
+
+    expect(messages[0]?.content).toContain("first clarify what the client wants to solve");
+    expect(messages[0]?.content).toContain("Do not start by asking which channel they plan to use");
+    expect(messages[0]?.content).toContain("Do not start by listing channels");
   });
 
   it("builds expanded sanitized context for brief-form assistance", () => {

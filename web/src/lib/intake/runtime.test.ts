@@ -24,7 +24,7 @@ describe("intake runtime", () => {
       nextStep: "clarify",
       missingFields: ["problem_statement"],
     });
-    expect(firstDecision.assistantReply).toContain("Чем занимается ваш бизнес");
+    expect(firstDecision.assistantReply).toContain("какой вопрос хотите решить");
 
     const secondDecision = runIntakeDryRun(
       {
@@ -44,13 +44,39 @@ describe("intake runtime", () => {
       contactCtaState: "not_offered",
       nextStep: "clarify",
     });
-    expect(secondDecision.assistantReply).toContain("Чем занимается ваш бизнес");
+    expect(secondDecision.assistantReply).toContain("какой вопрос хотите решить");
   });
 
-  it("offers the contact form before the optional brief when context is useful", () => {
+  it("keeps generic website chat interest in clarification before routing to a form", () => {
+    const decision = runIntakeDryRun(
+      {
+        ...baseMessage,
+        receivedAtUtc: "2026-05-24T10:01:00.000Z",
+        text: "Я хочу сайт с чатом как у вас.",
+        locale: "ru",
+      },
+      {
+        briefDraft: {
+          preferredLanguage: "ru",
+          contactCtaState: "not_offered",
+          nextStep: "clarify",
+        },
+      },
+    );
+
+    expect(decision.action).toBe("ask_followup");
+    expect(decision.briefDraft).toMatchObject({
+      contactCtaState: "not_offered",
+      nextStep: "clarify",
+      missingFields: ["problem_statement"],
+    });
+    expect(decision.assistantReply).toContain("какой вопрос хотите решить");
+  });
+
+  it("offers contact form only for service/support questions", () => {
     const decision = runIntakeDryRun({
       ...baseMessage,
-      text: "Мы обрабатываем заявки с сайта и Telegram вручную, хотим автоматизировать первичную квалификацию клиентов и передачу менеджеру.",
+      text: "Нужен чат для обслуживания клиентов: отвечать на вопросы и принимать обращения.",
       locale: "ru",
     });
 
@@ -60,11 +86,29 @@ describe("intake runtime", () => {
       nextStep: "contact_form",
       missingFields: [],
     });
+    expect(decision.assistantReply).toContain("контактной формы");
+    expect(decision.assistantReply).toContain("Контакты");
+    expect(decision.assistantReply).not.toContain("бриф");
+  });
+
+  it("offers a contact-or-brief choice when the request is clearly automation", () => {
+    const decision = runIntakeDryRun({
+      ...baseMessage,
+      text: "Мы обрабатываем заявки с сайта и Telegram вручную, хотим автоматизировать первичную квалификацию клиентов и передачу менеджеру.",
+      locale: "ru",
+    });
+
+    expect(decision.action).toBe("ask_followup");
+    expect(decision.briefDraft).toMatchObject({
+      contactCtaState: "offered",
+      nextStep: "brief",
+      missingFields: [],
+    });
     expect(decision.briefDraft.contactHint).toBeUndefined();
     expect("adminNotification" in decision).toBe(false);
     expect("sheetsMirror" in decision).toBe(false);
-    expect(decision.assistantReply).toContain("контактную форму");
-    expect(decision.assistantReply).not.toContain("бриф");
+    expect(decision.assistantReply).toContain("форму");
+    expect(decision.assistantReply).toContain("бриф");
   });
 
   it("does not collect pasted contact data in chat", () => {
@@ -147,7 +191,7 @@ describe("intake runtime", () => {
       missingFields: [],
     });
     expect(decision.assistantReply).toContain("Стоимость и сроки зависят");
-    expect(decision.assistantReply).toContain("контактную форму");
+    expect(decision.assistantReply).toContain("контактной формы");
     expect(decision.assistantReply).not.toContain("бриф");
     expect("adminNotification" in decision).toBe(false);
   });
