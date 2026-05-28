@@ -7,6 +7,8 @@ const LLM_TIMEOUT_MS = 8_000;
 const MAX_LLM_REPLY_LENGTH = 1_200;
 const MAX_LLM_HISTORY_ITEMS = 12;
 const MAX_LLM_HISTORY_ITEM_LENGTH = 900;
+const PUBLIC_CONTACT_FORM_URL = "https://azursystech.fr/contact";
+const PUBLIC_BRIEF_FORM_URL = "https://azursystech.fr/brief";
 
 type LlmChatMessage = {
   role: "system" | "user" | "assistant";
@@ -63,11 +65,11 @@ function getProviderConfig():
 function describeNextStep(nextStep: AgentNextStep): string {
   switch (nextStep) {
     case "contact_form":
-      return "Offer the contact form link /contact or the Contact menu item. Do not mention /brief unless the user explicitly asks about the brief or asks what to write there.";
+      return `Offer the contact form link ${PUBLIC_CONTACT_FORM_URL} or the Contact menu item. Do not mention the brief unless the user explicitly asks about the brief or asks what to write there.`;
     case "brief":
-      return "Offer a choice: contact form /contact or optional brief /brief. Help the client phrase brief fields if they ask.";
+      return `Offer a choice: contact form ${PUBLIC_CONTACT_FORM_URL} or optional brief ${PUBLIC_BRIEF_FORM_URL}. Help the client phrase brief fields if they ask.`;
     case "handoff":
-      return "Keep the answer short and route the client to the contact form /contact.";
+      return `Keep the answer short and route the client to the contact form ${PUBLIC_CONTACT_FORM_URL}.`;
     case "clarify":
     default:
       return "Continue with one concise intent question before pushing forms. Do not start by listing channels.";
@@ -98,9 +100,9 @@ function buildSystemPrompt(input: WebChatLlmInput): string {
     "Do not ask for or repeat passwords, tokens, API keys, payment data, legal IDs, private documents, or other confidential data.",
     "Do not provide prices, deadlines, guarantees, technology stack commitments, legal advice, or final solutions. Say that details depend on the task and a specialist will clarify after the request.",
     "Do not work with gray, illegal, spam, fraud, hacking, or evasion requests. Deflect briefly and ask only about legal AzurSysTech services.",
-    "If the request is about practical IT service/support, including Wi-Fi, printers, local networks, workstation setup, or on-site support, do not reject it as out of scope. Route to the contact form link /contact or the Contact menu item.",
-    "If the request is about general website/service questions, route to the contact form link /contact or the Contact menu item.",
-    "If the request is clearly about automation, offer a choice between the contact form /contact and the optional brief /brief.",
+    `If the request is about practical IT service/support, including Wi-Fi, printers, local networks, workstation setup, or on-site support, do not reject it as out of scope. Route to the contact form link ${PUBLIC_CONTACT_FORM_URL} or the Contact menu item.`,
+    `If the request is about general website/service questions, route to the contact form link ${PUBLIC_CONTACT_FORM_URL} or the Contact menu item.`,
+    `If the request is clearly about automation, offer a choice between the contact form ${PUBLIC_CONTACT_FORM_URL} and the optional brief ${PUBLIC_BRIEF_FORM_URL}.`,
     "The brief is optional; never present it as mandatory.",
     "Keep the reply concise: 2-5 short sentences. Ask at most one question unless the user explicitly asks for a checklist.",
     `Backend-approved next step: ${draft.nextStep}. ${describeNextStep(draft.nextStep)}`,
@@ -157,6 +159,12 @@ function isUnsafeAssistantOutput(reply: string): boolean {
   return false;
 }
 
+function expandPublicFormLinks(reply: string): string {
+  return reply
+    .replace(/(^|[\s([{"'«])\/contact\b/giu, `$1${PUBLIC_CONTACT_FORM_URL}`)
+    .replace(/(^|[\s([{"'«])\/brief\b/giu, `$1${PUBLIC_BRIEF_FORM_URL}`);
+}
+
 export async function generateWebChatLlmReply(input: WebChatLlmInput): Promise<WebChatLlmResult> {
   const config = getProviderConfig();
   if (!config.ok) {
@@ -189,7 +197,9 @@ export async function generateWebChatLlmReply(input: WebChatLlmInput): Promise<W
     const payload = (await response.json()) as {
       choices?: Array<{ message?: { content?: unknown } }>;
     };
-    const reply = sanitizeLlmText(String(payload.choices?.[0]?.message?.content ?? ""), MAX_LLM_REPLY_LENGTH);
+    const reply = expandPublicFormLinks(
+      sanitizeLlmText(String(payload.choices?.[0]?.message?.content ?? ""), MAX_LLM_REPLY_LENGTH),
+    );
     if (!reply) {
       return { ok: false, reason: "empty_output" };
     }

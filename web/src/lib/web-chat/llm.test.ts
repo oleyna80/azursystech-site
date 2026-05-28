@@ -60,8 +60,8 @@ describe("web chat LLM advisory layer", () => {
     });
 
     expect(messages[0]?.role).toBe("system");
-    expect(messages[0]?.content).toContain("Offer the contact form link /contact");
-    expect(messages[0]?.content).toContain("Do not mention /brief unless the user explicitly asks");
+    expect(messages[0]?.content).toContain("Offer the contact form link https://azursystech.fr/contact");
+    expect(messages[0]?.content).toContain("Do not mention the brief unless the user explicitly asks");
   });
 
   it("keeps practical IT service requests in scope and routes them to contact", () => {
@@ -87,7 +87,7 @@ describe("web chat LLM advisory layer", () => {
     expect(messages[0]?.content).toContain("practical IT services");
     expect(messages[0]?.content).toContain("Wi-Fi, printers, local networks");
     expect(messages[0]?.content).toContain("do not reject it as out of scope");
-    expect(messages[0]?.content).toContain("Offer the contact form link /contact");
+    expect(messages[0]?.content).toContain("Offer the contact form link https://azursystech.fr/contact");
   });
 
   it("instructs clarification turns to ask intent before channel details", () => {
@@ -170,6 +170,38 @@ describe("web chat LLM advisory layer", () => {
         }),
       }),
     );
+  });
+
+  it("expands relative contact and brief links returned by the provider", async () => {
+    vi.stubEnv("DEEPSEEK_API_KEY", "test-key");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content: "Можно начать с /contact. Если нужна анкета подробнее, используйте /brief.",
+              },
+            },
+          ],
+        }),
+      })),
+    );
+
+    const result = await generateWebChatLlmReply({
+      message: baseMessage,
+      decision: baseDecision,
+      history: [],
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      provider: "deepseek",
+      reply:
+        "Можно начать с https://azursystech.fr/contact. Если нужна анкета подробнее, используйте https://azursystech.fr/brief.",
+    });
   });
 
   it("fails closed on unsafe output instead of returning provider promises", async () => {
