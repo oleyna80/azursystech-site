@@ -20,6 +20,10 @@ HEALTH_URL="${HEALTH_URL:-https://azursystech.fr/health}"
 ROLLBACK_ON_FAILURE="${ROLLBACK_ON_FAILURE:-1}"
 DEPLOY_STATE_DIR="${DEPLOY_STATE_DIR:-.deploy}"
 
+if [ -z "${APP_IMAGE}" ] && [ -f "${ENV_FILE}" ]; then
+  APP_IMAGE="$(grep -E '^APP_IMAGE=' "${ENV_FILE}" | head -1 | cut -d= -f2-)"
+fi
+
 if [ -z "${APP_IMAGE}" ]; then
   echo "APP_IMAGE is required (use an immutable registry image tag)" >&2
   exit 1
