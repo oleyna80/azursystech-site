@@ -7,6 +7,7 @@ import ChatWidget from "@/ChatWidget";
 import { createTranslator, readStoredLocale } from "@/i18n";
 
 const SUPPORTED_LOCALES = new Set(["fr", "ru", "en"]);
+const ROUTE_LOCALES = new Set(["fr", "ru"]);
 const FALLBACK_WIDGET_LOCALE = "ru";
 
 function resolveRuntimeLocale(): string {
@@ -31,14 +32,20 @@ function subscribeToLocaleChanges() {
   return () => {};
 }
 
+function resolveRouteLocale(pathname: string): string | null {
+  const seg = pathname.split("/")[1];
+  return ROUTE_LOCALES.has(seg) ? seg : null;
+}
+
 export function ChatWidgetContainer() {
   const pathname = usePathname();
-  const locale = useSyncExternalStore(
+  const runtimeLocale = useSyncExternalStore(
     subscribeToLocaleChanges,
     resolveRuntimeLocale,
     () => FALLBACK_WIDGET_LOCALE,
   );
-  const routeClassName = pathname === "/ai-automation" ? "route-ai-automation-chat-widget" : undefined;
+  const locale = resolveRouteLocale(pathname) ?? runtimeLocale;
+  const routeClassName = pathname.endsWith("/ai-automation") ? "route-ai-automation-chat-widget" : undefined;
 
   return (
     <div className={routeClassName}>

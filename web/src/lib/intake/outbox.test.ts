@@ -61,6 +61,18 @@ function createTransition(
   };
 }
 
+function createClaimMock(
+  implementation?: IntakeOutboxStore["withQueuedOutboundMessageDispatchClaim"],
+): IntakeOutboxStore["withQueuedOutboundMessageDispatchClaim"] {
+  return vi.fn(
+    implementation ??
+      (async ({ messageId }, fn) => ({
+        ok: true,
+        result: await fn(createOutboxMessage({ messageId })),
+      })),
+  ) as unknown as IntakeOutboxStore["withQueuedOutboundMessageDispatchClaim"];
+}
+
 function createStore(
   overrides: Partial<IntakeOutboxStore> = {},
 ): IntakeOutboxStore {
@@ -87,6 +99,7 @@ function createStore(
     markOutboundMessageFailed: vi.fn(async ({ messageId }) =>
       createTransition(createOutboxMessage({ messageId, status: "failed" }), "failed"),
     ),
+    withQueuedOutboundMessageDispatchClaim: createClaimMock(),
     ...overrides,
   };
 }
@@ -135,6 +148,13 @@ function createLifecycleStore(): IntakeOutboxStore {
         status: "failed",
       });
       return createTransition(message, "failed");
+    }),
+    withQueuedOutboundMessageDispatchClaim: createClaimMock(async ({ messageId }, fn) => {
+      if (message.messageId !== messageId || message.status !== "queued") {
+        return { ok: false, reason: "not_found" };
+      }
+
+      return { ok: true, result: await fn(message) };
     }),
   });
 }
@@ -300,6 +320,89 @@ describe("dispatchQueuedOutboundMessages", () => {
 
     expect(sender.send).not.toHaveBeenCalled();
     expect(store.markOutboundMessageSent).not.toHaveBeenCalled();
+    expect(store.markOutboundMessageFailed).not.toHaveBeenCalled();
+  });
+
+  it("does not send the same queued message twice while another dispatcher holds the claim", async () => {
+    const message = createOutboxMessage();
+    let locked = false;
+    let firstSendStarted: (() => void) | undefined;
+    const firstSendStartedPromise = new Promise<void>((resolve) => {
+      firstSendStarted = resolve;
+    });
+    let releaseFirstSend: (() => void) | undefined;
+    const releaseFirstSendPromise = new Promise<void>((resolve) => {
+      releaseFirstSend = resolve;
+    });
+
+    const store = createStore({
+      listQueuedOutboundMessages: vi.fn(async () => [message]),
+      withQueuedOutboundMessageDispatchClaim: createClaimMock(async (_input, fn) => {
+        if (locked) {
+          return { ok: false, reason: "locked" };
+        }
+
+        locked = true;
+        try {
+          return { ok: true, result: await fn(message) };
+        } finally {
+          locked = false;
+        }
+      }),
+    });
+    const sender: IntakeOutboundSender = {
+      send: vi.fn(async (): Promise<IntakeOutboundSendResult> => {
+        firstSendStarted?.();
+        await releaseFirstSendPromise;
+        return {
+          ok: true,
+          providerMessageId: "fake:msg-1",
+        };
+      }),
+    };
+    mocks.createSqlIntakeOutboxStore.mockReturnValue(store);
+
+    const { dispatchQueuedOutboundMessages } = await importOutboxModule();
+    const firstDispatch = dispatchQueuedOutboundMessages({
+      channel: "telegram",
+      liveSendingEnabled: true,
+      sender,
+    });
+    const secondDispatch = firstSendStartedPromise.then(() =>
+      dispatchQueuedOutboundMessages({
+        channel: "telegram",
+        liveSendingEnabled: true,
+        sender,
+      }),
+    );
+
+    await firstSendStartedPromise;
+    releaseFirstSend?.();
+    const [firstResult, secondResult] = await Promise.all([
+      firstDispatch,
+      secondDispatch,
+    ]);
+
+    expect(firstResult).toEqual({
+      ok: true,
+      mode: "enabled",
+      attempted: 1,
+      results: [
+        expect.objectContaining({
+          ok: true,
+          messageId: "msg-1",
+          providerMessageId: "fake:msg-1",
+        }),
+      ],
+    });
+    expect(secondResult).toEqual({
+      ok: true,
+      mode: "enabled",
+      attempted: 0,
+      results: [],
+    });
+    expect(sender.send).toHaveBeenCalledTimes(1);
+    expect(store.markOutboundMessageSent).toHaveBeenCalledTimes(1);
     expect(store.markOutboundMessageFailed).not.toHaveBeenCalled();
   });
 

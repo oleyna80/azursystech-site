@@ -116,6 +116,18 @@ export type MarkOutboundMessageSentInput = TransitionOutboundMessageInput & {
 
 export type MarkOutboundMessageFailedInput = TransitionOutboundMessageInput;
 
+export type ClaimQueuedOutboundMessageInput = TransitionOutboundMessageInput;
+
+export type ClaimQueuedOutboundMessageResult<T> =
+  | {
+      ok: true;
+      result: T;
+    }
+  | {
+      ok: false;
+      reason: "locked" | "not_found";
+    };
+
 export type OutboundMessageTransitionName =
   | "approved"
   | "queued"
@@ -201,6 +213,10 @@ export type IntakeOutboxStore = {
   markOutboundMessageFailed(
     input: MarkOutboundMessageFailedInput,
   ): Promise<OutboundMessageTransitionResult>;
+  withQueuedOutboundMessageDispatchClaim<T>(
+    input: ClaimQueuedOutboundMessageInput,
+    fn: (message: IntakeOutboxMessage) => Promise<T>,
+  ): Promise<ClaimQueuedOutboundMessageResult<T>>;
 };
 
 function getAdminNotification(

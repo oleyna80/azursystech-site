@@ -30,6 +30,8 @@ import {
   resolveAdminNotificationStatus,
   resolveBriefPersistenceStatus,
   resolveSheetsMirrorStatus,
+  type ClaimQueuedOutboundMessageInput,
+  type ClaimQueuedOutboundMessageResult,
   type IntakePersistenceStore,
   type IntakeOutboxMessage,
   type IntakeOutboxStore,
@@ -146,6 +148,10 @@ function toJson(value: unknown): string {
 
 function toNullableJson(value: unknown): string | null {
   return value === undefined || value === null ? null : JSON.stringify(value);
+}
+
+function outboundDispatchLockQuery(functionName: string): string {
+  return `SELECT ${functionName}(hashtext('intake_outbox_dispatch'), hashtext($1)) AS locked`;
 }
 
 function isBriefStatus(value: string): value is IntakeBriefPersistenceStatus {
@@ -374,6 +380,40 @@ export class SqlIntakeOutboxStore implements IntakeOutboxStore {
     );
 
     return result.rows.map(toOutboxMessage);
+  }
+
+  async withQueuedOutboundMessageDispatchClaim<T>(
+    input: ClaimQueuedOutboundMessageInput,
+    fn: (message: IntakeOutboxMessage) => Promise<T>,
+  ): Promise<ClaimQueuedOutboundMessageResult<T>> {
+    const client = await this.pool.connect();
+
+    try {
+      await client.query("BEGIN");
+      const locked = await tryAcquireOutboundDispatchLock(client, input.messageId);
+      if (!locked) {
+        await client.query("COMMIT");
+        return { ok: false, reason: "locked" };
+      }
+
+      const message = await findQueuedOutboundMessageForDispatch(
+        client,
+        input.messageId,
+      );
+      if (!message) {
+        await client.query("COMMIT");
+        return { ok: false, reason: "not_found" };
+      }
+
+      const result = await fn(toOutboxMessage(message));
+      await client.query("COMMIT");
+      return { ok: true, result };
+    } catch (error) {
+      await rollbackQuietly(client);
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async markOutboundMessageSent(
@@ -1139,6 +1179,54 @@ async function findOutboxMessageByIdForUpdate(
         AND m.direction = 'outbound'
         AND m.author_type = 'assistant'
       FOR UPDATE
+    `,
+    [messageId],
+  );
+
+  return result.rows[0] ?? null;
+}
+
+async function tryAcquireOutboundDispatchLock(
+  client: PoolClient,
+  messageId: string,
+): Promise<boolean> {
+  const result = await client.query<{ locked: boolean }>(
+    outboundDispatchLockQuery("pg_try_advisory_xact_lock"),
+    [messageId],
+  );
+
+  return result.rows[0]?.locked === true;
+}
+
+async function findQueuedOutboundMessageForDispatch(
+  client: PoolClient,
+  messageId: string,
+): Promise<OutboxMessageRow | null> {
+  const result = await client.query<OutboxMessageRow>(
+    `
+      SELECT
+        m.id::text AS message_id,
+        m.conversation_id,
+        m.idempotency_key,
+        m.provider_message_id,
+        m.direction,
+        m.channel,
+        m.author_type,
+        m.status,
+        m.body,
+        m.created_at AS created_at_utc,
+        m.approved_at AS approved_at_utc,
+        m.sent_at AS sent_at_utc,
+        c.conversation_key,
+        c.sender_key
+      FROM intake_channel_messages m
+      JOIN intake_channel_conversations c ON c.id = m.conversation_id
+      WHERE m.id = $1
+        AND m.direction = 'outbound'
+        AND m.author_type = 'assistant'
+        AND m.status = 'queued'
+        AND m.provider_message_id IS NULL
+      LIMIT 1
     `,
     [messageId],
   );

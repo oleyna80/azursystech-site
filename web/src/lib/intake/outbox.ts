@@ -11,6 +11,7 @@ import type {
   ListQueuedOutboundMessagesInput,
   MarkOutboundMessageSentInput,
   OutboundMessageTransitionResult,
+  ClaimQueuedOutboundMessageResult,
   TransitionOutboundMessageInput,
 } from "@/lib/intake/persistence";
 import type { IntakeOutboundSender } from "@/lib/intake/sender";
@@ -22,7 +23,8 @@ export type IntakeOutboxOperation =
   | "approve_outbound_draft_message"
   | "queue_approved_outbound_message"
   | "mark_outbound_message_sent"
-  | "mark_outbound_message_failed";
+  | "mark_outbound_message_failed"
+  | "claim_queued_outbound_message";
 
 export type DispatchQueuedOutboundMessagesInput = ListQueuedOutboundMessagesInput & {
   sender: IntakeOutboundSender;
@@ -178,28 +180,38 @@ export async function dispatchQueuedOutboundMessages(
       continue;
     }
 
-    const sendResult = await input.sender.send(message);
+    const claimResult = await claimQueuedOutboundMessageForDispatch(
+      message.messageId,
+      async (claimedMessage) => {
+        const sendResult = await input.sender.send(claimedMessage);
 
-    if (sendResult.ok) {
-      results.push({
-        ok: true,
-        messageId: message.messageId,
-        providerMessageId: sendResult.providerMessageId,
-        transition: await markOutboundMessageSent({
-          messageId: message.messageId,
-          providerMessageId: sendResult.providerMessageId,
-        }),
-      });
-      continue;
+        if (sendResult.ok) {
+          return {
+            ok: true,
+            messageId: claimedMessage.messageId,
+            providerMessageId: sendResult.providerMessageId,
+            transition: await markOutboundMessageSent({
+              messageId: claimedMessage.messageId,
+              providerMessageId: sendResult.providerMessageId,
+            }),
+          } satisfies DispatchQueuedOutboundMessageResult;
+        }
+
+        return {
+          ok: false,
+          messageId: claimedMessage.messageId,
+          error: sendResult.error,
+          retryable: sendResult.retryable,
+          transition: await markOutboundMessageFailed({
+            messageId: claimedMessage.messageId,
+          }),
+        } satisfies DispatchQueuedOutboundMessageResult;
+      },
+    );
+
+    if (claimResult.ok) {
+      results.push(claimResult.result);
     }
-
-    results.push({
-      ok: false,
-      messageId: message.messageId,
-      error: sendResult.error,
-      retryable: sendResult.retryable,
-      transition: await markOutboundMessageFailed({ messageId: message.messageId }),
-    });
   }
 
   return {
@@ -215,5 +227,14 @@ export function queueApprovedOutboundMessage(
 ): Promise<OutboundMessageTransitionResult> {
   return runOutboxOperation("queue_approved_outbound_message", (store) =>
     store.queueApprovedOutboundMessage(input),
+  );
+}
+
+function claimQueuedOutboundMessageForDispatch<T>(
+  messageId: string,
+  fn: (message: IntakeOutboxMessage) => Promise<T>,
+): Promise<ClaimQueuedOutboundMessageResult<T>> {
+  return runOutboxOperation("claim_queued_outbound_message", (store) =>
+    store.withQueuedOutboundMessageDispatchClaim({ messageId }, fn),
   );
 }

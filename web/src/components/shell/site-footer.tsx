@@ -1,4 +1,9 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+
 type FooterLocale = "fr" | "ru";
+const LOCALE_SLUGS = new Set(["fr", "ru"]);
 
 const CONTACT = {
   phoneDisplay: "+33 7 80 72 09 94",
@@ -53,8 +58,27 @@ const FOOTER_COPY = {
   },
 } as const;
 
+function getLocaleFromPath(pathname: string): FooterLocale | null {
+  const seg = pathname.split("/")[1];
+  return LOCALE_SLUGS.has(seg) ? (seg as FooterLocale) : null;
+}
+
+function localizeFooterHref(href: string, locale: FooterLocale) {
+  if (href.startsWith("/#")) {
+    return `/${locale}${href.slice(1)}`;
+  }
+
+  if (href === "/ai-automation") {
+    return `/${locale}/ai-automation`;
+  }
+
+  return href;
+}
+
 export function SiteFooter({ locale }: { locale: FooterLocale }) {
-  const copy = FOOTER_COPY[locale];
+  const pathname = usePathname();
+  const activeLocale = getLocaleFromPath(pathname) ?? locale;
+  const copy = FOOTER_COPY[activeLocale];
 
   return (
     <footer className="bg-graphite py-16 text-white/66">
@@ -68,11 +92,14 @@ export function SiteFooter({ locale }: { locale: FooterLocale }) {
             <div className="grid gap-4">
               <h2 className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/92">{copy.navigationTitle}</h2>
               <div className="grid gap-3">
-                {copy.links.map((link) => (
-                  <a key={link.href} href={link.href} className="text-base font-semibold text-white/78 transition-colors hover:text-white">
-                    {link.label}
-                  </a>
-                ))}
+                {copy.links.map((link) => {
+                  const href = localizeFooterHref(link.href, activeLocale);
+                  return (
+                    <a key={href} href={href} className="text-base font-semibold text-white/78 transition-colors hover:text-white">
+                      {link.label}
+                    </a>
+                  );
+                })}
               </div>
             </div>
             <div className="grid gap-4">

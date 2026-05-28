@@ -61,21 +61,16 @@ function buildNavLinks(locale: HeaderLocale) {
 
 export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [locale, setLocale] = useState<HeaderLocale>(initialLocale);
   const router = useRouter();
   const pathname = usePathname();
+  const routeLocale = getLocaleFromPath(pathname);
+  const [locale, setLocale] = useState<HeaderLocale>(routeLocale ?? initialLocale);
   const copy = HEADER_COPY[locale];
   const navLinks = useMemo(() => buildNavLinks(locale), [locale]);
 
-  // Sync locale from URL path (takes precedence)
   useEffect(() => {
-    const urlLocale = getLocaleFromPath(pathname);
-    if (urlLocale && urlLocale !== locale) setLocale(urlLocale);
-  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    setLocale(initialLocale);
-  }, [initialLocale]);
+    setLocale(routeLocale ?? initialLocale);
+  }, [routeLocale, initialLocale]);
 
   useEffect(() => {
     const handleResize = () => {
