@@ -96,7 +96,7 @@ function hasAutomationIntentSignal(text: string): boolean {
 }
 
 function hasServiceIntentSignal(text: string): boolean {
-  return /(?:обслуживан|поддержк|сопровожд|консультац|консультир|отвечать\s+на\s+вопрос|ответы\s+на\s+вопрос|service\s+client|support|assistance|maintenance|accompagnement)/iu.test(
+  return /(?:обслуживан|поддержк|сопровожд|консультац|консультир|отвечать\s+на\s+вопрос|ответы\s+на\s+вопрос|service\s+client|support|assistance|maintenance|accompagnement|wi[\s-]?fi|вай[\s-]?фай|wifi|r[eé]seau|локальн(?:ая|ую|ой)?\s+сет|принтер|imprimante|выездн(?:ая|ую|ой)?\s+помощ|intervention\s+sur\s+site|onsite|poste\s+de\s+travail|рабоч(?:ее|ие|их)\s+мест)/iu.test(
     text,
   );
 }
@@ -131,7 +131,7 @@ function hasMeaningfulDiagnosticSignal(text: string): boolean {
     return false;
   }
 
-  return /(?:ai|ии|автоматизац|автоматизир|бизнес|компан|заявк|клиент|процесс|сайт|crm|telegram|телеграм|whatsapp|ватсап|email|канал|demande|client|process|site|outil|canal|automat|automatis|business|leads?|requests?)/iu.test(
+  return /(?:ai|ии|автоматизац|автоматизир|бизнес|компан|заявк|клиент|процесс|сайт|crm|telegram|телеграм|whatsapp|ватсап|email|канал|wi[\s-]?fi|вай[\s-]?фай|wifi|принтер|локальн(?:ая|ую|ой)?\s+сет|кафе|настро(?:ить|йка|ить)|demande|client|process|site|outil|canal|r[eé]seau|imprimante|caf[eé]|automat|automatis|business|leads?|requests?)/iu.test(
     normalized,
   );
 }

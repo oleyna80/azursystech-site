@@ -64,6 +64,32 @@ describe("web chat LLM advisory layer", () => {
     expect(messages[0]?.content).toContain("Do not mention /brief unless the user explicitly asks");
   });
 
+  it("keeps practical IT service requests in scope and routes them to contact", () => {
+    const messages = buildWebChatLlmMessages({
+      message: {
+        ...baseMessage,
+        text: "Мне нужно Wi-Fi настроить в кафе. Вы это делаете?",
+      },
+      decision: {
+        ...baseDecision,
+        briefDraft: {
+          problemStatement: "Мне нужно Wi-Fi настроить в кафе.",
+          preferredLanguage: "ru",
+          missingFields: [],
+          contactCtaState: "offered",
+          nextStep: "contact_form",
+        },
+      },
+      history: [],
+    });
+
+    expect(messages[0]?.role).toBe("system");
+    expect(messages[0]?.content).toContain("practical IT services");
+    expect(messages[0]?.content).toContain("Wi-Fi, printers, local networks");
+    expect(messages[0]?.content).toContain("do not reject it as out of scope");
+    expect(messages[0]?.content).toContain("Offer the contact form link /contact");
+  });
+
   it("instructs clarification turns to ask intent before channel details", () => {
     const messages = buildWebChatLlmMessages({
       message: {

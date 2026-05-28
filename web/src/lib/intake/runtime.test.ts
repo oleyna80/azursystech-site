@@ -91,6 +91,25 @@ describe("intake runtime", () => {
     expect(decision.assistantReply).not.toContain("бриф");
   });
 
+  it("routes local IT service requests like cafe Wi-Fi to the contact form", () => {
+    const decision = runIntakeDryRun({
+      ...baseMessage,
+      text: "Нет, мне нужно Wi-Fi настроить в кафе. Вы это делаете?",
+      locale: "ru",
+    });
+
+    expect(decision.action).toBe("ask_followup");
+    expect(decision.briefDraft).toMatchObject({
+      contactCtaState: "offered",
+      nextStep: "contact_form",
+      missingFields: [],
+    });
+    expect(decision.assistantReply).toContain("контактной формы");
+    expect(decision.assistantReply).toContain("Контакты");
+    expect(decision.assistantReply).not.toContain("бриф");
+    expect("adminNotification" in decision).toBe(false);
+  });
+
   it("offers a contact-or-brief choice when the request is clearly automation", () => {
     const decision = runIntakeDryRun({
       ...baseMessage,
