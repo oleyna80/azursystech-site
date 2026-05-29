@@ -115,7 +115,7 @@ export default async function LocaleHomePage({
                 href={WHATSAPP}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/8 px-7 py-3.5 text-base font-bold text-white transition-colors hover:bg-white/12"
+                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/8 px-7 py-3.5 text-base font-bold text-white transition-all duration-150 ease-out hover:bg-white/12 active:scale-[0.97]"
               >
                 {copy.secondaryCta}
               </a>
@@ -171,22 +171,22 @@ export default async function LocaleHomePage({
       </section>
 
       {/* Automation */}
-      <section id="automation" className="border-y border-graphite/8 bg-[#f5f1ea] py-20 md:py-28">
+      <section id="automation" className="bg-graphite py-20 text-white md:py-28">
         <div className="container mx-auto px-4 md:px-8">
           <div className="grid gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
             <div>
-              <p className="mb-4 text-sm font-bold uppercase tracking-[0.18em] text-accent-terra/90">{copy.automationEyebrow}</p>
-              <h2 className="max-w-2xl text-3xl font-extrabold tracking-tight text-graphite md:text-5xl md:leading-[1.02]">{copy.automationTitle}</h2>
-              <p className="mt-6 max-w-2xl text-lg leading-8 text-graphite/72">{copy.automationIntro}</p>
-              <div className="mt-10 space-y-6 border-t border-graphite/10 pt-8">
+              <p className="mb-4 text-sm font-bold uppercase tracking-[0.18em] text-accent-teal/80">{copy.automationEyebrow}</p>
+              <h2 className="max-w-2xl text-3xl font-extrabold tracking-tight text-white md:text-5xl md:leading-[1.02]">{copy.automationTitle}</h2>
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-white/70">{copy.automationIntro}</p>
+              <div className="mt-10 space-y-6 border-t border-white/10 pt-8">
                 {copy.automationPoints.map((point) => (
                   <div key={point.title} className="group flex gap-4 rounded-[1.5rem] px-2 py-2 transition duration-300 ease-out md:hover:-translate-y-1 md:hover:scale-[1.03]">
-                    <div className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-accent-teal shadow-premium-soft ring-1 ring-graphite/5 transition duration-300 ease-out group-hover:scale-110 group-hover:bg-accent-teal group-hover:text-white">
+                    <div className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-accent-teal ring-1 ring-white/10 transition duration-300 ease-out group-hover:scale-110 group-hover:bg-accent-teal group-hover:text-white">
                       <span className="h-2.5 w-2.5 rounded-full bg-current" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-graphite">{point.title}</h3>
-                      <p className="mt-1 max-w-xl text-base leading-7 text-graphite/70">{point.desc}</p>
+                      <h3 className="text-lg font-bold text-white">{point.title}</h3>
+                      <p className="mt-1 max-w-xl text-base leading-7 text-white/60">{point.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -194,7 +194,7 @@ export default async function LocaleHomePage({
               <div className="mt-10 flex flex-wrap items-center gap-4">
                 <Link
                   href={`/${l}/ai-automation`}
-                  className="inline-flex items-center gap-2 rounded-full bg-graphite px-7 py-3.5 text-base font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-graphite/90"
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-base font-bold text-graphite shadow-premium-soft transition-transform duration-150 ease-out active:scale-[0.97] hover:bg-white/90"
                 >
                   {copy.automationCta}
                   <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -204,8 +204,8 @@ export default async function LocaleHomePage({
               </div>
             </div>
             <div className="relative">
-              <div className="absolute inset-0 -z-10 translate-x-5 translate-y-5 rounded-[2.5rem] bg-accent-terra/10 blur-2xl" />
-              <div className="overflow-hidden rounded-[2rem] bg-surface shadow-premium-soft ring-1 ring-graphite/5">
+              <div className="absolute inset-0 -z-10 translate-x-5 translate-y-5 rounded-[2.5rem] bg-accent-teal/15 blur-2xl" />
+              <div className="overflow-hidden rounded-[2rem] bg-white/5 shadow-premium-soft ring-1 ring-white/10 backdrop-blur">
                 <img src="/automation-illustration.svg" alt={copy.automationImageAlt} loading="lazy" decoding="async" className="h-full w-full object-cover" />
               </div>
             </div>
@@ -299,19 +299,19 @@ export default async function LocaleHomePage({
         </div>
       </section>
 
-      {/* Local SEO */}
-      <section className="border-t border-graphite/8 bg-surface py-10 md:py-12">
-        <div className="container mx-auto px-4 text-center md:px-8">
-          <p className="text-sm font-medium leading-7 text-graphite/55">
+      {/* Local SEO — dark separator */}
+      <section className="bg-graphite py-8 text-center md:py-10">
+        <div className="container mx-auto px-4 md:px-8">
+          <p className="text-sm font-medium leading-7 text-white/50">
             {copy.localSeo.cities.map((city, i) => (
               <span key={city}>
-                <strong className="font-semibold text-graphite/70">{city}</strong>
+                <strong className="font-semibold text-white/65">{city}</strong>
                 {i < copy.localSeo.cities.length - 1 && ", "}
               </span>
             ))}
             {" "}&amp; {copy.localSeo.region}
           </p>
-          <p className="mt-1 text-sm font-medium text-graphite/45">{copy.localSeo.tagline}</p>
+          <p className="mt-1 text-sm font-medium text-white/40">{copy.localSeo.tagline}</p>
         </div>
       </section>
 

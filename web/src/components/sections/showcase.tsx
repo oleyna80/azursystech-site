@@ -61,15 +61,23 @@ export function ShowcaseSection({
               href={demo.demoUrl}
               className="group block rounded-xl bg-graphite shadow-lg transition duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-1 hover:scale-[1.02] hover:shadow-premium-soft active:scale-[0.99] motion-reduce:transition-none motion-reduce:hover:scale-100 motion-reduce:hover:translate-y-0"
             >
-              {/* Preview — 16:10 themed placeholder */}
+              {/* Preview — 16:10 themed placeholder with browser chrome */}
               <div
                 className={`relative aspect-[16/10] overflow-hidden rounded-t-xl bg-gradient-to-br ${PREVIEW_GRADIENTS[demo.slug] ?? "from-graphite via-graphite/90 to-graphite/70"}`}
               >
+                {/* Browser chrome */}
+                <div className="absolute inset-x-0 top-0 flex items-center gap-1.5 border-b border-white/10 bg-black/20 px-3 py-2 backdrop-blur">
+                  <span className="h-2 w-2 rounded-full bg-white/25" />
+                  <span className="h-2 w-2 rounded-full bg-white/25" />
+                  <span className="h-2 w-2 rounded-full bg-white/25" />
+                  <span className="ml-2 h-3 flex-1 rounded-sm bg-white/10 px-2 text-[8px] leading-3 text-white/25">{demo.slug}.fr</span>
+                </div>
+                {/* Emoji placeholder — behind chrome */}
                 <span className="absolute inset-0 flex items-center justify-center text-4xl opacity-50 md:text-5xl md:opacity-40">
                   {PREVIEW_ICONS[demo.slug] ?? "🖥️"}
                 </span>
                 {demo.badge === "new" && (
-                  <span className="absolute left-3 top-3 rounded-full bg-accent-teal px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">
+                  <span className="absolute left-3 top-9 rounded-full bg-accent-teal px-3 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-lg">
                     new
                   </span>
                 )}
