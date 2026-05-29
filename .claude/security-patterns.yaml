@@ -1,0 +1,113 @@
+# AzurSysTech — custom security patterns
+# Project-specific checks on top of built-in security-guidance patterns.
+# https://code.claude.com/docs/en/security-guidance#add-custom-per-edit-patterns
+
+patterns:
+  # --- Secrets & credentials ---
+  - rule_name: hardcoded_azure_speech_key
+    substrings: ["AZURE_SPEECH_KEY=", "AZURE_SPEECH_REGION="]
+    reminder: "Hardcoded Azure Speech credential. Load from env var, never inline keys."
+
+  - rule_name: hardcoded_telegram_bot_token
+    regex: '\b\d{9,10}:[\w-]{35,}\b'
+    reminder: "Looks like a hardcoded Telegram bot token. Use AZURSYSTECH_TELEGRAM_BOT_TOKEN env var instead."
+
+  - rule_name: hardcoded_deepseek_key
+    substrings: ["DEEPSEEK_API_KEY="]
+    reminder: "Hardcoded DeepSeek API key. Load from env var — never commit real keys."
+
+  - rule_name: hardcoded_admin_secret
+    substrings: ["ADMIN_SESSION_SECRET=", "ADMIN_SCHEDULER_SECRET="]
+    reminder: "Hardcoded admin session/scheduler secret. Must come from env vars, rotated on leak."
+
+  - rule_name: next_public_secret
+    regex: 'NEXT_PUBLIC_(SECRET|KEY|TOKEN|PASSWORD)'
+    reminder: "NEXT_PUBLIC_* vars are inlined at build time and visible to the browser. Never put secrets here."
+
+  - rule_name: env_file_with_secrets_committed
+    regex: '^(?!.*\.example$)(?!.*\.local$)(?!.*\.template$).*\.env$'
+    paths: ["**/.env"]
+    reminder: ".env file may contain secrets. Only .env.example or .env.local should exist in the repo."
+
+  # --- SQL injection (PostgreSQL / pg) ---
+  - rule_name: pg_query_template_literal
+    regex: '\.query\(\s*`[^`]*\$\{[^}]*\}'
+    paths: ["**/*.ts", "**/*.tsx", "**/*.js"]
+    reminder: "Template literal in pg.query() — likely SQL injection. Use parameterized queries: pool.query('SELECT ... WHERE id = $1', [id])."
+
+  - rule_name: pg_query_string_concat
+    regex: '\.query\(\s*["''][^"'']*["'']\s*\+'
+    paths: ["**/*.ts", "**/*.tsx", "**/*.js"]
+    reminder: "String concatenation in pg.query() — SQL injection risk. Use parameterized queries with $1, $2 placeholders."
+
+  # --- Admin panel ---
+  - rule_name: admin_route_missing_middleware
+    regex: 'pathname\s*\.startsWith\("\/api\/admin'
+    paths: ["**/middleware.ts"]
+    reminder: "New admin API path added. Ensure it's behind auth middleware. Paths NOT in the matcher or isPublicPath() are unprotected."
+
+  - rule_name: admin_api_no_auth_check
+    regex: 'export\s+(async\s+)?function\s+(GET|POST|PUT|DELETE|PATCH)'
+    paths: ["**/admin/src/app/api/**/*.ts", "**/admin/src/app/api/**/*.tsx"]
+    reminder: "New admin API route handler. Confirm auth check via middleware or inline session verification. All /api/admin/* routes must be authenticated."
+
+  # --- Rate limiting ---
+  - rule_name: form_endpoint_missing_rate_limit
+    regex: 'export\s+(async\s+)?function\s+(POST)'
+    paths: ["**/api/contact/**", "**/api/brief/**", "**/api/intake/**"]
+    reminder: "POST endpoint for user-facing form. Ensure rate limiting is applied (check request-rate-limit.ts or middleware)."
+
+  # --- Shell scripts ---
+  - rule_name: chmod_too_permissive
+    regex: 'chmod\s+(777|o\+w|a\+w)'
+    paths: ["**/*.sh"]
+    reminder: "chmod 777 or world-writable permissions. Prefer 600 for secrets, 700 for dirs, 755 for executables."
+
+  - rule_name: curl_without_fail
+    regex: '\bcurl\s+(?!.*(--fail|-f))'
+    paths: ["**/*.sh"]
+    reminder: "curl without --fail won't exit on HTTP errors. Add --fail (or --fail-with-body) unless non-2xx responses are explicitly handled."
+
+  - rule_name: unquoted_env_var_in_script
+    regex: '\$\{[A-Z_]+\}(?![/\}"])'
+    paths: ["**/*.sh"]
+    reminder: "Unquoted env var expansion — breaks on spaces/special chars. Wrap in double quotes: \"${VAR}\"."
+
+  # --- Docker ---
+  - rule_name: dockerfile_broad_copy
+    regex: '^COPY\s+\.\s+\.'
+    paths: ["**/Dockerfile*"]
+    reminder: "COPY . . copies everything including .env, .git, node_modules. Use specific paths or .dockerignore."
+
+  - rule_name: dockerfile_npm_secret_mount
+    regex: 'npm\s+(ci|install)'
+    paths: ["**/Dockerfile*"]
+    reminder: "npm ci/install in Docker without --mount=type=secret for private packages. If using private registry, mount .npmrc as secret, don't COPY it."
+
+  # --- Node.js / Express ---
+  - rule_name: express_json_no_limit
+    regex: 'express\.json\(\s*\)'
+    paths: ["**/*.js", "**/*.ts"]
+    reminder: "express.json() without limit — default 100kb is fine for most cases, but explicitly set limit if expecting larger payloads."
+
+  - rule_name: cors_allow_origin_wildcard
+    regex: 'origin:\s*[''"]?\*[''"]?'
+    paths: ["**/*.ts", "**/*.tsx", "**/*.js"]
+    reminder: "CORS allow-origin wildcard (*) allows any website to call this API. Restrict to specific origins."
+
+  # --- React / Next.js ---
+  - rule_name: dangerously_set_html
+    regex: 'dangerouslySetInnerHTML\s*=\s*\{'
+    paths: ["**/*.tsx"]
+    reminder: "dangerouslySetInnerHTML — XSS risk if content includes user input. Sanitize with DOMPurify before rendering."
+
+  - rule_name: redirect_to_user_input
+    regex: 'redirect\(\s*(?!["\/])(?!.*\.origin)(?!.*\.pathname)[^)]*request\.(nextUrl|url)[^)]*\)'
+    paths: ["**/middleware.ts", "**/*.tsx"]
+    reminder: "Redirect to user-controllable URL — open redirect risk. Validate the target against a whitelist of allowed paths/domains."
+
+  # --- npm audit / supply chain ---
+  - rule_name: npm_legacy_peer_deps
+    regex: '--legacy-peer-deps'
+    paths: ["**/Dockerfile*", "**/*.sh", "**/package.json"]
+    reminder: "--legacy-peer-deps silences peer conflict warnings that may hide vulnerable dependency versions. Prefer --install-strategy=nested or fix the upstream peer ranges."
