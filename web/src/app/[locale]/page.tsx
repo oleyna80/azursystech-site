@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { HomeContactSection } from "@/components/sections/home-contact";
+import { ShowcaseSection } from "@/components/sections/showcase";
 import { HOME_CONTENT, HOME_JSON_LD, type HomeLocale } from "./_home-data";
 
 const SUPPORTED_LOCALES = ["fr", "ru"] as const;
@@ -211,6 +212,14 @@ export default async function LocaleHomePage({
           </div>
         </div>
       </section>
+
+      {/* Showcase */}
+      <ShowcaseSection
+        eyebrow={copy.showcaseEyebrow}
+        title={copy.showcaseTitle}
+        intro={copy.showcaseIntro}
+        demos={copy.showcaseDemos}
+      />
 
       {/* How it works */}
       <section id="how-it-works" className="bg-graphite py-20 text-white md:py-28">

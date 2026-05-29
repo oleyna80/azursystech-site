@@ -76,6 +76,52 @@ export const HOME_CONTENT = {
       region: "Alpes-Maritimes",
       tagline: "Déplacement sur site · Assistance en français et en russe.",
     },
+    showcaseEyebrow: "Exemples de réalisations",
+    showcaseTitle: "Des sites pour les commerces et services locaux",
+    showcaseIntro:
+      "Exemples de sites que nous pouvons créer pour votre activité — chaque site est adapté au métier et à la clientèle.",
+    showcaseCta: "Voir le site",
+    showcaseComingSoon: "Bientôt",
+    showcaseDemos: [
+      {
+        slug: "plomberie",
+        title: "Plomberie Pro",
+        category: "Services d'urgence",
+        badge: "new" as const,
+        demoUrl: "/demo/plomberie",
+      },
+      {
+        slug: "salon-beaute",
+        title: "Salon Beauté",
+        category: "Beauté & Bien-être",
+        badge: "new" as const,
+        demoUrl: "/demo/salon-beaute",
+      },
+      {
+        slug: "bistrot",
+        title: "Le Bistrot",
+        category: "Restauration",
+        demoUrl: "/demo/bistrot",
+      },
+      {
+        slug: "bijoux-artisanaux",
+        title: "Bijoux Artisanaux",
+        category: "Artisanat & Luxe",
+        demoUrl: "/demo/bijoux-artisanaux",
+      },
+      {
+        slug: "assurance",
+        title: "Agent d'Assurance",
+        category: "Finance & Conseil",
+        demoUrl: "/demo/assurance",
+      },
+      {
+        slug: "comptabilite",
+        title: "Cabinet Comptable",
+        category: "B2B & Services",
+        demoUrl: "/demo/comptabilite",
+      },
+    ],
   },
   ru: {
     location: "Ницца и окрестности",
@@ -152,6 +198,52 @@ export const HOME_CONTENT = {
       region: "Приморские Альпы",
       tagline: "Выезд на место · Поддержка на французском и русском языках.",
     },
+    showcaseEyebrow: "Примеры работ",
+    showcaseTitle: "Сайты для локальных бизнесов и услуг",
+    showcaseIntro:
+      "Примеры сайтов, которые мы можем создать для вашего дела — каждый сайт адаптирован под конкретную нишу и клиентов.",
+    showcaseCta: "Посмотреть сайт",
+    showcaseComingSoon: "Скоро",
+    showcaseDemos: [
+      {
+        slug: "plomberie",
+        title: "Plomberie Pro",
+        category: "Аварийные службы",
+        badge: "new" as const,
+        demoUrl: "/demo/plomberie",
+      },
+      {
+        slug: "salon-beaute",
+        title: "Salon Beauté",
+        category: "Красота & Уход",
+        badge: "new" as const,
+        demoUrl: "/demo/salon-beaute",
+      },
+      {
+        slug: "bistrot",
+        title: "Le Bistrot",
+        category: "Ресторанный бизнес",
+        demoUrl: "/demo/bistrot",
+      },
+      {
+        slug: "bijoux-artisanaux",
+        title: "Bijoux Artisanaux",
+        category: "Ремесло & Люкс",
+        demoUrl: "/demo/bijoux-artisanaux",
+      },
+      {
+        slug: "assurance",
+        title: "Agent d'Assurance",
+        category: "Финансы & Консалтинг",
+        demoUrl: "/demo/assurance",
+      },
+      {
+        slug: "comptabilite",
+        title: "Cabinet Comptable",
+        category: "B2B & Услуги",
+        demoUrl: "/demo/comptabilite",
+      },
+    ],
   },
 } as const;
 
