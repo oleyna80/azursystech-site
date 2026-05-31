@@ -94,7 +94,7 @@ export default async function BriefPage() {
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
-                  href="/services/automation"
+                  href="/#automation"
                   className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/6 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
                 >
                   {copy.backCta}

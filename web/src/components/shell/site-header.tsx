@@ -13,7 +13,7 @@ const CONTACT = {
 
 const LOCALE_OPTIONS: HeaderLocale[] = ["fr", "ru"];
 const LOCALE_SLUGS = new Set(["fr", "ru"]);
-const COOKIE_BACKED_ROUTES = ["/services", "/services/automation", "/services/websites", "/brief"] as const;
+const COOKIE_BACKED_ROUTES = ["/brief"] as const;
 
 function getLocaleFromPath(pathname: string): HeaderLocale | null {
   const seg = pathname.split("/")[1];
@@ -55,9 +55,9 @@ function buildNavLinks(locale: HeaderLocale) {
     ru: { automation: "AI-автоматизация", websites: "Сайты", services: "Услуги", faq: "FAQ", contact: "Контакты" },
   }[locale];
   return [
-    { href: "/services/automation", label: t.automation },
-    { href: "/services/websites", label: t.websites },
-    { href: "/services", label: t.services },
+    { href: `/${locale}#automation`, label: t.automation },
+    { href: `/${locale}#websites`, label: t.websites },
+    { href: `/${locale}#services`, label: t.services },
     { href: `/${locale}#faq`, label: t.faq },
     { href: `/${locale}#contact`, label: t.contact },
   ];
@@ -120,8 +120,8 @@ export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
   };
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-graphite/80 backdrop-blur-xl">
-      <div className="container relative mx-auto flex items-center justify-between gap-2 px-4 py-4 md:gap-3 md:px-8">
+    <header className="fixed left-0 right-0 top-0 z-50 overflow-hidden border-b border-white/10 bg-graphite/80 backdrop-blur-xl">
+      <div className="container relative mx-auto flex flex-wrap items-center justify-between gap-2 gap-y-2 px-4 py-4 md:gap-3 md:px-8">
         <Link href={`/${locale}`} className="group flex items-center gap-2.5 md:gap-3">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-teal text-white transition-transform group-hover:scale-105">
             <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -131,7 +131,7 @@ export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
               />
             </svg>
           </span>
-          <span className="text-lg font-extrabold tracking-tight text-white transition-colors group-hover:text-white/80 sm:text-xl md:text-2xl">
+          <span className="text-base font-extrabold tracking-tight text-white transition-colors group-hover:text-white/80 sm:text-xl md:text-2xl">
             AzurSysTech
           </span>
         </Link>

@@ -190,7 +190,7 @@ export default async function LocaleHomePage({
               </div>
               <div className="mt-10 flex flex-wrap items-center gap-4">
                 <Link
-                  href="/services/automation"
+                  href={`/${locale}/ai-automation`}
                   className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-base font-bold text-graphite shadow-premium-soft transition-transform duration-150 ease-out active:scale-[0.97] hover:bg-white/90"
                 >
                   {copy.automationCta}

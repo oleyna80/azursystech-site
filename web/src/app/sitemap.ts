@@ -25,13 +25,6 @@ const ROUTES: SitemapEntry[] = [
   { path: "/legal", changeFrequency: "yearly", priority: 0.3 },
   { path: "/pricing", changeFrequency: "monthly", priority: 0.7 },
   { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },
-  { path: "/services", changeFrequency: "monthly", priority: 0.8 },
-  { path: "/services/automation", changeFrequency: "monthly", priority: 0.8 },
-  { path: "/services/websites", changeFrequency: "monthly", priority: 0.8 },
-  { path: "/services/new-pc-setup", changeFrequency: "monthly", priority: 0.6 },
-  { path: "/services/onsite-support", changeFrequency: "monthly", priority: 0.6 },
-  { path: "/services/tpe-setup", changeFrequency: "monthly", priority: 0.6 },
-  { path: "/services/wifi-printer", changeFrequency: "monthly", priority: 0.6 },
   { path: "/terms", changeFrequency: "yearly", priority: 0.3 },
 ];
 

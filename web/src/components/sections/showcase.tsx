@@ -40,7 +40,7 @@ export function ShowcaseSection({
   demos,
 }: Props) {
   return (
-    <section id="showcase" className="bg-base py-20 md:py-28">
+    <section id="websites" className="bg-base py-20 md:py-28">
       <div className="container mx-auto px-4 md:px-8">
         <div className="mb-14 max-w-2xl">
           <p className="mb-4 text-sm font-bold uppercase tracking-[0.18em] text-accent-terra/90">
