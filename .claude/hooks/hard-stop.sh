@@ -12,7 +12,8 @@ cmd=$(jq -r '.tool_input.command // ""' 2>/dev/null || echo "")
 # sed stripping is text-based; shell runs expansions BEFORE the command.
 # A message like -m "$(dangerous_cmd)" would execute dangerous_cmd before
 # sed ever sees the text. Refuse to auto-approve these.
-if echo "$cmd" | grep -qP '(^|\s)(echo|git\s+commit)\s+.*[\$`]'; then
+# Match expansions ONLY within echo/git-commit segment (stop at && ; | boundaries)
+if echo "$cmd" | grep -qP '(^|\s)(echo|git\s+commit)\s+[^|&;$`]*[\$`]'; then
   jq -n '{
     continue: false,
     systemMessage: "\n🛑 BLOCKED: command contains shell expansion in echo/git-commit argument\nCannot auto-validate — expansions execute before the hook can inspect text.\nRewrite without $() or backticks, or ask Owner to approve manually.",
