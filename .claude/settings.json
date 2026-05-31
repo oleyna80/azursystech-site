@@ -9,5 +9,31 @@
       "Agent(Plan *)",
       "Agent(claude-code-guide *)"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/hard-stop.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // .tool_response.filePath' | { read -r f; case \"$f\" in *.env*|*secret*|*credential*) echo '{\"systemMessage\":\"⚠️  Sensitive file changed: '\"$f\"' — verify no secrets leaked\"}';; esac } 2>/dev/null || true",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
   }
 }

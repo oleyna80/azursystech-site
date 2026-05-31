@@ -9,6 +9,11 @@ set -euo pipefail
 
 cmd=$(jq -r '.tool_input.command // ""' 2>/dev/null || echo "")
 
+# Skip: git commit -m and echo contain arbitrary text, not executable intent
+if echo "$cmd" | grep -qP '^(git\s+commit\b|echo\b)'; then
+  exit 0
+fi
+
 # ── push to origin main ──────────────────────────────────────────────
 if echo "$cmd" | grep -qP 'git\s+push\s+(-[^\s]*\s+)*origin\s+main\b'; then
   jq -n '{
