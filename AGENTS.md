@@ -174,6 +174,7 @@ must not grant itself broader authority because it can run `psql`, `ssh`,
 | Credential rotation / secret changes | Security perimeter |
 | Destructive git ops (`reset --hard`, force push to main) | Data loss risk |
 | Sending real client communications (email, WhatsApp, Telegram) | External impact |
+| Push to main (`git push origin main`) | Public repo side effect; irreversible |
 
 Everything else → **run through to closeout, then report**.
 
@@ -341,6 +342,21 @@ documentation edits, staging, commit, push, deploy, DB, env/secret, and
 client-facing actions are blocked. Trivial quick-fix tasks may use the
 lightweight path, but must still report why full Stage 0 was skipped.
 
+**Compact preflight** — for Control-Tower-Only tasks (≤3 files, no DB, no deploy,
+no security, no client-facing): output one compact line instead of full 6-field
+preflight:
+
+```
+PREFLIGHT: CTO | <side-effect-class> | no DB | no HS | Skills: <checked>/<used>/<skipped> | READY
+```
+
+Example: `PREFLIGHT: CTO | production code | no DB | no HS | Skills: brand-guidelines,emil-design-eng/emil-design-eng,brand-guidelines/impeccable | READY`
+
+Compact preflight must still include Skill Routing Gate evidence (which skills
+were checked, which were used, which were skipped and why). Trivial quick-fix
+tasks (typo, comment, config tweak) may skip even compact preflight but must
+state: `Quick-fix: <reason>`.
+
 The preflight includes Skill Routing Gate. Before any non-trivial, Hard Stop,
 ops, DB, deploy, security, runtime, multi-domain, or subagent-delegated Work
 Block, Control Tower must perform Skill Routing Gate before planning or
@@ -350,21 +366,37 @@ executing actions.
 
 Skill Routing Gate requires:
 
+0. **Relevance filter (MANDATORY first step).** Before scanning any skill files,
+   state which skill categories are relevant to THIS task type. Group them:
+   - **Always relevant:** `brand-guidelines` (any visual work), `scoped-commit-guard` (any commit)
+   - **Relevant to this task:** e.g. "design + frontend" → taste-skill, frontend-design, impeccable, emil-design-eng
+   - **Not relevant to this task:** everything else (skip scanning these categories)
+
+   Then scan ONLY the relevant skills. This prevents silent skill ignorance —
+   the agent must actively decide which skills are OUT of scope, not just
+   "forget" to check them.
+
 1. Inspect `.agent/ROSTER.md` for routing-critical skills.
 2. Search or inspect `.agent/skills/*/SKILL.md` for matching `description`,
-   `## Triggers`, or `## When to Use`.
+   `## Triggers`, or `## When to Use` **within the relevant categories only**.
 3. Read only the matching skill files; do not bulk-read every skill.
 4. State in the Work Block:
-   - `Skills checked`
-   - `Skills matched`
-   - `Skills used`
-   - `Skills skipped and why`
+   - `Skills checked` (all relevant categories scanned)
+   - `Skills matched` (which matched the task)
+   - `Skills used` (which were actually applied)
+   - `Skills skipped and why` (matched but not used — must give reason)
 
 If a project-local skill matches the current Work Block or stage, use that
 skill's workflow. If the runtime exposes a formal Skill invocation mechanism,
 invoke the skill there. If the runtime does not expose project-local skills,
 read `.agent/skills/<name>/SKILL.md`, state
 `Project-local skill used: <name>`, and follow its workflow manually.
+
+For frontend/design work, `.agent/skills/impeccable` is a project-local wrapper
+around `.claude/skills/impeccable`. Treat `PRODUCT.md` as required project
+context for that skill. Do not copy the vendor skill into `.agent`; keep the
+wrapper as the routing point and the vendor file as the source of detailed
+frontend craft instructions.
 
 Skipping a matching skill is allowed only with a recorded reason:
 `not relevant after inspection`, `blocked`, or `superseded by stricter gate`.
