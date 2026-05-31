@@ -24,6 +24,8 @@ describe("sitemap", () => {
         "https://azursystech.fr/pricing",
         "https://azursystech.fr/privacy",
         "https://azursystech.fr/services",
+        "https://azursystech.fr/services/automation",
+        "https://azursystech.fr/services/websites",
         "https://azursystech.fr/services/new-pc-setup",
         "https://azursystech.fr/services/onsite-support",
         "https://azursystech.fr/services/tpe-setup",

@@ -115,6 +115,9 @@ const PAGE_COPY = {
     nextStepText:
       "Après réception de la demande, nous utilisons les informations du formulaire pour la qualification initiale et le prochain pas. En cas d’urgence, utilisez WhatsApp ou le téléphone.",
     serviceOptions: [
+      { value: "automatisation_ia", label: "Automatisation IA / agent pour demandes entrantes" },
+      { value: "site_web", label: "Site web / landing page" },
+      { value: "site_automation_bundle", label: "Site + formulaire + automatisation" },
       { value: "depannage_pc", label: "Dépannage / diagnostic PC" },
       { value: "installation_pc", label: "Configuration d’un nouveau PC" },
       { value: "wifi", label: "Configuration Wi‑Fi" },
@@ -221,6 +224,9 @@ const PAGE_COPY = {
     nextStepText:
       "После получения обращения мы используем данные из формы для первичной квалификации и следующего шага. Если вопрос срочный, используйте WhatsApp или звонок.",
     serviceOptions: [
+      { value: "automatisation_ia", label: "AI-автоматизация / агент для заявок" },
+      { value: "site_web", label: "Сайт / landing page" },
+      { value: "site_automation_bundle", label: "Сайт + форма + автоматизация" },
       { value: "depannage_pc", label: "Ремонт / диагностика ПК" },
       { value: "installation_pc", label: "Настройка нового ПК" },
       { value: "wifi", label: "Настройка Wi-Fi" },

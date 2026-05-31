@@ -10,47 +10,47 @@ import { resolveBriefLocale, type BriefLocale } from "@/lib/brief-submit";
 const PAGE_COPY = {
   fr: {
     meta: {
-      title: "Brief IA et automatisation | AzurSysTech",
+      title: "Brief projet — site web et automatisation IA | AzurSysTech",
       description:
-        "Brief court pour un premier échange sur l’automatisation IA : un processus principal, le flux actuel, les contraintes et le contact pour le prochain pas.",
+        "Décrivez votre projet d'automatisation ou de site web en quelques lignes. Un seul processus suffit pour commencer — sans engagement de prix ni de délai.",
     },
-    eyebrow: "AzurSysTech / brief",
-    title: "Brief court sur un seul processus d’automatisation IA",
+    eyebrow: "AzurSysTech / brief projet",
+    title: "Décrivez votre projet — site, automatisation ou les deux",
     intro:
-      "Remplissez ce brief court pour décrire votre besoin avec des mots simples. Cela aide à identifier le premier processus à automatiser et le prochain pas raisonnable.",
-    backCta: "Retour à la description du service",
+      "Quelques lignes suffisent : quel est votre flux actuel, ce qui bloque ou ce que vous voulez automatiser. Ça aide à identifier le premier processus à mettre en place et le prochain pas concret.",
+    backCta: "Retour au détail de l'automatisation",
     directCta: "Contacter directement",
     noteTitle: "À garder en tête",
     noteItems: [
-      "Ce n’est pas un cahier des charges complet",
-      "Un seul processus principal suffit",
-      "Les aides de saisie aident, mais ne remplacent pas le formulaire",
+      "Ce n'est pas un cahier des charges complet",
+      "Un seul processus ou besoin suffit",
+      "Après l'envoi : revue manuelle, puis clarification du prochain pas",
     ],
     footerNote:
-      "Après l’envoi, le brief part en revue manuelle. Cela ne vaut pas promesse de prix, de délai ou d’acceptation du projet.",
+      "Après l'envoi, le brief part en revue manuelle. Nous l'utilisons pour clarifier le besoin et proposer un premier pas raisonnable. Cela ne vaut pas promesse de prix, de délai ou d'acceptation du projet.",
     formError:
       "Le formulaire est temporairement indisponible. Contactez-nous directement via la page contact.",
   },
   ru: {
     meta: {
-      title: "Бриф на ИИ-автоматизацию | AzurSysTech",
+      title: "Бриф на проект — сайт и AI-автоматизация | AzurSysTech",
       description:
-        "Короткий бриф для первого обсуждения по ИИ-автоматизации: один главный процесс, текущий процесс, ограничения и контакт для следующего шага.",
+        "Опишите свой проект автоматизации или сайта в нескольких строках. Одного процесса достаточно, чтобы начать.",
     },
-    eyebrow: "AzurSysTech / бриф",
-    title: "Короткий бриф на один процесс по ИИ-автоматизации",
+    eyebrow: "AzurSysTech / бриф проекта",
+    title: "Опишите проект — сайт, автоматизация или всё вместе",
     intro:
-      "Заполните краткий бриф, чтобы описать задачу простыми словами. Это поможет понять, какой процесс имеет смысл автоматизировать первым и какой следующий шаг будет разумным.",
+      "Несколько строк достаточно: какой сейчас поток, что мешает или что хотите автоматизировать. Это поможет определить, с какого процесса начать и какой первый шаг будет разумным.",
     backCta: "Назад к описанию услуги",
     directCta: "Связаться напрямую",
     noteTitle: "Что важно помнить",
     noteItems: [
       "Это не полное техническое задание",
-      "Достаточно одного главного процесса",
-      "Подсказки помогают, но не заменяют форму",
+      "Достаточно одного процесса или потребности",
+      "После отправки: ручная проверка и уточнение следующего шага",
     ],
     footerNote:
-      "После отправки бриф попадёт на ручную проверку. Это не обещание цены, сроков или принятия проекта.",
+      "После отправки бриф попадёт на ручную проверку. Мы используем его, чтобы уточнить задачу и предложить разумный первый шаг. Это не обещание цены, сроков или принятия проекта.",
     formError: "Форма временно недоступна. Свяжитесь с нами напрямую через страницу контактов.",
   },
 } as const satisfies Record<BriefLocale, {
@@ -94,13 +94,13 @@ export default async function BriefPage() {
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
-                  href="/ai-automation"
+                  href="/services/automation"
                   className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/6 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
                 >
                   {copy.backCta}
                 </Link>
                 <Link
-                  href="/#contact"
+                  href={`/${locale}#contact`}
                   className="inline-flex items-center justify-center rounded-full bg-[#1F6F78] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(31,111,120,0.28)] transition-colors hover:bg-[#18565D]"
                 >
                   {copy.directCta}

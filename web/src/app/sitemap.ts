@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 const BASE_URL = "https://azursystech.fr";
-const LAST_MODIFIED = new Date("2026-05-22");
+const LAST_MODIFIED = new Date("2026-05-31");
 
 type SitemapEntry = {
   path: string;
@@ -26,6 +26,8 @@ const ROUTES: SitemapEntry[] = [
   { path: "/pricing", changeFrequency: "monthly", priority: 0.7 },
   { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },
   { path: "/services", changeFrequency: "monthly", priority: 0.8 },
+  { path: "/services/automation", changeFrequency: "monthly", priority: 0.8 },
+  { path: "/services/websites", changeFrequency: "monthly", priority: 0.8 },
   { path: "/services/new-pc-setup", changeFrequency: "monthly", priority: 0.6 },
   { path: "/services/onsite-support", changeFrequency: "monthly", priority: 0.6 },
   { path: "/services/tpe-setup", changeFrequency: "monthly", priority: 0.6 },

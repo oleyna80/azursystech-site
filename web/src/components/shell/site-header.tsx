@@ -13,6 +13,7 @@ const CONTACT = {
 
 const LOCALE_OPTIONS: HeaderLocale[] = ["fr", "ru"];
 const LOCALE_SLUGS = new Set(["fr", "ru"]);
+const COOKIE_BACKED_ROUTES = ["/services", "/services/automation", "/services/websites", "/brief"] as const;
 
 function getLocaleFromPath(pathname: string): HeaderLocale | null {
   const seg = pathname.split("/")[1];
@@ -25,6 +26,9 @@ function buildLocalizedPath(pathname: string, next: HeaderLocale): string {
     segs[1] = next;
     return segs.join("/") || `/${next}`;
   }
+  if (COOKIE_BACKED_ROUTES.includes(pathname as (typeof COOKIE_BACKED_ROUTES)[number])) {
+    return pathname;
+  }
   return `/${next}`;
 }
 
@@ -34,26 +38,26 @@ const HEADER_COPY = {
     menuOpenLabel: "Ouvrir le menu",
     menuCloseLabel: "Fermer le menu",
     whatsappCta: "WhatsApp",
-    submitCta: "Demander un devis",
+    submitCta: "Décrire un projet",
   },
   ru: {
     navAriaLabel: "Основная навигация",
     menuOpenLabel: "Открыть меню",
     menuCloseLabel: "Закрыть меню",
     whatsappCta: "WhatsApp",
-    submitCta: "Оставить заявку",
+    submitCta: "Описать проект",
   },
 } as const;
 
 function buildNavLinks(locale: HeaderLocale) {
   const t = {
-    fr: { business: "Pour les entreprises", automation: "Automatisation et IA", pricing: "Tarifs", faq: "FAQ", contact: "Contact" },
-    ru: { business: "Для бизнеса", automation: "Автоматизация и ИИ", pricing: "Цены", faq: "FAQ", contact: "Контакты" },
+    fr: { automation: "Automatisation IA", websites: "Sites web", services: "Services", faq: "FAQ", contact: "Contact" },
+    ru: { automation: "AI-автоматизация", websites: "Сайты", services: "Услуги", faq: "FAQ", contact: "Контакты" },
   }[locale];
   return [
-    { href: `/${locale}#business`, label: t.business },
-    { href: `/${locale}/ai-automation`, label: t.automation },
-    { href: `/${locale}#pricing`, label: t.pricing },
+    { href: "/services/automation", label: t.automation },
+    { href: "/services/websites", label: t.websites },
+    { href: "/services", label: t.services },
     { href: `/${locale}#faq`, label: t.faq },
     { href: `/${locale}#contact`, label: t.contact },
   ];
@@ -106,8 +110,13 @@ export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
     // Persist as UX preference cookie
     // eslint-disable-next-line react-hooks/immutability
     document.cookie = `${LOCALE_COOKIE_KEY}=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
-    // Navigate to localized version of current page
-    router.push(buildLocalizedPath(pathname, nextLocale));
+    // Navigate to localized version of current page or refresh cookie-backed pages.
+    const nextPath = buildLocalizedPath(pathname, nextLocale);
+    if (nextPath === pathname) {
+      router.refresh();
+      return;
+    }
+    router.push(nextPath);
   };
 
   return (
@@ -163,7 +172,7 @@ export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
             {copy.whatsappCta}
           </a>
           <Link
-            href={`/${locale}#contact`}
+            href="/brief"
             className="inline-flex rounded-full bg-accent-teal px-4 py-2.5 text-xs font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-accent-teal/90 sm:px-5 sm:text-sm"
           >
             {copy.submitCta}

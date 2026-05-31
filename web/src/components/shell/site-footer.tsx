@@ -15,16 +15,16 @@ const CONTACT = {
 
 const FOOTER_COPY = {
   fr: {
-    about: "Assistance informatique locale pour petites entreprises et particuliers à Nice et dans les environs.",
+    about: "Sites web, automatisation IA et support IT local pour les petites entreprises à Nice et dans les environs.",
     navigationTitle: "Navigation",
     documentsTitle: "Documents",
     contactTitle: "Contact",
     serviceArea: "Nice et jusqu'à 30 km autour",
     links: [
-      { href: "/#business", label: "Pour les entreprises" },
-      { href: "/ai-automation", label: "Automatisation et IA" },
+      { href: "/services/automation", label: "Automatisation IA" },
+      { href: "/services/websites", label: "Sites web" },
       { href: "/brief", label: "Brief" },
-      { href: "/#how-it-works", label: "Comment nous travaillons" },
+      { href: "/services", label: "Tous les services" },
       { href: "/pricing", label: "Tarifs" },
       { href: "/faq", label: "FAQ" },
       { href: "/#contact", label: "Contact" },
@@ -36,16 +36,16 @@ const FOOTER_COPY = {
     ],
   },
   ru: {
-    about: "Локальная техническая помощь для малого бизнеса и частных клиентов в Ницце и рядом.",
+    about: "Сайты, AI-автоматизация и локальная IT-поддержка для малого бизнеса в Ницце и рядом.",
     navigationTitle: "Навигация",
     documentsTitle: "Документы",
     contactTitle: "Контакты",
     serviceArea: "Ницца и до 30 км вокруг",
     links: [
-      { href: "/#business", label: "Для бизнеса" },
-      { href: "/ai-automation", label: "Автоматизация и ИИ" },
+      { href: "/services/automation", label: "AI-автоматизация" },
+      { href: "/services/websites", label: "Сайты" },
       { href: "/brief", label: "Бриф" },
-      { href: "/#how-it-works", label: "Как мы работаем" },
+      { href: "/services", label: "Все услуги" },
       { href: "/pricing", label: "Цены" },
       { href: "/faq", label: "FAQ" },
       { href: "/#contact", label: "Контакты" },
@@ -66,10 +66,6 @@ function getLocaleFromPath(pathname: string): FooterLocale | null {
 function localizeFooterHref(href: string, locale: FooterLocale) {
   if (href.startsWith("/#")) {
     return `/${locale}${href.slice(1)}`;
-  }
-
-  if (href === "/ai-automation") {
-    return `/${locale}/ai-automation`;
   }
 
   return href;

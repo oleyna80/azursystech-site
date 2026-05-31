@@ -9,6 +9,9 @@ const SOURCES = [CONTACT_SUBMIT_SOURCE, CONTACT_CHAT_SOURCE, CONTACT_WHATSAPP_SO
 
 const SEGMENTS = ["particulier", "tpe"] as const;
 const SERVICE_TYPES = [
+  "automatisation_ia",
+  "site_web",
+  "site_automation_bundle",
   "depannage_pc",
   "installation_pc",
   "wifi",
