@@ -8,6 +8,23 @@ set -euo pipefail
 
 cmd=$(jq -r '.tool_input.command // ""' 2>/dev/null || echo "")
 
+# Block: echo / git commit -m with shell expansions — $(...), $var, backticks
+# sed stripping is text-based; shell runs expansions BEFORE the command.
+# A message like -m "$(dangerous_cmd)" would execute dangerous_cmd before
+# sed ever sees the text. Refuse to auto-approve these.
+if echo "$cmd" | grep -qP '(^|\s)(echo|git\s+commit)\s+.*[\$`]'; then
+  jq -n '{
+    continue: false,
+    systemMessage: "\n🛑 BLOCKED: command contains shell expansion in echo/git-commit argument\nCannot auto-validate — expansions execute before the hook can inspect text.\nRewrite without $() or backticks, or ask Owner to approve manually.",
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecision: "deny",
+      permissionDecisionReason: "Shell expansion in echo/git-commit bypasses text-based stripping"
+    }
+  }'
+  exit 0
+fi
+
 # Remove quoted text from git commit -m and echo — these carry arbitrary text
 # Handles both "double" and 'single' quoted forms (including multi-line messages).
 # Collapse newlines before stripping — sed operates line-by-line,
