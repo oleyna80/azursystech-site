@@ -301,6 +301,22 @@ Quick-fix (≤3 files, no route/schema/API/security):
   Implement (Lite checks) → Inline sync → Done
 ```
 
+**Pre-Edit Lifecycle Check.** Before editing files created or renamed in the
+last 5 calendar days (visible via `git log --diff-filter=A --since="5 days ago"
+--name-only`), ask the Owner: "These pages are recently created — are they
+staying, or are we restructuring?" This prevents wasted surgical edits on pages
+that will be deleted in the same session. The check is required only when the
+file was recently added and the edit scope is non-trivial (more than a typo fix).
+
+**Crash Test Gate.** Before `git commit` on any Work Block that changes routes,
+navigation, or sitemap entries, run a local crash test:
+- All sitemap routes return expected HTTP status (200, 308);
+- Deleted routes return 404;
+- All anchor targets referenced in header/footer exist on the target page;
+- `npx vitest run` for affected test files;
+- Zero new errors in dev server logs.
+Record the result as `Crash test: PASSED / FAILED` in the commit body or closeout.
+
 Between stages: no confirmation pause unless a Hard Stop is triggered.
 If a stage fails: report the blocker, attempt recovery or skip with documented risk,
 then continue remaining stages.
