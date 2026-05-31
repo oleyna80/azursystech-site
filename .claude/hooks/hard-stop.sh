@@ -10,7 +10,8 @@ set -euo pipefail
 cmd=$(jq -r '.tool_input.command // ""' 2>/dev/null || echo "")
 
 # Skip: git commit -m and echo contain arbitrary text, not executable intent
-if echo "$cmd" | grep -qP '^(git\s+commit\b|echo\b)'; then
+# Check full command (not just start) — handles git add && git commit chains
+if echo "$cmd" | grep -qP '(^git\s+commit\b|\bgit\s+commit\b|^echo\b)'; then
   exit 0
 fi
 
