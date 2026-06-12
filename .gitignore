@@ -25,37 +25,7 @@ data/*.csv
 
 # Model/indexing noise
 .git/
-.agent/
-AGENTS.md
-Claude.md
-CLAUDE.md
-.codexignore
-.agentsignore
-.roo/
-.roomodes
-00_strategy/
-01_brand/
-02_website/
-03_leads/
-04_facebook/
-05_ai/
-06_seo/
-07_ops/
-docs/
 scripts/ai_agents.py
-memory_bank/
-docs/.active_ticket
-docs/AGENT_MODEL_ROUTING.md
-docs/backlog.md
-docs/content-status.md
-docs/decisions-log.md
-docs/project-notes.md
-docs/plans/
-docs/reference/
-docs/reports/
-docs/sdd_templates/
-docs/specs/
-docs/tasklist/
 docs/reports/git/stash-backups/*.patch
 .cache/
 .codex

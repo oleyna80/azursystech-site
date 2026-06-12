@@ -89,6 +89,13 @@ when it records one of these reasons in Stage 0:
 - `hard-stop`: delegation would require an unapproved side effect.
 - `user-disabled`: the Owner explicitly requested no subagents for the Work Block.
 
+Skipping a matching skill or subagent trigger requires a recorded reason.
+Before delegating, consult `docs/reference/subagent-anti-patterns.md` —
+it documents the 6 common failure modes (trivial delegation, chain-of-agents
+without validation, context-isolation harms, overly broad scope,
+single-verifier blindness, subagent-as-decision-maker) and provides a
+4-question pre-delegation checklist.
+
 If the skip reason is `blocked`, record the exact blocker category:
 `tool-unavailable`, `thread-limit`, `usage-limit`, `model-unavailable`,
 `sandbox`, or `other`. A blocked subagent does not make the review disappear:
@@ -103,12 +110,13 @@ and `.agentsignore` as the vendor-neutral advisory list. Do not bulk-read paths
 listed there unless the approved objective explicitly requires them. These files
 are context controls, not security boundaries.
 
-### Local Agent Layer
+### Synchronized Agent Layer
 
-The `.agent/`, `.roo/`, `.codexignore`, `.agentsignore`, and `memory_bank/`
-workflow layer is intentionally local-first. Do not remove these paths from
-`.gitignore` or publish them unless the Owner explicitly approves a public
-workflow-doc release.
+The `.agent/`, `.roo/`, `.codexignore`, `.agentsignore`, `memory_bank/`, and
+agent-facing `docs/` workflow layer is synchronized through Git by default so
+work can continue from multiple workstations without losing project context.
+Keep secrets, credentials, private transcripts, local runtime logs, caches, and
+machine-specific tool state out of Git.
 
 Run `scripts/bootstrap.sh` after cloning or restoring a workspace to verify that
 the local workflow layer required by the Session Start Read Set is present.
@@ -125,11 +133,12 @@ infra, secrets, and production state unless explicitly approved. Verifier may
 write approved verification artifacts only when the Work Block scopes that
 artifact path.
 
-Agent operations reviews are optional local-only retrospectives for permission
-friction, approval waits, tooling failures, and outcomes after large Work
-Blocks or sprint closeouts. They produce recommendations only: no automatic
-permission changes, no raw private transcript parsing by default, and no
-weakening of Hard Stops.
+Agent operations reviews are optional synchronized retrospectives for
+permission friction, approval waits, tooling failures, and outcomes after large
+Work Blocks or sprint closeouts. They produce recommendations only: no
+automatic permission changes, no raw private transcript parsing by default, and
+no weakening of Hard Stops. Redact secrets and private transcript content before
+committing any review artifact.
 
 ### Temporary Specializations
 
@@ -473,11 +482,13 @@ If the external CLI is blocked by network, account, model availability, sandbox,
 or a hung process, record the blocker and continue with the approved fallback
 instead of letting the subagent wait for Owner approval or tool escalation.
 
-### Ignored Local SSOT Closeout
+### Synchronized SSOT Closeout
 
-Local workflow/tasklist/memory files may be ignored by Git. For any closeout
-that updates ignored SSOT files, `git status` and `git diff` are not sufficient
-evidence. The Orchestrator must verify the update with direct inspection and:
+Workflow/tasklist/memory files are expected to be tracked by Git unless they
+contain secrets, private transcripts, local runtime logs, caches, or
+machine-specific state. For any closeout that updates ignored SSOT files, `git
+status` and `git diff` are not sufficient evidence. The Orchestrator must
+verify the update with direct inspection and:
 
 ```bash
 git check-ignore -v <changed-local-ssot-paths>
@@ -485,8 +496,8 @@ rg -n "<new status or evidence marker>" <changed-local-ssot-paths>
 git diff --check -- <changed-local-ssot-paths>
 ```
 
-The Owner report must state whether the SSOT changes are local-only/ignored and
-therefore will not appear in public Git history unless separately approved.
+The Owner report must state whether any SSOT changes are still ignored and
+therefore will not synchronize through Git.
 
 ---
 
