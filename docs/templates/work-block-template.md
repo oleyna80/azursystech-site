@@ -75,6 +75,7 @@
 
 ## SSOT updates
 
-- Local-only/ignored SSOT paths:
+- Tracked/synchronized SSOT paths:
+- Local-only/ignored SSOT paths and reason:
 - Direct evidence markers to verify with `rg -n`:
-- `git check-ignore -v` result required: yes / no
+- `git check-ignore -v` result for workflow docs: empty / ignored with reason / not checked

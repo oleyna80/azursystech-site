@@ -1,0 +1,25 @@
+# Context
+
+- **Current focus**: Ubuntu/WSL migration and Git sync setup. Agent/workflow docs are now synchronized through Git by default for multi-workstation development; keep secrets, raw private transcripts, logs, caches, and machine-specific state local-only.
+- **Git sync note**: `azursystech` has commit `5001816` for `.gitignore` + `AGENTS.md` + `CLAUDE.md` policy sync. Follow-up docs/skills edits are present locally and need a separate reviewed commit. `choushop` policy docs are updated locally, but the index has staged deletions that must be resolved before commit.
+- **Local SDLC/tooling note**: Codex hook pilot added locally: `.codex/write-gate.md` + PreToolUse guard require a fresh `Status: READY` marker before write-like Codex tool calls.
+- **Parallel stream AZR-010**: Telegram inbound live, outbound blocked at Gate C.3 (Hard Stop). No outbound send without separate Owner approval.
+- **Pivot status**:
+  - Фаза 0 (strategy docs) ✅ — 2026-05-30
+  - Фаза 1 (website copy) ✅ — 2026-05-31 (committed as `a2cad20`)
+  - Фаза 2 (nav restructure + cleanup) ✅ — 2026-05-31 (local, not committed)
+    - All `/services/*` pages deleted (8 pages + 1 component, -1354 lines)
+    - Header nav → anchor links: `#automation`, `#websites`, `#services`
+    - Footer nav → same anchor pattern
+    - Showcase `id="showcase"` → `id="websites"`
+    - Homepage automation CTA → `/${locale}/ai-automation`
+    - Brief back-link → `/#automation`
+    - Mobile header overflow fixed (`overflow-hidden`, `flex-wrap`)
+    - Sitemap cleaned (7 entries removed)
+    - Crash test: 16/16 routes 200, 0 errors, sitemap test passes
+  - Next: Фаза 3 — portfolio/demo cases, developer identity (requires separate Work Block)
+- **Next gate (AZR-010)**: Gate C.3 first approved Telegram send (Hard Stop).
+- **Hard boundaries**: no Telegram outbound send, `deleteWebhook`/rollback, WhatsApp/Google Sheets call, additional DB schema/migration change, deploy/image change, payment/order action, real client commitment, or env/secret/config change without separate explicit approval.
+- **Paused product work**: SEO Sprint 3.
+- **Portfolio note**: No real automation cases exist as of 2026-05-31. Demo portfolio cases to be created in Phase 3 of pivot.
+- **Dev server**: `localhost:3456` (clean `.next` after cache issue resolved)
