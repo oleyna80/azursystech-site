@@ -1,0 +1,4 @@
+interface:
+  display_name: "Scoped Coder"
+  short_description: "Implement approved diffs inside a strict write-set."
+  default_prompt: "Implement the approved scoped change, stay inside the write-set, run targeted checks, and report changed files and risks."

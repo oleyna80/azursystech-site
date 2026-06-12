@@ -1,6 +1,6 @@
 ---
 name: verifier
-description: Verification gate agent. Use after implementation to verify acceptance criteria, contracts, security, and production readiness. Read-only for source/runtime/config/DB/infra/secrets/production state. Can issue BLOCKED verdict that halts pipeline. May write approved verification artifacts only when Work Block scopes that path.
+description: "Pre-merge quality gate. Use to verify code is ready to ship: route contracts (status, Content-Type, body), TypeScript, tests, CSP/CSRF headers, schema alignment, secret leak scan. Issues structured READY or BLOCKED verdict with file:line evidence. Read-only. Для верификации, проверки перед мержем, инспекции кода, проверки роута."
 user-invocable: true
 argument-hint: "[verification tier: lite|standard|full] [target files or contract]"
 allowed-tools:
@@ -22,6 +22,7 @@ allowed-tools:
   - Bash(rg *)
   - Bash(jq *)
   - Bash(scripts/secret-scan.sh *)
+  - Bash(node .claude/skills/verifier/scripts/gather-context.mjs *)
 ---
 
 # Verifier
@@ -95,10 +96,76 @@ Standard +:
 
 ## Workflow
 
+0. **Сбор контекста:** `node .claude/skills/verifier/scripts/gather-context.mjs --json --tier <lite|standard|full>` — собирает git state (branch, SHA, changed files), Next.js routes (все + затронутые), и запускает проверки согласно tier (typecheck/lint для standard+, secret-scan для full). Используй JSON вывод как evidence.
 1. **Чтение контекста** — утверждённые AC, изменённые файлы, task description
-2. **Проверка** — прогон чеков соответствующего tier. Каждый: PASS/FAIL/BLOCKED
+2. **Проверка** — прогон чеков соответствующего tier. Каждый: PASS/FAIL/BLOCKED/UNVERIFIED
 3. **Вердикт** — READY или BLOCKED. BLOCKED = конкретный чек + evidence
 4. **Доклад** — структурированный вердикт с evidence
+
+## Obstacle Reporting
+
+Если проверка невыполнима (live URL недоступен, DB locked, tool missing, config неизвестен) — ставь `UNVERIFIED` с обязательным obstacle report. Никогда не пропускай чек молча и не угадывай результат.
+
+```
+### 🚧 UNVERIFIED Check
+
+**Check:** [название невыполненной проверки]
+**Reason:** [конкретная причина — endpoint not reachable, DB access denied, tool missing, config unknown]
+**What I tried:** [шаги для выполнения проверки]
+**What I need from Control Tower:** [конкретный запрос]
+**Risk if skipped:** [низкий/средний/высокий — что можем пропустить]
+```
+
+**Правило:** UNVERIFIED ≠ PASS. Каждый UNVERIFIED — это пробел в верификации, который Control Tower должен осознанно принять или закрыть.
+
+## Output Schema (JSON Schema)
+
+Для machine-валидации вывод Verifier должен соответствовать этой структуре:
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["verdict", "tier", "checks"],
+  "properties": {
+    "verdict": { "type": "string", "enum": ["READY", "BLOCKED"] },
+    "tier": { "type": "string", "enum": ["lite", "standard", "full"] },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "status", "evidence"],
+        "properties": {
+          "name": { "type": "string", "description": "Название проверки: 'TypeScript check', 'Route: GET /api/health', ..." },
+          "status": { "type": "string", "enum": ["PASS", "FAIL", "BLOCKED", "UNVERIFIED"] },
+          "evidence": { "type": "string", "description": "Вывод команды, file:line, curl response" }
+        }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "description": "Обязательно при verdict=BLOCKED. Каждый blocker — конкретный FAIL/BLOCKED check",
+      "items": {
+        "type": "object",
+        "required": ["check", "fix"],
+        "properties": {
+          "check": { "type": "string", "description": "Ссылка на check.name" },
+          "file": { "type": "string", "description": "Файл с проблемой, если применимо" },
+          "line": { "type": "number", "description": "Строка, если применимо" },
+          "fix": { "type": "string", "description": "Конкретная рекомендация по исправлению" }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "description": "Неблокирующие проблемы — можно merge/deploy, но надо знать",
+      "items": { "type": "string" }
+    }
+  }
+}
+```
+
+**Как использовать:** Control Tower может передать эту схему в `agent(schema: ...)` для автоматической валидации structured output. Если схема не передана — используй её как контракт для ручной проверки формата.
 
 ## Handoff
 

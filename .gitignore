@@ -29,6 +29,7 @@ scripts/ai_agents.py
 docs/reports/git/stash-backups/*.patch
 .cache/
 .codex
+.mcp.json
 .npm-cache/
 .playwright-browsers/
 .playwright-cli/
@@ -36,6 +37,7 @@ docs/reports/git/stash-backups/*.patch
 output/
 web/.npm-cache/
 web/test-results/
+.claude/skills/*/workspace/
 frontend_mvp/
 docs/reports/qwen/
 codex-orchestration-skills/

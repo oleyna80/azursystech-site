@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verifier"
+  short_description: "Run tiered verification and return READY or BLOCKED."
+  default_prompt: "Verify the scoped change against the approved tier and acceptance criteria. Return READY or BLOCKED with check evidence."

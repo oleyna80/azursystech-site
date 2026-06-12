@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reviewer"
+  short_description: "Run read-only multi-dimension reviews with evidence."
+  default_prompt: "Review the scoped change for correctness, drift, maintainability, and risks. Return findings first with file and line evidence."

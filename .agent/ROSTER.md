@@ -35,6 +35,17 @@ existing source. Public/vendor skills may be adapted locally when useful, but
 tool capability or external availability never expands file authority, hard-stop
 rules, or approved scope.
 
+Project-local Codex skills live in `.agent/skills/<skill>/SKILL.md`. Skills may
+include `agents/openai.yaml` UI metadata plus optional `scripts/`, `references/`,
+and `assets/` resources. Load bundled resources only when the active task needs
+them.
+
+Codex memories are a shared recall layer, not an authority source and not a
+per-agent SSOT. Keep mandatory process rules in `AGENTS.md` and durable project
+state in the documented SSOT files. If a role accumulates repeatable verified
+lessons, curate them into that role's skill `references/` files instead of
+creating ad hoc per-agent memory folders.
+
 Temporary specializations are allowed per Work Block. Use the base role for
 authority and a specialization for focus, for example `Reviewer / Architecture
 Analyst`, `Reviewer / Security Analyst`, `Coder / Backend Coder`, or `Verifier /
@@ -58,6 +69,20 @@ commit, deploy, and file authority rules.
 Used via Antigravity / direct API.
 Follows `AGENTS.md` for flow policy, hard stops, and file write authority.
 Skill routing: same as Codex — stage flow + skill triggers.
+
+### Claude Code Agents (`.claude/agents/`)
+
+> Native Claude Code agents with persistent memory. Each agent accumulates
+> institutional knowledge across Work Blocks in its own memory store.
+
+| Agent | SDLC Phase | Authority | Memory | Purpose |
+|---|---|---|---|---|
+| `solution-architect` | Plan (pre-implementation) | Read-only research, risk flagging | `.claude/agent-memory/solution-architect/` | Codebase analysis, architectural decisions, risk matrix, optimal solution proposal |
+| `verifier` | Verify (post-implementation) | Read-only source/config/DB/infra, can issue BLOCKED verdict | `.claude/agent-memory/verifier/` | Acceptance criteria verification, contract/schema/security checks, tier-based gate (lite/standard/full) |
+
+**Proven pattern:** `solution-architect → verifier(skill) → Plan mode → Implement → verifier(agent)`.
+
+**When to add a new agent:** recurring role with cumulative knowledge (failure patterns, contract-sensitive zones, anti-patterns). One-off tasks → use skills instead.
 
 ---
 
@@ -83,6 +108,9 @@ This table lists routing-critical skills, not every utility skill in `.agent/ski
 | `architecture-discovery` | Control Tower (optional pre-SDD research) |
 | `memory-bank-manager` | Control Tower |
 | `ssot-sync-closeout` | Control Tower |
+| `reviewer` | Docs Reviewer / read-only Reviewer subagent |
+| `scoped-coder` | Scoped Coder |
+| `verifier` | Verifier |
 | `azursystech-contract-verifier` | Verifier |
 | `security-verification-gate` | Verifier |
 | `intake-agent-foundation` | Scoped Coder |

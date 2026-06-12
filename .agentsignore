@@ -1,0 +1,47 @@
+# Agent context exclusions
+#
+# Advisory vendor-neutral list for AI agents and external reviewers.
+# Codex-specific indexing should also read `.codexignore`.
+# This file is not a security boundary: agents may still read an excluded path
+# when an approved objective explicitly requires it.
+
+.git/
+node_modules/
+web/node_modules/
+admin/node_modules/
+.next/
+web/.next/
+admin/.next/
+dist/
+build/
+out/
+*.tsbuildinfo
+
+*.log
+logs/
+data/*.csv
+05_ai/runs/*.json
+05_ai/runs/*.approval.md
+
+.env
+.env.*
+*.pem
+*.key
+*.crt
+*.p12
+
+.cache/
+.codex/
+.npm-cache/
+.playwright-browsers/
+.playwright-cli/
+.qwen/
+.roo/
+output/
+web/.npm-cache/
+web/test-results/
+
+frontend_mvp/
+docs/reports/git/stash-backups/*.patch
+docs/reports/qwen/
+DOCS_REVIEW.md

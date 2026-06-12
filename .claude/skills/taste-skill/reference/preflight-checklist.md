@@ -1,0 +1,66 @@
+# Pre-Flight Checklist
+
+**THIS IS NOT OPTIONAL. Run every box. If any box fails, the output is not done.**
+
+- [ ] **Brief inference** declared (Section 0.B one-liner)?
+- [ ] **Dial values** explicit and reasoned from the brief, not silently using baseline?
+- [ ] **Design system** chosen from Section 2 if applicable, or aesthetic labeled honestly?
+- [ ] **Redesign mode** detected and audit performed (if applicable, Section 11)?
+- [ ] **ZERO em-dashes (`—`) anywhere on the page.** (Section 9.G - non-negotiable.)
+- [ ] **Page Theme Lock**: ONE theme (light, dark, or auto) for the whole page. No section flips to inverted mode mid-page (Section 4.11)?
+- [ ] **Color Consistency Lock**: one accent color used identically across all sections (Section 4.2)?
+- [ ] **Shape Consistency Lock**: one corner-radius system applied consistently (Section 4.4)?
+- [ ] **Button Contrast Check**: every CTA text is readable against its background (no white-on-white, WCAG AA 4.5:1)?
+- [ ] **CTA Button Wrap**: no CTA label wraps to 2+ lines at desktop?
+- [ ] **Form Contrast Check**: form inputs, placeholders, focus rings, labels all pass WCAG AA against the section background?
+- [ ] **Serif discipline**: if a serif is used, it is NOT Fraunces or Instrument_Serif (or it is, with explicit brand justification)?
+- [ ] **Premium-consumer palette check**: if the brief is premium-consumer, the palette is NOT the AI-default beige+brass+oxblood+espresso family?
+- [ ] **Italic descender clearance**: every italic word with `y g j p q` has `leading-[1.1]` min + `pb-1` reserve?
+- [ ] **Hero fits the viewport**: headline ≤ 2 lines, subtext ≤ 20 words AND ≤ 4 lines, CTA visible without scroll?
+- [ ] **Hero top padding**: max `pt-24` at desktop?
+- [ ] **Hero stack discipline**: max 4 text elements in hero? No tiny tagline below CTAs, no trust micro-strip in hero?
+- [ ] **EYEBROW COUNT (mechanical)**: count instances of `uppercase tracking` micro-labels. Count ≤ ceil(sectionCount / 3)? Hero counts as 1.
+- [ ] **Split-Header Ban**: no "left big headline + right small explainer paragraph" as section header?
+- [ ] **Zigzag Alternation Cap**: no 3+ consecutive sections with the same image+text-split layout?
+- [ ] **No Duplicate CTA Intent**: no two CTAs with the same intent on page?
+- [ ] **Logo wall = logo only**: no industry / category labels printed below logos?
+- [ ] **Bento Background Diversity**: at least 2-3 bento cells have real visual variation?
+- [ ] **"Used by / Trusted by" logo wall** lives UNDER the hero, uses REAL SVG logos?
+- [ ] **Copy Self-Audit**: every visible string re-read, no grammatically-broken or AI-hallucinated phrases?
+- [ ] **Motion motivated**: every animation can be justified in one sentence?
+- [ ] **Marquee max-one-per-page**: no two horizontal marquees on the same page?
+- [ ] **Navigation on ONE line** at desktop, height ≤ 80px?
+- [ ] **Section-Layout-Repetition** check: no two sections share the same layout family?
+- [ ] **Bento has rhythm AND exact cell count** (N items → N cells, no empty cells)?
+- [ ] **Long lists use the right UI component** (not default `<ul>` with `divide-y` for > 5 items)?
+- [ ] **Real images used** (gen-tool first, then Picsum-seed, then explicit placeholder slots)?
+- [ ] **No pills/labels overlaid on images?**
+- [ ] **No photo-credit captions as decoration?**
+- [ ] **No version footers** on marketing pages?
+- [ ] **No micro-meta-sentences** under eyebrows?
+- [ ] **No decoration text strip at hero bottom?**
+- [ ] **No floating top-right sub-text** in section headings?
+- [ ] **No scoring/progress bars with filled background tracks?**
+- [ ] **No locale / city-name / time / weather strips** unless brief is genuinely place-focused?
+- [ ] **No scroll cues** (`Scroll`, `↓ scroll`, `Scroll to explore`)?
+- [ ] **No version labels in hero** unless the brief is a launch?
+- [ ] **No section-numbering eyebrows** (`00 / INDEX`, `001 · Capabilities`)?
+- [ ] **No decorative dots** (zero by default)?
+- [ ] **No `border-t` + `border-b` on every row** of long lists / spec tables?
+- [ ] **Content density** sane: no 20-row data tables, no fake-precise specs, ≤ 25-word sub-paragraphs?
+- [ ] **Quotes ≤ 3 lines** of body, attribution clean (no em-dash)?
+- [ ] **Motion claimed = motion shown**: if `MOTION_INTENSITY > 4`, page actually animates?
+- [ ] **GSAP sticky-stack / horizontal-pan** implemented per canonical skeleton?
+- [ ] **No `window.addEventListener('scroll')`**?
+- [ ] **Reduced motion** wrapped for everything `MOTION_INTENSITY > 3`?
+- [ ] **Dark mode** tokens defined and tested in both modes?
+- [ ] **Mobile collapse** explicit for high-variance layouts?
+- [ ] **Viewport stability**: `min-h-[100dvh]`, never `h-screen`?
+- [ ] **`useEffect` animations** have strict cleanup functions?
+- [ ] **Empty / loading / error** states provided?
+- [ ] **Cards omitted** in favor of spacing where possible?
+- [ ] **Icons** from an allowed library only?
+- [ ] **Motion** isolated in client-leaf components with `'use client'`?
+- [ ] **No AI Tells** from Section 9?
+- [ ] **Core Web Vitals** plausibly hit (LCP < 2.5s, INP < 200ms, CLS < 0.1)?
+- [ ] **One design system** per project (no Material + shadcn mixed)?
