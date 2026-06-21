@@ -36,7 +36,7 @@ Quickly and reliably confirm that critical SEO tags and Structured Data (JSON-LD
 
 2. **Verify Static Pages (`○`)**
    Use the available search tool for the active agent environment (for example
-   `grep_search` in Roo/Cline, or `rg` in a shell-based Codex session) to search
+   `rg` in a shell-based Codex session, or Claude Code search tools) to search
    the `.next/server/app/` directory.
    - For `hreflang`: Search for `"hreflang"` or `"x-default"`.
    - For `canonical`: Search for `"canonical"`.
@@ -62,9 +62,9 @@ Quickly and reliably confirm that critical SEO tags and Structured Data (JSON-LD
 - Validation of `sitemap.xml` contents.
 
 ## Guardrails
-- **Use the native read/search tools for the active environment.** In Roo/Cline
-  this means `grep_search` and `view_file`; in Codex shell sessions this means
-  `rg` and targeted file reads.
+- **Use the native read/search tools for the active environment.** In Codex
+  shell sessions this means `rg` and targeted file reads; in Claude Code use
+  its native read/search tools.
 - Do not run this before a fresh `npm run build`. Old build artifacts might return false positives.
 - If SEO tags are missing from the build, halt deployment and return to the `Scoped Coder` phase to fix the metadata generation.
 

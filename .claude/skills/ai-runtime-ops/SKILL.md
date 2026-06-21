@@ -25,7 +25,8 @@ allowed-tools:
 4. Прогнать dry-run через `scripts/ai_agents.py`.
 5. Обновить спецификацию в `05_ai/*.md`.
 
-Related Roo skill: `.roo/skills/azursystech-safe-ai-runtime/SKILL.md`.
+Related workflow: use Codex/Claude Code project-local skills; RooCode artifacts
+are retired.
 
 ## Validation
 - `python3 -m py_compile scripts/ai_agents.py`

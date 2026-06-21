@@ -18,7 +18,8 @@ description: Процедуры triage, классификации и перво
 
 ## Runtime Link
 - Использовать `scripts/ai_agents.py` + агент `lead_router`.
-- Related Roo skill: `.roo/skills/azursystech-form-contract/SKILL.md`.
+- Related workflow: use Codex/Claude Code project-local form/contract skills;
+  RooCode artifacts are retired.
 - В live-режиме обязательно human approval перед отправкой.
 
 ## Handoff

@@ -112,11 +112,13 @@ are context controls, not security boundaries.
 
 ### Synchronized Agent Layer
 
-The `.agent/`, `.roo/`, `.codexignore`, `.agentsignore`, `memory_bank/`, and
+The `.agent/`, `.claude/`, `.codexignore`, `.agentsignore`, `memory_bank/`, and
 agent-facing `docs/` workflow layer is synchronized through Git by default so
 work can continue from multiple workstations without losing project context.
-Keep secrets, credentials, private transcripts, local runtime logs, caches, and
-machine-specific tool state out of Git.
+Active agent runtimes are Codex and Claude Code only. RooCode/Cline artifacts
+such as `.roo/` and `.roomodes` are retired local artifacts and must not be
+synchronized. Keep secrets, credentials, private transcripts, local runtime
+logs, caches, and machine-specific tool state out of Git.
 
 Run `scripts/bootstrap.sh` after cloning or restoring a workspace to verify that
 the local workflow layer required by the Session Start Read Set is present.

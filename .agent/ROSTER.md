@@ -7,14 +7,11 @@
 
 ---
 
-## Roo / Cline Modes (`.roomodes`)
+## Active Agent Surfaces
 
-| Slug | Name | Role | Hard Stop Authority |
-|---|---|---|---|
-| `azursystech-control-tower` | Control Tower | Orchestration, planning, SSOT ownership | Owns plan approval gate |
-| `azursystech-docs-reviewer` | Docs Reviewer | Read-only audit, SSOT drift | None (read-only) |
-| `azursystech-scoped-coder` | Scoped Coder | Approved-scope implementation | None (execute only) |
-| `azursystech-verifier` | Verifier | AC verification gate | BLOCKED verdict halts pipeline |
+Codex and Claude Code are the only active agent runtimes for this project.
+RooCode/Cline mode files (`.roo/`, `.roomodes`) are retired local artifacts and
+are intentionally excluded from Git synchronization.
 
 ---
 
@@ -53,17 +50,6 @@ QA Analyst`.
 
 ---
 
-## Qwen
-
-Config: `.qwen/settings.json`
-Allowed commands whitelist. Follows `AGENTS.md` for flow policy.
-
-Runtime allowlists and tool capabilities do not grant process authority. All
-agents still follow `AGENTS.md` for approved write-set, hard stops, staging,
-commit, deploy, and file authority rules.
-
----
-
 ## Claude (Anthropic)
 
 Used via Antigravity / direct API.
@@ -83,14 +69,6 @@ Skill routing: same as Codex — stage flow + skill triggers.
 **Proven pattern:** `solution-architect → verifier(skill) → Plan mode → Implement → verifier(agent)`.
 
 **When to add a new agent:** recurring role with cumulative knowledge (failure patterns, contract-sensitive zones, anti-patterns). One-off tasks → use skills instead.
-
----
-
-## Gemini (Google)
-
-Used via Antigravity / direct API.
-Follows `AGENTS.md` for flow policy, hard stops, and file write authority.
-Skill routing: same as Codex — stage flow + skill triggers.
 
 ---
 
