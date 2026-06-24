@@ -1,0 +1,23 @@
+# Stage Artifact Template
+
+- Stage:
+- Stream:
+- Base role:
+- Mission role:
+- Objective:
+- Scope:
+- Out of scope:
+- Approved write-set:
+- Side-effect class:
+- Allowed external runtimes/MCPs:
+- Hard stops:
+- Parallel group:
+- Sibling streams:
+- Dependencies:
+- Checks run:
+- Verification evidence:
+- Result:
+- Accepted by Control Tower: yes/no
+- Verifier verdict:
+- Explicit defers:
+- Next handoff:
