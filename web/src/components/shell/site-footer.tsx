@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { openAnalyticsConsentSettings } from "@/lib/analytics-consent";
 
 type FooterLocale = "fr" | "ru";
 const LOCALE_SLUGS = new Set(["fr", "ru"]);
@@ -15,11 +16,11 @@ const CONTACT = {
 
 const FOOTER_COPY = {
   fr: {
-    about: "Sites web, automatisation IA et support IT local pour les petites entreprises à Nice et dans les environs.",
+    about: "Sites web, automatisation IA et intake client pour les petites entreprises francophones et russophones en Europe.",
     navigationTitle: "Navigation",
     documentsTitle: "Documents",
     contactTitle: "Contact",
-    serviceArea: "Nice et jusqu'à 30 km autour",
+    serviceArea: "Services numériques à distance dans l'UE",
     links: [
       { href: "/#automation", label: "Automatisation IA" },
       { href: "/#websites", label: "Sites web" },
@@ -34,13 +35,14 @@ const FOOTER_COPY = {
       { href: "/legal", label: "Mentions légales" },
       { href: "/terms", label: "Conditions de service" },
     ],
+    cookieSettings: "Paramètres cookies",
   },
   ru: {
-    about: "Сайты, AI-автоматизация и локальная IT-поддержка для малого бизнеса в Ницце и рядом.",
+    about: "Сайты, AI-автоматизация и клиентский intake для русскоязычного и франкоязычного малого бизнеса в Европе.",
     navigationTitle: "Навигация",
     documentsTitle: "Документы",
     contactTitle: "Контакты",
-    serviceArea: "Ницца и до 30 км вокруг",
+    serviceArea: "Цифровые услуги удаленно по ЕС",
     links: [
       { href: "/#automation", label: "AI-автоматизация" },
       { href: "/#websites", label: "Сайты" },
@@ -55,6 +57,7 @@ const FOOTER_COPY = {
       { href: "/legal", label: "Правовая информация" },
       { href: "/terms", label: "Условия оказания услуг" },
     ],
+    cookieSettings: "Настройки cookies",
   },
 } as const;
 
@@ -106,6 +109,13 @@ export function SiteFooter({ locale }: { locale: FooterLocale }) {
                     {link.label}
                   </a>
                 ))}
+                <button
+                  type="button"
+                  onClick={openAnalyticsConsentSettings}
+                  className="w-fit text-left text-base font-semibold text-white/78 transition-colors hover:text-white"
+                >
+                  {copy.cookieSettings}
+                </button>
               </div>
             </div>
             <div className="grid gap-4 sm:col-span-2 lg:col-span-1">

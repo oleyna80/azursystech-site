@@ -39,7 +39,7 @@ const PAGE_COPY = {
     emailFieldLabel: "Email",
     emailPlaceholder: "Email",
     cityLabel: "Ville *",
-    cityPlaceholder: "Par exemple : Nice",
+    cityPlaceholder: "Ville et pays",
     segmentLegend: "Vous nous contactez en tant que *",
     segmentParticulier: "Particulier",
     segmentTpe: "Entreprise / TPE",
@@ -108,9 +108,9 @@ const PAGE_COPY = {
     quickActionsTitle: "Actions rapides",
     callCta: `Appeler : ${CONTACT.phoneDisplay}`,
     whatsappCta: `WhatsApp : ${CONTACT.whatsappDisplay}`,
-    serviceAreaTitle: "Zone d’intervention",
+    serviceAreaTitle: "Zone de service",
     serviceAreaText:
-      "Intervention à Nice et dans une zone d’environ 30 km. Si vous êtes à proximité, indiquez simplement la ville dans le formulaire.",
+      "Sites, automatisation et intake IA peuvent être cadrés à distance dans l’Union européenne. Les interventions sur site sont possibles uniquement après accord préalable.",
     nextStepTitle: "Après l’envoi",
     nextStepText:
       "Après réception de la demande, nous utilisons les informations du formulaire pour la qualification initiale et le prochain pas. En cas d’urgence, utilisez WhatsApp ou le téléphone.",
@@ -148,7 +148,7 @@ const PAGE_COPY = {
     emailFieldLabel: "Email",
     emailPlaceholder: "Email",
     cityLabel: "Город *",
-    cityPlaceholder: "Например: Nice",
+    cityPlaceholder: "Город и страна",
     segmentLegend: "Вы обращаетесь как *",
     segmentParticulier: "Частный клиент",
     segmentTpe: "Бизнес / TPE",
@@ -217,9 +217,9 @@ const PAGE_COPY = {
     quickActionsTitle: "Быстрые действия",
     callCta: `Позвонить: ${CONTACT.phoneDisplay}`,
     whatsappCta: `WhatsApp: ${CONTACT.whatsappDisplay}`,
-    serviceAreaTitle: "Зона обслуживания",
+    serviceAreaTitle: "Зона работы",
     serviceAreaText:
-      "Работаем в Nice и в зоне до ~30 км. Если вы рядом с этой зоной, укажите город в форме — формат работ уточним при контакте.",
+      "Сайты, автоматизацию и AI-intake можно обсуждать и запускать удаленно по Европейскому союзу. Выездные работы возможны только по отдельному согласованию.",
     nextStepTitle: "Что ожидать после контакта",
     nextStepText:
       "После получения обращения мы используем данные из формы для первичной квалификации и следующего шага. Если вопрос срочный, используйте WhatsApp или звонок.",

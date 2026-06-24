@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
-import Script from "next/script";
+import { AnalyticsConsentManager } from "@/components/analytics-consent-manager";
 import { ChatWidgetContainer } from "@/components/chat-widget";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { SiteFooter } from "@/components/shell/site-footer";
@@ -40,24 +40,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
-      <head>
-        <Script
-          strategy="afterInteractive"
-          src="https://www.googletagmanager.com/gtag/js?id=G-J4Y77YBQMC"
-        />
-        <Script
-          id="google-analytics"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-J4Y77YBQMC');
-            `,
-          }}
-        />
-      </head>
+      <head />
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
@@ -68,6 +51,7 @@ export default async function RootLayout({
           <ErrorBoundary label="chat-widget">
             <ChatWidgetContainer />
           </ErrorBoundary>
+          <AnalyticsConsentManager locale={locale} />
         </div>
       </body>
     </html>

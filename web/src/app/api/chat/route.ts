@@ -184,6 +184,10 @@ function sanitizeHistory(history: unknown): ChatHistoryItem[] {
         return null;
       }
 
+      if (hasPromptInjectionAttempt(content)) {
+        return null;
+      }
+
       return { role, content };
     })
     .filter((item): item is ChatHistoryItem => item !== null)

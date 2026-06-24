@@ -7,6 +7,22 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
   },
+  async rewrites() {
+    const showcaseUrl =
+      process.env.SHOWCASE_URL ||
+      (process.env.NODE_ENV !== "production" ? "http://localhost:3001" : null);
+    if (!showcaseUrl) return [];
+    return [
+      {
+        source: "/demo-assets/:path*",
+        destination: `${showcaseUrl}/:path*`,
+      },
+      {
+        source: "/demo/:path*",
+        destination: `${showcaseUrl}/demo/:path*`,
+      },
+    ];
+  },
   async redirects() {
     return [
       {

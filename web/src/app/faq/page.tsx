@@ -23,10 +23,10 @@ const FAQ_PAGE = {
     meta: {
       title: "FAQ support informatique | AzurSysTech",
       description:
-        "Questions fréquentes sur l’assistance informatique sur site à Nice : périmètre, tarification de départ, format d’intervention et premier contact.",
+        "Questions fréquentes sur les sites web, l’automatisation IA, le support technique, le périmètre de service et le premier contact.",
     },
     eyebrow: "AzurSysTech",
-    title: "Questions fréquentes sur l’assistance informatique sur site à Nice et dans les environs",
+    title: "Questions fréquentes sur les services AzurSysTech",
     intro:
       "Cette page regroupe les réponses les plus utiles pour les petites entreprises et les particuliers : périmètre d’intervention, logique d’évaluation et premier contact.",
     primaryCta: "Laisser une demande",
@@ -45,7 +45,7 @@ const FAQ_PAGE = {
           {
             question: "Que fait AzurSysTech ?",
             answer:
-              "AzurSysTech propose une assistance informatique sur site pour petites entreprises et particuliers à Nice et dans les environs. Nous aidons sur les ordinateurs, postes de travail, Wi‑Fi, réseau local, imprimantes, dossiers partagés et mise en place IT de base.",
+              "AzurSysTech aide les petites entreprises avec des sites web, formulaires, agents IA, automatisation de demandes entrantes et support technique ponctuel quand l’environnement bloque le projet.",
           },
           {
             question: "Travaillez-vous uniquement avec les entreprises ?",
@@ -58,12 +58,12 @@ const FAQ_PAGE = {
               "Non. Nous intervenons à la fois pour les particuliers et pour les petits bureaux, cabinets, commerces et autres petits espaces de travail.",
           },
           {
-            question: "Dans quelle zone intervenez-vous ?",
-            answer: "La zone principale d’intervention est Nice et environ 30 km autour.",
+            question: "Dans quelle zone travaillez-vous ?",
+            answer: "Les projets web, automatisation et intake IA peuvent être cadrés à distance dans l’Union européenne. Les interventions sur site se font uniquement après accord préalable.",
           },
           {
             question: "Intervenez-vous à distance ou seulement sur site ?",
-            answer: "Au stade actuel, le format principal est l’intervention sur place.",
+            answer: "Le format principal pour les sites, formulaires et automatisations est le travail à distance. Le sur-site reste un cas complémentaire à valider séparément.",
           },
           {
             question: "Quel est le meilleur moyen de vous joindre ?",
@@ -221,10 +221,10 @@ const FAQ_PAGE = {
     meta: {
       title: "FAQ по IT-помощи | AzurSysTech",
       description:
-        "Частые вопросы по выездной IT-помощи в Ницце: зона работы, логика цен, формат обращения и следующий шаг после заявки.",
+        "Частые вопросы по сайтам, AI-автоматизации, технической поддержке, зоне работы и первому обращению.",
     },
     eyebrow: "AzurSysTech",
-    title: "Частые вопросы по выездной IT-помощи в Ницце и рядом",
+    title: "Частые вопросы об услугах AzurSysTech",
     intro:
       "Эта страница собрана как практичный FAQ для малого бизнеса и частных клиентов. Здесь можно быстро понять формат работы, логику оценки и удобный способ первого обращения.",
     primaryCta: "Оставить заявку",
@@ -243,7 +243,7 @@ const FAQ_PAGE = {
           {
             question: "Чем занимается AzurSysTech?",
             answer:
-              "AzurSysTech — это выездная IT-помощь для малого бизнеса и частных клиентов в Ницце и рядом. Помогаем с компьютерами, рабочими местами, Wi‑Fi, локальной сетью, принтерами, общими папками и базовой настройкой IT-среды.",
+              "AzurSysTech помогает малому бизнесу с сайтами, формами, AI-агентами, автоматизацией входящих заявок и точечной технической поддержкой, когда среда мешает запуску проекта.",
           },
           {
             question: "Вы работаете только с бизнесом?",
@@ -257,11 +257,11 @@ const FAQ_PAGE = {
           },
           {
             question: "Где вы работаете?",
-            answer: "Основная зона выезда — Ницца и примерно 30 км вокруг.",
+            answer: "Сайты, автоматизацию и AI-intake можно обсуждать и запускать удаленно по Европейскому союзу. Выездные работы возможны только по отдельному согласованию.",
           },
           {
             question: "Вы работаете удалённо или только с выездом?",
-            answer: "На текущем этапе основной формат — выездная помощь на месте.",
+            answer: "Основной формат для сайтов, форм и автоматизации — удаленная работа. Выезд остается дополнительным вариантом, который нужно согласовать отдельно.",
           },
           {
             question: "Как лучше связаться?",

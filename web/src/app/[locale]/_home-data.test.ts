@@ -12,11 +12,14 @@ describe("HOME_CONTENT showcase section", () => {
         expect(copy.showcaseDemos).toHaveLength(6)
       })
 
-      it("every demo has slug, title, category, demoUrl", () => {
+      it("every demo has strategy fields and demoUrl", () => {
         for (const d of copy.showcaseDemos) {
           expect(d.slug).toBeTruthy()
           expect(d.title).toBeTruthy()
           expect(d.category).toBeTruthy()
+          expect(d.siteType).toBeTruthy()
+          expect(d.businessFunction).toBeTruthy()
+          expect(d.automationBadge).toBeTruthy()
           expect(d.demoUrl).toBeTruthy()
         }
       })

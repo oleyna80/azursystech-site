@@ -10,12 +10,12 @@ const PAGE_META = {
   fr: {
     title: "Contact et demande | AzurSysTech",
     description:
-      "Contactez AzurSysTech via le formulaire, WhatsApp, téléphone ou email pour décrire un besoin informatique à Nice et dans les environs.",
+      "Contactez AzurSysTech via le formulaire, WhatsApp, téléphone ou email pour décrire un besoin web, automatisation IA ou support technique.",
   },
   ru: {
     title: "Контакты и заявка | AzurSysTech",
     description:
-      "Связаться с AzurSysTech через форму, WhatsApp, телефон или email для IT-задачи в Ницце и рядом.",
+      "Связаться с AzurSysTech через форму, WhatsApp, телефон или email для сайта, AI-автоматизации или технической задачи.",
   },
 } as const satisfies Record<ContactPageLocale, Metadata>;
 

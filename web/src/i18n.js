@@ -13,8 +13,8 @@ const dictionaries = {
     fr: {
         meta: {
             home: {
-                title: 'AzurSysTech | Automatisation IA et sites web pour petites entreprises à Nice',
-                description: 'AzurSysTech aide les petites entreprises à automatiser leurs demandes entrantes : sites web, formulaires intelligents, agents IA et support informatique local à Nice et dans les environs.',
+                title: 'AzurSysTech | Automatisation IA et sites web pour petites entreprises en Europe',
+                description: 'AzurSysTech aide les petites entreprises francophones et russophones en Europe à automatiser leurs demandes entrantes : sites web, formulaires intelligents et agents IA.',
             },
             legal: {
                 title: 'Mentions légales | AzurSysTech',
@@ -26,7 +26,7 @@ const dictionaries = {
             },
         },
         common: {
-            location: 'Nice + 30 km',
+            location: 'Union européenne',
             privacyPolicy: 'politique de confidentialité',
             legalInformation: 'mentions légales',
             cookieSettings: 'Paramètres cookies',
@@ -56,7 +56,7 @@ const dictionaries = {
         hero: {
             titlePrefix: 'Votre business automatisé,',
             titleAccent: 'prêt à recevoir des clients',
-            subtitle: 'Sites web, formulaires intelligents et agents IA pour automatiser vos demandes entrantes — pour les petites entreprises à Nice et dans les environs.',
+            subtitle: 'Sites web, formulaires intelligents et agents IA pour automatiser vos demandes entrantes — pour les petites entreprises en Europe.',
             primaryCta: 'Décrire mon projet',
             secondaryCta: 'Voir les services',
             supportLine: 'Pour les petites entreprises, commerces, cabinets et indépendants.',
@@ -75,7 +75,7 @@ const dictionaries = {
                 'Intégration CRM / Google Sheets',
                 'Site + formulaire de contact',
                 'Réponse automatique au client',
-                'Support IT local sur site',
+                'Support technique par accord',
             ],
         },
         services: {
@@ -223,7 +223,7 @@ const dictionaries = {
                     name: 'Votre nom',
                     phone: 'Numéro pour vous joindre',
                     email: 'Email (facultatif)',
-                    city: 'Par exemple : Nice',
+                    city: 'Ville et pays',
                     description: 'Que faut-il faire ou quel problème rencontrez-vous ?',
                     companyName: 'Nom de l’entreprise',
                 },
@@ -266,7 +266,7 @@ const dictionaries = {
             },
         },
         footer: {
-            about: 'Automatisation IA et sites web pour les petites entreprises à Nice. Support informatique local inclus.',
+            about: 'Automatisation IA et sites web pour les petites entreprises francophones et russophones en Europe.',
             navigationTitle: 'Navigation',
             documentsTitle: 'Documents',
             contactTitle: 'Contact',
@@ -318,7 +318,7 @@ const dictionaries = {
                 title: 'Mentions légales',
                 intro: 'Cette page contient les informations sur l’éditeur du site AzurSysTech, les coordonnées, l’hébergement et les conditions juridiques de base d’utilisation du site.',
                 siteIdentificationTitle: 'Identification du site',
-                sitePurpose: 'Assistance informatique locale pour petites entreprises et particuliers à Nice et dans les communes voisines.',
+                sitePurpose: 'Sites web, automatisation IA et support technique pour les petites entreprises en Europe.',
                 ownerTitle: 'Informations sur le propriétaire du site',
                 hostingTitle: 'Hébergement',
                 intellectualPropertyTitle: 'Propriété intellectuelle',
@@ -404,8 +404,8 @@ const dictionaries = {
     ru: {
         meta: {
             home: {
-                title: 'AzurSysTech | AI-автоматизация и сайты для малого бизнеса в Ницце',
-                description: 'AzurSysTech помогает малому бизнесу автоматизировать обработку входящих заявок: сайты, умные формы, AI-агенты и локальная IT-поддержка в Ницце и рядом.',
+                title: 'AzurSysTech | AI-автоматизация и сайты для малого бизнеса в ЕС',
+                description: 'AzurSysTech помогает русскоязычному и франкоязычному малому бизнесу в Европе автоматизировать обработку входящих заявок: сайты, умные формы и AI-агенты.',
             },
             legal: {
                 title: 'Правовая информация | AzurSysTech',
@@ -417,7 +417,7 @@ const dictionaries = {
             },
         },
         common: {
-            location: 'Nice + 30 km',
+            location: 'Европейский союз',
             privacyPolicy: 'политика конфиденциальности',
             legalInformation: 'правовая информация',
             cookieSettings: 'Настройки cookies',
@@ -447,7 +447,7 @@ const dictionaries = {
         hero: {
             titlePrefix: 'Ваш бизнес автоматизирован,',
             titleAccent: 'готов принимать клиентов',
-            subtitle: 'Сайты, умные формы и AI-агенты для автоматической обработки входящих заявок — для малого бизнеса в Ницце и рядом.',
+            subtitle: 'Сайты, умные формы и AI-агенты для автоматической обработки входящих заявок — для малого бизнеса в Европе.',
             primaryCta: 'Описать проект',
             secondaryCta: 'Посмотреть услуги',
             supportLine: 'Для малого бизнеса, магазинов, студий, кабинетов и частных клиентов.',
@@ -466,7 +466,7 @@ const dictionaries = {
                 'Интеграция CRM / Google Sheets',
                 'Сайт + форма заявки',
                 'Автоответ клиенту',
-                'Локальная IT-поддержка',
+                'Техническая поддержка по согласованию',
             ],
         },
         services: {
@@ -602,7 +602,7 @@ const dictionaries = {
                     name: 'Ваше имя',
                     phone: 'Телефон для связи',
                     email: 'Email (необязательно)',
-                    city: 'Например: Nice',
+                    city: 'Город и страна',
                     description: 'Что нужно сделать или какая проблема возникла?',
                     companyName: 'Название компании',
                 },
@@ -645,7 +645,7 @@ const dictionaries = {
             },
         },
         footer: {
-            about: 'AI-автоматизация и сайты для малого бизнеса в Ницце. Локальная IT-поддержка включена.',
+            about: 'AI-автоматизация и сайты для малого бизнеса в Европе. Техническая поддержка по согласованию.',
             navigationTitle: 'Навигация',
             documentsTitle: 'Документы',
             contactTitle: 'Контакты',
@@ -697,7 +697,7 @@ const dictionaries = {
                 title: 'Правовая информация',
                 intro: 'Эта страница содержит сведения о владельце сайта AzurSysTech, контактные данные, данные о хостинге и базовые правовые условия использования сайта.',
                 siteIdentificationTitle: 'Идентификация сайта',
-                sitePurpose: 'Локальная IT-поддержка для малого бизнеса и частных клиентов в Ницце и соседних городах.',
+                sitePurpose: 'Сайты, AI-автоматизация и техническая поддержка для малого бизнеса в Европе.',
                 ownerTitle: 'Информация о владельце сайта',
                 hostingTitle: 'Хостинг',
                 intellectualPropertyTitle: 'Интеллектуальная собственность',
@@ -783,8 +783,8 @@ const dictionaries = {
     en: {
         meta: {
             home: {
-                title: 'AzurSysTech | IT support in Nice',
-                description: 'IT support and practical infrastructure setup for small businesses and home users in Nice and nearby towns.',
+                title: 'AzurSysTech | AI automation and websites for small businesses in Europe',
+                description: 'Websites, intelligent forms, AI agents and technical support for small businesses in Europe.',
             },
             legal: {
                 title: 'Legal information | AzurSysTech',
@@ -796,7 +796,7 @@ const dictionaries = {
             },
         },
         common: {
-            location: 'Nice + 30 km',
+            location: 'European Union',
             privacyPolicy: 'privacy policy',
             legalInformation: 'legal information',
             cookieSettings: 'Cookie settings',
@@ -826,13 +826,13 @@ const dictionaries = {
         hero: {
             titlePrefix: 'IT support and infrastructure setup',
             titleAccent: 'for small businesses',
-            subtitle: 'Workstation setup, Wi-Fi, local network and printer configuration. On-site support in Nice and within 30 km. We also help home users.',
+            subtitle: 'Websites, intelligent forms, AI agents and practical technical support for small businesses in Europe.',
             primaryCta: 'Request a quote',
             secondaryCta: 'Discuss your need',
             supportLine: 'For small businesses, shops, offices, practices and home users.',
             imageAlt: 'Modern office workstation',
-            trustCardTitle: 'Reliable IT environment',
-            trustCardSubtitle: 'On-site support',
+            trustCardTitle: 'Practical automation',
+            trustCardSubtitle: 'Human-controlled delivery',
         },
         businessValue: {
             title: 'We help small businesses launch and stabilize their IT environment quickly',
@@ -844,7 +844,7 @@ const dictionaries = {
                 'Wi-Fi and network',
                 'Printers',
                 'Shared folders',
-                'On-site support',
+                'Technical support by agreement',
                 'Basic IT environment',
             ],
         },
@@ -891,9 +891,9 @@ const dictionaries = {
         },
         whyUs: {
             title: 'Why AzurSysTech',
-            intro: 'A practical local IT service for people who need a working result, not complicated technical language. Especially useful if you do not have your own IT administrator.',
+            intro: 'Practical digital and technical services for small businesses that need a working result, not complicated technical language.',
             reasons: [
-                'On-site support in Nice and within 30 km',
+                'Remote digital services across the European Union',
                 'Help for small businesses and home users',
                 'Wide coverage: PCs, networks, Wi-Fi and printers',
                 'Clear communication without corporate complexity',
@@ -927,7 +927,7 @@ const dictionaries = {
         faq: {
             title: 'Frequently asked questions',
             items: [
-                { q: 'Do you work only in Nice?', a: 'We work in Nice and roughly within a 30 km radius.' },
+                { q: 'Do you work outside France?', a: 'Yes. Website, automation and AI intake projects can be handled remotely across the European Union. On-site work requires separate agreement.' },
                 { q: 'Do you help only businesses?', a: 'No. We work with both small businesses and home users.' },
                 { q: 'Can I call you for Wi-Fi and printer setup?', a: 'Yes, that is one of the most common request types.' },
                 { q: 'Can I describe the task by message first?', a: 'Yes. That is usually the preferred format for an initial estimate through WhatsApp or the form.' },
@@ -962,7 +962,7 @@ const dictionaries = {
                     name: 'Your name',
                     phone: 'Best phone number',
                     email: 'Email (optional)',
-                    city: 'For example: Nice',
+                    city: 'City and country',
                     description: 'What needs to be done or what problem are you facing?',
                     companyName: 'Company name',
                 },
@@ -1002,7 +1002,7 @@ const dictionaries = {
             },
         },
         footer: {
-            about: 'Local IT support for small businesses and home users in Nice and nearby areas.',
+            about: 'AI automation, websites and technical support for small businesses in Europe.',
             navigationTitle: 'Navigation',
             documentsTitle: 'Documents',
             contactTitle: 'Contact',
@@ -1054,7 +1054,7 @@ const dictionaries = {
                 title: 'Legal information',
                 intro: 'This page contains information about the AzurSysTech website owner, contact details, hosting data and the basic legal terms for using the website.',
                 siteIdentificationTitle: 'Website identification',
-                sitePurpose: 'Local IT support for small businesses and home users in Nice and nearby towns.',
+                sitePurpose: 'Websites, AI automation and technical support for small businesses in Europe.',
                 ownerTitle: 'Website owner information',
                 hostingTitle: 'Hosting',
                 intellectualPropertyTitle: 'Intellectual property',

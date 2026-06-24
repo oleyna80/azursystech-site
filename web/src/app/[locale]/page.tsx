@@ -10,14 +10,14 @@ const BASE_URL = "https://azursystech.fr";
 
 const META = {
   fr: {
-    title: "Automatisation IA et sites web pour petites entreprises à Nice | AzurSysTech",
+    title: "Automatisation IA et sites web pour petites entreprises en Europe | AzurSysTech",
     description:
-      "Sites web, formulaires intelligents, agents IA et support IT local pour petites entreprises à Nice et dans les environs.",
+      "Sites web, formulaires intelligents et agents IA pour petites entreprises francophones et russophones dans l'Union européenne.",
   },
   ru: {
-    title: "AI-автоматизация и сайты для малого бизнеса в Ницце | AzurSysTech",
+    title: "AI-автоматизация и сайты для малого бизнеса в ЕС | AzurSysTech",
     description:
-      "Сайты, умные формы, AI-агенты и локальная IT-поддержка для малого бизнеса в Ницце и соседних городах.",
+      "Сайты, умные формы и AI-агенты для русскоязычных и франкоязычных предпринимателей в Европейском союзе.",
   },
 } as const;
 

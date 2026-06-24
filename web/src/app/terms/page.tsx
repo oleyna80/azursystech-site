@@ -63,7 +63,7 @@ const TERMS_PAGE = {
       {
         title: "3. Zone d’intervention",
         paragraphs: [
-          "AzurSysTech intervient principalement à Nice et dans un rayon d’environ 30 km autour de Nice, sauf accord particulier.",
+          "AzurSysTech fournit principalement des services numériques à distance dans l’Union européenne. Les interventions sur site ne sont possibles que sur accord particulier.",
         ],
       },
       {
@@ -249,7 +249,7 @@ const TERMS_PAGE = {
       {
         title: "3. Зона оказания услуг",
         paragraphs: [
-          "AzurSysTech оказывает услуги преимущественно в Ницце и в радиусе примерно 30 км вокруг Ниццы, если иное отдельно не согласовано.",
+          "AzurSysTech преимущественно оказывает цифровые услуги удаленно в пределах Европейского союза. Выездные работы возможны только по отдельному согласованию.",
         ],
       },
       {

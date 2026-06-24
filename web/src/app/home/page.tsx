@@ -94,7 +94,7 @@ export default function HomePage() {
         <section className="rounded-2xl border border-[#D8D0C4] bg-[#FFFDFC] p-8 shadow-sm sm:p-10">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#1F6F78]">AzurSysTech</p>
           <h1 className="mt-4 max-w-3xl font-serif text-3xl text-[#1F2A37] sm:text-4xl">
-            Спокойная и понятная IT-помощь для дома в Nice и рядом
+            Спокойная и понятная техническая помощь для дома
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-[#1F2A37]/90">
             Страница для частных и домашних пользователей: диагностика ПК, новый компьютер,

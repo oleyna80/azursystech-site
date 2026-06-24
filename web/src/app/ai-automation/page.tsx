@@ -27,7 +27,7 @@ const CONTENT = {
       serviceType: "Agents IA pour intake, qualification et automatisation de processus répétitifs",
       serviceDescription:
         "Automatisation pragmatique de la première couche de traitement des demandes pour petites entreprises, avec validation humaine.",
-      areaServed: "Nice et zone jusqu'à 30 km",
+      areaServed: "Union européenne",
       inLanguage: "fr",
     },
     backLink: "AzurSysTech",
@@ -187,7 +187,7 @@ const CONTENT = {
       serviceType: "ИИ-автоматизация первичного приема, оценки обращений и повторяющихся процессов",
       serviceDescription:
         "Практичная автоматизация первого слоя обработки обращений для малого бизнеса с контролем человека.",
-      areaServed: "Nice и зона до 30 км",
+      areaServed: "Европейский союз",
       inLanguage: "ru",
     },
     backLink: "AzurSysTech",

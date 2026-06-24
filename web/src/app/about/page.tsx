@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const TRUST_POINTS = [
-  "Локальная помощь в Nice и в зоне до 30 км.",
+  "Работа с предпринимателями в ЕС: сайты, AI-автоматизация и техническая поддержка по согласованию.",
   "Фокус на практичном результате: рабочие места, Wi‑Fi, принтеры, локальная сеть.",
   "Понятная коммуникация без перегруженного технического языка.",
   "Бизнес-задачи (TPE) показываются и обрабатываются как приоритет.",
@@ -35,12 +35,12 @@ export default function AboutPage() {
         <section className="rounded-2xl border border-[#D8D0C4] bg-[#FFFDFC] p-8 shadow-sm sm:p-10">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#1F6F78]">О проекте AzurSysTech</p>
           <h1 className="mt-4 max-w-4xl font-serif text-3xl text-[#1F2A37] sm:text-4xl">
-            Локальная IT-помощь с понятным подходом для бизнеса и дома
+            Сайты, AI-автоматизация и техническая помощь с понятным подходом
           </h1>
           <p className="mt-4 max-w-4xl text-base leading-7 text-[#1F2A37]/90">
-            AzurSysTech — это практичный сервис для частных клиентов и малого бизнеса в Nice и рядом.
-            На старте приоритет отдается бизнес-задачам TPE, при этом сохраняется отдельная понятная
-            помощь для домашних пользователей.
+            AzurSysTech — это практичный сервис для малого бизнеса и предпринимателей в Европе.
+            На старте приоритет отдается сайтам, AI-автоматизации и входящим заявкам, при этом
+            техническая помощь остается доступной по согласованию.
           </p>
           <p className="mt-4 max-w-4xl text-[#1F2A37]/90">
             Проект ведёт основатель <strong>OLEINIK DMITRII</strong>: прямой контакт, прозрачная
@@ -54,7 +54,7 @@ export default function AboutPage() {
               Оставить заявку
             </Link>
             <Link
-              href="/services"
+              href="/ru#services"
               className="rounded-lg border border-[#D8D0C4] bg-[#FFFDFC] px-5 py-3 text-sm font-semibold text-[#1F2A37] hover:bg-[#F6F1E8]"
             >
               Посмотреть услуги

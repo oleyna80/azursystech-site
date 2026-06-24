@@ -130,6 +130,7 @@ export default async function ThankYouPage() {
   const cookieStore = await cookies();
   const locale = resolveThankYouLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
   const copy = THANK_YOU_COPY[locale];
+  const servicesHref = `/${locale}#services`;
 
   return (
     <main className="min-h-screen bg-[#F6F1E8] px-4 py-8 text-[#1F2A37] sm:px-6 lg:px-8">
@@ -193,7 +194,7 @@ export default async function ThankYouPage() {
           <p className="mt-4 max-w-3xl text-base leading-7 text-[#1F2A37]/90">{copy.routesText}</p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
-              href="/services"
+              href={servicesHref}
               className="rounded-lg bg-[#1F6F78] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#185A61]"
             >
               {copy.servicesCta}
