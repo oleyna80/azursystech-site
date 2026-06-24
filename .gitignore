@@ -77,3 +77,13 @@ out/
 # OS
 .DS_Store
 Thumbs.db
+
+# Business / strategy / marketing material — local only, not code
+00_strategy/
+01_brand/
+02_website/
+03_leads/
+04_facebook/
+05_ai/
+06_seo/
+07_ops/

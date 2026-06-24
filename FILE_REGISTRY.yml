@@ -1,0 +1,572 @@
+# Machine-readable navigation registry for important files and path patterns.
+# It is intentionally selective: register authority-bearing files and major
+# project zones, not every file.
+
+version: 1
+scope: azursystech_project
+project:
+  name: "AzurSysTech"
+  slug: "azursystech"
+  root: "."
+
+statuses:
+  normative: "source of truth or policy-bearing file"
+  runtime: "runtime-specific agent, CI, deploy, or tool configuration"
+  reference: "background knowledge; does not override policy"
+  example: "illustrative scenario; not mandatory policy"
+  log: "evidence/history; not current authority"
+  derived: "generated or discovered from other sources"
+  local_state: "machine-local or runtime state; do not publish by default"
+  source: "project source code or tests"
+
+authority_order:
+  - explicit_owner_instruction
+  - AGENTS.md
+  - approved_work_block_plan
+  - PROJECT_MAP.md
+  - FILE_REGISTRY.yml
+  - runtime_policy_files
+  - reference_docs_examples_logs_generated_artifacts
+
+entries:
+  AGENTS.md:
+    role: root_agent_policy
+    status: normative
+    owner: owner
+    update_when:
+      - role permissions change
+      - approval gates change
+      - project source boundaries change
+      - hard stop rules change
+    related:
+      - PROJECT_MAP.md
+      - FILE_REGISTRY.yml
+      - docs/session-bootstrap.md
+      - .agent/workflows/sdd-protocol.md
+
+  PROJECT_MAP.md:
+    role: human_readable_project_map
+    status: normative
+    owner: architect
+    update_when:
+      - major directories change
+      - authority model changes
+      - runtime layers change
+      - generated or local-only boundaries change
+    related:
+      - FILE_REGISTRY.yml
+      - docs/session-bootstrap.md
+
+  FILE_REGISTRY.yml:
+    role: machine_readable_navigation_registry
+    status: normative
+    owner: architect
+    update_when:
+      - key files or path patterns are added moved or removed
+      - file authority status changes
+      - update triggers change
+    related:
+      - PROJECT_MAP.md
+      - docs/session-bootstrap.md
+
+  README.md:
+    role: repository_entrypoint
+    status: normative
+    owner: maintainer
+    update_when:
+      - quickstart changes
+      - top-level application structure changes
+      - deployment summary changes
+    related:
+      - PROJECT_MAP.md
+      - PRODUCT.md
+      - web/README.md
+
+  PRODUCT.md:
+    role: product_positioning_contract
+    status: normative
+    owner: product
+    update_when:
+      - product positioning changes
+      - target users change
+      - brand or design principles change
+    related:
+      - 00_strategy/**
+      - 01_brand/**
+      - 02_website/**
+
+  docs/session-bootstrap.md:
+    role: new_session_intake_flow
+    status: normative
+    owner: architect
+    update_when:
+      - new-session read order changes
+      - git or diff preflight changes
+      - memory usage policy changes
+    related:
+      - PROJECT_MAP.md
+      - FILE_REGISTRY.yml
+      - AGENTS.md
+
+  docs/profiles.md:
+    role: operating_profile_selector
+    status: normative
+    owner: architect
+    update_when:
+      - operating profiles change
+      - runtime layers change
+      - optional model routing overlay changes
+    related:
+      - PROJECT_MAP.md
+      - docs/reference/codex-model-routing.md
+
+  docs/reference/codex-model-routing.md:
+    role: codex_model_routing_policy
+    status: reference
+    owner: architect
+    update_when:
+      - Codex provider or profile guidance changes
+      - Codex critic or worker model-routing rules change
+      - optional local or cheaper model usage policy changes
+    related:
+      - docs/profiles.md
+      - .codex/critic.md
+      - .codex/config.toml.template
+
+  docs/templates/work-block-template.md:
+    role: work_block_template
+    status: normative
+    owner: orchestrator
+    update_when:
+      - Work Block planning requirements change
+      - expected final result or closeout requirements change
+      - verification evidence requirements change
+    related:
+      - AGENTS.md
+      - docs/session-bootstrap.md
+      - memory_bank/orchestrator-log.md
+
+  docs/templates/project-agent-update-template.md:
+    role: framework_update_intake_template
+    status: normative
+    owner: orchestrator
+    update_when:
+      - framework update intake process changes
+      - project feedback response contract changes
+      - synchronization boundaries change
+    related:
+      - docs/session-bootstrap.md
+      - PROJECT_MAP.md
+      - FILE_REGISTRY.yml
+
+  .agent/**:
+    role: runtime_neutral_agent_routing
+    status: normative
+    owner: architect
+    update_when:
+      - roster changes
+      - workflow routing changes
+      - skill list changes
+      - gate policy changes
+    related:
+      - AGENTS.md
+      - .agent/workflows/sdd-protocol.md
+
+  .codex/*.md:
+    role: portable_codex_policy
+    status: runtime
+    owner: orchestrator
+    update_when:
+      - Codex write gate changes
+      - Codex critic contract changes
+    related:
+      - AGENTS.md
+      - docs/reference/codex-model-routing.md
+      - memory_bank/orchestrator-log.md
+      - memory_bank/review-log.md
+
+  .codex/config.toml.template:
+    role: portable_codex_config_example
+    status: example
+    owner: orchestrator
+    update_when:
+      - safe project defaults change
+      - provider configuration guidance changes
+    related:
+      - docs/profiles.md
+      - docs/reference/codex-model-routing.md
+
+  .codex/agents/*.toml:
+    role: portable_codex_agent_profiles
+    status: runtime
+    owner: orchestrator
+    update_when:
+      - Codex agent roles or permissions change
+    related:
+      - AGENTS.md
+      - .agent/ROSTER.md
+
+  .codex/hooks/*.py:
+    role: portable_codex_hooks
+    status: runtime
+    owner: orchestrator
+    update_when:
+      - write-gate enforcement changes
+    related:
+      - .codex/write-gate.md
+      - AGENTS.md
+
+  .codex/config.toml:
+    role: private_codex_provider_config
+    status: local_state
+    owner: owner
+    update_when:
+      - never publish; maintain per user or workstation
+    related:
+      - .gitignore
+      - docs/profiles.md
+
+  ~/.config/claude-code/env:
+    role: private_claude_code_provider_env
+    status: local_state
+    owner: owner
+    update_when:
+      - never publish; maintain per user or workstation
+      - active Claude Code provider or model routing changes locally
+    related:
+      - docs/profiles.md
+      - PROJECT_MAP.md
+
+  .codex/backups/**:
+    role: local_codex_recovery_state
+    status: local_state
+    owner: owner
+    update_when:
+      - never publish; retain or remove through an approved cleanup task
+    related:
+      - .gitignore
+
+  .claude/**:
+    role: claude_code_team_runtime
+    status: runtime
+    owner: architect
+    update_when:
+      - Claude Code agents change
+      - hooks change
+      - tracked settings or MCP boundaries change
+      - per-agent memory policy changes
+    related:
+      - CLAUDE.md
+      - memory_bank/external-team-log.md
+
+  memory_bank/context.md:
+    role: durable_project_context
+    status: normative
+    owner: orchestrator
+    update_when:
+      - project focus changes
+      - durable context is learned and verified
+    related:
+      - memory_bank/progress.md
+      - memory_bank/decisions.md
+
+  memory_bank/progress.md:
+    role: rolling_project_status_log
+    status: log
+    owner: orchestrator
+    update_when:
+      - meaningful verified closeout occurs
+      - current status or next gate changes
+    related:
+      - memory_bank/context.md
+      - memory_bank/archive/**
+
+  memory_bank/decisions.md:
+    role: durable_decision_log
+    status: normative
+    owner: architect
+    update_when:
+      - architecture, runtime, product, or SDLC decision is made
+    related:
+      - docs/specs/**
+      - docs/plans/**
+
+  memory_bank/orchestrator-log.md:
+    role: orchestrator_decision_log
+    status: log
+    owner: orchestrator
+    update_when:
+      - significant orchestration decision is made
+      - Work Block needs audit trail
+    related:
+      - .codex/critic.md
+      - docs/plans/**
+
+  memory_bank/review-log.md:
+    role: critic_reviewer_verifier_log
+    status: log
+    owner: reviewer
+    update_when:
+      - critic review runs
+      - verifier review runs
+      - review findings are resolved
+    related:
+      - .codex/critic.md
+      - docs/reports/**
+
+  memory_bank/external-team-log.md:
+    role: external_team_delivery_log
+    status: log
+    owner: orchestrator
+    update_when:
+      - Claude Code or another external team is delegated work
+      - handoff result is reviewed
+    related:
+      - .claude/**
+      - docs/plans/**
+
+  docs/plans/**:
+    role: work_block_plans
+    status: log
+    owner: orchestrator
+    update_when:
+      - Work Block is planned or closed
+    related:
+      - docs/templates/work-block-template.md
+
+  docs/specs/**:
+    role: specifications
+    status: normative
+    owner: architect
+    update_when:
+      - product or technical contract changes
+    related:
+      - docs/tasklist/**
+      - docs/plans/**
+
+  docs/tasklist/**:
+    role: live_task_status
+    status: normative
+    owner: orchestrator
+    update_when:
+      - active ticket status changes
+      - acceptance criteria or gate state changes
+    related:
+      - docs/specs/**
+      - memory_bank/context.md
+
+  docs/reports/**:
+    role: reports_and_verification_evidence
+    status: log
+    owner: verifier
+    update_when:
+      - verification or review report is created
+    related:
+      - docs/plans/**
+      - memory_bank/review-log.md
+
+  docs/deployment/**:
+    role: deployment_runbooks
+    status: normative
+    owner: ops
+    update_when:
+      - deploy, backup, restore, or credential runbook changes
+    related:
+      - scripts/**
+      - docker-compose.vps.yml
+
+  00_strategy/**:
+    role: strategy_and_positioning
+    status: normative
+    owner: product
+    update_when:
+      - product direction, offer stack, roadmap, or positioning changes
+    related:
+      - PRODUCT.md
+      - 01_brand/**
+
+  01_brand/**:
+    role: brand_and_copy_reference
+    status: reference
+    owner: product
+    update_when:
+      - brand voice or marketing copy changes
+    related:
+      - PRODUCT.md
+      - 02_website/**
+
+  02_website/**:
+    role: website_content_and_specs
+    status: reference
+    owner: product
+    update_when:
+      - website copy, legal content, wireframes, or template docs change
+    related:
+      - web/**
+      - PRODUCT.md
+
+  03_leads/**:
+    role: lead_intake_specs_and_playbooks
+    status: normative
+    owner: product
+    update_when:
+      - lead intake taxonomy, brief schema, CRM pipeline, or response templates change
+    related:
+      - web/src/lib/intake/**
+      - web/src/app/api/**
+
+  04_facebook/**:
+    role: facebook_social_automation_playbooks
+    status: reference
+    owner: product
+    update_when:
+      - social automation strategy or reply playbooks change
+    related:
+      - admin/**
+      - docs/specs/AZR-004-facebook-social-automation.md
+
+  05_ai/**:
+    role: ai_agent_specs_prompts_and_examples
+    status: normative
+    owner: architect
+    update_when:
+      - AI agent contract, prompts, escalation rules, or registry change
+    related:
+      - docs/specs/AZR-INTAKE-agent-contract-v1.md
+      - web/src/lib/web-chat/**
+
+  06_seo/**:
+    role: seo_and_local_search_reference
+    status: reference
+    owner: product
+    update_when:
+      - SEO plan, GBP, reviews, or service-page plan changes
+    related:
+      - web/src/app/sitemap.ts
+      - web/src/app/robots.ts
+
+  07_ops/**:
+    role: operations_planning_reference
+    status: reference
+    owner: ops
+    update_when:
+      - task board, KPI framework, or launch checklist changes
+    related:
+      - docs/deployment/**
+
+  web/**:
+    role: public_website_source
+    status: source
+    owner: coder
+    update_when:
+      - approved Work Block includes website source changes
+    related:
+      - web/package.json
+      - web/sql/**
+      - 02_website/**
+
+  admin/**:
+    role: internal_admin_source
+    status: source
+    owner: coder
+    update_when:
+      - approved Work Block includes admin source changes
+    related:
+      - admin/package.json
+      - admin/sql/**
+      - docs/specs/AZR-004-facebook-social-automation.md
+
+  showcase/**:
+    role: demo_showcase_source
+    status: source
+    owner: coder
+    update_when:
+      - approved Work Block includes showcase changes
+    related:
+      - DEMO_TEMPLATES_STRATEGY.md
+      - 08_showcase/**
+
+  scripts/**:
+    role: automation_deploy_backup_verification_scripts
+    status: runtime
+    owner: ops
+    update_when:
+      - local verification, deploy, backup, restore, or VPS workflows change
+    related:
+      - docs/deployment/**
+      - AGENTS.md
+
+  sql_migrations:
+    role: database_migrations
+    status: source
+    owner: architect
+    patterns:
+      - web/sql/**
+      - admin/sql/**
+    update_when:
+      - approved Work Block includes schema changes
+    related:
+      - docs/specs/**
+      - scripts/vps-db-tunnel.sh
+
+  deployment_runtime:
+    role: production_runtime_config_templates
+    status: runtime
+    owner: ops
+    patterns:
+      - Dockerfile
+      - Dockerfile.admin
+      - Dockerfile.proxy
+      - docker-compose.yml
+      - docker-compose.vps.yml
+      - nginx.proxy.conf
+      - deploy.sh
+      - deploy-admin.sh
+      - .github/workflows/**
+    update_when:
+      - build, deploy, CI, or runtime wiring changes
+    related:
+      - docs/deployment/**
+      - scripts/**
+
+  generated_outputs:
+    role: build_cache_generated_artifacts
+    status: derived
+    owner: tooling
+    patterns:
+      - node_modules/**
+      - .next/**
+      - web/.next/**
+      - admin/.next/**
+      - showcase/.next/**
+      - dist/**
+      - build/**
+      - coverage/**
+      - output/**
+      - web/test-results/**
+    update_when:
+      - generated by tools only
+    related:
+      - .gitignore
+      - .agentsignore
+      - .codexignore
+
+  local_secrets:
+    role: local_credentials_and_environment
+    status: local_state
+    owner: owner
+    patterns:
+      - .env
+      - .env.*
+      - "*.pem"
+      - "*.key"
+      - "*.crt"
+      - "*.p12"
+      - secrets/**
+      - credentials/**
+    update_when:
+      - never commit; rotate through approved secret process
+    related:
+      - .gitignore
+      - .agentsignore
+      - .codexignore
