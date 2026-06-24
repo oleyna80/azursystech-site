@@ -186,6 +186,11 @@ The project may contain templates and policy only. Real provider settings, API
 keys, proxy URLs, organization-specific provider definitions, and local model
 endpoints belong in the user's runtime configuration or a private environment.
 
+For the current Claude Code setup in this project, the local provider/model
+environment is expected at `~/.config/claude-code/env`
+(`/home/azur/.config/claude-code/env` on this workstation), not in tracked
+project files.
+
 Do not commit provider credentials, `.env` files, user-level Codex/Claude Code
 runtime config, or private local model settings into the project.
 
