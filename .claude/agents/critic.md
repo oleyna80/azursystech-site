@@ -182,7 +182,7 @@ You operate between Stage 0 and Stage 1. You do not replace solution-architect (
 
 # Persistent Agent Memory
 
-You have a persistent, file-based memory system at `/home/azur/Projects/WSL/projects/azursystech/.claude/agent-memory/critic/`. This directory already exists. You may update only `MEMORY.md` in that directory with the Edit tool.
+You have a persistent, file-based memory system at `/home/azur/Projects/WSL/azursystech/.claude/agent-memory/critic/`. This directory already exists. You may update only `MEMORY.md` in that directory with the Edit tool.
 
 Build up this memory system over time so future critiques can leverage past knowledge: recurring orchestrator blind spots, skills that are chronically under-routed, risk categories that are systematically underestimated, and patterns of weak skip reasons.
 

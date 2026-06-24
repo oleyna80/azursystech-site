@@ -75,7 +75,7 @@ if echo "$clean_cmd" | grep -qP 'git\s+push\s+(-[^\s]*\s+)*origin\s+main\b'; the
 fi
 
 # ── destructive git ops ──────────────────────────────────────────────
-if echo "$clean_cmd" | grep -qP '(git\s+reset\s+--hard|git\s+(push|clean)\s+.*(-[^\s]*f|--force)\b|git\s+push\s+.*:\s*\w+\s*$|git\s+checkout\s+--\s+\.)'; then
+if echo "$clean_cmd" | grep -qP '(git\s+reset\s+--hard|git\s+(push|clean)\s+.*(-[^\s]*f|--force)\b|git\s+push\s+.*\+\s*\w+|git\s+push\s+.*:\s*\w+\s*$|git\s+checkout\s+--\s+\.)'; then
   jq -n '{
     continue: false,
     systemMessage: "\n🛑 HARD STOP: destructive git operation\nAGENTS.md § Hard Stops requires Owner approval.",
@@ -83,6 +83,20 @@ if echo "$clean_cmd" | grep -qP '(git\s+reset\s+--hard|git\s+(push|clean)\s+.*(-
       hookEventName: "PreToolUse",
       permissionDecision: "deny",
       permissionDecisionReason: "Hard Stop: destructive git ops require Owner approval (AGENTS.md)"
+    }
+  }'
+  exit 0
+fi
+
+# ── remote SSH access ────────────────────────────────────────────────
+if echo "$clean_cmd" | grep -qP '(^|[&;|]\s*)ssh\s+'; then
+  jq -n '{
+    continue: false,
+    systemMessage: "\n🛑 HARD STOP: remote SSH access\nAGENTS.md § Hard Stops requires Owner approval.",
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecision: "deny",
+      permissionDecisionReason: "Hard Stop: remote SSH access requires Owner approval (AGENTS.md)"
     }
   }'
   exit 0
@@ -103,7 +117,7 @@ if echo "$clean_cmd" | grep -qP '(^|[&;|]\s*)(rm\s+|rmdir\s+|find\s+[^&;|]*\s-de
 fi
 
 # ── production deploy ─────────────────────────────────────────────────
-if echo "$clean_cmd" | grep -qP '(docker\s+(push|image\s+push)|(bash\s+|\./|scripts/)build-push-image\.sh|scp\s+.*\bdeploy\b|ghcr\.io.*push)'; then
+if echo "$clean_cmd" | grep -qP '(docker\s+(push|image\s+push|compose\s+push)|(bash\s+|\./|scripts/)build-push-image\.sh|scp\s+.*\bdeploy\b|ghcr\.io.*push)'; then
   jq -n '{
     continue: false,
     systemMessage: "\n🛑 HARD STOP: production deploy\nAGENTS.md § Hard Stops requires Owner approval.",
