@@ -15,6 +15,7 @@ env/
 # Env files
 .env
 .env.*
+!.env.vps.example
 
 # Logs
 *.log
@@ -28,12 +29,30 @@ data/*.csv
 scripts/ai_agents.py
 docs/reports/git/stash-backups/*.patch
 .cache/
-.codex
+# Claude/Codex agent private config -- local machine state, never commit.
+.claude/settings.json
+
+# Codex project policy is portable; private runtime config stays ignored.
+.codex/*
+!.codex/
+!.codex/agents/
+!.codex/agents/*.toml
+!.codex/hooks/
+!.codex/hooks/*.py
+!.codex/instructions.md
+!.codex/critic.md
+!.codex/write-gate.md
+!.codex/config.toml.template
+.codex/config.toml
+.codex/*.local.*
+.codex/**/*.local.*
 .mcp.json
 .npm-cache/
 .playwright-browsers/
 .playwright-cli/
 .qwen/
+.roo/
+.roomodes
 output/
 web/.npm-cache/
 web/test-results/

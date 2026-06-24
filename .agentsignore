@@ -25,18 +25,25 @@ data/*.csv
 
 .env
 .env.*
+!.env.vps.example
 *.pem
 *.key
 *.crt
 *.p12
 
 .cache/
-.codex/
+# Codex project policy is portable; private runtime config stays ignored.
+.codex/config.toml
+.codex/*.local.*
+.codex/**/*.local.*
+.claude/settings.json
+.mcp.json
 .npm-cache/
 .playwright-browsers/
 .playwright-cli/
 .qwen/
 .roo/
+.roomodes
 output/
 web/.npm-cache/
 web/test-results/

@@ -4,12 +4,15 @@ logs/
 data/*.csv
 .git/
 .cache/
-.codex/
+.codex/config.toml
+.codex/*.local.*
+.codex/**/*.local.*
 .npm-cache/
 .playwright-browsers/
 .playwright-cli/
 .qwen/
 .roo/
+.roomodes
 output/
 node_modules/
 web/node_modules/
@@ -23,6 +26,9 @@ out/
 *.tsbuildinfo
 .env
 .env.*
+!.env.vps.example
+.claude/settings.json
+.mcp.json
 *.pem
 *.key
 *.crt

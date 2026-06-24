@@ -1,0 +1,10 @@
+* text=auto
+
+# Keep executable/tooling sources stable across Linux, WSL, and Windows clones.
+*.sh text eol=lf
+*.py text eol=lf
+*.toml text eol=lf
+
+# Native Windows command files use CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
