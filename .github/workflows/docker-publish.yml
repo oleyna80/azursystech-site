@@ -97,6 +97,20 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}-app:${{ steps.meta.outputs.immutable_tag }}
 
+      - name: Build and push proxy image
+        id: build_proxy
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.proxy
+          push: true
+          provenance: true
+          sbom: true
+          cache-from: type=gha,scope=proxy
+          cache-to: type=gha,mode=max,scope=proxy
+          tags: |
+            ghcr.io/${{ github.repository }}-proxy:${{ steps.meta.outputs.immutable_tag }}
+
       - name: Build and push admin image
         id: build_admin
         if: ${{ inputs.publish_admin }}
@@ -120,6 +134,7 @@ jobs:
           REF_NAME: ${{ steps.meta.outputs.ref }}
           REPOSITORY_NAME: ${{ github.repository }}
           SHA: ${{ steps.meta.outputs.sha }}
+          PROXY_DIGEST: ${{ steps.build_proxy.outputs.digest }}
           WEB_DIGEST: ${{ steps.build_web.outputs.digest }}
         run: |
           {
@@ -130,6 +145,8 @@ jobs:
             echo "- Immutable tag: \`${IMMUTABLE_TAG}\`"
             echo "- Web image: \`ghcr.io/${REPOSITORY_NAME}-app:${IMMUTABLE_TAG}\`"
             echo "- Web digest: \`${WEB_DIGEST}\`"
+            echo "- Proxy image: \`ghcr.io/${REPOSITORY_NAME}-proxy:${IMMUTABLE_TAG}\`"
+            echo "- Proxy digest: \`${PROXY_DIGEST}\`"
             if [ "${ADMIN_PUBLISHED}" = "true" ]; then
               echo "- Admin image: \`ghcr.io/${REPOSITORY_NAME}-admin:${IMMUTABLE_TAG}\`"
               echo "- Admin digest: \`${ADMIN_DIGEST}\`"
