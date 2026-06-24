@@ -2,7 +2,7 @@
 
 Status: READY
 Expires: 2026-06-25
-Work Block: WB-2026-06-24-e2-e3-portability-ignore-policy
+Work Block: WB-2026-06-24-a2-agent-runtime-control-readiness
 Side-effect class: local-docs/workflow plus local-test for non-mutating deploy preflight
 DB action mode: none
 

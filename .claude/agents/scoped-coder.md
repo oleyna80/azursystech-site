@@ -3,7 +3,7 @@ name: "scoped-coder"
 description: "Use this agent for implementation — when files need to be created or modified within an approved write-set. Implements features, builds UI, creates API routes, writes validation, authors migrations, adds error handling, refactors code. Reports DONE/DONE_WITH_CONCERNS/NEEDS_CONTEXT/BLOCKED. One Scoped Coder per write-set."
 tools: Read, Write, Edit, Bash(git diff:*), Bash(git log:*), Bash(grep *), Bash(find *), Bash(npm run *), Bash(npx *), Bash(curl *), Bash(fuser *), Bash(node *), Bash(ls *), Bash(wc *), Bash(cat *), Bash(head *), Bash(tail *), Bash(sort *), Bash(uniq *), Bash(rg *), Bash(jq *)
 skills: scoped-coder, scoped-commit-guard, shell-context-guard
-model: inherit
+model: claude-sonnet-4-6
 color: blue
 memory: project
 ---

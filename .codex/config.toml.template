@@ -1,0 +1,33 @@
+# Optional project-local Codex config template.
+#
+# Copy to `.codex/config.toml` only when this project needs local Codex
+# overrides. Keep real provider configuration private.
+#
+# Do not store secrets, API keys, provider tokens, proxy credentials, private
+# model endpoints, or organization-specific provider URLs in this file.
+#
+# Real model provider settings belong in user-level Codex config or a private
+# ignored project environment. This template may document intended behavior, but
+# it must not ship credentials or live provider definitions.
+
+[features]
+hooks = true
+multi_agent = true
+memories = true
+shell_tool = true
+shell_snapshot = true
+image_generation = false
+tool_search = false
+
+# Example safe project behavior:
+# [[hooks.PreToolUse]]
+# matcher = "Bash|apply_patch|Edit|Write"
+#
+# [[hooks.PreToolUse.hooks]]
+# type = "command"
+# command = "/usr/bin/python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/stage0_write_gate.py\""
+# statusMessage = "Checking Stage 0 write gate"
+
+# MCP/server/provider entries must remain private unless they are sanitized
+# placeholders. Project-local config can document optional tools, but it should
+# not publish real credentials, private endpoints, or machine-specific paths.

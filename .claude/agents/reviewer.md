@@ -3,7 +3,7 @@ name: "reviewer"
 description: "Use this agent for read-only multi-dimension review: code correctness, architecture boundaries, docs↔code drift, security triage, copy consistency. Triggers on 'review X', 'check X for Y', 'audit Z', 'is there drift between A and B'. Read-only — findings go to Control Tower, not BLOCKED verdicts."
 tools: Read, Bash(git diff:*), Bash(git log:*), Bash(grep *), Bash(find *), Bash(rg *), Bash(jq *), Bash(ls *), Bash(wc *), Bash(cat *), Bash(head *), Bash(tail *), Bash(sort *), Bash(uniq *)
 skills: reviewer, security-audit-triage
-model: inherit
+model: claude-sonnet-4-6
 color: yellow
 memory: project
 ---

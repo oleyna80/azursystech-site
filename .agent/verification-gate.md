@@ -1,11 +1,11 @@
 Status: SKIPPED
-Work Block: wb-claude-config-sync
+Work Block: WB-2026-06-24-a2-agent-runtime-control-readiness
 Verification Tier: lite
 New Domain: false
 Claude Verifier Verdict: READY
 Verification Report: —
 GPT Verifier Status: NOT_REQUIRED
-GPT Verifier Reason: Config sync only — no code, no routes, no schema, no security
+GPT Verifier Reason: Phase A read-only + Phase B gate refresh. Read-only, no code, no routes, no schema, no security.
 GPT Verifier Report: —
 GPT Verifier Degraded Reason: —
 Quick-Fix: true
@@ -45,4 +45,4 @@ an explicit reason.
 Only valid for `Quick-Fix: true`.
 Format: `verification: SKIPPED — Quick-Fix — [reason]`
 
-verification: SKIPPED — Quick-Fix — Config sync from choushop: hooks, agents, skills, settings. No code changes, no routes, no schema, no security impact. All bash syntax valid, JSON valid, paths adapted.
+verification: PENDING — Awaiting Phase B gate refresh.

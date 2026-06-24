@@ -1,13 +1,13 @@
-Status: SKIPPED
-Work Block: wb-claude-config-sync
+Status: READY
+Work Block: WB-2026-06-24-a2-agent-runtime-control-readiness
 Verification Tier: lite
 New Domain: false
-Subagent Topology Status: SINGLE_AGENT
+Subagent Topology Status: PLANNED
 Critic Verdict: APPROVE
-Critic Report: —
+Critic Report: docs/reports/wb-a2-critic.md
 GPT Critic Status: NOT_REQUIRED
-GPT Critic Reason: Config sync — no code, no routes, no schema, no DB, no security impact
-GPT Critic Report: —
+GPT Critic Reason: Phase A read-only, new domain=false, verification tier=lite
+GPT Critic Report: docs/reports/wb-a2-critic.md
 GPT Critic Degraded Reason: —
 
 # Critic Gate
@@ -55,14 +55,18 @@ No-Skip: false
 
 ## Triggers Active
 
-Config sync from choushop: hooks, agents, skills, settings, .agent docs. No production code, no routes, no schema, no DB, no security, no API changes.
+Phase A read-only inventory complete. Phase B: gate refresh only — 3 files.
 
 Approved Write-Set:
 
 - .claude/**
 - .agent/**
 - memory_bank/**
+- .codex/write-gate.md
+- .mcp.json
+- /home/azur/.claude/projects/-home-azur-Projects-WSL-azursystech/memory/**
+- .gitignore
 
 ## Skip Record (if SKIPPED)
 
-critic: SKIPPED — Config sync from choushop: hooks, agents, skills, settings. Component-level config change, no DB/auth/payment/new-domain triggers.
+critic: APPROVE — Phase A complete. solution-architect + critic dispatched, gpt-critic NOT_REQUIRED.
