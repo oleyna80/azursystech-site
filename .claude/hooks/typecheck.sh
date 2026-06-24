@@ -25,6 +25,16 @@ done
 
 [ -z "${proj:-}" ] && exit 0
 
+# Skip only if file is clean and tracked — run tsc for any change (staged, unstaged, untracked).
+# PostToolUse fires before git add, so unstaged modifications are the common case.
+if git rev-parse --show-toplevel >/dev/null 2>&1; then
+  status=$(git status --porcelain "$f" 2>/dev/null || echo "")
+  if [ -z "$status" ]; then
+    exit 0  # clean tracked file — skip
+  fi
+fi
+# Fallback: if not a git repo, run tsc unconditionally
+
 # Run tsc
 out=$(cd "$proj" && npx tsc --noEmit 2>&1) && rc=$? || rc=$?
 if [ "$rc" -ne 0 ]; then

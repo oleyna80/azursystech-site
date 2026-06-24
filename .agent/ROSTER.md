@@ -65,8 +65,15 @@ Skill routing: same as Codex — stage flow + skill triggers.
 |---|---|---|---|---|
 | `solution-architect` | Plan (pre-implementation) | Read-only research, risk flagging | `.claude/agent-memory/solution-architect/` | Codebase analysis, architectural decisions, risk matrix, optimal solution proposal |
 | `verifier` | Verify (post-implementation) | Read-only source/config/DB/infra, can issue BLOCKED verdict | `.claude/agent-memory/verifier/` | Acceptance criteria verification, contract/schema/security checks, tier-based gate (lite/standard/full) |
+| `critic` | Gate (Stage 0→1) | Read-only review of Control Tower decisions | `.claude/agent-memory/critic/` | Independent critique of scope, skill routing, subagent topology, skip reasons, risk assessment |
+| `gpt-critic` | Gate (Stage 0→1, external) | Read-only adversarial review via Codex MCP | `.claude/agent-memory/gpt-critic/` | GPT second opinion on Control Tower decisions; complements Claude critic |
+| `reviewer` | Review (any stage) | Read-only multi-dimension review | `.claude/agent-memory/reviewer/` | Code correctness, architecture boundaries, docs↔code drift, security triage, copy consistency |
+| `scoped-coder` | Implement (Stage 1) | Write within approved write-set only | `.claude/agent-memory/scoped-coder/` | Implementation of features, UI, API routes, validation, migrations, error handling |
+| `gpt-verifier` | Verify (Stage 2, external) | Read-only adversarial verification via Codex MCP | `.claude/agent-memory/gpt-verifier/` | GPT second opinion on implementation; complements Claude verifier |
+| `codex-reviewer` | Verify (Stage 2, optional deep) | Read-only extra-deep Codex MCP review | `.claude/agent-memory/codex-reviewer/` | Optional deep adversarial review beyond default GPT verifier |
 
 **Proven pattern:** `solution-architect → verifier(skill) → Plan mode → Implement → verifier(agent)`.
+**Extended pattern:** `solution-architect → critic + gpt-critic → Plan mode → scoped-coder → verifier + gpt-verifier`.
 
 **When to add a new agent:** recurring role with cumulative knowledge (failure patterns, contract-sensitive zones, anti-patterns). One-off tasks → use skills instead.
 
@@ -128,6 +135,13 @@ This table lists routing-critical skills, not every utility skill in `.agent/ski
 | `output-skill` | Scoped Coder (force complete unabridged output) |
 | `imagegen-frontend-web` | Scoped Coder (section-level design reference images) |
 | `image-to-code-skill` | Scoped Coder (reference image → production code) |
+
+| `codex-verification` | Verifier / GPT Critic / GPT Verifier |
+| `context-snapshot` | Control Tower |
+| `critic-review` | Critic |
+| `merge-protocol` | Control Tower |
+| `orchestrator-log` | Control Tower |
+| `handoff-live-smoke` | Control Tower |
 
 Utility / preflight skills are intentionally omitted from the routing-critical
 table unless they define ownership. Invoke these by trigger when needed:
