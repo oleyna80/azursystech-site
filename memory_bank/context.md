@@ -1,6 +1,7 @@
 # Context
 
-- **Current focus**: Ubuntu/WSL migration and Git sync setup. Agent/workflow docs are now synchronized through Git by default for multi-workstation development; keep secrets, raw private transcripts, logs, caches, and machine-specific state local-only.
+- **Current focus**: Showcase demo templates (feature/showcase-demo-templates). Claude Code full SDLC stack synced from choushop: 8 agents, 4 hooks, 64 skills, critic+verification gates active. GPT subagents (gpt-critic, gpt-verifier, codex-reviewer) available via Codex MCP.
+- **A1 runtime WB**: Claude Code Coder pilot is verified and closed. Codex and Claude Code are the only active project runtimes in the roster; the exact A1 patch is ready for a separate Owner-approved commit decision, with staging still empty.
 - **Git sync note**: `azursystech` has commit `5001816` for `.gitignore` + `AGENTS.md` + `CLAUDE.md` policy sync. Follow-up docs/skills edits are present locally and need a separate reviewed commit. `choushop` policy docs are updated locally, but the index has staged deletions that must be resolved before commit.
 - **Local SDLC/tooling note**: Codex hook pilot added locally: `.codex/write-gate.md` + PreToolUse guard require a fresh `Status: READY` marker before write-like Codex tool calls.
 - **Parallel stream AZR-010**: Telegram inbound live, outbound blocked at Gate C.3 (Hard Stop). No outbound send without separate Owner approval.

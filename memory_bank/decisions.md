@@ -99,3 +99,16 @@
 - **Контекст**: Страницы `/services/automation` и `/services/websites` были созданы в Фазе 1 как сырые заглушки — дублировали информацию с главной, без дизайна. IT-support страницы (new-pc-setup, onsite-support, tpe-setup, wifi-printer) также удалены — не соответствуют новому позиционированию. Принято решение не плодить отдельные страницы под каждый сервис, а использовать single-page дизайн с якорной навигацией.
 - **Принятые решения**: (1) Главная страница — основной destination для всех сервисов через якоря. (2) `/ai-automation` остаётся отдельной детальной страницей. (3) Showcase-секция получила `id="websites"`. (4) Footer и header используют одинаковый паттерн якорных ссылок с locale-префиксом.
 - **Последствия**: -1354 строк кода, 15 файлов изменено. Sitemap сокращён на 7 записей. Все ссылки верифицированы (0 битых). Следующий шаг: commit → push → deploy. Будущие страницы сервисов должны создаваться только при наличии уникального контента, которого нет на главной.
+
+## ADR-017: Claude Code config sync from choushop + GPT subagent availability
+
+- **Решение**: Синхронизировать зрелую конфигурацию Claude Code из проекта `choushop` в `azursystech` с адаптацией путей (`memory-bank` → `memory_bank`) и названий (`ChouShop` → `AzurSysTech`). Codex MCP настроен в глобальном `~/.mcp.json` (не в проектном), GPT-субагенты используют `mcp__codex__codex` tool через MCP, а не прямой CLI-вызов.
+- **Дата**: 2026-06-24
+- **Контекст**: В `azursystech` было только 2 Claude Code агента (solution-architect, verifier) и 2 хука. В `choushop` — полный SDLC-стек: 8 агентов, 4 хука (включая critic-gate и verification-gate), gate-шаблоны в `.agent/`. Codex CLI (`/home/azur/.local/bin/codex`) доступен глобально и запускается через `mcp-server --sandbox read-only --approval_policy never`. Прямые вызовы `codex` CLI заблокированы хуком `hard-stop.sh`.
+- **Принятые решения**:
+  1. Codex MCP — в `~/.mcp.json` (глобальный, не отслеживается в git). Проектный `.mcp.json` содержит только `playwright`. Это правильно: абсолютный путь `/home/azur/.local/bin/codex` машино-специфичен.
+  2. GPT-субагенты (gpt-critic, gpt-verifier, codex-reviewer) вызывают Codex исключительно через MCP tool `mcp__codex__codex` — без shell pipe, без прямого CLI.
+  3. critic-gate.sh (PreToolUse) и verification-gate.sh (Stop) активны. Шаблоны gate-файлов в `.agent/` созданы.
+  4. Agent memory созданы для всех 8 агентов в `.claude/agent-memory/`.
+- **Проверено**: Codex MCP живой вызов — ответил `OK`. Все хуки прошли bash-синтаксис. JSON settings валиден. Пути адаптированы.
+- **Последствия**: Полный agentic SDLC-стек доступен. Work Block теперь может проходить через `solution-architect → critic + gpt-critic → Plan → scoped-coder → verifier + gpt-verifier`. Quick-fix путь (≤3 файла) по-прежнему доступен через SKIPPED в gate-файлах.

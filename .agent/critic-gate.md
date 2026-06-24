@@ -61,6 +61,7 @@ Approved Write-Set:
 
 - .claude/**
 - .agent/**
+- memory_bank/**
 
 ## Skip Record (if SKIPPED)
 

@@ -79,3 +79,4 @@ the Owner instruction, `AGENTS.md`, active tasklist or Work Block plan,
   staging, commit, and push remain blocked pending a separate Owner decision.
 | 2026-06-24 | wb-claude-config-sync | critic: SKIPPED | Config sync from choushop: hooks, agents, skills, settings. No DB/auth/payment/new-domain triggers. |
 | 2026-06-24 | wb-claude-config-sync | verification: SKIPPED | Quick-Fix — Config sync, no code, no routes, no schema, no security. All bash syntax valid, JSON valid. |
+| 2026-06-24 | wb-claude-config-sync | ADR-017 recorded | Claude Code config sync + GPT subagent availability analysis committed to memory_bank/decisions.md |
