@@ -1,13 +1,13 @@
 Status: READY
-Work Block: WB-2026-06-24-a2-agent-runtime-control-readiness
-Verification Tier: lite
+Work Block: WB-2026-06-26-assurance-next-homepage-port
+Verification Tier: standard
 New Domain: false
 Subagent Topology Status: PLANNED
 Critic Verdict: APPROVE
-Critic Report: docs/reports/wb-a2-critic.md
+Critic Report: docs/reports/wb-2026-06-26-assurance-next-homepage-port-critic.md
 GPT Critic Status: NOT_REQUIRED
-GPT Critic Reason: Phase A read-only, new domain=false, verification tier=lite
-GPT Critic Report: docs/reports/wb-a2-critic.md
+GPT Critic Reason: Supplement resolved; remaining inventory issue handled in plan/task; standard frontend homepage slice, no security/payment/database/deploy/dependency scope
+GPT Critic Report: docs/reports/wb-2026-06-26-assurance-next-homepage-port-critic.md
 GPT Critic Degraded Reason: —
 
 # Critic Gate
@@ -55,18 +55,17 @@ No-Skip: false
 
 ## Triggers Active
 
-Phase A read-only inventory complete. Phase B: gate refresh only — 3 files.
+Homepage-only Next port for Assurance showcase. Standard frontend verification. No package/config/dependency/database/deploy/payment scope.
 
 Approved Write-Set:
 
-- .claude/**
-- .agent/**
-- memory_bank/**
-- .codex/write-gate.md
-- .mcp.json
-- /home/azur/.claude/projects/-home-azur-Projects-WSL-azursystech/memory/**
-- .gitignore
+- .agent/critic-gate.md
+- docs/plans/WB-2026-06-26-assurance-next-homepage-port.md
+- docs/plans/WB-2026-06-26-assurance-next-homepage-port-claude-coder-task.md
+- showcase/app/demo/assurance/**
+- showcase/components/assurance/**
+- showcase/public/demo/assurance-site/**
 
 ## Skip Record (if SKIPPED)
 
-critic: APPROVE — Phase A complete. solution-architect + critic dispatched, gpt-critic NOT_REQUIRED.
+critic: APPROVE after supplement handling — native Codex Critic dispatched twice; GPT critic NOT_REQUIRED for standard homepage slice after inventory supplement.
