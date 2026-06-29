@@ -37,6 +37,7 @@ For azursystech showcase pages:
 6. Convert source internal links to future target paths. Do not keep localhost or filesystem links.
 7. Keep above-the-fold critical text independent from scroll reveal state. Do not wrap hero copy, logo, or primary navigation in IntersectionObserver-based reveal components.
 8. Use reveal/scroll animation only for non-critical lower sections, and make it one-way visible after first intersection.
+9. For portfolio/demo forms, remove external actions, provider endpoints, backend calls, and submission scripts. Rebuild submit behavior as local `preventDefault` state with visible demo-only copy unless the Owner separately approves real backend/provider work.
 
 ## Fidelity Checks
 
@@ -53,6 +54,7 @@ Check at minimum:
 - console errors
 - route marker presence
 - neighboring showcase demo still works
+- demo forms stay on the same route after invalid and valid submit, with no provider URL, form action, `fetch`, `XMLHttpRequest`, `sendBeacon`, `.env`, secret, or token reference
 
 If text disappears after scrolling back up, inspect computed `opacity`, `transform`, wrapper classes, and header link colors. Remove reveal wrappers from critical first-viewport text before adding more CSS.
 

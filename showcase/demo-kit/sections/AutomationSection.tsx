@@ -9,7 +9,7 @@ export function AutomationSection({ content }: Props) {
   return (
     <section className="automation-section" id="automation">
       <div className="automation-copy">
-        <p className="eyebrow">AI-assisted qualification</p>
+        <p className="eyebrow">Qualification</p>
         <h2>{content.title}</h2>
         <p>{content.body}</p>
         <a className="button button--primary" href={content.cta.href}>
@@ -26,7 +26,7 @@ export function AutomationSection({ content }: Props) {
           ))}
         </div>
         <div className="summary-box">
-          <span>Summary мастеру</span>
+          <span>Résumé</span>
           {content.summary.map((item) => (
             <p key={item.label}>
               <strong>{item.label}:</strong> {item.value}

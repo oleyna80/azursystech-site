@@ -5,21 +5,21 @@ type Props = {
   content: UrgentRequestContent
 }
 
-export function UrgentRequestSection({ content }: Props) {
+export function UrgentRequestSection({ site, content }: Props) {
   return (
     <section className="urgent-section" id="request">
       <div className="urgent-copy">
-        <p className="eyebrow">Urgent intake</p>
+        <p className="eyebrow">Demande prioritaire</p>
         <h2>{content.title}</h2>
         <p>{content.body}</p>
         <a className="button button--primary" href={content.cta.href}>
           {content.cta.label}
         </a>
       </div>
-      <div className="request-panel" aria-label="Request form preview">
+      <div className="request-panel" aria-label={`Apercu de demande ${site.title}`}>
         <div className="request-panel__header">
-          <span>Срочная заявка</span>
-          <strong>standard / urgent</strong>
+          <span>Demande client</span>
+          <strong>standard / prioritaire</strong>
         </div>
         <div className="request-fields">
           {content.fields.map((field) => (

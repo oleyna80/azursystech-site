@@ -1,0 +1,144 @@
+.legalSection {
+  background:
+    linear-gradient(180deg, var(--color-cream) 0%, var(--color-white) 52%, var(--color-cream) 100%);
+  padding: 72px 0 88px;
+}
+
+.legalLayout {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 780px);
+  gap: 56px;
+  align-items: start;
+}
+
+.summary {
+  position: sticky;
+  top: 104px;
+  display: grid;
+  gap: 6px;
+  padding: 24px 0;
+  border-top: 1px solid rgba(13, 32, 64, 0.14);
+  border-bottom: 1px solid rgba(13, 32, 64, 0.14);
+}
+
+.summaryEyebrow {
+  margin: 0 0 8px;
+  color: var(--color-gold-dark);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.summary a {
+  color: var(--color-navy);
+  font-size: 0.95rem;
+  font-weight: 750;
+  line-height: 1.45;
+  text-decoration: none;
+  transition: color 180ms ease;
+}
+
+.summary a:hover {
+  color: var(--color-gold-dark);
+}
+
+.legalContent {
+  max-width: 780px;
+  padding: 52px 56px;
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: 0 24px 60px rgba(15, 26, 46, 0.08);
+}
+
+.legalBlock {
+  scroll-margin-top: 112px;
+}
+
+.legalBlock + .legalBlock {
+  margin-top: 38px;
+  padding-top: 34px;
+  border-top: 1px solid rgba(13, 32, 64, 0.1);
+}
+
+.legalBlock h2 {
+  margin: 0 0 16px;
+  color: var(--color-navy);
+  font-size: clamp(1.35rem, 2.1vw, 1.7rem);
+  line-height: 1.2;
+}
+
+.legalBlock p {
+  margin: 0;
+  color: rgba(26, 26, 46, 0.76);
+  font-size: 1rem;
+  line-height: 1.78;
+}
+
+.legalBlock p + p {
+  margin-top: 14px;
+}
+
+.legalBlock strong {
+  color: var(--color-navy);
+  font-weight: 800;
+}
+
+.legalBlock a {
+  color: var(--color-gold-dark);
+  font-weight: 750;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.legalBlock a:hover {
+  color: var(--color-navy);
+}
+
+.updatedAt {
+  margin: 44px 0 0;
+  padding-top: 22px;
+  border-top: 1px solid rgba(13, 32, 64, 0.12);
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+  .legalSection {
+    padding: 52px 0 72px;
+  }
+
+  .legalLayout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .summary {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    padding: 18px 0;
+  }
+
+  .summaryEyebrow {
+    flex: 0 0 100%;
+  }
+
+  .legalContent {
+    padding: 38px 30px;
+  }
+}
+
+@media (max-width: 560px) {
+  .legalContent {
+    padding: 30px 20px;
+    box-shadow: none;
+  }
+
+  .legalBlock + .legalBlock {
+    margin-top: 30px;
+    padding-top: 28px;
+  }
+}

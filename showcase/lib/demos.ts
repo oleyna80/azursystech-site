@@ -1,4 +1,5 @@
 import type { DemoContent, DemoSite } from '@/lib/types'
+import { content as assuranceContent, site as assuranceSite } from '@/demos/assurance/site'
 import { content as plomberieContent, site as plomberieSite } from '@/demos/plomberie/site'
 import { content as salonBeautyContent, site as salonBeautySite } from '@/demos/salon-beaute/site'
 
@@ -80,7 +81,7 @@ const demos: Record<string, { site: DemoSite; content: DemoContent }> = {
   'salon-beaute': { site: salonBeautySite, content: salonBeautyContent },
   bistrot: placeholder('bistrot', 'Le Bistrot', 'Сайт с меню и бронью'),
   'bijoux-artisanaux': placeholder('bijoux-artisanaux', 'Bijoux Artisanaux', 'Мини-каталог / e-commerce light'),
-  assurance: placeholder('assurance', "Agent d'Assurance", 'B2B-сайт для сбора лидов'),
+  assurance: { site: assuranceSite, content: assuranceContent },
   comptabilite: placeholder('comptabilite', 'Cabinet Comptable', 'Сайт кабинета с intake-формой'),
 }
 
