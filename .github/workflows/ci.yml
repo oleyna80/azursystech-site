@@ -19,6 +19,7 @@ jobs:
       matrix:
         project:
           - web
+          - showcase
           - admin
     steps:
       - name: Checkout
@@ -54,4 +55,6 @@ jobs:
 
       - name: Build
         working-directory: ${{ matrix.project }}
+        env:
+          SHOWCASE_STATIC_EXPORT: ${{ matrix.project == 'showcase' && '1' || '0' }}
         run: npm run build
