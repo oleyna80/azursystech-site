@@ -1,0 +1,121 @@
+.faqSection {
+  padding: 76px 0 92px;
+  background: var(--color-cream);
+}
+
+.faqWrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.faqList {
+  display: grid;
+  gap: 16px;
+}
+
+.faqItem {
+  overflow: hidden;
+  border: 1px solid rgba(13, 32, 64, 0.08);
+  border-radius: var(--radius-xl);
+  background: var(--color-white);
+  box-shadow: var(--shadow-sm);
+}
+
+.faqQuestion {
+  display: flex;
+  width: 100%;
+  min-height: 72px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border: 0;
+  background: transparent;
+  color: var(--color-navy);
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.04rem;
+  font-weight: 900;
+  line-height: 1.35;
+  padding: 22px 24px;
+  text-align: left;
+}
+
+.faqQuestion:hover {
+  background: rgba(248, 247, 244, 0.78);
+}
+
+.faqIcon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: var(--radius-full);
+  background: rgba(232, 160, 32, 0.12);
+  color: var(--color-gold-dark);
+  font-size: 1.45rem;
+  font-weight: 400;
+  line-height: 1;
+  transition: transform 180ms ease;
+}
+
+.faqIcon[data-open='true'] {
+  transform: rotate(45deg);
+}
+
+.faqAnswer {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 190ms ease;
+}
+
+.faqAnswer[data-open='true'] {
+  grid-template-rows: 1fr;
+}
+
+.faqAnswer p {
+  min-height: 0;
+  overflow: hidden;
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.75;
+  padding: 0 24px;
+}
+
+.faqAnswer[data-open='true'] p {
+  padding-bottom: 24px;
+}
+
+.contactPrompt {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  margin-top: 48px;
+  text-align: center;
+}
+
+.contactPrompt p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 620px) {
+  .faqSection {
+    padding: 52px 0 72px;
+  }
+
+  .faqWrap {
+    padding: 0 1rem;
+  }
+
+  .faqQuestion {
+    min-height: 64px;
+    padding: 18px;
+  }
+
+  .faqAnswer p {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+}

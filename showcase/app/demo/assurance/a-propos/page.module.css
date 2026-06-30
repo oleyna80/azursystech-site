@@ -1,0 +1,193 @@
+.storySection {
+  padding: 76px 0 88px;
+  background: var(--color-white);
+}
+
+.storyGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
+  gap: clamp(32px, 6vw, 72px);
+  align-items: center;
+}
+
+.agentMedia {
+  position: relative;
+  min-height: 560px;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: var(--color-cream);
+  box-shadow: var(--shadow-xl);
+}
+
+.agentImage {
+  object-fit: cover;
+  object-position: center;
+}
+
+.oriasBadge {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  display: grid;
+  gap: 2px;
+  border-radius: var(--radius-md);
+  background: var(--color-gold);
+  color: var(--color-navy);
+  font-weight: 900;
+  padding: 14px 18px;
+  box-shadow: var(--shadow-lg);
+}
+
+.oriasBadge span {
+  font-size: 0.78rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.storyContent,
+.sectionHeader {
+  display: grid;
+  gap: 18px;
+}
+
+.eyebrow {
+  color: var(--color-gold-dark);
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.storyContent h2,
+.sectionHeader h2,
+.ctaInner h2 {
+  margin: 0;
+  color: var(--color-navy);
+  font-family: var(--font-family);
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.08;
+}
+
+.storyContent p,
+.engagementCard p,
+.ctaInner p {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.7;
+}
+
+.storyContent a {
+  justify-self: start;
+  margin-top: 8px;
+}
+
+.engagementSection {
+  padding: 82px 0 92px;
+  background: var(--color-cream);
+}
+
+.sectionHeader {
+  justify-items: center;
+  max-width: 760px;
+  margin: 0 auto 42px;
+  text-align: center;
+}
+
+.engagementGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.engagementCard {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-height: 260px;
+  border: 1px solid rgba(13, 32, 64, 0.08);
+  border-radius: var(--radius-xl);
+  background: var(--color-white);
+  box-shadow: var(--shadow-sm);
+  padding: 30px;
+}
+
+.cardIcon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: var(--radius-lg);
+  background: rgba(232, 160, 32, 0.12);
+  color: var(--color-gold-dark);
+}
+
+.cardIcon svg {
+  width: 25px;
+  height: 25px;
+}
+
+.engagementCard h3 {
+  margin: 0;
+  color: var(--color-navy);
+  font-size: 1.16rem;
+}
+
+.ctaSection {
+  padding: 82px 0;
+  background:
+    radial-gradient(circle at 50% 120%, rgba(232, 160, 32, 0.14) 0%, transparent 64%),
+    linear-gradient(135deg, var(--color-navy-dark) 0%, var(--color-navy) 100%);
+  color: var(--color-white);
+}
+
+.ctaInner {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  text-align: center;
+}
+
+.ctaSection .ctaInner h2 {
+  color: var(--color-white);
+}
+
+.ctaSection .ctaInner p {
+  max-width: 620px;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 1.1rem;
+}
+
+.ctaActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+@media (max-width: 920px) {
+  .storyGrid,
+  .engagementGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .agentMedia {
+    min-height: 440px;
+  }
+}
+
+@media (max-width: 620px) {
+  .storySection,
+  .engagementSection,
+  .ctaSection {
+    padding: 52px 0 64px;
+  }
+
+  .agentMedia {
+    min-height: 360px;
+  }
+
+  .engagementCard {
+    min-height: auto;
+    padding: 24px;
+  }
+}
