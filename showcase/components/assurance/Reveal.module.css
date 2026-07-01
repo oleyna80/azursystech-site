@@ -1,0 +1,15 @@
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity var(--transition-slow), transform var(--transition-slow);
+}
+
+.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.delay1 { transition-delay: 100ms; }
+.delay2 { transition-delay: 200ms; }
+.delay3 { transition-delay: 300ms; }
+.delay4 { transition-delay: 400ms; }

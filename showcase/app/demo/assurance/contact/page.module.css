@@ -1,0 +1,423 @@
+.contactSection {
+  background:
+    linear-gradient(180deg, rgba(245, 241, 232, 0.94) 0%, rgba(255, 255, 255, 0.98) 54%),
+    var(--assurance-cream);
+  padding: 72px 0 88px;
+}
+
+.contactLayout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.86fr) minmax(420px, 1.14fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.infoColumn {
+  display: grid;
+  gap: 18px;
+}
+
+.infoPanel,
+.locationPanel,
+.formPanel {
+  border: 1px solid rgba(15, 45, 68, 0.12);
+  border-radius: var(--assurance-radius-xl);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--assurance-shadow-soft);
+}
+
+.infoPanel {
+  padding: 30px;
+}
+
+.sectionEyebrow {
+  margin: 0 0 10px;
+  color: var(--assurance-gold);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.infoPanel h2,
+.formHeading h2,
+.successPanel h2,
+.ctaLayout h2 {
+  margin: 0;
+  color: var(--assurance-navy);
+  font-family: var(--font-family-heading);
+  font-size: clamp(1.55rem, 2.1vw, 2.3rem);
+  line-height: 1.14;
+}
+
+.infoIntro,
+.formHeading p,
+.successPanel p,
+.locationCopy p {
+  margin: 14px 0 0;
+  color: var(--assurance-text-muted);
+  font-size: 0.98rem;
+  line-height: 1.75;
+}
+
+.detailList {
+  display: grid;
+  gap: 14px;
+  margin-top: 26px;
+}
+
+.detailItem {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  min-width: 0;
+}
+
+.detailIcon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 14px;
+  background: rgba(184, 134, 11, 0.1);
+  color: var(--assurance-gold);
+}
+
+.detailIcon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.detailBody {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.detailBody:hover .detailLine {
+  color: var(--assurance-navy);
+}
+
+.detailTitle {
+  color: var(--assurance-navy);
+  font-weight: 800;
+}
+
+.detailLine {
+  color: var(--assurance-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  transition: color 160ms ease;
+}
+
+.locationPanel {
+  overflow: hidden;
+}
+
+.mapFrame {
+  position: relative;
+  min-height: 230px;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(15, 45, 68, 0.88), rgba(31, 73, 99, 0.82)),
+    var(--assurance-navy);
+}
+
+.mapGrid {
+  position: absolute;
+  inset: -20px;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 34px 34px;
+  transform: rotate(-6deg) scale(1.08);
+}
+
+.mapPin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  background: var(--assurance-gold);
+  color: white;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.26);
+}
+
+.mapPin svg {
+  width: 25px;
+  height: 25px;
+}
+
+.mapLabel {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 1;
+  display: grid;
+  gap: 3px;
+  max-width: calc(100% - 36px);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 12px 14px;
+  color: var(--assurance-navy);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+}
+
+.mapLabel strong,
+.mapLabel span {
+  overflow-wrap: anywhere;
+}
+
+.mapLabel span {
+  color: var(--assurance-text-muted);
+  font-size: 0.86rem;
+}
+
+.locationCopy {
+  padding: 22px 24px 24px;
+}
+
+.locationCopy h3 {
+  margin: 0;
+  color: var(--assurance-navy);
+  font-size: 1.08rem;
+}
+
+.formPanel {
+  min-width: 0;
+  padding: 34px;
+}
+
+.formHeading {
+  margin-bottom: 22px;
+}
+
+.errorBanner {
+  margin-bottom: 18px;
+  border: 1px solid rgba(170, 61, 49, 0.24);
+  border-radius: 12px;
+  background: rgba(170, 61, 49, 0.08);
+  padding: 12px 14px;
+  color: #8f2d24;
+  font-size: 0.94rem;
+  font-weight: 750;
+}
+
+.formStack {
+  display: grid;
+  gap: 18px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  color: var(--assurance-navy);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(15, 45, 68, 0.18);
+  border-radius: 12px;
+  background: #fffdf8;
+  padding: 13px 14px;
+  color: var(--assurance-text);
+  font: inherit;
+  font-weight: 600;
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.field select {
+  min-height: 48px;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: rgba(184, 134, 11, 0.62);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(184, 134, 11, 0.12);
+}
+
+.field input[aria-invalid='true'],
+.field select[aria-invalid='true'],
+.field textarea[aria-invalid='true'] {
+  border-color: rgba(170, 61, 49, 0.65);
+}
+
+.fieldError {
+  color: #8f2d24;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.submitRow {
+  display: grid;
+  gap: 10px;
+  padding-top: 2px;
+}
+
+.submitButton {
+  width: 100%;
+  min-height: 44px;
+  justify-content: center;
+}
+
+.formNote {
+  margin: 0;
+  color: var(--assurance-text-muted);
+  font-size: 0.86rem;
+  line-height: 1.55;
+  text-align: left;
+}
+
+.successPanel {
+  display: grid;
+  gap: 16px;
+  min-height: 420px;
+  align-content: center;
+  justify-items: start;
+}
+
+.successIcon {
+  display: grid;
+  width: 62px;
+  height: 62px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(184, 134, 11, 0.12);
+  color: var(--assurance-gold);
+}
+
+.successIcon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.summaryList {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin: 4px 0 10px;
+}
+
+.summaryList div {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px;
+  border-top: 1px solid rgba(15, 45, 68, 0.1);
+  padding-top: 10px;
+}
+
+.summaryList dt {
+  color: var(--assurance-text-muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.summaryList dd {
+  min-width: 0;
+  margin: 0;
+  color: var(--assurance-navy);
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.ctaBand {
+  background: var(--assurance-navy);
+  padding: 48px 0;
+  color: white;
+}
+
+.ctaLayout {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ctaBand .ctaLayout h2 {
+  color: white;
+}
+
+.ctaActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+@media (max-width: 960px) {
+  .contactLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .ctaLayout {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ctaActions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .contactSection {
+    padding: 48px 0 64px;
+  }
+
+  .infoPanel,
+  .formPanel {
+    padding: 24px 18px;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .submitRow {
+    gap: 10px;
+  }
+
+  .submitButton {
+    width: 100%;
+  }
+
+  .formNote {
+    text-align: left;
+  }
+
+  .summaryList div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
