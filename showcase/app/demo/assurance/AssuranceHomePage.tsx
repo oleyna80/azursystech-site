@@ -55,9 +55,18 @@ const TESTIMONIALS = [
   },
 ]
 
+const getMainSiteReturnHref = () => {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_WEB_BASE_URL ??
+    (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '')
+
+  return `${baseUrl}/fr#websites`
+}
+
 export function AssuranceHomePage() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [cookieVisible, setCookieVisible] = useState(true)
+  const mainSiteReturnHref = getMainSiteReturnHref()
 
   return (
     <main className={`${tokenStyles.root} ${styles.page}`} data-assurance-route="static-homepage">
@@ -365,7 +374,7 @@ export function AssuranceHomePage() {
           <div>
             <h3>Demo</h3>
             <Link href="/demo/plomberie">Voir Plomberie</Link>
-            <Link href="/">Retour showcase</Link>
+            <a href={mainSiteReturnHref}>Retour showcase</a>
           </div>
         </div>
       </footer>
@@ -383,10 +392,10 @@ export function AssuranceHomePage() {
         </div>
       )}
 
-      <Link href="/" className={styles.returnLink}>
+      <a href={mainSiteReturnHref} className={styles.returnLink}>
         <ArrowIcon />
         Retour au showcase
-      </Link>
+      </a>
     </main>
   )
 }

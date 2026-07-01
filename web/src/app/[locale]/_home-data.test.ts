@@ -12,11 +12,14 @@ describe("HOME_CONTENT showcase section", () => {
         expect(copy.showcaseDemos).toHaveLength(6)
       })
 
-      it("every demo has slug, title, category, demoUrl", () => {
+      it("every demo has complete showcase card data", () => {
         for (const d of copy.showcaseDemos) {
           expect(d.slug).toBeTruthy()
           expect(d.title).toBeTruthy()
           expect(d.category).toBeTruthy()
+          expect(d.siteType).toBeTruthy()
+          expect(d.businessFunction).toBeTruthy()
+          expect(d.automationBadge).toBeTruthy()
           expect(d.demoUrl).toBeTruthy()
         }
       })
@@ -31,9 +34,10 @@ describe("HOME_CONTENT showcase section", () => {
         expect(new Set(slugs).size).toBe(slugs.length)
       })
 
-      it("all demoUrls start with /demo/ and match slug", () => {
+      it("all demoUrls route to the matching showcase demo", () => {
         for (const d of copy.showcaseDemos) {
-          expect(d.demoUrl).toBe(`/demo/${d.slug}`)
+          const url = new URL(d.demoUrl, "http://localhost:3000")
+          expect(url.pathname).toBe(`/demo/${d.slug}`)
         }
       })
     })
