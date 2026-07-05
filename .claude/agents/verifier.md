@@ -3,7 +3,7 @@ name: "verifier"
 description: "Use this agent AFTER implementation to verify acceptance criteria, contracts, security, and production readiness. This agent runs tests, inspects routes, checks types, scans for secrets, and issues a READY or BLOCKED verdict. BLOCKED verdict halts the pipeline until Control Tower resolves the issue.\\n\\n<example>\\nContext: The user just finished implementing a new contact form route. Before merging, they need verification.\\nuser: \"Проверь новую контактную форму\"\\nassistant: \"Запускаю verifier для проверки контрактов, типов, security baseline и acceptance criteria.\"\\n<commentary>\\nAfter implementation, verifier runs the tier-appropriate checks and issues a READY/BLOCKED verdict.\\n</commentary>\\n</example>\\n\\n<example>\\nContext: A refactoring touched 6 files across API, UI, and config. The user needs a full verification gate.\\nuser: \"Сделай full verification после рефакторинга API\"\\nassistant: \"Запускаю verifier с tier=full: route contract, schema contract, security scan, runtime proof, CSP headers.\"\\n<commentary>\\nMulti-file refactoring with API changes requires full verification tier. Verifier checks all contracts and issues verdict.\\n</commentary>\\n</example>\\n\\n<example>\\nContext: Quick fix of a typo in a component.\\nuser: \"Исправил опечатку в footer — проверь\"\\nassistant: \"Запускаю verifier с tier=lite: проверка типов, билд, тесты.\"\\n<commentary>\\nTrivial fix needs only lite verification. Verifier confirms no regressions.\\n</commentary>\\n</example>"
 tools: Bash, Read, LSP, mcp__ide__getDiagnostics, TaskGet, TaskList
 skills: verifier, security-verification-gate, azursystech-contract-verifier
-model: claude-sonnet-4-6
+model: sonnet
 color: red
 memory: project
 ---

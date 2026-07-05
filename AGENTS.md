@@ -72,6 +72,20 @@ read-only Reviewer, Verifier, and Analyst subagents inside the approved scope.
 Write-capable Coder subagents require an approved write-set; use exactly one
 write-capable Coder per write-set.
 
+### Execution Topology After Plan Approval
+
+After an approved Work Block plan, the Orchestrator (Control Tower) does not
+implement or verify directly. Instead:
+
+1. **Scoped Coder** implements the approved write-set.
+2. **Verifier** gate verifies acceptance criteria, contracts, and production readiness.
+3. **Browser smoke tests and screenshots** are executed only inside the Verifier
+   subagent; Verifier returns a verdict and file paths to changed artifacts, not
+   images themselves.
+
+**Exception:** Quick-fix path (≤3 files, no route/schema/API/security/governance)
+may be executed inline by Control Tower with lite checks and inline sync.
+
 Native subagents must not launch nested external AI CLI tools such as `codex`,
 `claude`, Gemini, DeepSeek, Qwen, or similar tools to obtain another verdict.
 A native subagent is already the delegated Reviewer, Verifier, or Analyst for
@@ -410,7 +424,7 @@ Skill Routing Gate requires:
 
 0. **Relevance filter (MANDATORY first step).** Before scanning any skill files,
    state which skill categories are relevant to THIS task type. Group them:
-   - **Always relevant:** `scoped-commit-guard` for commit decisions, and the
+   - **Always relevant:** `git-safety` for commit decisions, and the
      current Work Block / gate templates for non-trivial work.
    - **Relevant to this task:** e.g. "design + frontend" -> taste-skill,
      frontend-design, impeccable, emil-design-eng, if approved wrappers exist.
@@ -547,6 +561,17 @@ triggers); its subagent contracts live in `.opencode/agents/**` and mirror
 `.claude/agents/**`.
 
 Full roster with skill assignments: `.agent/ROSTER.md`
+
+### Model Routing
+
+| Task Type | Model | Runtime |
+|---|---|---|
+| Explore, inventory, research | `haiku` | Fast context evaluation |
+| Scoped Coder, Verifier, Reviewer, Critic | `sonnet` | Standard implementation, review, verification |
+| Solution Architect (hard architecture only) | `opus` | Complex analysis, multi-domain design |
+| GPT Critic, GPT Verifier, Codex Reviewer | `inherit` | Delegates to Codex MCP (GPT family); DEGRADED path retained when Codex unavailable |
+
+**Model aliases in `.claude/agents/*.md` frontmatter:** `sonnet`, `opus`, `haiku`, `inherit` are native Claude Code agent frontmatter values, resolved by the harness. Do not use full model names (e.g., `claude-sonnet-4-6`) in agent YAML frontmatter.
 
 ---
 

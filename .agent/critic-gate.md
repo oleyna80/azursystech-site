@@ -1,4 +1,4 @@
-# Critic Gate — template (Stage 0 fills session-local values; reset to this template before commit)
+# Critic Gate — template (Stage 0 fills session-local values; reset to this template before commit). OWNED BY CONTROL TOWER — subagents must not edit this file.
 
 Status: PENDING
 Work Block: [WB-id]

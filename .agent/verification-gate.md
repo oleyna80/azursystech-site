@@ -1,4 +1,4 @@
-# Verification Gate — template (Stage 2 fills session-local values; reset to this template before commit)
+# Verification Gate — template (Stage 2 fills session-local values; reset to this template before commit). OWNED BY CONTROL TOWER — subagents must not edit this file.
 
 Status: PENDING
 Work Block: [WB-id]

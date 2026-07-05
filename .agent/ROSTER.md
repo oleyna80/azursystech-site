@@ -1,153 +1,105 @@
-# .agent/ROSTER.md — Agent & Mode Registry
+# .agent/ROSTER.md — Agent & Skill Registry (9 Consolidated Skills)
 
-> Canonical registry of all agents, modes, and their responsibilities.
-> Update when adding new modes or skills.
-> Team functions are temporary specializations by default, not permanent roles,
-> unless they require a new authority model.
+> Curated registry of all agents and 9 consolidated skills. Authority model: Control Tower (plan/sync), Scoped Coder (execute), Verifier (independent check), Reviewer (read-only analysis). Model routing: haiku (discover), sonnet (coder/verifier/reviewer), opus (architect). GPT agents inherit via Codex MCP (DEGRADED path when unavailable).
 
 ---
 
-## Roo / Cline Modes (`.roomodes`)
+## The 9 Consolidated Skills
 
-| Slug | Name | Role | Hard Stop Authority |
+| # | Skill | Triggers | Primary Agent | Mode(s) | Key References |
+|---|---|---|---|---|---|
+| 1 | **impeccable** | Vendor wrapper (OpenCode local) | Scoped Coder (when wrapper available) | Local vendor skill | (keep as-is, local only) |
+| 2 | **design-direction** | "build landing", "redesign", "brutalist/minimalist", "fix animation", "pick theme" | Scoped Coder | Greenfield, Redesign, Style, Theme | taste, emil, theme-factory, redesign, brutalist, minimalist, frontend-design |
+| 3 | **discovery** | "research before coding", "best stack/API", "how does X interact", "code map" | Control Tower / Architect | Strategic, Tactical, Map | architecture, technical, graphify |
+| 4 | **security-pass** | "pentest report", "fix findings", "verify hardening", auth/payments/DB changes | Reviewer (triage), Coder (harden), Verifier (verify) | Triage, Harden, Verify, Codex, Handoff-smoke | triage, harden, verify, codex, handoff-smoke |
+| 5 | **memory-ops** | "log decision", "freeze state", "housekeep memory", "sync closeout", "review friction" | Control Tower | Log, Snapshot, Bank, SSOT-sync, Ops-review | log, snapshot, bank-manager, ssot-sync, ops-review |
+| 6 | **git-safety** | "scoped commit", "2+ agents done", "merge conflicts", "bash/PowerShell error" | Coder (commit), Control Tower (merge, shell) | Scoped-commit, Merge-protocol, Shell-context | scoped-commit, merge, shell-context |
+| 7 | **systematic-debugging** | Debugging, logging, error isolation | Control Tower / Debugger | Root-cause, isolation | (kept as-is, no merge) |
+| 8 | **webapp-testing** | QA, smoke tests, visual regression | Verifier / QA Analyst | Browser tests, acceptance | (kept as-is, no merge) |
+| 9 | **subagent-mission-brief** | Subagent dispatch, mission framing | Control Tower | Mission definition, scope isolation | (kept as-is, no merge) |
+
+---
+
+## Agent Authority & Hard Stops
+
+| Agent | Role | Authority | Hard Stops |
 |---|---|---|---|
-| `azursystech-control-tower` | Control Tower | Orchestration, planning, SSOT ownership | Owns plan approval gate |
-| `azursystech-docs-reviewer` | Docs Reviewer | Read-only audit, SSOT drift | None (read-only) |
-| `azursystech-scoped-coder` | Scoped Coder | Approved-scope implementation | None (execute only) |
-| `azursystech-verifier` | Verifier | AC verification gate | BLOCKED verdict halts pipeline |
+| **Control Tower** | Orchestrator, SSOT owner | Plan approval, stage flow, subagent dispatch, scope gate, closeout | plan approval, scope expansion, tier selection, critic verdict |
+| **Scoped Coder** | Implementation executor | Write approved write-set only | None (execute within scope only) |
+| **Verifier** | Acceptance gate | AC validation, checks, security, verdict (READY/BLOCKED/UNVERIFIED) | BLOCKED verdict halts pipeline |
+| **Reviewer** | Read-only analyst | Code audit, security triage, feedback (no changes) | None (advisory only) |
+| **Critic** | Decision reviewer | Pre-Work-Block quality gate, verdict (SUPPLEMENT sends back) | RECONSIDER verdict |
 
 ---
 
-## Codex (OpenAI)
+## Model Routing
 
-Config template: `.codex/config.toml.template` — `multi_agent = true`
-Instructions: `.codex/instructions.md` — delegation policy, SDD stage mapping, context hygiene
-Custom agents: none committed by default; use runtime-native subagents when
-available and this roster for role/scope contracts.
-Routing: follows `AGENTS.md` stage flow + skill triggers. Main chat stays
-Control Tower. Use subagents whenever they materially improve speed, quality,
-or context hygiene, and for large expected outputs. Use one write-capable Scoped
-Coder per approved write-set; keep Reviewer/Verifier subagents read-only for
-source, runtime, config, DB, infra, secrets, and production state unless a Work
-Block explicitly scopes verification artifact writes.
-Create a new project-local skill only for a recurring repo-specific workflow
-not already covered by an existing workflow or skill; otherwise update the
-existing source. Public/vendor skills may be adapted locally when useful, but
-tool capability or external availability never expands file authority, hard-stop
-rules, or approved scope.
-
-Temporary specializations are allowed per Work Block. Use the base role for
-authority and a specialization for focus, for example `Reviewer / Architecture
-Analyst`, `Reviewer / Security Analyst`, `Coder / Backend Coder`, or `Verifier /
-QA Analyst`.
+| Task Class | Model | Rationale |
+|---|---|---|
+| Discover/Explore | **haiku** | Fast, cheap research |
+| Implement/Code/Verify | **sonnet** | Fast, capable, cost-effective |
+| Architect/Hard Decisions | **opus** | Strong reasoning for complex decisions |
+| GPT agents (gpt-critic, gpt-verifier) | **inherit** via Codex MCP | Fallback to DEGRADED if Codex unavailable |
 
 ---
 
-## Qwen
+## Archived Skills (`.agent/skills/_archive/`)
 
-Config: `.qwen/settings.json`
-Allowed commands whitelist. Follows `AGENTS.md` for flow policy.
+37 → 9 consolidation. Archived skills are preserved locally with their original SKILL.md intact for reference:
 
-Runtime allowlists and tool capabilities do not grant process authority. All
-agents still follow `AGENTS.md` for approved write-set, hard stops, staging,
-commit, deploy, and file authority rules.
+**Design consolidations (7 → design-direction):**
+- taste-skill, emil-design-eng, theme-factory, frontend-design, brutalist-skill, minimalist-skill, redesign-skill
 
----
+**Discovery consolidations (3 → discovery):**
+- architecture-discovery, technical-discovery, graphify-code-map
 
-## Claude (Anthropic)
+**Security consolidations (5 → security-pass):**
+- security-audit-triage, security-hardening-pass, security-verification-gate, codex-verification, handoff-live-smoke
 
-Used via Antigravity / direct API.
-Follows `AGENTS.md` for flow policy, hard stops, and file write authority.
-Skill routing: same as Codex — stage flow + skill triggers.
+**Memory/Ops consolidations (5 → memory-ops):**
+- orchestrator-log, context-snapshot, memory-bank-manager, ssot-sync-closeout, agent-operations-review
 
----
+**Git consolidations (3 → git-safety):**
+- merge-protocol, scoped-commit-guard, shell-context-guard
 
-## OpenCode
+**Agent duplicates (removed, authority moved to .claude/agents/):**
+- critic-review, reviewer, verifier, scoped-coder
 
-Config: `.opencode/agents/*.md` — subagent contracts mirroring
-`.claude/agents/` (same roles: solution-architect, critic, gpt-critic,
-reviewer, scoped-coder, verifier, gpt-verifier, codex-reviewer).
-Frontmatter is opencode-specific: `mode: subagent`, `permission` block,
-`color` as hex or theme token (named colors are invalid).
-Root config: `opencode.json` — permission floor mirroring `AGENTS.md` Hard
-Stops (deny push-to-main/force-push/ssh/deploy/live-DB/direct Codex CLI;
-ask by default), `share: disabled`, `autoupdate: false`.
-GPT models: native OpenAI provider via ChatGPT Plus/Pro subscription auth
-(`opencode auth login`); Codex MCP is not required inside OpenCode —
-gpt-critic/gpt-verifier may pin a GPT model via `model:` frontmatter.
-Follows `AGENTS.md` for flow policy, hard stops, and file write authority.
-Skill routing: same as Codex — stage flow + skill triggers.
-Plugin runtime state under `.opencode/` (node_modules, package*.json) is
-local-only, self-ignored via generated `.opencode/.gitignore`.
+**Vendor/utility (moved to _archive for reference, not active):**
+- skill-creator, mcp-builder, output-skill, project-estimation, task-decomposition
 
 ---
 
-## Gemini (Google)
+## Quick Skill Routing
 
-Used via Antigravity / direct API.
-Follows `AGENTS.md` for flow policy, hard stops, and file write authority.
-Skill routing: same as Codex — stage flow + skill triggers.
-
----
-
-## Skill → Agent Assignment
-
-This table lists routing-critical skill candidates and approved project-local
-skills. It does not mean every listed `.agent/skills/<name>/` directory is
-committed or required in a fresh clone. Use the skill workflow only when the
-skill file exists in the workspace and is inside the approved scope; otherwise
-record `skill-file-unavailable` and use the nearest committed gate/template.
-
-| Skill | Primary Agent |
-|---|---|
-| `task-decomposition` | Control Tower |
-| `subagent-mission-brief` | Control Tower |
-| `agent-operations-review` | Control Tower |
-| `project-estimation` | Control Tower |
-| `technical-discovery` | Control Tower |
-| `architecture-discovery` | Control Tower / Architecture Analyst |
-| `memory-bank-manager` | Control Tower |
-| `ssot-sync-closeout` | Control Tower |
-| `context-snapshot` | Control Tower |
-| `orchestrator-log` | Control Tower |
-| `merge-protocol` | Control Tower |
-| `shell-context-guard` | Control Tower |
-| `systematic-debugging` | Control Tower |
-| `handoff-live-smoke` | Control Tower (Owner approval if external runtime/API is used) |
-| `mcp-builder` | Control Tower (Owner approval if config/dependency changes are required) |
-| `graphify-code-map` | Control Tower / Architecture Analyst |
-| `skill-creator` | Control Tower |
-| `scoped-coder` | Scoped Coder |
-| `scoped-commit-guard` | Scoped Coder / Control Tower before staging |
-| `reviewer` | Docs Reviewer |
-| `critic-review` | Docs Reviewer / Reviewer |
-| `verifier` | Verifier |
-| `codex-verification` | Verifier |
-| `security-verification-gate` | Verifier |
-| `security-audit-triage` | Docs Reviewer |
-| `security-hardening-pass` | Scoped Coder |
-| `theme-factory` | Control Tower → Scoped Coder (theme application) |
-| `frontend-design` | Scoped Coder |
-| `emil-design-eng` | Scoped Coder (on-demand UI polish + animation review) |
-| `azursystech-impeccable` | Scoped Coder when an approved OpenCode wrapper exists; vendor `impeccable` remains runtime-local under `.claude/skills/impeccable` |
-| `taste-skill` | Scoped Coder (strategic: brief inference + 3 param dials) |
-| `minimalist-ui` | Scoped Coder (Linear/Notion editorial style) |
-| `industrial-brutalist-ui` | Scoped Coder (Swiss typography + industrial aesthetic) |
-| `redesign-existing-projects` | Scoped Coder (audit & upgrade existing UIs) |
-| `full-output-enforcement` | Scoped Coder (force complete unabridged output) |
-| `webapp-testing` | Verifier / QA Analyst |
-
-Utility / preflight skills are intentionally omitted from the routing-critical
-table unless they define ownership. Invoke these by trigger when needed:
-runtime tools, MCP tools, browser helpers, and project-specific scripts.
+| Brief | → Skill | Mode | Agent |
+|---|---|---|---|
+| "build landing page" | design-direction | Greenfield | Coder |
+| "fix this button animation" | design-direction | Style (emil) | Coder |
+| "this site needs redesign" | design-direction | Redesign | Coder |
+| "pick theme for demo" | design-direction | Theme | Coder |
+| "what's the best stack?" | discovery | Strategic | Control Tower |
+| "how does code interact?" | discovery | Tactical | Control Tower |
+| "check pentest report" | security-pass | Triage | Reviewer |
+| "fix security findings" | security-pass | Harden | Coder |
+| "verify after hardening" | security-pass | Verify | Verifier |
+| "commit only these files" | git-safety | Scoped-commit | Coder |
+| "2+ agents completed" | git-safety | Merge-protocol | Control Tower |
+| "log this decision" | memory-ops | Log | Control Tower |
+| "freeze state for parallel" | memory-ops | Snapshot | Control Tower |
+| "sync SSOT on closeout" | memory-ops | SSOT-sync | Control Tower |
 
 ---
 
-## Autonomy Level per Skill
+## Configuration References
 
-| Level | Meaning |
-|---|---|
-| 🟢 AUTO | Skill auto-proceeds; no Owner confirmation needed |
-| 🔴 HARD STOP | Skill requires explicit Owner approval before execution |
+- **AGENTS.md:** SDD operating contract, stage flow, Hard Stops, skill triggers, authority model (source of truth)
+- **CLAUDE.md:** Global code style, environment setup, multi-agent workflows
+- **Codex Config:** `.codex/config.toml.template`, `.codex/instructions.md`
+- **OpenCode:** `.opencode/agents/*.md`, `opencode.json` (permission floor = AGENTS.md Hard Stops)
+- **Roo/Cline Modes:** `.roomodes` map agents to `.agent/` responsibilities
 
-See each `SKILL.md → ## Handoff` for per-skill level.
+---
+
+**This ROSTER is canonical for "which skill?" and "who decides?" All implementation and approval flows through Control Tower → Scoped Coder execution → Verifier gates.**
+
