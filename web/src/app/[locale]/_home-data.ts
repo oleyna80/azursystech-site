@@ -83,6 +83,11 @@ export const HOME_CONTENT = {
       region: "Alpes-Maritimes",
       tagline: "Automatisation, sites web et support local · Assistance en français et en russe.",
     },
+    portfolioEyebrow: "Portfolio",
+    portfolioTitle: "Nos réalisations en vidéo",
+    portfolioIntro:
+      "Chaque projet du portfolio est présenté en vidéo : fonctionnalités du site et processus métier qu'il permet d'automatiser.",
+    portfolioCta: "Voir le portfolio",
     showcaseEyebrow: "Sites web et scénarios métier",
     showcaseTitle: "Six exemples de sites pensés comme des outils de travail",
     showcaseIntro:
@@ -224,6 +229,11 @@ export const HOME_CONTENT = {
       region: "Приморские Альпы",
       tagline: "Автоматизация, сайты и локальная поддержка · Французский и русский языки.",
     },
+    portfolioEyebrow: "Портфолио",
+    portfolioTitle: "Наши работы в видеообзорах",
+    portfolioIntro:
+      "Каждый проект портфолио показан в видео: возможности сайта и бизнес-процессы, которые он помогает автоматизировать.",
+    portfolioCta: "Смотреть портфолио",
     showcaseEyebrow: "Сайты и бизнес-сценарии",
     showcaseTitle: "Шесть примеров сайтов как рабочих инструментов",
     showcaseIntro:

@@ -51,12 +51,14 @@ const HEADER_COPY = {
 
 function buildNavLinks(locale: HeaderLocale) {
   const t = {
-    fr: { automation: "Automatisation IA", websites: "Sites web", services: "Services", faq: "FAQ", contact: "Contact" },
-    ru: { automation: "AI-автоматизация", websites: "Сайты", services: "Услуги", faq: "FAQ", contact: "Контакты" },
+    fr: { automation: "Automatisation IA", websites: "Sites web", portfolio: "Portfolio", services: "Services", faq: "FAQ", contact: "Contact" },
+    ru: { automation: "AI-автоматизация", websites: "Сайты", portfolio: "Портфолио", services: "Услуги", faq: "FAQ", contact: "Контакты" },
   }[locale];
+  // Portfolio sits after "websites": feature discovery before meta links (faq/contact).
   return [
     { href: `/${locale}#automation`, label: t.automation },
     { href: `/${locale}#websites`, label: t.websites },
+    { href: "/portfolio", label: t.portfolio },
     { href: `/${locale}#services`, label: t.services },
     { href: `/${locale}#faq`, label: t.faq },
     { href: `/${locale}#contact`, label: t.contact },

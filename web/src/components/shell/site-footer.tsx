@@ -23,6 +23,7 @@ const FOOTER_COPY = {
     links: [
       { href: "/#automation", label: "Automatisation IA" },
       { href: "/#websites", label: "Sites web" },
+      { href: "/portfolio", label: "Portfolio" },
       { href: "/brief", label: "Brief" },
       { href: "/#services", label: "Tous les services" },
       { href: "/pricing", label: "Tarifs" },
@@ -44,6 +45,7 @@ const FOOTER_COPY = {
     links: [
       { href: "/#automation", label: "AI-автоматизация" },
       { href: "/#websites", label: "Сайты" },
+      { href: "/portfolio", label: "Портфолио" },
       { href: "/brief", label: "Бриф" },
       { href: "/#services", label: "Все услуги" },
       { href: "/pricing", label: "Цены" },

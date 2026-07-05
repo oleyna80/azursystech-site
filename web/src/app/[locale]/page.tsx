@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { HomeContactSection } from "@/components/sections/home-contact";
+import { PortfolioCard } from "@/components/portfolio/portfolio-card";
 import { ShowcaseSection } from "@/components/sections/showcase";
+import { PORTFOLIO_PROJECTS } from "@/lib/portfolio-data";
 import { HOME_CONTENT, HOME_JSON_LD, type HomeLocale } from "./_home-data";
 
 const SUPPORTED_LOCALES = ["fr", "ru"] as const;
@@ -217,6 +219,33 @@ export default async function LocaleHomePage({
         intro={copy.showcaseIntro}
         demos={copy.showcaseDemos}
       />
+
+      {/* Portfolio teaser */}
+      <section id="portfolio" className="border-t border-white/10 bg-[#081120] py-20 text-white md:py-28">
+        <div className="container mx-auto px-4 md:px-8">
+          <div className="mb-12 max-w-3xl">
+            <p className="mb-4 text-sm font-bold uppercase tracking-[0.18em] text-[#4f8cff]">{copy.portfolioEyebrow}</p>
+            <h2 className="text-3xl font-extrabold tracking-tight md:text-5xl md:leading-[1.02]">{copy.portfolioTitle}</h2>
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-white/68">{copy.portfolioIntro}</p>
+          </div>
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {PORTFOLIO_PROJECTS.slice(0, 3).map((project) => (
+              <PortfolioCard key={project.slug} project={project} />
+            ))}
+          </div>
+          <div className="mt-10">
+            <Link
+              href="/portfolio"
+              className="inline-flex items-center gap-2 rounded-full bg-[#4f8cff] px-7 py-3.5 text-base font-bold text-white shadow-premium-soft transition-transform duration-150 ease-out active:scale-[0.97] hover:bg-[#4f8cff]/90"
+            >
+              {copy.portfolioCta}
+              <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                <path fill="currentColor" d="M5 11h11.2l-4.6-4.6L13 5l7 7-7 7-1.4-1.4 4.6-4.6H5v-2z" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* How it works */}
       <section id="how-it-works" className="bg-graphite py-20 text-white md:py-28">
