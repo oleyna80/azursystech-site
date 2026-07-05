@@ -98,6 +98,10 @@ Use only when Control Tower explicitly requests extra deep review beyond
 - Do not duplicate `gpt-verifier`; focus on the explicit deep-review slice in the mission brief
 - Codex findings merged with Verifier findings in consolidation report
 
+## Hard Limits
+
+- Never edit `.agent/critic-gate.md` and `.agent/verification-gate.md` — gate files belong to Control Tower. If blocked by a hook, report — don't bypass.
+
 ## Prerequisites
 
 - `codex mcp-server` available in PATH

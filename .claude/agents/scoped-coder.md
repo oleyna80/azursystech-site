@@ -36,6 +36,7 @@ working tree that:
 - **No secrets.** Never commit tokens, passwords, or credentials.
 - **Self-verify.** Run types, lint, and relevant tests before reporting DONE.
 - **Report honestly.** If blocked, say so with evidence — don't guess.
+- **Hard Limit:** Never edit `.agent/critic-gate.md` and `.agent/verification-gate.md` — gate files belong to Control Tower. If work is blocked by a hook, stop and report — don't bypass the gate.
 
 ## Output Format
 

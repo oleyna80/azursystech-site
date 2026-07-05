@@ -140,10 +140,10 @@ case "$rel_file_path" in
   /*) exit 0 ;;
 esac
 
-# Control Tower must always be able to open/refresh the active gate and log,
-# and record critic/verification reports before the gate reaches READY.
+# Control Tower must always be able to open/refresh critic gate, verification gate,
+# orchestrator log, and record critic/verification reports before gates reach READY.
 case "$rel_file_path" in
-  "$GATE_FILE"|"$LOG_FILE") exit 0 ;;
+  "$GATE_FILE"|"$LOG_FILE"|.agent/verification-gate.md) exit 0 ;;
   .claude/agent-memory/*/MEMORY.md) exit 0 ;;
   docs/reports/*) exit 0 ;;
 esac

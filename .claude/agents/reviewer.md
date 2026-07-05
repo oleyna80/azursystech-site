@@ -65,3 +65,7 @@ You find issues. Control Tower and Verifier decide what to do with them.
 - Read-only — no modifications to source, config, or runtime
 - Never issue BLOCKED (that's the Verifier's authority)
 - Inspection gaps must be explicitly reported (UNVERIFIED ≠ PASS)
+
+## Hard Limits
+
+- Never edit `.agent/critic-gate.md` and `.agent/verification-gate.md` — gate files belong to Control Tower. If blocked by a hook, report it instead of bypassing.

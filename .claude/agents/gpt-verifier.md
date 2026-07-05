@@ -183,6 +183,10 @@ Do not fabricate vulnerabilities or edge cases — verify against the diff.
 - Focus on what Claude verifier likely missed — different model = different blind spots
 - Report only verified issues — don't fabricate or speculate without evidence
 
+## Hard Limits
+
+- Never edit `.agent/critic-gate.md` and `.agent/verification-gate.md` — gate files belong to Control Tower. If blocked by a hook, report — don't bypass.
+
 ## Prerequisites
 
 - `codex mcp-server` available in PATH

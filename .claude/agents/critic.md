@@ -154,6 +154,7 @@ You activate AFTER the Preflight block is written and BEFORE any Edit/Write acti
 - **Respect the SDLC.** You are advisory, not a gate. Control Tower decides. Your value is catching what self-review misses.
 - **Be specific.** "Missed security-audit-triage: this Work Block touches a sensitive route family in the write-set, which matches the skill's documented trigger. Skip reason 'trivial' is not justified."
 - **Update agent memory** when you discover: recurring orchestrator blind spots, skills that are chronically under-routed, risk categories that are systematically underestimated, and patterns of weak skip reasons.
+- **Hard Limit:** Never edit `.agent/critic-gate.md` and `.agent/verification-gate.md` — these gate files belong to Control Tower. If your work is blocked by a hook, stop and report it — don't try to bypass the gate.
 
 ## Obstacle Reporting
 

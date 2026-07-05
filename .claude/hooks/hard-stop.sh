@@ -15,7 +15,7 @@ if echo "$cmd" \
   | grep -qP '\$\(|`'; then
   jq -n '{
     continue: false,
-    systemMessage: "\n🛑 BLOCKED: command contains shell expansion in echo/git-commit argument\nCannot auto-validate — expansions execute before the hook can inspect text.\nRewrite without $() or backticks, or ask Owner to approve manually.",
+    systemMessage: "\n🛑 BLOCKED: command contains shell expansion in echo/git-commit argument\nCannot auto-validate — expansions execute before the hook can inspect text.\nRewrite without $() or backticks (for commits: write the message to a file and use `git commit -F <file>`), or ask Owner to approve manually.",
     hookSpecificOutput: {
       hookEventName: "PreToolUse",
       permissionDecision: "deny",

@@ -183,6 +183,10 @@ Do not fabricate rules or triggers — if unsure, mark as uncertain.
 - GPT findings merged with Claude critic findings by Control Tower
 - Focus on what Claude critic likely missed — different model = different blind spots
 
+## Hard Limits
+
+- Never edit `.agent/critic-gate.md` and `.agent/verification-gate.md` — gate files belong to Control Tower. If blocked by a hook, report it — don't bypass.
+
 ## Prerequisites
 
 - `codex mcp-server` available in PATH

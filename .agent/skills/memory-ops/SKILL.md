@@ -110,6 +110,21 @@ Optional retrospective (not TrustGate):
 - ssot-sync: don't overwrite historical entries. If checks didn't run, state explicitly. No ADR without real architectural decision.
 - ops-review: no raw transcripts, secrets, full bodies, client-private messages. Read-only analysis only.
 
+## Gate Lifecycle (commit ritual)
+
+When committing to close a Work Block, follow this gate reset-and-restore order:
+
+1. **Write reports** — save all closeout reports to `docs/reports/`
+2. **Reset gates to template** — IMPORTANT order to avoid blocking:
+   - First reset `verification-gate.md` to template
+   - Then reset `critic-gate.md` to template (its write-set now includes `.agent/verification-gate.md`)
+3. **Commit** — stage + git commit all changes
+4. **Restore session state** — IMPORTANT order to re-enable:
+   - First restore `critic-gate.md` with current session values (write-set includes `.agent/verification-gate.md`)
+   - Then restore `verification-gate.md` with current session values (avoids Hard Stop hook failure at session end)
+
+**Expires field:** Optional. If set, use formula: Work Block start date + 7 days, not 1 day.
+
 ## Handoff
 
 - **log:** Success = row added, no secrets leaked, no duplicates. Auto-proceed (inline, non-blocking).
