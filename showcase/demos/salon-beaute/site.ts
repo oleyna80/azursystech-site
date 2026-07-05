@@ -64,8 +64,10 @@ const services: SalonBeautyContent['servicesPage']['services'] = [
     description: 'Épilation à la cire du visage et du corps pour une peau douce et nette.',
     price: 'à partir de 15 €',
     image: img(
-      'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=1200&q=84',
-      'Produits et serviettes pour un soin esthétique doux',
+      '/demo/salon-beaute/epilation.png',
+      'Épilation à la cire en cabine — soin doux et professionnel',
+      1200,
+      1200,
     ),
   },
 ]
