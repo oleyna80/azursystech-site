@@ -668,10 +668,10 @@ function Icon({ name }: { name: string }) {
 function SalonStyles() {
   return (
     <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap');
 
       [data-demo='salon-beaute'] {
-        --salon-display: 'Playfair Display', Didot, 'Bodoni 72', Georgia, serif;
+        --salon-display: 'Cormorant Garamond', 'IM Fell English', Didot, Georgia, serif;
         --salon-body: Inter, 'Segoe UI', system-ui, sans-serif;
         background: #faf7f4;
         color: #1f1f1f;
@@ -753,7 +753,7 @@ function SalonStyles() {
       }
 
       .salon-page {
-        --salon-display: 'Playfair Display', Didot, 'Bodoni 72', Georgia, serif;
+        --salon-display: 'Cormorant Garamond', 'IM Fell English', Didot, Georgia, serif;
         --salon-body: Inter, 'Segoe UI', system-ui, sans-serif;
         --salon-ink: #1f1f1f;
         --salon-muted: #6b6460;
@@ -804,8 +804,8 @@ function SalonStyles() {
       .salon-about-hero {
         align-items: center;
         display: grid;
-        gap: clamp(1.8rem, 4.5vw, 3.8rem);
-        grid-template-columns: minmax(400px, 0.96fr) minmax(380px, 1.08fr);
+        gap: clamp(1.8rem, 4vw, 3.2rem);
+        grid-template-columns: minmax(380px, 1.1fr) minmax(320px, 0.9fr);
         min-width: 0;
       }
 
@@ -837,14 +837,14 @@ function SalonStyles() {
         color: var(--salon-ink);
         font-family: var(--salon-display);
         font-weight: 500;
-        letter-spacing: 0;
+        letter-spacing: 0.01em; /* Cormorant Garamond has beautiful natural letter spacing */
         line-height: 1;
         margin: 0;
       }
 
       .salon-hero h1 {
-        font-size: clamp(2.9rem, 4.35vw, 4.05rem);
-        line-height: 1.01;
+        font-size: clamp(3rem, 4.5vw, 4.4rem); /* Slightly larger — Cormorant is lighter weight */
+        line-height: 1.04;
         max-width: 19ch;
         text-wrap: balance;
       }
@@ -863,10 +863,12 @@ function SalonStyles() {
       }
 
       .salon-hero__media {
-        border-radius: 24px;
-        min-height: clamp(28rem, 42vw, 38rem);
+        align-self: center;
+        border-radius: 20px;
+        max-height: clamp(24rem, 38vw, 34rem); /* cap height so it doesn't overflow buttons */
         overflow: hidden;
         position: relative;
+        width: 100%;
       }
 
       .salon-hero__media .salon-visual,
