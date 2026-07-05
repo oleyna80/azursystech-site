@@ -676,13 +676,15 @@ function SalonStyles() {
         background: #faf7f4;
         color: #1f1f1f;
         font-family: var(--salon-body);
-        overflow-x: hidden;
+        /* overflow-x: hidden removed — breaks position: sticky on .demo-nav */
       }
 
       [data-demo='salon-beaute'] .demo-nav {
-        background: rgba(250, 247, 244, 0.94);
-        border-bottom: 1px solid rgba(232, 221, 214, 0.82);
-        box-shadow: 0 18px 48px rgba(84, 55, 51, 0.1);
+        background: rgba(250, 247, 244, 0.85);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border-bottom: 1px solid rgba(232, 221, 214, 0.6);
+        box-shadow: 0 4px 24px rgba(84, 55, 51, 0.06);
         padding: 1.05rem clamp(1.2rem, 5vw, 4rem);
       }
 
