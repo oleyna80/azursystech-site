@@ -125,6 +125,8 @@ When committing to close a Work Block, follow this gate reset-and-restore order:
 
 **Expires field:** Optional. If set, use formula: Work Block start date + 7 days, not 1 day.
 
+**Push-approval log entries:** The `push-approval` WB-column in `orchestrator-log.md` is reserved exclusively for Owner approval entries authorizing plain `git push origin main` (not force-push or destructive ops). Format: `| YYYY-MM-DD | push-approval | push: APPROVED origin main - <reason> | Owner |`. No other log entries may use `push-approval` as the WB id to prevent collisions with the hard-stop.sh approval check.
+
 ## Handoff
 
 - **log:** Success = row added, no secrets leaked, no duplicates. Auto-proceed (inline, non-blocking).

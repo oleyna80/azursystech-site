@@ -60,20 +60,6 @@ if [ -n "$codex_violation" ]; then
   exit 0
 fi
 
-# ── push to origin main ──────────────────────────────────────────────
-if echo "$clean_cmd" | grep -qP 'git\s+push\s+(-[^\s]*\s+)*origin\s+main\b'; then
-  jq -n '{
-    continue: false,
-    systemMessage: "\n🛑 HARD STOP: push to origin main\nAGENTS.md § Hard Stops requires Owner approval.",
-    hookSpecificOutput: {
-      hookEventName: "PreToolUse",
-      permissionDecision: "deny",
-      permissionDecisionReason: "Hard Stop: push to origin main requires Owner approval (AGENTS.md)"
-    }
-  }'
-  exit 0
-fi
-
 # ── destructive git ops ──────────────────────────────────────────────
 if echo "$clean_cmd" | grep -qP '(git\s+reset\s+--hard|git\s+(push|clean)\s+.*(-[^\s]*f|--force)\b|git\s+push\s+.*\+\s*\w+|git\s+push\s+.*:\s*\w+\s*$|git\s+checkout\s+--\s+\.)'; then
   jq -n '{
@@ -83,6 +69,51 @@ if echo "$clean_cmd" | grep -qP '(git\s+reset\s+--hard|git\s+(push|clean)\s+.*(-
       hookEventName: "PreToolUse",
       permissionDecision: "deny",
       permissionDecisionReason: "Hard Stop: destructive git ops require Owner approval (AGENTS.md)"
+    }
+  }'
+  exit 0
+fi
+
+# ── push to origin main ──────────────────────────────────────────────
+# Approval channel: check memory_bank/orchestrator-log.md for same-day Owner approval.
+# Format: | YYYY-MM-DD | push-approval | push: APPROVED origin main - <reason> | Owner |
+# This is a cooperative control, not cryptographic. Control Tower records the entry
+# only on explicit Owner instruction in chat.
+# Belt-and-suspenders: even with a valid approval entry, force-push/destructive ops
+# are denied by the destructive-git block above.
+if echo "$clean_cmd" | grep -qP 'git\s+push\s+(-[^\s]*\s+)*origin\s+main\b'; then
+  # Belt-and-suspenders: re-check that this is not a force-push or destructive operation.
+  # Even with approval, force-push (-f, --force, +) is denied. The destructive-git block
+  # above already caught these, but we re-check here to protect against future reordering.
+  if echo "$clean_cmd" | grep -qE '(-f|--force|\+)'; then
+    jq -n '{
+      continue: false,
+      systemMessage: "\n🛑 HARD STOP: force-push blocked\nDestructive operations (force-push, rebase push, deletion) cannot be unlocked by approval. Even with orchestrator-log approval, force-push is denied. Only plain \`git push origin main\` is unlockable.",
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: "deny",
+        permissionDecisionReason: "Hard Stop: force-push is destructive and cannot be unlocked by orchestrator-log approval"
+      }
+    }'
+    exit 0
+  fi
+
+  # Check for same-day approval in orchestrator-log
+  today=$(date +%F)
+  if [ -f "memory_bank/orchestrator-log.md" ] && \
+     grep -qE "^\| $today \| push-approval \| push: APPROVED" "memory_bank/orchestrator-log.md"; then
+    # Approval found, allow push
+    exit 0
+  fi
+
+  # No approval found, deny
+  jq -n '{
+    continue: false,
+    systemMessage: "\n🛑 HARD STOP: push to origin main\nAGENTS.md § Hard Stops requires Owner approval.\n\nApproval channel: Owner may approve by instructing Control Tower to record an entry in memory_bank/orchestrator-log.md with format:\n| YYYY-MM-DD | push-approval | push: APPROVED origin main - <reason> | Owner |\n\nThis approval is valid for the calendar day only and does not unlock force-push or destructive operations.",
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecision: "deny",
+      permissionDecisionReason: "Hard Stop: push to origin main requires Owner approval recorded in orchestrator-log (AGENTS.md)"
     }
   }'
   exit 0

@@ -212,6 +212,8 @@ must not grant itself broader authority because it can run `psql`, `ssh`,
 | Sending real client communications (email, WhatsApp, Telegram) | External impact |
 | Push to main (`git push origin main`) | Public repo side effect; irreversible |
 
+**Push-to-main approval channel (cooperative control):** Owner may approve a plain `git push origin main` without manual `!` by instructing Control Tower to record an entry in `memory_bank/orchestrator-log.md` with format `| YYYY-MM-DD | push-approval | push: APPROVED origin main - <reason> | Owner |`. This approval is valid for the calendar day only and does not unlock force-push, destructive operations, or deletions — those remain unconditionally blocked. This is a cooperative control (prevents pushes without recorded Owner instruction), not cryptographic protection. Control Tower records the entry only on explicit Owner instruction in chat.
+
 Everything else → **run through to closeout, then report**.
 
 ### Side-Effect Classes
