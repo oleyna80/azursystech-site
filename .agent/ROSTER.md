@@ -20,9 +20,10 @@
 
 ## Codex (OpenAI)
 
-Config: `.codex/config.toml` — `multi_agent = true`
+Config template: `.codex/config.toml.template` — `multi_agent = true`
 Instructions: `.codex/instructions.md` — delegation policy, SDD stage mapping, context hygiene
-Custom agents: `.codex/agents/scoped-coder.toml`, `.codex/agents/verifier.toml`
+Custom agents: none committed by default; use runtime-native subagents when
+available and this roster for role/scope contracts.
 Routing: follows `AGENTS.md` stage flow + skill triggers. Main chat stays
 Control Tower. Use subagents whenever they materially improve speed, quality,
 or context hygiene, and for large expected outputs. Use one write-capable Scoped
@@ -61,6 +62,26 @@ Skill routing: same as Codex — stage flow + skill triggers.
 
 ---
 
+## OpenCode
+
+Config: `.opencode/agents/*.md` — subagent contracts mirroring
+`.claude/agents/` (same roles: solution-architect, critic, gpt-critic,
+reviewer, scoped-coder, verifier, gpt-verifier, codex-reviewer).
+Frontmatter is opencode-specific: `mode: subagent`, `permission` block,
+`color` as hex or theme token (named colors are invalid).
+Root config: `opencode.json` — permission floor mirroring `AGENTS.md` Hard
+Stops (deny push-to-main/force-push/ssh/deploy/live-DB/direct Codex CLI;
+ask by default), `share: disabled`, `autoupdate: false`.
+GPT models: native OpenAI provider via ChatGPT Plus/Pro subscription auth
+(`opencode auth login`); Codex MCP is not required inside OpenCode —
+gpt-critic/gpt-verifier may pin a GPT model via `model:` frontmatter.
+Follows `AGENTS.md` for flow policy, hard stops, and file write authority.
+Skill routing: same as Codex — stage flow + skill triggers.
+Plugin runtime state under `.opencode/` (node_modules, package*.json) is
+local-only, self-ignored via generated `.opencode/.gitignore`.
+
+---
+
 ## Gemini (Google)
 
 Used via Antigravity / direct API.
@@ -71,7 +92,11 @@ Skill routing: same as Codex — stage flow + skill triggers.
 
 ## Skill → Agent Assignment
 
-This table lists routing-critical skills, not every utility skill in `.agent/skills/`.
+This table lists routing-critical skill candidates and approved project-local
+skills. It does not mean every listed `.agent/skills/<name>/` directory is
+committed or required in a fresh clone. Use the skill workflow only when the
+skill file exists in the workspace and is inside the approved scope; otherwise
+record `skill-file-unavailable` and use the nearest committed gate/template.
 
 | Skill | Primary Agent |
 |---|---|
@@ -80,53 +105,41 @@ This table lists routing-critical skills, not every utility skill in `.agent/ski
 | `agent-operations-review` | Control Tower |
 | `project-estimation` | Control Tower |
 | `technical-discovery` | Control Tower |
-| `architecture-discovery` | Control Tower (optional pre-SDD research) |
+| `architecture-discovery` | Control Tower / Architecture Analyst |
 | `memory-bank-manager` | Control Tower |
 | `ssot-sync-closeout` | Control Tower |
-| `azursystech-contract-verifier` | Verifier |
+| `context-snapshot` | Control Tower |
+| `orchestrator-log` | Control Tower |
+| `merge-protocol` | Control Tower |
+| `shell-context-guard` | Control Tower |
+| `systematic-debugging` | Control Tower |
+| `handoff-live-smoke` | Control Tower (Owner approval if external runtime/API is used) |
+| `mcp-builder` | Control Tower (Owner approval if config/dependency changes are required) |
+| `graphify-code-map` | Control Tower / Architecture Analyst |
+| `skill-creator` | Control Tower |
+| `scoped-coder` | Scoped Coder |
+| `scoped-commit-guard` | Scoped Coder / Control Tower before staging |
+| `reviewer` | Docs Reviewer |
+| `critic-review` | Docs Reviewer / Reviewer |
+| `verifier` | Verifier |
+| `codex-verification` | Verifier |
 | `security-verification-gate` | Verifier |
-| `intake-agent-foundation` | Scoped Coder |
-| `azursystech-schema-route` | Scoped Coder |
 | `security-audit-triage` | Docs Reviewer |
 | `security-hardening-pass` | Scoped Coder |
-| `contact-drift-audit` | Docs Reviewer |
-| `copy-review` | Docs Reviewer |
-| `index-exclusions-manager` | Scoped Coder |
-| `local-seo-ops` | Scoped Coder |
-| `lead-response-ops` | Scoped Coder |
-| `social-automation-ops` | Scoped Coder |
-| `ai-runtime-ops` | Scoped Coder |
-| `telegram-webhook-gate` | Control Tower / Scoped Coder |
-| `scoped-commit-guard` | Scoped Coder |
-| `systematic-debugging` | Control Tower |
-| `shell-context-guard` | Control Tower |
-| `compose-preflight` | Control Tower |
-| `deploy-readiness-gate` | Control Tower |
-| `vps-registry-pull-deploy` | Control Tower (Owner approval required) |
-| `vps-deploy-recovery` | Control Tower (Owner approval required) |
-| `vps-db-tunnel-ops` | Control Tower (Owner approval required) |
-| `vps-repo-sync` | Control Tower |
-| `vps-ghcr-credential-rotation` | Control Tower (Owner approval required) |
-| `vps-security-runtime-proof` | Verifier |
-| `vps-sql-runtime-proof` | Verifier |
 | `theme-factory` | Control Tower → Scoped Coder (theme application) |
-| `brand-guidelines` | Control Tower / Scoped Coder |
 | `frontend-design` | Scoped Coder |
 | `emil-design-eng` | Scoped Coder (on-demand UI polish + animation review) |
-| `impeccable` | Scoped Coder (wrapper in `.agent/skills/impeccable`, vendor source `.claude/skills/impeccable`) |
+| `azursystech-impeccable` | Scoped Coder when an approved OpenCode wrapper exists; vendor `impeccable` remains runtime-local under `.claude/skills/impeccable` |
 | `taste-skill` | Scoped Coder (strategic: brief inference + 3 param dials) |
-| `minimalist-skill` | Scoped Coder (Linear/Notion editorial style) |
-| `soft-skill` | Scoped Coder (premium/calm high-end agency look) |
-| `brutalist-skill` | Scoped Coder (Swiss typography + industrial aesthetic) |
-| `redesign-skill` | Scoped Coder (audit & upgrade existing UIs) |
-| `output-skill` | Scoped Coder (force complete unabridged output) |
-| `imagegen-frontend-web` | Scoped Coder (section-level design reference images) |
-| `image-to-code-skill` | Scoped Coder (reference image → production code) |
+| `minimalist-ui` | Scoped Coder (Linear/Notion editorial style) |
+| `industrial-brutalist-ui` | Scoped Coder (Swiss typography + industrial aesthetic) |
+| `redesign-existing-projects` | Scoped Coder (audit & upgrade existing UIs) |
+| `full-output-enforcement` | Scoped Coder (force complete unabridged output) |
+| `webapp-testing` | Verifier / QA Analyst |
 
 Utility / preflight skills are intentionally omitted from the routing-critical
 table unless they define ownership. Invoke these by trigger when needed:
-`graphify-code-map`, `nextjs-seo-build-verifier`, `npm-audit-wsl`,
-`wsl-browser-preflight`.
+runtime tools, MCP tools, browser helpers, and project-specific scripts.
 
 ---
 

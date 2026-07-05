@@ -1,0 +1,28 @@
+# Optional project-local Codex config template.
+#
+# Copy to `.codex/config.toml` only when this project needs local Codex
+# overrides. Commit only secret-free policy/templates; keep machine-specific
+# provider settings outside Git.
+#
+# Codex can run the shared Agentic SDLC contract independently. Claude Code is
+# a separate runtime/team layer available through the handoff contract when
+# that extra architecture is useful.
+#
+# Do not store secrets or provider tokens in this file.
+#
+# Keep real model provider settings in user-level Codex config or a private
+# project environment. The framework template may document intended profiles,
+# but it must not ship API keys, proxy URLs, or organization-specific provider
+# definitions.
+
+multi_agent = true
+# [mcp_servers.context7]
+# command = "npx"
+# args = ["-y", "@upstash/context7-mcp"]
+
+# Figma MCP is intentionally disabled by default.
+# Enable only after Owner approves the local setup.
+#
+# [mcp_servers.figma]
+# command = "npx"
+# args = ["-y", "figma-developer-mcp", "--stdio"]

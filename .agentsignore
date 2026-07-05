@@ -1,0 +1,54 @@
+# Heavy generated output
+node_modules/
+.next/
+dist/
+build/
+out/
+coverage/
+test-results/
+
+# Local caches and browser artifacts
+.cache/
+.npm-cache/
+.playwright-browsers/
+.playwright-cli/
+.qwen/
+web/.npm-cache/
+web/test-results/
+showcase/.next/
+web/.next/
+
+# Secrets and local environment
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Runtime logs and local-only state
+*.log
+logs/
+memory_bank/
+memory_bank/archive/
+memory_bank/snapshots/
+
+# Agent runtime/private configuration
+.codex/config.toml
+.codex/agents/**
+.agent/skills/**
+.claude/settings.local.json
+.claude/agent-memory/**
+!.claude/agent-memory/*/
+!.claude/agent-memory/*/MEMORY.md
+# Claude skills stay excluded from agent indexing: heavy, separately curated.
+.claude/skills/**
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

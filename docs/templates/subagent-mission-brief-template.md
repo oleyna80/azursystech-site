@@ -1,46 +1,71 @@
-# Subagent Mission Brief
+# Subagent Mission Brief Template
+
+> Use for all non-trivial delegated work.
+> Control Tower fills this in before launching a subagent.
+
+---
 
 ## Base Role
+[Orchestrator | Coder | Reviewer | Verifier]
 
 ## Mission Role
+[Architecture Analyst | Security Analyst | Backend Coder | QA Analyst | Docs Analyst]
+Temporary specialization — narrows focus, does not expand authority.
 
 ## Skill(s)
-
-- Required project-local skills:
-- Optional project-local skills:
-- Skills explicitly out of scope:
-- If a required skill is unavailable, report `skill-blocked:<reason>` and do not silently replace it with memory-derived steps.
+- [skill-name]: [why this skill applies]
 
 ## Objective
-
-## Context
+[One sentence — what must the subagent accomplish?]
 
 ## Scope
 
-## Out of scope
+### In Scope
+- [Item 1]
 
-## Inputs / files to read
+### Out of Scope
+- [Item 1]
 
-## Allowed tools / MCP
+## Inputs / Files to Read
+- [ ] `AGENTS.md`
+- [ ] `memory_bank/context.md`
+- [ ] [task/spec/plan file]
+- [ ] [source files]
+- [ ] `memory_bank/snapshots/snapshot-[wb-id]-[stage]-[date].md` (if parallel dispatch — frozen system state)
 
-## Nested external AI CLI
+## Allowed Tools / MCP
+- Read, Bash, LSP, Grep, Glob, WebFetch, WebSearch
+- MCP: [list relevant MCP servers]
 
-Forbidden unless this mission is explicitly assigned as `External Audit Runner`.
+## Approved Write-Set
+```
+[path pattern — empty for read-only roles]
+```
 
-## Self-report boundary
+## Side-Effect Class
+[read-only | local-docs | production-code | ...]
 
-Report only from the assigned role. Do not present yourself as Control Tower.
-Do not judge native/fallback/fork/inline orchestration. If this is relevant,
-write `not assessed` unless Control Tower explicitly provided the fact.
+## DB Action Mode
+[none | local_temp | live_readonly | ...]
 
-## Approved write-set
+## Parallel Group / Sibling Streams
+[Other subagents running concurrently — coordination notes]
 
-Use `none` for read-only missions.
+## Hard Stops
+- [ ] Production deploy
+- [ ] Live DB migration
+- [ ] Credential rotation
+- [ ] Destructive git ops
+- [ ] Commit or push
+- [ ] Public release/publication
+- [ ] Client communications
 
-## Hard stops
+## Required Checks / Verification Evidence
+- [ ] [Check 1 — how to verify]
+- [ ] [Check 2 — how to verify]
 
-## Required checks
+## Expected Output
+[Format, file path if writing artifacts, schema if structured]
 
-## Expected output
-
-## Handoff target
+## Acceptance Owner / Handoff Target
+[Who receives the output and decides whether it's accepted]

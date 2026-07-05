@@ -1,0 +1,49 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "share": "disabled",
+  "autoupdate": false,
+  "plugin": [
+    "./.opencode/plugin/sdlc-guard-smoke.ts"
+  ],
+  "instructions": [
+    "AGENTS.md",
+    "PROJECT_MAP.md",
+    "FILE_REGISTRY.yml",
+    ".agent/workflows/sdd-protocol.md",
+    ".agent/ROSTER.md",
+    "docs/session-bootstrap.md"
+  ],
+  "permission": {
+    "webfetch": "ask",
+    "bash": {
+      "*": "ask",
+      "git status*": "allow",
+      "git diff*": "allow",
+      "git log*": "allow",
+      "git show*": "allow",
+      "rg *": "allow",
+      "grep *": "allow",
+      "find *": "allow",
+      "ls *": "allow",
+      "cat *": "allow",
+      "head *": "allow",
+      "tail *": "allow",
+      "wc *": "allow",
+      "sort *": "allow",
+      "uniq *": "allow",
+      "jq *": "allow",
+      "npm run *": "allow",
+      "npx tsc --noEmit*": "allow",
+      "git push origin main*": "deny",
+      "git push --force*": "deny",
+      "git push -f*": "deny",
+      "git reset --hard*": "deny",
+      "codex *": "deny",
+      "ssh *": "deny",
+      "scp *": "deny",
+      "docker push*": "deny",
+      "npx prisma migrate deploy*": "deny",
+      "npx prisma db push*": "deny"
+    }
+  }
+}

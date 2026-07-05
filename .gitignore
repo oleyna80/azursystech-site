@@ -71,6 +71,78 @@ docs/reports/qwen/
 codex-orchestration-skills/
 08_showcase/
 
+# Committed Agentic SDLC navigation and policy layer.
+!AGENTS.md
+!.codexignore
+!.agentsignore
+!PROJECT_MAP.md
+!FILE_REGISTRY.yml
+!docs/
+!docs/session-bootstrap.md
+!docs/engineering-memory/
+!docs/engineering-memory/**
+!docs/plans/
+!docs/plans/**
+!docs/reports/
+!docs/reports/**
+!docs/specs/
+!docs/specs/**
+!docs/tasklist/
+!docs/tasklist/**
+!docs/templates/
+!docs/templates/**
+!.agent/
+!.agent/**
+!.codex/
+!.codex/AGENTS.md
+!.codex/critic.md
+!.codex/write-gate.md
+!.codex/instructions.md
+!.codex/config.toml.template
+!.codex/hooks/
+!.codex/hooks/**
+
+# Local/deferred skill candidates are curated in a separate Work Block. They can
+# be added explicitly with `git add -f` after exact skill paths are approved.
+.agent/skills/**
+
+# Claude Code project control layer is committed: settings.json, hooks/,
+# agents/, security guidance, agent-memory MEMORY.md indexes.
+# Private/local/heavy Claude state stays ignored.
+.claude/settings.local.json
+.claude/agent-memory/**
+!.claude/agent-memory/*/
+!.claude/agent-memory/*/MEMORY.md
+# Skills remain a separate curated scope: approve exact paths per Work Block
+# and add with `git add -f` (already-tracked legacy skill files stay tracked).
+.claude/skills/**
+.codex/agents/**
+.opencode/skills/**
+
+# Local browser-automation artifacts (Playwright MCP snapshots).
+.playwright-mcp/
+
+# Private runtime config remains local even when policy templates are committed.
+.codex/config.toml
+.codex/*.local*
+.codex/**/__pycache__/
+
+# OpenCode: agents/ is committed; runtime/provider config and plugin runtime
+# state stay local. (opencode also self-generates a nested .opencode/.gitignore,
+# but it self-ignores, so the rules are committed here.)
+.opencode/config.toml
+.opencode/opencode.json
+.opencode/*.local*
+.opencode/node_modules/
+.opencode/package.json
+.opencode/package-lock.json
+.opencode/bun.lock
+.opencode/.gitignore
+
+# Keep generated/heavy local evidence ignored even though docs are visible.
+docs/reports/git/stash-backups/*.patch
+docs/reports/qwen/
+
 # Build
 build/
 out/

@@ -103,16 +103,38 @@ and `.agentsignore` as the vendor-neutral advisory list. Do not bulk-read paths
 listed there unless the approved objective explicitly requires them. These files
 are context controls, not security boundaries.
 
-### Local Agent Layer
+### Committed and Local Agent Layers
 
-The `.agent/`, `.roo/`, `.codexignore`, `.agentsignore`, and `memory_bank/`
-workflow layer is intentionally local-first. Do not remove these paths from
-`.gitignore` or publish them unless the Owner explicitly approves a public
-workflow-doc release.
+The Agentic SDLC layer is split into committed policy/templates and local
+runtime state.
 
-Run `scripts/bootstrap.sh` after cloning or restoring a workspace to verify that
-the local workflow layer required by the Session Start Read Set is present.
-Bootstrap is a preflight check; it does not install secrets, fetch private
+Committed, portable workflow files include `AGENTS.md`, `PROJECT_MAP.md`,
+`FILE_REGISTRY.yml`, `docs/session-bootstrap.md`,
+`docs/engineering-memory/**`, `docs/templates/**`, `.agent/README.md`,
+`.agent/ROSTER.md`, `.agent/critic-gate.md`, `.agent/verification-gate.md`,
+`.agent/workflows/**`, `.codexignore`, `.agentsignore`, and safe Codex
+policy/template files such as `.codex/AGENTS.md`, `.codex/critic.md`,
+`.codex/write-gate.md`, `.codex/instructions.md`,
+`.codex/config.toml.template`, and `.codex/hooks/**`.
+
+Project-local `.agent/skills/**` wrappers are commit-eligible only after a
+separate skill-curation Work Block approves the specific skill paths. Until
+then, unapproved skill directories are local/deferred aids and are not required
+for bootstrap, review, verification, or a fresh clone.
+
+Local-only runtime state includes `memory_bank/**`, `.env*`, secrets,
+credentials, provider tokens, private runtime config such as
+`.codex/config.toml`, `.codex/agents/**`, `.claude/**`, caches, generated
+browser/build artifacts, and runtime logs. These files must stay ignored unless
+the Owner explicitly approves a public workflow-doc release for a specific path.
+If runtime paths are already tracked from earlier work, treat them as legacy
+tracked runtime payloads pending a separate cleanup/curation Work Block; do not
+expand them during unrelated control-layer work.
+
+Run `scripts/bootstrap.sh --check` after cloning or restoring a workspace to
+verify that the workflow layer required by the Session Start Read Set is
+present. Run `scripts/bootstrap.sh --init` when a fresh clone needs local
+`memory_bank/` starter files. Bootstrap does not install secrets, fetch private
 material, or change production configuration.
 
 Owner involvement is intentionally light: the Owner starts the process,
@@ -297,7 +319,7 @@ Standard:
           └─→ Verify (Verifier gate, tier-scoped)
                 └─→ Sync & Report (SSOT Sync + Owner report)
 
-Quick-fix (≤3 files, no route/schema/API/security):
+Quick-fix (≤2 planned write-set files, no route/schema/API/security/governance):
   Implement (Lite checks) → Inline sync → Done
 ```
 
@@ -330,11 +352,15 @@ See `.agent/workflows/sdd-protocol.md` for full stage definitions, verification 
 For non-trivial work, read these files before planning edits:
 
 1. `AGENTS.md` — operating contract, autonomy policy, hard stops, file authority
-2. `.agent/workflows/sdd-protocol.md` — stage flow, verification tiers, quick-fix rules
-3. `.agent/ROSTER.md` — agent/mode and skill routing
-4. `memory_bank/context.md` — current focus and next gate
-5. `memory_bank/progress.md` — rolling status log
-6. `memory_bank/decisions.md` — ADRs and durable decisions
+2. `PROJECT_MAP.md` — project map, authority model, and major path boundaries
+3. `FILE_REGISTRY.yml` — machine-readable registry for key files and zones
+4. `docs/session-bootstrap.md` — current session intake and memory-use rules
+5. `.agent/workflows/sdd-protocol.md` — stage flow, verification tiers, quick-fix rules
+6. `.agent/ROSTER.md` — agent/mode and skill routing
+7. Relevant `docs/engineering-memory/*` entries — durable engineering memory
+8. `memory_bank/context.md` — current operational focus and next gate
+9. `memory_bank/progress.md` — rolling operational status log
+10. `memory_bank/decisions.md` — operational decision summaries only
 
 Read additional specs, plans, tasklists, skills, or code only when they are relevant
 to the approved objective.
@@ -358,15 +384,15 @@ documentation edits, staging, commit, push, deploy, DB, env/secret, and
 client-facing actions are blocked. Trivial quick-fix tasks may use the
 lightweight path, but must still report why full Stage 0 was skipped.
 
-**Compact preflight** — for Control-Tower-Only tasks (≤3 files, no DB, no deploy,
-no security, no client-facing): output one compact line instead of full 6-field
-preflight:
+**Compact preflight** — for Control-Tower-Only tasks (≤2 planned write-set
+files, no DB, no deploy, no security, no client-facing, no governance impact):
+output one compact line instead of full 6-field preflight:
 
 ```
 PREFLIGHT: CTO | <side-effect-class> | no DB | no HS | Skills: <checked>/<used>/<skipped> | READY
 ```
 
-Example: `PREFLIGHT: CTO | production code | no DB | no HS | Skills: brand-guidelines,emil-design-eng/emil-design-eng,brand-guidelines/impeccable | READY`
+Example: `PREFLIGHT: CTO | production code | no DB | no HS | Skills: checked=roster,critic-gate; used=critic-gate; skipped=skill-file-unavailable | READY`
 
 Compact preflight must still include Skill Routing Gate evidence (which skills
 were checked, which were used, which were skipped and why). Trivial quick-fix
@@ -384,17 +410,22 @@ Skill Routing Gate requires:
 
 0. **Relevance filter (MANDATORY first step).** Before scanning any skill files,
    state which skill categories are relevant to THIS task type. Group them:
-   - **Always relevant:** `brand-guidelines` (any visual work), `scoped-commit-guard` (any commit)
-   - **Relevant to this task:** e.g. "design + frontend" → taste-skill, frontend-design, impeccable, emil-design-eng
+   - **Always relevant:** `scoped-commit-guard` for commit decisions, and the
+     current Work Block / gate templates for non-trivial work.
+   - **Relevant to this task:** e.g. "design + frontend" -> taste-skill,
+     frontend-design, impeccable, emil-design-eng, if approved wrappers exist.
    - **Not relevant to this task:** everything else (skip scanning these categories)
 
    Then scan ONLY the relevant skills. This prevents silent skill ignorance —
    the agent must actively decide which skills are OUT of scope, not just
    "forget" to check them.
 
-1. Inspect `.agent/ROSTER.md` for routing-critical skills.
-2. Search or inspect `.agent/skills/*/SKILL.md` for matching `description`,
+1. Inspect `.agent/ROSTER.md` for routing-critical skill candidates.
+2. If approved or local `.agent/skills/*/SKILL.md` files exist for the relevant
+   categories, search or inspect them for matching `description`,
    `## Triggers`, or `## When to Use` **within the relevant categories only**.
+   If no matching skill file exists, record `skill-file-unavailable` and use
+   the nearest committed gate/template as the fallback.
 3. Read only the matching skill files; do not bulk-read every skill.
 4. State in the Work Block:
    - `Skills checked` (all relevant categories scanned)
@@ -402,17 +433,19 @@ Skill Routing Gate requires:
    - `Skills used` (which were actually applied)
    - `Skills skipped and why` (matched but not used — must give reason)
 
-If a project-local skill matches the current Work Block or stage, use that
-skill's workflow. If the runtime exposes a formal Skill invocation mechanism,
-invoke the skill there. If the runtime does not expose project-local skills,
-read `.agent/skills/<name>/SKILL.md`, state
-`Project-local skill used: <name>`, and follow its workflow manually.
+If an approved or local project-local skill matches the current Work Block or
+stage, use that skill's workflow. If the runtime exposes a formal Skill
+invocation mechanism, invoke the skill there. If the runtime does not expose
+project-local skills, read `.agent/skills/<name>/SKILL.md`, state
+`Project-local skill used: <name>`, and follow its workflow manually. If the
+skill exists only as a candidate in `.agent/ROSTER.md`, record the missing
+skill file and continue with the committed gate/template fallback.
 
-For frontend/design work, `.agent/skills/impeccable` is a project-local wrapper
-around `.claude/skills/impeccable`. Treat `PRODUCT.md` as required project
-context for that skill. Do not copy the vendor skill into `.agent`; keep the
-wrapper as the routing point and the vendor file as the source of detailed
-frontend craft instructions.
+For frontend/design work, `.agent/skills/impeccable` may be used only if its
+wrapper is present and approved for the current workspace. Vendor runtime skills
+under `.claude/skills/**` remain runtime-local unless separately approved for a
+public workflow-doc release; the committed Claude control layer (settings,
+hooks, agents, agent-memory indexes) is governed by `FILE_REGISTRY.yml`.
 
 Skipping a matching skill is allowed only with a recorded reason:
 `not relevant after inspection`, `blocked`, or `superseded by stricter gate`.
@@ -428,9 +461,14 @@ credential, deploy, live DB, destructive, or client-facing action.
 - `docs/specs/*` are approved product/technical contracts; use them as requirements/reference,
   not live task status unless they are synced in the active tasklist.
 - `docs/reports/*` are immutable historical evidence snapshots, not current truth.
+- `docs/engineering-memory/*` contains durable engineering memory, source-of-truth
+  chains, reproducible procedures, temporary decisions, and accepted decision
+  records.
 - `memory_bank/context.md` contains only current focus, scope, and next gate.
 - `memory_bank/progress.md` contains the rolling status log.
-- `memory_bank/decisions.md` contains ADRs only.
+- `memory_bank/decisions.md` contains operational decision summaries only.
+  Promote durable architecture/runtime/process decisions to
+  `docs/engineering-memory/`.
 
 If a report or plan conflicts with the active tasklist, follow the active tasklist
 and document the drift during Sync & Report.
@@ -473,11 +511,12 @@ If the external CLI is blocked by network, account, model availability, sandbox,
 or a hung process, record the blocker and continue with the approved fallback
 instead of letting the subagent wait for Owner approval or tool escalation.
 
-### Ignored Local SSOT Closeout
+### Local Runtime Memory Closeout
 
-Local workflow/tasklist/memory files may be ignored by Git. For any closeout
-that updates ignored SSOT files, `git status` and `git diff` are not sufficient
-evidence. The Orchestrator must verify the update with direct inspection and:
+`memory_bank/**` is operational runtime memory and may be ignored by Git.
+For any closeout that updates ignored runtime memory, `git status` and
+`git diff` are not sufficient evidence. The Orchestrator must verify the update
+with direct inspection and:
 
 ```bash
 git check-ignore -v <changed-local-ssot-paths>
@@ -487,6 +526,8 @@ git diff --check -- <changed-local-ssot-paths>
 
 The Owner report must state whether the SSOT changes are local-only/ignored and
 therefore will not appear in public Git history unless separately approved.
+Reusable knowledge that should survive a new workstation or a new agent runtime
+must be promoted into `docs/engineering-memory/` before closeout.
 
 ---
 
@@ -499,6 +540,12 @@ therefore will not appear in public Git history unless separately approved.
 | Scoped Coder | `azursystech-scoped-coder` | Approved-scope implementation only |
 | Verifier | `azursystech-verifier` | AC verification gate |
 
+Approved runtimes hosting these roles: Codex, Claude Code, OpenCode, Qwen,
+Gemini. OpenCode follows this AGENTS.md for flow policy, Hard Stops, and file
+write authority; skill routing same as Codex/Claude (stage flow + skill
+triggers); its subagent contracts live in `.opencode/agents/**` and mirror
+`.claude/agents/**`.
+
 Full roster with skill assignments: `.agent/ROSTER.md`
 
 ---
@@ -509,11 +556,16 @@ Memory bank files in the session start read set:
 
 1. `memory_bank/context.md` — current focus, scope, next step
 2. `memory_bank/progress.md` — done / in-progress / next (last 15 entries)
-3. `memory_bank/decisions.md` — architecture decisions and rationale
+3. `memory_bank/decisions.md` — operational decision summaries and pointers to
+   durable records
 
 Update memory bank only after a meaningful closeout has verification evidence.
 Do not update it for every small discussion, clarification, or intermediate
 handoff.
+
+Durable engineering memory belongs in `docs/engineering-memory/`, not in
+`memory_bank/`. Promote accepted architecture, runtime, integration, delivery,
+or process decisions there during closeout.
 
 **Rolling window**: `progress.md` keeps the last 15 entries. When exceeding 15,
 move older entries to `memory_bank/archive/progress-YYYY-MM.md`.
@@ -551,8 +603,11 @@ Archived entries are read only when explicitly needed (debugging, audit).
 
 ## Skill Index
 
-Skills live in `.agent/skills/<skill-name>/SKILL.md`.
-Each skill defines: Triggers · Workflow · Guardrails · Handoff.
+Approved project-local skills live in `.agent/skills/<skill-name>/SKILL.md`.
+Each skill defines: Triggers · Workflow · Guardrails · Handoff. Candidate or
+local-only skills may be listed in `.agent/ROSTER.md`, but they do not become
+fresh-clone requirements until a skill-curation Work Block approves their exact
+paths for commit.
 
 Agents may create project-local skills or adapt public/vendor skills when they
 reduce recurring work. Prefer existing skills first. New or adapted skills stay
@@ -587,7 +642,8 @@ See `.agent/README.md` for navigation guide.
 
 | Path pattern | Who can write |
 |---|---|
-| `AGENTS.md`, `.agent/*`, `docs/specs`, `docs/plans`, `docs/tasklist`, `docs/templates/*`, `memory_bank/*` | Control Tower |
-| `web/*`, `scripts/*`, `05_ai/*` | Scoped Coder (within approved write-set) |
-| `docs/reports/*` | Verifier, Scoped Coder (closeout reports) |
+| `AGENTS.md`, `PROJECT_MAP.md`, `FILE_REGISTRY.yml`, `docs/session-bootstrap.md`, `.agentsignore`, `.codexignore` | Control Tower |
+| `.agent/README.md`, `.agent/ROSTER.md`, `.agent/critic-gate.md`, `.agent/verification-gate.md`, `.agent/workflows/**`, approved `.agent/skills/**`, safe `.codex/**` policy/templates/hooks, `docs/engineering-memory/**`, `docs/templates/**`, `docs/specs/**`, `docs/plans/**`, `docs/tasklist/**`, `memory_bank/**` | Control Tower |
+| `web/**`, `admin/**`, `showcase/**`, `scripts/**`, `05_ai/**` | Scoped Coder (within approved write-set) |
+| `docs/reports/**` | Verifier, Scoped Coder, Control Tower (closeout and consolidation reports) |
 | `.env`, secrets, production infra | Owner only |
