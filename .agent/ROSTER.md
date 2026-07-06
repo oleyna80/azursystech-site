@@ -1,10 +1,10 @@
-# .agent/ROSTER.md — Agent & Skill Registry (9 Consolidated Skills)
+# .agent/ROSTER.md — Agent & Skill Registry (10 Skills)
 
-> Curated registry of all agents and 9 consolidated skills. Authority model: Control Tower (plan/sync), Scoped Coder (execute), Verifier (independent check), Reviewer (read-only analysis). Model routing: haiku (discover), sonnet (coder/verifier/reviewer), opus (architect). GPT agents inherit via Codex MCP (DEGRADED path when unavailable).
+> Curated registry of all agents and 10 skills (9 consolidated + sprint-analysis). Authority model: Control Tower (plan/sync), Scoped Coder (execute), Verifier (independent check), Reviewer (read-only analysis). Model routing: haiku (discover), sonnet (coder/verifier/reviewer), opus (architect). GPT agents inherit via Codex MCP (DEGRADED path when unavailable).
 
 ---
 
-## The 9 Consolidated Skills
+## The 10 Skills
 
 | # | Skill | Triggers | Primary Agent | Mode(s) | Key References |
 |---|---|---|---|---|---|
@@ -17,6 +17,7 @@
 | 7 | **systematic-debugging** | Debugging, logging, error isolation | Control Tower / Debugger | Root-cause, isolation | (kept as-is, no merge) |
 | 8 | **webapp-testing** | QA, smoke tests, visual regression | Verifier / QA Analyst | Browser tests, acceptance | (kept as-is, no merge) |
 | 9 | **subagent-mission-brief** | Subagent dispatch, mission framing | Control Tower | Mission definition, scope isolation | (kept as-is, no merge) |
+| 10 | **sprint-analysis** | "проанализируй спринт", "что сделали за неделю", velocity, план/факт, retro with numbers | Control Tower | Period analytics (log + git) | scripts/extract.sh |
 
 ---
 
@@ -88,6 +89,7 @@
 | "log this decision" | memory-ops | Log | Control Tower |
 | "freeze state for parallel" | memory-ops | Snapshot | Control Tower |
 | "sync SSOT on closeout" | memory-ops | SSOT-sync | Control Tower |
+| "проанализируй спринт" | sprint-analysis | Period analytics | Control Tower |
 
 ---
 
