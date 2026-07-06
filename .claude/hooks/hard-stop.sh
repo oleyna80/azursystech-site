@@ -8,9 +8,24 @@ set -euo pipefail
 
 cmd=$(jq -r '.tool_input.command // ""' 2>/dev/null || echo "")
 
+# Quote-aware newline normalization. Newline outside quotes is a command
+# separator (→ ";"), inside quotes it is text (→ " "), so echo/git-commit
+# segments end at line boundaries and the sed strips below cannot swallow
+# the next line (echo done<NL>rm -rf x must stay visible as a command).
+norm_cmd=$(printf '%s' "$cmd" | perl -0777 -ne '
+  my ($sq,$dq,$esc)=(0,0,0);
+  for my $c (split //) {
+    if ($esc) { print($c eq "\n" ? " " : $c); $esc=0; next }
+    if ($c eq "\\" && !$sq) { print $c; $esc=1; next }
+    if ($c eq "\x27" && !$dq) { $sq=!$sq; print $c; next }
+    if ($c eq "\"" && !$sq) { $dq=!$dq; print $c; next }
+    if ($c eq "\n") { print(($sq||$dq) ? " " : ";"); next }
+    print $c;
+  }
+')
+
 # Block: echo / git commit -m with shell expansions — $(...), $var, backticks
-if echo "$cmd" \
-  | tr '\n' ' ' \
+if printf '%s' "$norm_cmd" \
   | grep -oP '(^|[&;|]\s*)\K(echo|git\s+commit)\s+[^&;|]*' \
   | grep -qP '\$\(|`'; then
   jq -n '{
@@ -26,8 +41,7 @@ if echo "$cmd" \
 fi
 
 # Remove quoted text from git commit -m and echo — these carry arbitrary text
-clean_cmd=$(echo "$cmd" \
-  | tr '\n' ' ' \
+clean_cmd=$(printf '%s' "$norm_cmd" \
   | sed -E '
     s/git commit -m "[^"]*"/git commit/g
     s/git commit -m '\''[^'\'']*'\''/git commit/g
