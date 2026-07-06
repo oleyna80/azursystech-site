@@ -61,7 +61,12 @@ if [ -n "$codex_violation" ]; then
 fi
 
 # ── destructive git ops ──────────────────────────────────────────────
-if echo "$clean_cmd" | grep -qP '(git\s+reset\s+--hard|git\s+(push|clean)\s+.*(-[^\s]*f|--force)\b|git\s+push\s+.*\+\s*\w+|git\s+push\s+.*:\s*\w+\s*$|git\s+checkout\s+--\s+\.)'; then
+# checkout/restore: block only whole-tree discard (bare-dot pathspec token:
+# ".", "./", ".."); single-file checkout/restore stays allowed (gate-reset ritual).
+# Global opts (-C/--git-dir/--work-tree) may precede the subcommand.
+# push/clean -f: match f anywhere in a standalone option token (-fd, -xdf),
+# not inside branch names like feat-fix.
+if echo "$clean_cmd" | grep -qP '(git\s+reset\s+--hard|git\s+(push|clean)(\s+\S+)*\s+(-[a-zA-Z]*f[a-zA-Z]*|--force)(\s|$)|git\s+push\s+.*\+\s*\w+|git\s+push\s+.*:\s*\w+\s*$|git\s+((-C|--git-dir|--work-tree)(=\S+|\s+\S+)\s+)*(checkout|restore)(\s+[^&;|]*)?\s+\.{1,2}/?(\s|$))'; then
   jq -n '{
     continue: false,
     systemMessage: "\n🛑 HARD STOP: destructive git operation\nAGENTS.md § Hard Stops requires Owner approval.",
