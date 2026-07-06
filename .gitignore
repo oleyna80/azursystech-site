@@ -27,8 +27,6 @@ data/*.csv
 .git/
 .agent/
 AGENTS.md
-Claude.md
-CLAUDE.md
 .codexignore
 .agentsignore
 .roo/
