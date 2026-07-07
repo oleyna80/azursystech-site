@@ -143,7 +143,19 @@ demo-kit/sections/*.tsx       →  section components (Hero, Services, FAQ, …)
 
 The project uses an Agentic SDLC. Authoritative files:
 - `AGENTS.md` — contract: stages, Hard Stops, authority model
-- `.agent/ROSTER.md` — registry of 9 skills + routing table
+- `.agent/ROSTER.md` — registry of 10 active skills + routing table
 - `.claude/agents/` — subagent definitions (scoped-coder, verifier, reviewer, critic, solution-architect, codex-reviewer, gpt-*)
 
-Hard Stops and verification gate: `.agent/verification-gate.md`, `.claude/hooks/`.
+Main chat operating mode:
+- The main Claude Code chat acts as Control Tower / Orchestrator.
+- Use subagents for implementation, review, fixes, verification, and specialist analysis when the Work Block is non-trivial.
+- Use exactly one write-capable `scoped-coder` for a given write-set.
+- Reviewer, critic, verifier, GPT critic/verifier, and codex-reviewer are read-only for project files unless their agent contract explicitly allows a narrow memory/report artifact.
+- The Orchestrator owns `.agent/critic-gate.md`, `.agent/verification-gate.md`, orchestrator-log updates, scope amendments, and final Owner reporting.
+
+Hard Stops and verification gate: `.agent/critic-gate.md`, `.agent/verification-gate.md`, `.claude/hooks/`.
+
+Claude Code local/provider settings:
+- Real API keys, provider credentials, subscription tokens, and model endpoint overrides live outside the repository.
+- Codex MCP may be configured globally or locally by the developer; repo-local `.mcp.json` is optional and must not contain secrets.
+- If a GPT/Codex-backed subagent cannot access its MCP tool, it must report `UNVERIFIED` or `BLOCKED`, not silently fall back to direct shell invocation.

@@ -131,6 +131,12 @@ policy/template files such as `.codex/AGENTS.md`, `.codex/critic.md`,
 `.codex/write-gate.md`, `.codex/instructions.md`,
 `.codex/config.toml.template`, and `.codex/hooks/**`.
 
+Committed Claude Code control files may include `.claude/settings.json`,
+`.claude/hooks/**`, `.claude/agents/**`, and curated
+`.claude/agent-memory/**` indexes when they define portable workflow behavior.
+These files are part of the project control layer, not private model/provider
+configuration.
+
 Project-local `.agent/skills/**` wrappers are commit-eligible only after a
 separate skill-curation Work Block approves the specific skill paths. Until
 then, unapproved skill directories are local/deferred aids and are not required
@@ -138,12 +144,13 @@ for bootstrap, review, verification, or a fresh clone.
 
 Local-only runtime state includes `memory_bank/**`, `.env*`, secrets,
 credentials, provider tokens, private runtime config such as
-`.codex/config.toml`, `.codex/agents/**`, `.claude/**`, caches, generated
-browser/build artifacts, and runtime logs. These files must stay ignored unless
-the Owner explicitly approves a public workflow-doc release for a specific path.
-If runtime paths are already tracked from earlier work, treat them as legacy
-tracked runtime payloads pending a separate cleanup/curation Work Block; do not
-expand them during unrelated control-layer work.
+`.codex/config.toml`, `.codex/agents/**`, Claude runtime skill payloads under
+`.claude/skills/**`, caches, generated browser/build artifacts, and runtime
+logs. These files must stay ignored unless the Owner explicitly approves a
+public workflow-doc release for a specific path. If runtime paths are already
+tracked from earlier work, treat them as legacy tracked runtime payloads pending
+a separate cleanup/curation Work Block; do not expand them during unrelated
+control-layer work.
 
 Run `scripts/bootstrap.sh --check` after cloning or restoring a workspace to
 verify that the workflow layer required by the Session Start Read Set is
@@ -458,10 +465,13 @@ skill exists only as a candidate in `.agent/ROSTER.md`, record the missing
 skill file and continue with the committed gate/template fallback.
 
 For frontend/design work, `.agent/skills/impeccable` may be used only if its
-wrapper is present and approved for the current workspace. Vendor runtime skills
-under `.claude/skills/**` remain runtime-local unless separately approved for a
-public workflow-doc release; the committed Claude control layer (settings,
-hooks, agents, agent-memory indexes) is governed by `FILE_REGISTRY.yml`.
+wrapper is present, the Skill Routing field matched it for the current Work
+Block, and the approved scope includes frontend/design implementation,
+critique, polish, hardening, or verification.
+Vendor runtime skills under `.claude/skills/**` remain runtime-local unless
+separately approved for a public workflow-doc release; the committed Claude
+control layer (settings, hooks, agents, agent-memory indexes) is governed by
+`FILE_REGISTRY.yml`.
 
 Skipping a matching skill is allowed only with a recorded reason:
 `not relevant after inspection`, `blocked`, or `superseded by stricter gate`.

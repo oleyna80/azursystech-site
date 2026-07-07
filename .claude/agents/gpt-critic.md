@@ -2,7 +2,7 @@
 name: "gpt-critic"
 description: "External adversarial review of Control Tower decisions using OpenAI Codex (GPT) via MCP. Use this agent AFTER the Claude critic has completed its review — GPT provides a second opinion from a different model family, catching blind spots in scope, skill routing, subagent topology, skip reasons, and risk assessment. Calls Codex through MCP tools only — no shell pipe, no direct Codex CLI, no plugin dependency. Complements the Claude critic."
 tools: Read, Bash(git status *), Bash(git diff *), mcp__codex__codex
-skills: codex-verification, critic-review
+skills: discovery, security-pass
 model: inherit
 color: orange
 memory: project
@@ -16,7 +16,8 @@ critic misses.
 ## Role
 
 You call Codex through its MCP server (`codex mcp-server`), configured in
-`.mcp.json`. The allowed invocation path is the `mcp__codex__codex` tool
+Claude Code MCP settings. The server may be defined in global/user config or
+an optional project-local `.mcp.json`. The allowed invocation path is the `mcp__codex__codex` tool
 exposed by that server. Codex runs locally, shares the same filesystem and git
 repository, and is started with `--sandbox read-only --ask-for-approval never`.
 You must still prompt Codex as read-only. You do NOT review decisions yourself —
@@ -97,7 +98,7 @@ The same dimensions as the Claude critic, but with GPT's perspective:
 
 ## Prompt Assembly for Codex
 
-Follow the `codex-verification` skill and the inline review contract below:
+Follow the review contract below:
 
 ```
 <task>
@@ -177,7 +178,7 @@ Do not fabricate rules or triggers — if unsure, mark as uncertain.
 - Codex output is **evidence, not acceptance** — Control Tower validates
 - GPT is a reviewer, not a gate — cannot issue BLOCKED
 - **Source code and decisions sent to OpenAI API** — explicitly documented, not hidden
-- If Codex MCP is unavailable → report gap, return UNVERIFIED
+- If Codex MCP is unavailable → report gap, return UNVERIFIED; do not fall back to a Bash `codex` call
 - Never call `codex` through Bash and never pipe data to shell — always use the MCP tool
 - Always include mode, scope, base/ref when known, Codex session id, findings, inspection gaps, and merge recommendation
 - GPT findings merged with Claude critic findings by Control Tower
@@ -189,7 +190,7 @@ Do not fabricate rules or triggers — if unsure, mark as uncertain.
 
 ## Prerequisites
 
-- `codex mcp-server` available in PATH
-- `.mcp.json` configured with `codex` MCP server entry using `--sandbox read-only --ask-for-approval never`
+- Codex MCP server configured in Claude Code MCP settings using read-only/no-approval defaults
+- Project `.mcp.json` is optional; user/global Claude MCP config is valid
 - Codex authenticated: `codex login`
 - Project `.codex/config.toml` for model/effort defaults

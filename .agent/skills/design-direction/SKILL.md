@@ -146,7 +146,7 @@ All consolidated content from merged skills is organized into reference files in
 6. **Apply design engineering directives.** Section 4: typography, color, layout, interactivity, images, content density.
 7. **Context-aware proactivity.** Section 5: motion, animations, marquees, GSAP patterns.
 8. **Performance & accessibility guardrails.** Section 6.
-9. **Run Pre-Flight Check.** `node .agent/skills/design-direction/scripts/detect.mjs [--json] [paths...]`
+9. **Run the pre-flight review.** Use `reference/taste.md` Section 14 and any local review helper your workspace already provides. Do not depend on a checked-in detector script.
 10. **Manual checklist.** `reference/taste.md` Section 14.
 
 ### B. Redesign Existing Website/App
@@ -222,28 +222,12 @@ All consolidated content from merged skills is organized into reference files in
 | Brutalist or industrial direction needed | `brutalist.md` |
 | Clean, editorial, minimalist direction needed | `minimalist.md` |
 | Existing site needs comprehensive redesign audit | `redesign.md` (Design Audit section) |
-| Pre-Flight Check before shipping | `taste.md` Section 14 + `scripts/detect.mjs` |
+| Pre-Flight review before shipping | `taste.md` Section 14 + manual checklist |
 
 ---
 
-## Scripts
+## Manual Review
 
-### Pre-Flight Detector
+Use `reference/taste.md` Section 14 as the authoritative checklist before shipping.
 
-```bash
-node .agent/skills/design-direction/scripts/detect.mjs [--json] [paths...]
-```
-
-Scans for: em-dashes, gradient text, Inter defaults, eyebrow overuse, scale(0) animations, generic names, fake screenshots, button wraps, duplicate CTAs, form contrast, AI-purple, beige+brass palette defaults, and 10+ other AI tells.
-
-Exit code 1 = slop found. 0 = pass.
-
-### Preset Theme Validator
-
-```bash
-node .agent/skills/design-direction/scripts/validate-theme.mjs [--json] [theme.json]
-```
-
-Checks DemoTheme contract, WCAG contrast, approved heading fonts, Geist Sans body font.
-
-Exit code 1 = invalid. 0 = pass.
+If your workspace exposes a local review helper, treat it as optional and manual-only. This skill no longer claims a checked-in detector or theme validator command.

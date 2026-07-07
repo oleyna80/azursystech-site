@@ -20,16 +20,17 @@ copying its full instructions into `.agent/skills`.
 
 ## Workflow
 
-1. Read `.claude/skills/impeccable/SKILL.md`.
-2. Follow its setup exactly, including `PRODUCT.md` context.
-3. For AzurSysTech, `PRODUCT.md` is the project context register and uses the
+1. Confirm the request has passed the skill-routing gate and is within an approved frontend/design implementation, critique, polish, hardening, or verification scope.
+2. Only after that gate, read `.claude/skills/impeccable/SKILL.md`.
+3. Follow its setup exactly, including `PRODUCT.md` context.
+4. For AzurSysTech, `PRODUCT.md` is the project context register and uses the
    `brand` register unless a later approved product note says otherwise.
-4. Prefer a concrete Impeccable command over a generic invocation:
+5. Prefer a concrete Impeccable command over a generic invocation:
    - `critique` for UX/design review;
    - `polish` for final visual quality;
    - `harden` for i18n, edge cases, and production readiness;
    - `layout`, `typeset`, or `clarify` for narrow fixes.
-5. Do not duplicate vendor skill content here. If the vendor skill changes,
+6. Do not duplicate vendor skill content here. If the vendor skill changes,
    this wrapper should continue to point to the canonical source.
 
 ## Constraints
@@ -55,6 +56,6 @@ copying its full instructions into `.agent/skills`.
   project-local routing path while preserving the vendor skill as source.
 - **Next**: `frontend-design`, `nextjs-seo-build-verifier`, or visual browser
   verification when the Work Block scope allows it.
-- **Auto-proceed**: 🟢 YES inside approved frontend/design scope.
+- **Auto-proceed**: 🟢 YES inside approved frontend/design implementation, critique, polish, hardening, or verification scope.
 - **Hard stop**: 🔴 YES before deploy, live runtime, production data, new
   dependencies, or write actions outside approved scope.

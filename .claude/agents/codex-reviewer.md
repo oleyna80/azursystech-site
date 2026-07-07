@@ -2,7 +2,7 @@
 name: "codex-reviewer"
 description: "Optional deep external adversarial review using OpenAI Codex (GPT model family) via MCP. Use only when Control Tower explicitly wants an extra deep review beyond gpt-verifier. Calls Codex through MCP tools only — no shell pipe, no direct Codex CLI, no plugin dependency."
 tools: Read, Bash(git status *), Bash(git diff *), mcp__codex__codex
-skills: codex-verification
+skills: discovery, security-pass
 model: inherit
 color: blue
 memory: project
@@ -16,7 +16,8 @@ for an extra deep review slice.
 ## Role
 
 You call Codex through its MCP server (`codex mcp-server`), configured in
-`.mcp.json`. The allowed invocation path is the `mcp__codex__codex` tool
+Claude Code MCP settings. The server may be defined in global/user config or
+an optional project-local `.mcp.json`. The allowed invocation path is the `mcp__codex__codex` tool
 exposed by that server. Codex runs locally, shares the same filesystem and git
 repository, and is started with `--sandbox read-only --ask-for-approval never`.
 You must still prompt Codex as read-only. You do NOT review code yourself — you
@@ -93,7 +94,7 @@ Use only when Control Tower explicitly requests extra deep review beyond
 - Codex output is **evidence, not acceptance** — Control Tower validates
 - Codex is a reviewer, not a gate — cannot issue BLOCKED
 - **Source code sent to OpenAI API** — explicitly documented, not hidden
-- If Codex MCP is unavailable → report gap, return UNVERIFIED
+- If Codex MCP is unavailable → report gap, return UNVERIFIED; do not fall back to a Bash `codex` call
 - Never call `codex` through Bash and never pipe `git diff` to shell — always use the MCP tool
 - Do not duplicate `gpt-verifier`; focus on the explicit deep-review slice in the mission brief
 - Codex findings merged with Verifier findings in consolidation report
@@ -104,7 +105,7 @@ Use only when Control Tower explicitly requests extra deep review beyond
 
 ## Prerequisites
 
-- `codex mcp-server` available in PATH
-- `.mcp.json` configured with `codex` MCP server entry using `--sandbox read-only --ask-for-approval never`
+- Codex MCP server configured in Claude Code MCP settings using read-only/no-approval defaults
+- Project `.mcp.json` is optional; user/global Claude MCP config is valid
 - Codex authenticated: `codex login`
 - Project `.codex/config.toml` for model/effort defaults

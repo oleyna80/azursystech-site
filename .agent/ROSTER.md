@@ -99,9 +99,7 @@
 - **CLAUDE.md:** Global code style, environment setup, multi-agent workflows
 - **Codex Config:** `.codex/config.toml.template`, `.codex/instructions.md`
 - **OpenCode:** `.opencode/agents/*.md`, `opencode.json` (permission floor = AGENTS.md Hard Stops)
-- **Roo/Cline Modes:** `.roomodes` map agents to `.agent/` responsibilities
 
 ---
 
 **This ROSTER is canonical for "which skill?" and "who decides?" All implementation and approval flows through Control Tower → Scoped Coder execution → Verifier gates.**
-
