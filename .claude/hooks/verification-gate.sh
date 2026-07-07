@@ -89,8 +89,36 @@ gpt_verifier_status=$(field "GPT Verifier Status")
 gpt_verifier_reason=$(field "GPT Verifier Reason")
 gpt_degraded_reason=$(field "GPT Verifier Degraded Reason")
 quick_fix=$(field "Quick-Fix")
+verifier=$(field "Verifier")
+sensitive_domains=$(field "Sensitive Domains" | tr '[:upper:]' '[:lower:]')
 
 [ -n "$wb_id" ] || deny "Verification gate: Work Block is required before closeout."
+
+# Verifier identity (AGENTS.md Hook-Enforced Gate Rules): READY closeout must
+# record who verified; sensitive domains require an independent subagent or a
+# same-day Owner waiver in the orchestrator-log (fixed-string lookups).
+require_verifier_identity() {
+  case "$sensitive_domains" in
+    "["*|pending|"") deny "Verification gate: Sensitive Domains is ${sensitive_domains:-missing}. Classify sensitive domains (none | list) before closeout." ;;
+  esac
+
+  case "$verifier" in
+    subagent) ;;
+    ct-inline)
+      if [ "$sensitive_domains" != "none" ]; then
+        local today
+        today=$(date +%F)
+        grep "^| ${today} |" "$LOG_FILE" 2>/dev/null \
+          | grep -F -- "$wb_id" \
+          | grep -F "verifier-waiver: APPROVED" \
+          | grep -q . \
+          || deny "Verification gate: Sensitive Domains (${sensitive_domains}) require Verifier: subagent. For ct-inline, record a same-day Owner waiver in ${LOG_FILE}: | ${today} | ${wb_id} | verifier-waiver: APPROVED - <reason> | Owner |"
+      fi
+      ;;
+    PENDING|pending|"["*|"") deny "Verification gate: Verifier is ${verifier:-missing}. Set Verifier: subagent or ct-inline before closeout." ;;
+    *) deny "Verification gate: invalid Verifier '${verifier}'. Use subagent or ct-inline." ;;
+  esac
+}
 
 gpt_verifier_required=0
 case "$verification_tier" in
@@ -138,6 +166,7 @@ case "$status" in
       PENDING|"") deny "Verification gate: Claude Verifier Verdict is ${verifier_verdict:-missing}. Record verifier verdict before closeout." ;;
       *) deny "Verification gate: invalid Claude Verifier Verdict '${verifier_verdict}'. Use READY or BLOCKED." ;;
     esac
+    require_verifier_identity
     exit 0
     ;;
 

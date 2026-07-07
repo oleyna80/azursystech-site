@@ -7,6 +7,7 @@ New Domain: PENDING
 Sensitive Domains: [none | list]
 Claude Verifier Verdict: PENDING
 Verification Report: [docs/reports/...]
+Verifier: PENDING
 GPT Verifier Status: PENDING
 GPT Verifier Reason: [required when NOT_REQUIRED]
 GPT Verifier Degraded Reason: none

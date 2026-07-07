@@ -6,9 +6,11 @@ Verification Tier: PENDING
 New Domain: PENDING
 Subagent Topology Status: PENDING
 Critic Verdict: PENDING
+Critic Report: [docs/reports/...]
 GPT Critic Status: PENDING
 GPT Critic Reason: [required when NOT_REQUIRED]
 No-Skip: false
+Skills Routing: PENDING
 Session: any
 Expires:
 

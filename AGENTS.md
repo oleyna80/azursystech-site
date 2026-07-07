@@ -468,6 +468,36 @@ Skipping a matching skill is allowed only with a recorded reason:
 Hard Stop skills still require explicit Owner approval before any production,
 credential, deploy, live DB, destructive, or client-facing action.
 
+### Hook-Enforced Gate Rules
+
+Three SDLC rules are enforced deterministically at the tool-call boundary
+(principle: a rule lives in a hook, or it does not exist):
+
+1. **Skills Routing field** (`critic-gate.sh`, every gated edit). Repository
+   edits are denied until `.agent/critic-gate.md` records routing evidence,
+   bracket-free (a bracketed or `PENDING` value is a placeholder and denies):
+   `Skills Routing: checked=...; matched=...; used=...; skipped=...`
+
+2. **Write-set amendment** (`critic-gate.sh`, `Status: READY`). Critic reports
+   must list the approved write-set verbatim, one path per line. Editing a
+   path whose write-set pattern is absent from the Critic Report requires a
+   same-day orchestrator-log entry:
+   `| YYYY-MM-DD | <WB-id> | amendment: write-set + <path> - <reason> | Control Tower |`
+   Silent scope expansion after APPROVE is impossible. SKIPPED
+   (Owner-approved) Work Blocks are exempt from the amendment check.
+
+3. **Verifier identity** (`verification-gate.sh`, `Status: READY`). The gate
+   must record `Verifier: subagent | ct-inline` and classify
+   `Sensitive Domains` (`none` or a list; compared case-insensitively).
+   When Sensitive Domains is not `none`, `ct-inline` additionally requires a
+   same-day Owner waiver:
+   `| YYYY-MM-DD | <WB-id> | verifier-waiver: APPROVED - <reason> | Owner |`
+
+All orchestrator-log lookups use fixed-string matching (`grep -F`) — log
+entries and write-set paths are literals, not patterns. Payload fixtures for
+both hooks: `.claude/hooks/tests/gate-fixtures.sh` (extend it in any Work
+Block that touches these hooks).
+
 ---
 
 ## SSOT Hierarchy

@@ -103,6 +103,8 @@ relative_path() {
   printf '%s' "$path"
 }
 
+matched_pattern=""
+
 path_allowed() {
   local path="$1"
   local rel_path pattern
@@ -116,16 +118,34 @@ path_allowed() {
 
     case "$pattern" in
       */)
-        [[ "$rel_path" == "$pattern"* ]] && return 0
+        [[ "$rel_path" == "$pattern"* ]] && { matched_pattern="$pattern"; return 0; }
         ;;
       *)
-        [[ "$rel_path" == "$pattern" ]] && return 0
-        [[ "$rel_path" == $pattern ]] && return 0
+        [[ "$rel_path" == "$pattern" ]] && { matched_pattern="$pattern"; return 0; }
+        [[ "$rel_path" == $pattern ]] && { matched_pattern="$pattern"; return 0; }
         ;;
     esac
   done < <(approved_write_set)
 
   return 1
+}
+
+# Amendment channel: a write-set pattern absent from the critic-approved report
+# requires a same-day orchestrator-log amendment entry (all lookups fixed-string).
+require_amendment_if_unapproved() {
+  local report_path="$1"
+  local today
+
+  grep -qF -- "$matched_pattern" "$report_path" && return 0
+
+  today=$(date +%F)
+  grep "^| ${today} |" "$LOG_FILE" 2>/dev/null \
+    | grep -F -- "$wb_id" \
+    | grep -F "amendment" \
+    | grep -qF -- "$matched_pattern" \
+    && return 0
+
+  deny "Critic gate: '${matched_pattern}' is not in the critic-approved write-set (${report_path}). Silent scope expansion after APPROVE is not allowed. Record a same-day amendment in ${LOG_FILE}: | ${today} | ${wb_id} | amendment: write-set + ${matched_pattern} - <reason> | Control Tower |"
 }
 
 case "$tool" in
@@ -162,8 +182,13 @@ gpt_critic_reason=$(field "GPT Critic Reason")
 gpt_degraded_reason=$(field "GPT Critic Degraded Reason")
 expires=$(field "Expires")
 gate_session=$(field "Session")
+skills_routing=$(field "Skills Routing")
 
 [ -n "$wb_id" ] || deny "Critic gate: Work Block is required before repository edits."
+
+# Skill Routing Gate (AGENTS.md): routing evidence is mandatory for any gated edit.
+is_placeholder "$skills_routing" \
+  && deny "Critic gate: Skills Routing is ${skills_routing:-missing}. Record routing evidence in ${GATE_FILE} (bracket-free), e.g.: Skills Routing: checked=roster; matched=...; used=...; skipped=none"
 
 if [ -n "$expires" ]; then
   today=$(date +%F)
@@ -240,6 +265,7 @@ case "$status" in
       PENDING|"") deny "Critic gate: Critic Verdict is ${critic_verdict:-missing}. Record critic verdict before editing files." ;;
       *) deny "Critic gate: invalid Critic Verdict '${critic_verdict}'. Use APPROVE, SUPPLEMENT, or RECONSIDER." ;;
     esac
+    require_amendment_if_unapproved "$(relative_path "$(field "Critic Report")")"
     exit 0
     ;;
 
