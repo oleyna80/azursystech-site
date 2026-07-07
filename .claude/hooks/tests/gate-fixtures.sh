@@ -287,6 +287,92 @@ reset_sandbox; write_verif_report
 write_verif_gate PENDING PENDING PENDING none false
 assert "VG status PENDING" DENY "$(run_verif)"
 
+# ── gpt-verifier hardening: placeholder variants ─────────────────────
+
+reset_sandbox; write_critic_report
+write_critic_gate READY APPROVE "[checked: unclosed bracket"
+assert "CG routing unclosed-bracket placeholder" DENY "$(run_critic src/allowed.ts)"
+
+reset_sandbox; write_critic_report
+write_critic_gate READY APPROVE "Pending"
+assert "CG routing mixed-case Pending" DENY "$(run_critic src/allowed.ts)"
+
+reset_sandbox; write_verif_report
+write_verif_gate READY READY Pending none false
+assert "VG Verifier mixed-case Pending" DENY "$(run_verif)"
+
+reset_sandbox; write_verif_report
+write_verif_gate READY READY subagent "[none" false
+assert "VG sensitive unclosed-bracket placeholder" DENY "$(run_verif)"
+
+# ── gpt-verifier hardening: wb_id delimiters + actor column ──────────
+
+reset_sandbox; write_critic_report
+write_critic_gate READY APPROVE "checked=r; matched=x; used=x; skipped=none"
+log_entry "| $TODAY | WB-TEST-gate-extended | amendment: write-set + src/extra.ts - superstring wb | Control Tower |"
+assert "CG amendment wb_id superstring collision" DENY "$(run_critic src/extra.ts)"
+
+reset_sandbox; write_critic_report
+write_critic_gate READY APPROVE "checked=r; matched=x; used=x; skipped=none"
+log_entry "| $TODAY | WB-TEST-gate | amendment: write-set + src/extra.ts - no actor column"
+assert "CG amendment missing actor column" DENY "$(run_critic src/extra.ts)"
+
+reset_sandbox; write_critic_report
+write_critic_gate READY APPROVE "checked=r; matched=x; used=x; skipped=none"
+log_entry "| $TODAY | WB-TEST-gate | amendment: write-set + src/extra.ts - wrong actor | Owner |"
+assert "CG amendment wrong actor (Owner)" DENY "$(run_critic src/extra.ts)"
+
+reset_sandbox; write_critic_report
+write_critic_gate SKIPPED PENDING "checked=r; matched=none; used=none; skipped=none"
+log_entry "| $TODAY | WB-TEST-gate-extended | critic: SKIPPED - superstring wb | Owner |"
+assert "CG SKIPPED auth wb_id superstring" DENY "$(run_critic src/allowed.ts)"
+
+reset_sandbox; write_verif_report
+write_verif_gate READY READY ct-inline "auth, hooks" false
+log_entry "| $TODAY | WB-TEST-gate-extended | verifier-waiver: APPROVED - superstring wb | Owner |"
+assert "VG waiver wb_id superstring collision" DENY "$(run_verif)"
+
+reset_sandbox; write_verif_report
+write_verif_gate READY READY ct-inline "auth, hooks" false
+log_entry "| $TODAY | WB-TEST-gate | verifier-waiver: APPROVED - wrong actor | Control Tower |"
+assert "VG waiver wrong actor (Control Tower)" DENY "$(run_verif)"
+
+reset_sandbox
+write_verif_gate SKIPPED PENDING PENDING none true
+log_entry "| $TODAY | WB-TEST-gate-extended | verification: SKIPPED - superstring wb | Control Tower |"
+assert "VG SKIPPED auth wb_id superstring" DENY "$(run_verif)"
+
+# ── gpt re-check: actor column anchored at line end ──────────────────
+
+reset_sandbox; write_critic_report
+write_critic_gate READY APPROVE "checked=r; matched=x; used=x; skipped=none"
+log_entry "| $TODAY | WB-TEST-gate | amendment: write-set + src/extra.ts - mentions | Control Tower | in reason | Hacker |"
+assert "CG amendment actor token in reason text" DENY "$(run_critic src/extra.ts)"
+
+reset_sandbox; write_verif_report
+write_verif_gate READY READY ct-inline "auth, hooks" false
+log_entry "| $TODAY | WB-TEST-gate | verifier-waiver: APPROVED - says | Owner | in reason | Hacker |"
+assert "VG waiver actor token in reason text" DENY "$(run_verif)"
+
+reset_sandbox; write_critic_report
+write_critic_gate SKIPPED PENDING "checked=r; matched=none; used=none; skipped=none"
+log_entry "| $TODAY | WB-TEST-gate | critic: SKIPPED - forged | Hacker |"
+assert "CG SKIPPED wrong final actor" DENY "$(run_critic src/allowed.ts)"
+
+# ── gpt re-check: wb_id as fixed string in require_log_entry ─────────
+
+reset_sandbox
+write_verif_gate SKIPPED PENDING PENDING none true
+sed -i 's/^Work Block: WB-TEST-gate$/Work Block: WB-A.1/' "$SANDBOX/.agent/verification-gate.md"
+log_entry "| $TODAY | WB-Ax1 | verification: SKIPPED - metachar collision | Control Tower |"
+assert "VG SKIPPED wb_id regex metachar collision" DENY "$(run_verif)"
+
+reset_sandbox
+write_verif_gate SKIPPED PENDING PENDING none true
+sed -i 's/^Work Block: WB-TEST-gate$/Work Block: WB-A.1/' "$SANDBOX/.agent/verification-gate.md"
+log_entry "| $TODAY | WB-A.1 | verification: SKIPPED - literal wb ok | Control Tower |"
+assert "VG SKIPPED wb_id metachar literal match" ALLOW "$(run_verif)"
+
 # ── summary ──────────────────────────────────────────────────────────
 
 echo

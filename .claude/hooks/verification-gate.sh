@@ -41,8 +41,10 @@ relative_path() {
 is_placeholder() {
   local value="$1"
   [ -z "$value" ] && return 0
-  case "$value" in
-    "["*"]"|PENDING|pending|none|NONE) return 0 ;;
+  local lc
+  lc=$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]')
+  case "$lc" in
+    "["*|pending|none) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -73,7 +75,9 @@ require_log_entry() {
   [ -f "$LOG_FILE" ] \
     || deny "Verification gate: ${label} requires orchestrator-log entry. ${LOG_FILE} not found."
 
-  grep -q "^|.*${wb_id}.*${needle}" "$LOG_FILE" 2>/dev/null \
+  grep "^|" "$LOG_FILE" 2>/dev/null \
+    | grep -F -- "| ${wb_id} |" \
+    | grep -qF -- "$needle" \
     || deny "Verification gate: ${label} missing orchestrator-log entry for ${wb_id}: ${needle}."
 }
 
@@ -109,9 +113,9 @@ require_verifier_identity() {
         local today
         today=$(date +%F)
         grep "^| ${today} |" "$LOG_FILE" 2>/dev/null \
-          | grep -F -- "$wb_id" \
+          | grep -F -- "| ${wb_id} |" \
           | grep -F "verifier-waiver: APPROVED" \
-          | grep -q . \
+          | grep -qE '\| Owner \|[[:space:]]*$' \
           || deny "Verification gate: Sensitive Domains (${sensitive_domains}) require Verifier: subagent. For ct-inline, record a same-day Owner waiver in ${LOG_FILE}: | ${today} | ${wb_id} | verifier-waiver: APPROVED - <reason> | Owner |"
       fi
       ;;

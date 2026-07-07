@@ -493,10 +493,13 @@ Three SDLC rules are enforced deterministically at the tool-call boundary
    same-day Owner waiver:
    `| YYYY-MM-DD | <WB-id> | verifier-waiver: APPROVED - <reason> | Owner |`
 
-All orchestrator-log lookups use fixed-string matching (`grep -F`) — log
-entries and write-set paths are literals, not patterns. Payload fixtures for
-both hooks: `.claude/hooks/tests/gate-fixtures.sh` (extend it in any Work
-Block that touches these hooks).
+All orchestrator-log lookups treat log entries and write-set paths as
+literals, not patterns: WB ids match as pipe-delimited fixed strings
+(`grep -F "| <WB-id> |"`), and the authorizing actor column (`| Owner |` /
+`| Control Tower |`) is matched anchored at end of line — an actor token
+embedded in the reason text does not authorize. Payload fixtures for both
+hooks: `.claude/hooks/tests/gate-fixtures.sh` (extend it in any Work Block
+that touches these hooks).
 
 ---
 

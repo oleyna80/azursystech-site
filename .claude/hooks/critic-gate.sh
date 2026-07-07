@@ -39,8 +39,10 @@ field() {
 is_placeholder() {
   local value="$1"
   [ -z "$value" ] && return 0
-  case "$value" in
-    "["*"]"|PENDING|pending|none|NONE) return 0 ;;
+  local lc
+  lc=$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]')
+  case "$lc" in
+    "["*|pending|none) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -71,7 +73,9 @@ require_log_entry() {
   [ -f "$LOG_FILE" ] \
     || deny "Critic gate: ${label} requires orchestrator-log entry. ${LOG_FILE} not found."
 
-  grep -q "^|.*${wb_id}.*${needle}" "$LOG_FILE" 2>/dev/null \
+  grep "^|" "$LOG_FILE" 2>/dev/null \
+    | grep -F -- "| ${wb_id} |" \
+    | grep -qF -- "$needle" \
     || deny "Critic gate: ${label} missing orchestrator-log entry for ${wb_id}: ${needle}."
 }
 
@@ -140,9 +144,10 @@ require_amendment_if_unapproved() {
 
   today=$(date +%F)
   grep "^| ${today} |" "$LOG_FILE" 2>/dev/null \
-    | grep -F -- "$wb_id" \
+    | grep -F -- "| ${wb_id} |" \
     | grep -F "amendment" \
-    | grep -qF -- "$matched_pattern" \
+    | grep -F -- "$matched_pattern" \
+    | grep -qE '\| Control Tower \|[[:space:]]*$' \
     && return 0
 
   deny "Critic gate: '${matched_pattern}' is not in the critic-approved write-set (${report_path}). Silent scope expansion after APPROVE is not allowed. Record a same-day amendment in ${LOG_FILE}: | ${today} | ${wb_id} | amendment: write-set + ${matched_pattern} - <reason> | Control Tower |"
@@ -277,8 +282,11 @@ case "$status" in
     [ -f "$LOG_FILE" ] \
       || deny "Critic gate: SKIPPED requires orchestrator-log entry. ${LOG_FILE} not found."
 
-    grep -q "^|.*${wb_id}.*critic: SKIPPED" "$LOG_FILE" 2>/dev/null \
-      || deny "Critic gate: SKIPPED not authorized. No matching critic: SKIPPED Owner approval entry in orchestrator-log for ${wb_id}."
+    grep "^|" "$LOG_FILE" 2>/dev/null \
+      | grep -F -- "| ${wb_id} |" \
+      | grep -F "critic: SKIPPED" \
+      | grep -qE '\| Owner \|[[:space:]]*$' \
+      || deny "Critic gate: SKIPPED not authorized. Requires orchestrator-log entry for ${wb_id} containing 'critic: SKIPPED' with final actor column '| Owner |'."
 
     skip_count=0
     while IFS= read -r line; do
