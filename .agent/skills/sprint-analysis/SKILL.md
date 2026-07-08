@@ -43,7 +43,8 @@ digs into operational friction; sprint-analysis measures the sprint.
 
 1. Extract raw data (one call, no context waste):
    `bash .agent/skills/sprint-analysis/scripts/extract.sh [SINCE] [UNTIL]`
-   Emits: log rows in period, per-WB event counts, commits, file churn.
+   Emits: log rows in period, per-WB event counts, evidence-gap heuristics,
+   commits, and file churn.
 2. If a WB's story is unclear from counts, read its rows in the extract
    output (they carry full reasons) and, when referenced, the report files
    in `docs/reports/`.
@@ -72,10 +73,12 @@ mentioning amended/added write-set); WBs spawned by findings of another WB
 (fix-WBs created same/next day citing a discovery); critic RECONSIDER
 rounds; quick-fixes that grew into full WBs.
 
-**4. Git linkage.** Commits in period vs WBs: map by same-day + subject
-overlap (heuristic — say so). Flag: WBs with verification READY but no
-matching commit (unshipped work), commits with no WB (out-of-process
-change — worth a process note, not an accusation).
+**4. Git linkage and evidence gaps.** Commits in period vs WBs: map by same-day
++ subject overlap (heuristic — say so). Read the extractor's evidence-gap
+section before making this judgment. Flag: WBs with implementation/DONE rows
+but no verification row, WBs with verification READY/SKIPPED but weak commit
+linkage, and commits with no explicit WB reference (out-of-process change —
+worth a process note, not an accusation).
 
 **5. Improvement candidates.** When the period exposes repeated friction,
 missed evidence, or a clear recurring pattern, surface follow-up candidates
@@ -118,3 +121,8 @@ evidence than a bare entry. Incidents are under-reported by nature; absence
 of incidents is weak evidence of a clean sprint. Never inflate: an empty or
 thin period is a valid result ("2 WB, both docs — quiet week"), not a
 failure to analyze.
+
+Evidence-gap sections emitted by the extractor are heuristics, not verdicts.
+They are useful smoke alarms: report them as candidates for human review, then
+cross-check the relevant WB plan, reports, and commit subjects before saying a
+process breach definitely happened.

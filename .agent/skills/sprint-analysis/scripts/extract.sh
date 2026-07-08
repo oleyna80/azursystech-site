@@ -32,6 +32,40 @@ awk -F'|' -v s="$SINCE" -v u="$UNTIL" '
   }
   END { for (k in n) printf "%s x%d\n", k, n[k] }' "$LOG" | sort
 
+printf '\n=== EVIDENCE GAPS (heuristic) ===\n'
+printf 'WB rows with implementation/DONE activity but no verification row in period:\n'
+awk -F'|' -v s="$SINCE" -v u="$UNTIL" '
+  /^\|/ {
+    d=$2; gsub(/^[ \t]+|[ \t]+$/, "", d)
+    if (d < s || d > u || d !~ /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/) next
+    wb=$3; gsub(/^[ \t]+|[ \t]+$/, "", wb)
+    ev=$4; gsub(/^[ \t]+|[ \t]+$/, "", ev)
+    if (wb == "" || wb == "Work Block") next
+    seen[wb]=1
+    if (tolower(ev) ~ /(implementation: done|implementation|done)/) impl[wb]=1
+    if (tolower(ev) ~ /(verification:|gpt-verification:)/) ver[wb]=1
+  }
+  END {
+    found=0
+    for (wb in seen) {
+      if (impl[wb] && !ver[wb]) {
+        print "- " wb
+        found=1
+      }
+    }
+    if (!found) print "- none"
+  }' "$LOG" | sort
+
+printf '\nCommits without explicit WB id in subject (heuristic):\n'
+git log --since="$SINCE 00:00" --until="$UNTIL 23:59" \
+  --pretty='%h|%ad|%s' --date=format:'%Y-%m-%d' 2>/dev/null \
+  | awk -F'|' '
+      $3 !~ /WB-[0-9]{4}-[0-9]{2}-[0-9]{2}/ && $3 !~ /WB-init/ {
+        print "- " $0
+        found=1
+      }
+      END { if (!found) print "- none" }' || true
+
 printf '\n=== GIT COMMITS (in period) ===\n'
 git log --since="$SINCE 00:00" --until="$UNTIL 23:59" \
   --pretty='%h|%ad|%s' --date=format:'%Y-%m-%d' 2>/dev/null || true

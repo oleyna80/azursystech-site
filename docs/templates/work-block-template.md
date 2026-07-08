@@ -96,6 +96,10 @@ client-facing side effects.
 - **Files to stage/commit:** [explicit list or pathspec]
 - **Files to leave unstaged:** [pre-existing dirty files, local artifacts,
   generated output, secrets]
+- **Commit readiness evidence:** [for non-trivial Work Blocks, cite the final
+  `memory_bank/orchestrator-log.md` verification row or explicit SKIPPED
+  reason before scoped commit; for quick-fix/trivial work, state why the
+  lighter path applies]
 - **Scope guard:** [command/check used before staging, for example
   `git diff --name-only` and `git status --short`]
 
@@ -168,6 +172,9 @@ lessons to fill the form.
 - **Closeout Classification:** [SUCCESS | REPORTING_ONLY]
 - **Task Status:** [completed only when verdict READY | blocked]
 - **Verification Evidence:** [commands, logs, reports, artifacts]
+- **WB/commit linkage:** [commit hash when committed, or "not committed yet";
+  if committed, cite the verification row or explicit skip reason that made the
+  commit ready]
 - **Residual Risks:** [known gaps, deferred checks, assumptions]
 
 ### Critic and Review Value
