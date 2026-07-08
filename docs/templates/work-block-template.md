@@ -177,6 +177,13 @@ lessons to fill the form.
 - **What the critic missed:** [only if discovered later]
 - **Skip/fallback reason:** [required if critic was skipped or unavailable]
 
+### Agent Improvement Candidates
+Record only evidence-backed follow-ups from this Work Block.
+
+| Candidate | Class | Evidence | Disposition |
+|---|---|---|---|
+| [short label] | [skill-update | skill-create | skill-archive | agent-prompt | template | workflow | hook | no-action] | [source file, log row, or report] | [propose | defer | reject | no-action] |
+
 ### Lessons Learned
 - **What worked:** [process/tooling/agent behavior worth preserving]
 - **What did not work:** [friction, missed context, weak gate, slow step]

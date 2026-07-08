@@ -77,6 +77,15 @@ overlap (heuristic — say so). Flag: WBs with verification READY but no
 matching commit (unshipped work), commits with no WB (out-of-process
 change — worth a process note, not an accusation).
 
+**5. Improvement candidates.** When the period exposes repeated friction,
+missed evidence, or a clear recurring pattern, surface follow-up candidates
+for the Owner. Classify each candidate as one of:
+`skill-update`, `skill-create`, `skill-archive`, `agent-prompt`, `template`,
+`workflow`, `hook`, or `no-action`. Every candidate must include source
+evidence, the problem observed, the proposed change, expected effect, risk,
+verification, and disposition. Recommendations are advisory only and do not
+authorize changes.
+
 ## Report Template (chat)
 
 Keep it scannable — numbers first, then the 2–4 findings that deserve the
@@ -92,6 +101,11 @@ Owner's attention. Skip empty sections silently.
 **Findings:**
 1. <the thing that most deserves attention, with WB/commit refs>
 2. ...
+
+**Improvement candidates:** <evidence-backed follow-ups only; each item names
+the classification, source evidence, problem, proposed change, expected
+effect, risk, verification, and disposition. Recommendations here do not
+authorize edits or policy changes.>
 
 **Recommendation:** <1–2 concrete process adjustments, only if warranted>
 ```
