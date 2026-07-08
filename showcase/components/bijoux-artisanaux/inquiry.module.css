@@ -1,0 +1,210 @@
+/* Inquiry drawer styles */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--bx-z-modal);
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 20px;
+}
+
+.drawer {
+  background: var(--bx-bg-primary);
+  border-radius: var(--bx-radius-lg) var(--bx-radius-lg) 0 0;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  animation: slideUp 300ms var(--bx-ease-out);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px;
+  border-bottom: 1px solid var(--bx-border-color);
+}
+
+.header h2 {
+  font-family: var(--bx-font-heading);
+  font-size: var(--bx-text-lg);
+  margin: 0;
+  font-weight: 400;
+  flex: 1;
+}
+
+.close {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--bx-border-color);
+  background: transparent;
+  cursor: pointer;
+  color: var(--bx-text-muted);
+  transition: all var(--bx-duration-base);
+}
+
+.close:hover {
+  color: var(--bx-text-primary);
+  border-color: var(--bx-color-rose);
+  background: var(--bx-bg-secondary);
+}
+
+.form {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.productInfo {
+  background: var(--bx-bg-secondary);
+  padding: 16px;
+  border-radius: var(--bx-radius-md);
+}
+
+.productName {
+  font-family: var(--bx-font-heading);
+  font-size: var(--bx-text-base);
+  font-weight: 400;
+  margin: 0 0 4px;
+  color: var(--bx-text-primary);
+}
+
+.productCollection {
+  font-size: var(--bx-text-xs);
+  color: var(--bx-text-muted);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field label {
+  font-size: var(--bx-text-sm);
+  font-weight: var(--bx-font-weight-medium);
+  color: var(--bx-text-primary);
+}
+
+.field input,
+.field select {
+  padding: 12px 16px;
+  border: 1px solid var(--bx-border-color);
+  border-radius: var(--bx-radius-sm);
+  font-size: var(--bx-text-base);
+  font-family: var(--bx-font-body);
+  color: var(--bx-text-primary);
+  background: var(--bx-bg-primary);
+  transition: border-color var(--bx-duration-base);
+}
+
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-color: var(--bx-color-rose);
+  box-shadow: 0 0 0 3px rgba(217, 168, 160, 0.1);
+}
+
+.field input.error,
+.field select.error {
+  border-color: var(--bx-color-error);
+}
+
+.errorMsg {
+  font-size: var(--bx-text-xs);
+  color: var(--bx-color-error);
+}
+
+.submitBtn {
+  padding: 12px 24px;
+  background: var(--bx-color-espresso);
+  color: var(--bx-color-ivory);
+  border: none;
+  border-radius: var(--bx-radius-sm);
+  font-size: var(--bx-text-sm);
+  font-weight: var(--bx-font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all var(--bx-duration-base) var(--bx-ease-out);
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: var(--bx-text-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--bx-shadow-elevation);
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.success {
+  padding: 32px 24px;
+  text-align: center;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.successIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(139, 157, 138, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--bx-color-sage);
+}
+
+.success p {
+  margin: 0;
+  color: var(--bx-text-secondary);
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .drawer {
+    border-radius: var(--bx-radius-lg) var(--bx-radius-lg) 0 0;
+  }
+
+  .header {
+    padding: 20px;
+  }
+
+  .form {
+    padding: 20px;
+  }
+}

@@ -1,0 +1,178 @@
+/* Design tokens scoped to the Maison Olive demo. */
+.root {
+  /* Colors */
+  --mo-color-warm-white: #FFFEF9;
+  --mo-color-cream-50: #FAF7F2;
+  --mo-color-cream-100: #F3EDE2;
+  --mo-color-cream-200: #E8DFD0;
+  --mo-color-cream-300: #D5C9B5;
+  --mo-color-cream-400: #B8A892;
+  --mo-color-cream-500: #8C7C6A;
+  --mo-color-olive-100: #EEF2E7;
+  --mo-color-olive-500: #4F6B35;
+  --mo-color-olive-600: #3E5429;
+  --mo-color-terra-100: #F7EDE6;
+  --mo-color-terra-500: #C07050;
+  --mo-color-terra-600: #9F5538;
+  --mo-color-gold-300: #D4B87A;
+  --mo-color-gold-500: #B8925A;
+  --mo-color-espresso-700: #3D3525;
+  --mo-color-espresso-900: #1E1810;
+
+  --mo-bg-primary: var(--mo-color-cream-50);
+  --mo-bg-surface: var(--mo-color-warm-white);
+  --mo-bg-subtle: var(--mo-color-cream-100);
+  --mo-text-primary: var(--mo-color-espresso-900);
+  --mo-text-secondary: var(--mo-color-espresso-700);
+  --mo-text-muted: var(--mo-color-cream-500);
+  --mo-brand-primary: var(--mo-color-olive-500);
+  --mo-brand-primary-hover: var(--mo-color-olive-600);
+  --mo-brand-accent: var(--mo-color-terra-500);
+  --mo-brand-gold: var(--mo-color-gold-500);
+  --mo-brand-gold-light: var(--mo-color-gold-300);
+  --mo-border-subtle: var(--mo-color-cream-200);
+  --mo-border-default: var(--mo-color-cream-300);
+  --mo-border-focus: var(--mo-color-olive-500);
+  --mo-border-error: #B84040;
+
+  /* Typography */
+  --mo-font-heading: 'Cormorant Garamond', 'Garamond', 'Georgia', Times, serif;
+  --mo-font-body: 'DM Sans', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+
+  --mo-text-xs: 0.75rem;
+  --mo-text-sm: 0.875rem;
+  --mo-text-base: 1rem;
+  --mo-text-lg: 1.125rem;
+  --mo-text-xl: 1.25rem;
+  --mo-text-2xl: 1.5rem;
+  --mo-text-3xl: 1.875rem;
+  --mo-text-4xl: 2.25rem;
+  --mo-text-5xl: 3rem;
+
+  --mo-font-weight-300: 300;
+  --mo-font-weight-400: 400;
+  --mo-font-weight-500: 500;
+  --mo-font-weight-600: 600;
+
+  --mo-line-height-tight: 1.2;
+  --mo-line-height-snug: 1.32;
+  --mo-line-height-normal: 1.5;
+  --mo-line-height-relaxed: 1.65;
+  --mo-line-height-loose: 1.78;
+
+  /* Spacing */
+  --mo-space-1: 0.25rem;
+  --mo-space-2: 0.5rem;
+  --mo-space-3: 0.75rem;
+  --mo-space-4: 1rem;
+  --mo-space-6: 1.5rem;
+  --mo-space-8: 2rem;
+  --mo-space-10: 2.5rem;
+  --mo-space-12: 3rem;
+  --mo-space-16: 4rem;
+  --mo-space-20: 5rem;
+  --mo-space-24: 6rem;
+  --mo-space-32: 8rem;
+
+  /* Layout */
+  --mo-nav-height: 72px;
+  --mo-container-max: 1280px;
+  --mo-section-padding-x: 64px;
+  --mo-section-padding-y: 96px;
+
+  /* Borders & Radius */
+  --mo-radius-sm: 4px;
+  --mo-radius-md: 8px;
+  --mo-radius-lg: 12px;
+  --mo-radius-xl: 16px;
+
+  /* Shadows */
+  --mo-shadow-sm: 0 2px 6px rgba(30, 24, 16, 0.07), 0 1px 2px rgba(30, 24, 16, 0.05);
+  --mo-shadow-md: 0 4px 14px rgba(30, 24, 16, 0.09), 0 2px 4px rgba(30, 24, 16, 0.06);
+  --mo-shadow-lg: 0 8px 28px rgba(30, 24, 16, 0.11), 0 3px 8px rgba(30, 24, 16, 0.07);
+  --mo-shadow-btn: 0 1px 3px rgba(30, 24, 16, 0.10), 0 1px 1px rgba(30, 24, 16, 0.06);
+  --mo-ring-brand: 0 0 0 3px rgba(79, 107, 53, 0.22);
+  --mo-ring-error: 0 0 0 3px rgba(184, 64, 64, 0.22);
+
+  /* Motion */
+  --mo-duration-fast: 120ms;
+  --mo-duration-base: 220ms;
+  --mo-duration-slow: 380ms;
+  --mo-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Z-index */
+  --mo-z-nav: 200;
+  --mo-z-modal: 300;
+  --mo-z-toast: 400;
+
+  font-family: var(--mo-font-body);
+  font-size: var(--mo-text-base);
+  line-height: var(--mo-line-height-relaxed);
+  color: var(--mo-text-primary);
+  background-color: var(--mo-bg-primary);
+}
+
+.root :global(a) {
+  color: inherit;
+  text-decoration: none;
+}
+
+.root :global(h1),
+.root :global(h2),
+.root :global(h3),
+.root :global(h4),
+.root :global(h5),
+.root :global(h6) {
+  font-family: var(--mo-font-heading);
+  font-weight: var(--mo-font-weight-500);
+  line-height: var(--mo-line-height-tight);
+  color: var(--mo-text-primary);
+}
+
+.root :global(img) {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.root :global(button) {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.root :global(input),
+.root :global(select),
+.root :global(textarea) {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+.container {
+  max-width: var(--mo-container-max);
+  margin: 0 auto;
+  padding-right: var(--mo-section-padding-x);
+  padding-left: var(--mo-section-padding-x);
+}
+
+@media (max-width: 768px) {
+  .root {
+    --mo-section-padding-x: 24px;
+  }
+
+  .container {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .root {
+    --mo-section-padding-x: 16px;
+  }
+
+  .container {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+}

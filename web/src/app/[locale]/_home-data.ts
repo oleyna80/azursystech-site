@@ -122,7 +122,7 @@ export const HOME_CONTENT = {
         siteType: "Menu & réservation",
         businessFunction: "Site multi-pages pour un restaurant français. Menu interactif, galerie de plats et réservation en ligne.",
         automationBadge: "Menu & réservation",
-        demoUrl: showcaseDemoUrl("bistrot"),
+        demoUrl: showcaseDemoUrl("maison-olive"),
       },
       {
         slug: "bijoux-artisanaux",
@@ -268,7 +268,7 @@ export const HOME_CONTENT = {
         siteType: "Сайт с меню и бронью",
         businessFunction: "Многостраничный сайт ресторана: меню, галерея блюд и бронирование столика онлайн.",
         automationBadge: "Бронь и меню",
-        demoUrl: showcaseDemoUrl("bistrot"),
+        demoUrl: showcaseDemoUrl("maison-olive"),
       },
       {
         slug: "bijoux-artisanaux",

@@ -1,0 +1,82 @@
+/* Button styles for Maison Olive demo */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--mo-font-weight-500);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1.5px solid transparent;
+  border-radius: var(--mo-radius-sm);
+  cursor: pointer;
+  transition: background-color var(--mo-duration-fast) var(--mo-ease-out),
+    border-color var(--mo-duration-fast) var(--mo-ease-out),
+    box-shadow var(--mo-duration-base) var(--mo-ease-out),
+    transform var(--mo-duration-base) var(--mo-ease-out);
+  white-space: nowrap;
+  font-family: var(--mo-font-body);
+  font-size: var(--mo-text-xs);
+}
+
+.btn:active {
+  transform: scale(0.975);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnSm {
+  padding: 8px 20px;
+  font-size: var(--mo-text-xs);
+}
+
+.btnMd {
+  padding: 11px 28px;
+  font-size: var(--mo-text-xs);
+}
+
+.btnLg {
+  padding: 14px 40px;
+  font-size: var(--mo-text-sm);
+}
+
+.btnFull {
+  width: 100%;
+  justify-content: center;
+}
+
+.btnPrimary {
+  background-color: var(--mo-brand-primary);
+  color: var(--mo-color-warm-white);
+  box-shadow: var(--mo-shadow-btn);
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background-color: var(--mo-brand-primary-hover);
+  box-shadow: var(--mo-shadow-md);
+}
+
+.btnSecondary {
+  background-color: transparent;
+  color: var(--mo-brand-primary);
+  border-color: var(--mo-brand-primary);
+}
+
+.btnSecondary:hover:not(:disabled) {
+  background-color: var(--mo-color-olive-100);
+  border-color: var(--mo-brand-primary-hover);
+}
+
+.btnGhost {
+  background-color: transparent;
+  color: var(--mo-color-warm-white);
+  border-color: rgba(255, 254, 249, 0.45);
+}
+
+.btnGhost:hover:not(:disabled) {
+  border-color: rgba(255, 254, 249, 0.9);
+  background-color: rgba(255, 254, 249, 0.08);
+}

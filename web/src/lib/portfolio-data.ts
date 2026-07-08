@@ -94,7 +94,7 @@ export const PORTFOLIO_PROJECTS: readonly PortfolioProject[] = [
       ],
     },
     tags: ["Restauration", "Réservation"],
-    demoUrl: showcaseDemoUrl("bistrot"),
+    demoUrl: showcaseDemoUrl("maison-olive"),
   },
   {
     slug: "bijoux-artisanaux",

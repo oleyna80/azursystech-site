@@ -1,0 +1,148 @@
+/* Design tokens scoped to Bijoux Artisanaux demo */
+.root {
+  /* Colors — custom palette adapted from source */
+  --bx-color-espresso: #2c2c2c;
+  --bx-color-champagne: #f5f1ed;
+  --bx-color-champagne-soft: #faf8f5;
+  --bx-color-rose: #d9a8a0;
+  --bx-color-sage: #8b9d8a;
+  --bx-color-gold: #d4af37;
+  --bx-color-ivory: #fffbf7;
+  --bx-color-porcelain: #f0ede8;
+  --bx-color-ink: #1a1a1a;
+  --bx-color-error: #d97060;
+  --bx-color-success: #8b9d8a;
+
+  --bx-bg-primary: var(--bx-color-ivory);
+  --bx-bg-secondary: var(--bx-color-porcelain);
+  --bx-bg-tertiary: var(--bx-color-champagne);
+  --bx-text-primary: var(--bx-color-ink);
+  --bx-text-secondary: var(--bx-color-espresso);
+  --bx-text-muted: #999;
+  --bx-border-color: #e5e0db;
+  --bx-border-dark: #d0cac4;
+  --bx-shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --bx-shadow-card: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --bx-shadow-elevation: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  /* Typography */
+  --bx-font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --bx-font-heading: 'Libre Caslon Text', Georgia, serif;
+
+  --bx-text-xs: 0.75rem;
+  --bx-text-sm: 0.875rem;
+  --bx-text-base: 1rem;
+  --bx-text-lg: 1.125rem;
+  --bx-text-xl: 1.25rem;
+  --bx-text-2xl: 1.5rem;
+  --bx-text-3xl: 1.875rem;
+  --bx-text-4xl: 2.25rem;
+  --bx-text-5xl: 3rem;
+
+  --bx-font-weight-normal: 400;
+  --bx-font-weight-medium: 500;
+  --bx-font-weight-semibold: 600;
+  --bx-font-weight-bold: 700;
+
+  --bx-line-height-tight: 1.25;
+  --bx-line-height-normal: 1.5;
+  --bx-line-height-relaxed: 1.65;
+
+  /* Spacing */
+  --bx-space-1: 0.25rem;
+  --bx-space-2: 0.5rem;
+  --bx-space-3: 0.75rem;
+  --bx-space-4: 1rem;
+  --bx-space-6: 1.5rem;
+  --bx-space-8: 2rem;
+  --bx-space-12: 3rem;
+  --bx-space-16: 4rem;
+  --bx-space-20: 5rem;
+  --bx-space-24: 6rem;
+  --bx-space-32: 8rem;
+
+  /* Layout */
+  --bx-max-w-content: 1140px;
+  --bx-container-padding: 2rem;
+  --bx-header-height: 64px;
+
+  /* Borders & Radius */
+  --bx-radius-sm: 4px;
+  --bx-radius-md: 8px;
+  --bx-radius-lg: 12px;
+  --bx-radius-xl: 16px;
+
+  /* Motion */
+  --bx-duration-fast: 150ms;
+  --bx-duration-base: 250ms;
+  --bx-duration-slow: 400ms;
+  --bx-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Z-index */
+  --bx-z-dropdown: 100;
+  --bx-z-header: 200;
+  --bx-z-modal: 300;
+  --bx-z-toast: 400;
+
+  font-family: var(--bx-font-body);
+  font-size: var(--bx-text-base);
+  line-height: var(--bx-line-height-relaxed);
+  color: var(--bx-text-primary);
+  background-color: var(--bx-bg-primary);
+}
+
+.root :global(a) {
+  color: inherit;
+  text-decoration: none;
+}
+
+.root :global(h1),
+.root :global(h2),
+.root :global(h3),
+.root :global(h4),
+.root :global(h5),
+.root :global(h6) {
+  font-family: var(--bx-font-heading);
+  font-weight: 400;
+  line-height: var(--bx-line-height-tight);
+  color: var(--bx-text-primary);
+}
+
+.root :global(img),
+.root :global(svg) {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.root :global(button) {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.root :global(input),
+.root :global(select),
+.root :global(textarea) {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+.container {
+  max-width: var(--bx-max-w-content);
+  margin: 0 auto;
+  padding-right: var(--bx-container-padding);
+  padding-left: var(--bx-container-padding);
+}
+
+@media (max-width: 768px) {
+  .root {
+    --bx-container-padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .root {
+    --bx-container-padding: 1rem;
+  }
+}
