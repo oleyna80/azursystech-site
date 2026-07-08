@@ -93,12 +93,33 @@
 
 ---
 
+## Runtime Command Adapters
+
+Canonical skill contracts live in `.agent/skills/**`. Runtime adapters may make
+those skills easier to invoke, but must stay thin and must not fork the
+canonical instructions.
+
+| Runtime | Invocation | Adapter | Canonical source |
+|---|---|---|---|
+| OpenCode | `/sprint` | `.opencode/commands/sprint.md` | `.agent/skills/sprint-analysis/SKILL.md` |
+| Claude Code | `/sprint` | `.claude/commands/sprint.md` | `.agent/skills/sprint-analysis/SKILL.md` |
+| Codex | skill discovery / `$sprint-analysis` | `.agents/skills/sprint-analysis/SKILL.md` | `.agent/skills/sprint-analysis/SKILL.md` |
+
+Adapter rules:
+
+- Sprint analysis is read-only by default.
+- `docs/reports/**` output is allowed only when the Owner explicitly asks for a file.
+- Adapters must not edit skills, hooks, templates, source code, env/provider config, or perform commit/push/deploy.
+- Improvement candidates become proposals for a later Work Block, not automatic permission to self-edit process files.
+
+---
+
 ## Configuration References
 
 - **AGENTS.md:** SDD operating contract, stage flow, Hard Stops, skill triggers, authority model (source of truth)
 - **CLAUDE.md:** Global code style, environment setup, multi-agent workflows
 - **Codex Config:** `.codex/config.toml.template`, `.codex/instructions.md`
-- **OpenCode:** `.opencode/agents/*.md`, `opencode.json` (permission floor = AGENTS.md Hard Stops)
+- **OpenCode:** `.opencode/commands/*.md`, `.opencode/agents/*.md`, `opencode.json` (permission floor = AGENTS.md Hard Stops)
 
 ---
 

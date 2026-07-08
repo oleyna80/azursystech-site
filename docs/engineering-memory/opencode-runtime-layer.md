@@ -46,6 +46,20 @@ frontmatter `name:` (opencode requires the match):
 the rename. `.claude/skills/` (vendor skills with executable assets) stays
 Claude Code runtime-local and is not mirrored into `.opencode/skills/`.
 
+## Commands (`.opencode/commands/`)
+
+OpenCode project commands are thin runtime adapters. They must point back to
+canonical `.agent/skills/**` contracts instead of duplicating process rules.
+
+Current command:
+
+- `/sprint` -> `.opencode/commands/sprint.md` -> `.agent/skills/sprint-analysis/SKILL.md`
+
+Commands inherit the same safety boundary as the canonical skill: sprint
+analysis is read-only by default; report files under `docs/reports/` require an
+explicit Owner request; adapters must not edit source code, skills, hooks,
+templates, provider config, secrets, stage files, commit, push, or deploy.
+
 ## Authority and write ownership
 
 `.opencode/**` is `committed_control_layer` (see `FILE_REGISTRY.yml`). Per

@@ -58,9 +58,10 @@ Start with the smallest mode that can safely deliver the Work Block:
 | `README.md` | reference | Product/repository overview and human quickstart. |
 | `.agent/` | normative routing | Runtime-neutral roster, SDD workflow, gates, and approved skill wrappers. |
 | `.agent/workflows/sdd-protocol.md` | normative | Canonical Work Block lifecycle and verification semantics. |
+| `.agents/` | runtime adapter | Codex-compatible project skill discovery wrappers; canonical skill bodies remain in `.agent/skills/**`. |
 | `.codex/` | runtime | Codex-specific instructions, critic contract, and write gate. |
-| `.claude/` | runtime | Claude Code control layer: settings, hooks, subagent contracts, security guidance (committed); skills curated separately, local state ignored. |
-| `.opencode/` | runtime | OpenCode control layer: subagent contracts in `agents/` (committed), mirroring `.claude/agents/`; plugin runtime state self-ignored. |
+| `.claude/` | runtime | Claude Code control layer: settings, hooks, command adapters, subagent contracts, security guidance (committed); skills curated separately, local state ignored. |
+| `.opencode/` | runtime | OpenCode control layer: command adapters and subagent contracts in `agents/` (committed), mirroring `.claude/agents/`; plugin runtime state self-ignored. |
 | `opencode.json` | runtime | OpenCode root config: permission floor mirroring Hard Stops, share disabled, autoupdate pinned; no provider/credential settings. |
 | `docs/engineering-memory/` | normative | Durable project engineering memory for all agent runtimes. |
 | `docs/plans/` | evidence | Work Block plans and execution records. |
@@ -86,6 +87,9 @@ Start with the smallest mode that can safely deliver the Work Block:
   approves exact skill paths. Unapproved local skill directories are deferred
   aids, not bootstrap requirements, and should remain ignored/local until
   curated.
+- `.agents/**` contains Codex-compatible runtime adapters only. Keep canonical
+  skill content in `.agent/skills/**`; do not commit provider config or local
+  machine paths there.
 - `.codex/**` may contain committed Codex policy/templates/hooks only.
   Private runtime config such as `.codex/config.toml` must stay local.
 - `memory_bank/**` is operational runtime state. Bootstrap may create starter

@@ -212,6 +212,23 @@ entries:
       - .agent/ROSTER.md
       - docs/plans/**
 
+  .agents/**:
+    role: codex_skill_discovery_adapters
+    status: committed_control_layer
+    owner: orchestrator
+    boundary: >
+      committed: thin Codex-compatible wrappers that point to canonical
+      .agent/skills/** contracts; no provider/model/API settings, secrets,
+      local machine paths, generated output, or runtime cache belongs here
+    update_when:
+      - Codex project skill discovery adapters change
+      - canonical .agent/skills/** invocation path changes
+      - runtime command adapter policy changes
+    related:
+      - .agent/skills/**
+      - .agent/ROSTER.md
+      - docs/engineering-memory/runtime-command-adapters.md
+
   .codex/**:
     role: codex_runtime_policy
     status: runtime
@@ -229,13 +246,14 @@ entries:
     status: committed_control_layer
     owner: architect
     boundary: >
-      committed: settings.json, hooks/, agents/, security guidance,
+      committed: settings.json, hooks/, agents/, commands/, security guidance,
       agent-memory MEMORY.md indexes; local: settings.local.json,
       agent-memory session state; .claude/skills/** stays a separate
       curated scope (exact paths approved per Work Block, added with git add -f)
     update_when:
       - Claude hook policy (hard-stop, critic/verification gates, typecheck) changes
       - subagent role contracts in .claude/agents/ change
+      - project command adapters in .claude/commands/ change
       - a skill curation Work Block approves exact .claude/skills paths
     related:
       - AGENTS.md
@@ -267,7 +285,8 @@ entries:
     status: committed_control_layer
     owner: architect
     boundary: >
-      committed: agents/ (subagent contracts mirroring .claude/agents with
+      committed: commands/ (project command adapters), agents/ (subagent
+      contracts mirroring .claude/agents with
       opencode frontmatter — color as hex/theme token, permission block) and
       skills/ (skill mirrors synced from .agent/skills/ for native opencode
       Skill tool loading; .agent/skills/ is canonical, .opencode/skills/ is a
@@ -278,6 +297,7 @@ entries:
       credential config belongs here (root .gitignore pre-empts
       config.toml/opencode.json/*.local*)
     update_when:
+      - project command adapters in .opencode/commands/ change
       - subagent role contracts change (keep in sync with .claude/agents/)
       - opencode frontmatter schema requirements change
       - .agent/skills/ change (re-sync to .opencode/skills/ to avoid drift)
@@ -286,6 +306,7 @@ entries:
       - .agent/ROSTER.md
       - .agent/skills/
       - .claude/agents/
+      - docs/engineering-memory/runtime-command-adapters.md
 
   memory_bank/**:
     role: operational_agent_memory
