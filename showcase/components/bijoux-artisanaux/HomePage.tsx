@@ -1,16 +1,7 @@
-'use client'
-
 import Link from 'next/link'
-import { products } from './data'
+import { products, statusLabels } from './data'
 import { SiteShell } from './SiteShell'
 import styles from './home.module.css'
-
-const statusLabels = {
-  available: 'Disponible',
-  made_to_order: 'Sur commande',
-  sold_out: 'Épuisé',
-  preorder: 'Précommande',
-} as const
 
 export function HomePage() {
   const featured = products.filter((p) => p.featured)

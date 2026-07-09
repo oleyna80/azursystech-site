@@ -10,10 +10,10 @@ export function ThankYouPage() {
       <div className={tokenStyles.container}>
         <div className={styles.content}>
           <div className={styles.icon}>✓</div>
-          <h1>Merci!</h1>
-          <p>Votre demande de piece personnalisee a ete envoyee avec succes.</p>
+          <h1>Merci !</h1>
+          <p>Votre demande de pièce personnalisée a été envoyée avec succès.</p>
           <p className={styles.subtitle}>
-            Nos artisans examineront votre projet et vous recontacteront dans les 48 heures.
+            L&apos;atelier examinera votre projet et vous recontactera dans les 48 heures.
           </p>
 
           <div className={styles.actions}>

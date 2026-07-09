@@ -15,7 +15,7 @@ const dmsans = DM_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Atelier Liora | Bijoux Artisanaux',
+  title: 'Atelier Liora | Bijoux artisanaux',
   description: 'Bijoux artisanaux façonnés à la main avec soin et passion.',
 }
 
@@ -25,15 +25,9 @@ export default function Layout({
   children: React.ReactNode
 }) {
   return (
-    <>
-      <style>{`
-        :root {
-          --bx-font-heading: ${librecaston.style?.fontFamily || "'Libre Caslon Text'"};
-          --bx-font-body: ${dmsans.style?.fontFamily || "'DM Sans'"};
-        }
-      `}</style>
+    <div className={`${librecaston.variable} ${dmsans.variable}`}>
       {children}
       <DemoReturnLink />
-    </>
+    </div>
   )
 }

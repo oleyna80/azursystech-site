@@ -2,25 +2,16 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { getProduct } from './data'
+import { statusLabels } from './data'
+import type { Product } from './types'
 import { InquiryDrawer } from './InquiryDrawer'
 import tokenStyles from './tokens.module.css'
 import styles from './product.module.css'
 
-export function ProductPage({ slug }: { slug: string }) {
+export function ProductPage({ product }: { product: Product }) {
   const [inquiryOpen, setInquiryOpen] = useState(false)
-  const product = getProduct(slug)
-
-  if (!product) {
-    return (
-      <div className={`${tokenStyles.root} ${styles.page}`}>
-        <div className={tokenStyles.container}>
-          <Link href="/demo/bijoux-artisanaux/catalogue">← Retour au catalogue</Link>
-          <h1>Produit non trouvé</h1>
-        </div>
-      </div>
-    )
-  }
+  const [selectedSize, setSelectedSize] = useState<string | null>(null)
+  const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null)
 
   return (
     <div className={`${tokenStyles.root} ${styles.page}`}>
@@ -59,10 +50,7 @@ export function ProductPage({ slug }: { slug: string }) {
 
             <div className={styles.statusSection}>
               <span className={`${styles.statusBadge} ${styles[product.status]}`}>
-                {product.status === 'available' && 'Disponible'}
-                {product.status === 'made_to_order' && 'Sur commande'}
-                {product.status === 'sold_out' && 'Épuisé'}
-                {product.status === 'preorder' && 'Précommande'}
+                {statusLabels[product.status]}
               </span>
               <span className={styles.price}>{product.priceLabel}</span>
             </div>
@@ -97,7 +85,12 @@ export function ProductPage({ slug }: { slug: string }) {
                     <label>Tailles disponibles :</label>
                     <div className={styles.optionsList}>
                       {product.options.sizes.map((size) => (
-                        <button key={size} className={styles.optionBtn}>
+                        <button
+                          key={size}
+                          className={`${styles.optionBtn} ${selectedSize === size ? styles.optionBtnActive : ''}`}
+                          aria-pressed={selectedSize === size}
+                          onClick={() => setSelectedSize(size)}
+                        >
                           {size}
                         </button>
                       ))}
@@ -109,7 +102,12 @@ export function ProductPage({ slug }: { slug: string }) {
                     <label>Matériaux :</label>
                     <div className={styles.optionsList}>
                       {product.options.materials.map((material) => (
-                        <button key={material} className={styles.optionBtn}>
+                        <button
+                          key={material}
+                          className={`${styles.optionBtn} ${selectedMaterial === material ? styles.optionBtnActive : ''}`}
+                          aria-pressed={selectedMaterial === material}
+                          onClick={() => setSelectedMaterial(material)}
+                        >
                           {material}
                         </button>
                       ))}
@@ -123,7 +121,7 @@ export function ProductPage({ slug }: { slug: string }) {
               onClick={() => setInquiryOpen(true)}
               className={styles.ctaBtn}
             >
-              Intéressé ? Demander plus d&apos;infos
+              Intéressé ? Demander plus d&apos;informations
             </button>
 
             <InquiryDrawer

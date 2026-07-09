@@ -125,7 +125,7 @@
 .hero {
   background:
     radial-gradient(circle at 15% 16%, rgba(217, 180, 171, 0.18), transparent 28%),
-    linear-gradient(180deg, #fdf8f7 0%, #f9f7f2 100%);
+    linear-gradient(180deg, #fbf9f6 0%, #f9f7f2 100%);
 }
 
 .heroGrid {
@@ -164,7 +164,7 @@
   position: relative;
   min-height: 520px;
   overflow: hidden;
-  border-radius: 40px;
+  border-radius: var(--bx-radius-xl);
   background: var(--bx-color-champagne-soft);
   box-shadow: var(--bx-shadow-soft);
   isolation: isolate;
@@ -290,7 +290,7 @@
   grid-template-columns: minmax(300px, 0.95fr) minmax(0, 1.05fr);
   gap: 40px;
   align-items: center;
-  border-radius: 40px;
+  border-radius: var(--bx-radius-xl);
   background: var(--bx-color-porcelain);
   padding: 44px;
   box-shadow: var(--bx-shadow-card);
@@ -300,7 +300,7 @@
   position: relative;
   min-height: 500px;
   overflow: hidden;
-  border-radius: 32px;
+  border-radius: var(--bx-radius-lg);
   background: var(--bx-color-champagne-soft);
   box-shadow: var(--bx-shadow-soft);
 }
@@ -395,10 +395,10 @@
   display: block;
   overflow: hidden;
   border: 1px solid rgba(45, 38, 33, 0.1);
-  border-radius: 26px;
+  border-radius: var(--bx-radius-lg);
   background: rgba(255, 255, 255, 0.62);
   color: inherit;
-  box-shadow: 0 10px 30px rgba(45, 38, 33, 0.06);
+  box-shadow: var(--bx-shadow-card);
   transition:
     border-color var(--bx-duration-base) var(--bx-ease-out),
     box-shadow var(--bx-duration-base) var(--bx-ease-out),
@@ -459,7 +459,7 @@
 }
 
 .cta .sectionShell {
-  border-radius: 40px;
+  border-radius: var(--bx-radius-xl);
   background:
     radial-gradient(circle at 88% 24%, rgba(212, 175, 55, 0.2), transparent 26%),
     var(--bx-color-espresso);
@@ -484,6 +484,10 @@
   color: rgba(255, 255, 255, 0.72);
   font-size: 1.05rem;
   line-height: 1.75;
+}
+
+.cta .btnLight {
+  color: var(--bx-color-espresso) !important;
 }
 
 /* Footer */
@@ -612,7 +616,7 @@
 
   .storyGrid,
   .cta .sectionShell {
-    border-radius: 28px;
+    border-radius: var(--bx-radius-lg);
     padding: 24px;
   }
 

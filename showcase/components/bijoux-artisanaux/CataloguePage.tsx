@@ -2,13 +2,18 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { products, collections } from './data'
+import { products, collections, statusLabels } from './data'
 import { SiteShell } from './SiteShell'
 import tokenStyles from './tokens.module.css'
 import styles from './catalogue.module.css'
+import type { ProductCategory } from './types'
+
+const categoryFilters = collections.filter(
+  (col): col is (typeof collections)[number] & { category: ProductCategory } => col.category !== null,
+)
 
 export function CataloguePage() {
-  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [activeCategory, setActiveCategory] = useState<ProductCategory | null>(null)
 
   const filtered = activeCategory ? products.filter((p) => p.category === activeCategory) : products
 
@@ -32,11 +37,11 @@ export function CataloguePage() {
             >
               Toutes
             </button>
-            {collections.slice(1).map((col) => (
+            {categoryFilters.map((col) => (
               <button
                 key={col.id}
                 className={`${styles.filterBtn} ${activeCategory === col.category ? styles.active : ''}`}
-                onClick={() => setActiveCategory(col.category as string)}
+                onClick={() => setActiveCategory(col.category)}
               >
                 {col.label}
               </button>
@@ -65,10 +70,7 @@ export function CataloguePage() {
                 <p className={styles.collection}>{product.collection}</p>
                 <p className={styles.price}>{product.priceLabel}</p>
                 <span className={`${styles.statusBadge} ${styles[product.status]}`}>
-                  {product.status === 'available' && 'Disponible'}
-                  {product.status === 'made_to_order' && 'Sur commande'}
-                  {product.status === 'sold_out' && 'Épuisé'}
-                  {product.status === 'preorder' && 'Précommande'}
+                  {statusLabels[product.status]}
                 </span>
               </div>
             </Link>

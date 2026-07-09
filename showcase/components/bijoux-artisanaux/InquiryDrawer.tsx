@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Product } from './types'
 import styles from './inquiry.module.css'
 
@@ -17,12 +17,29 @@ export function InquiryDrawer({ product, isOpen, onClose }: InquiryDrawerProps) 
   const [pending, setPending] = useState(false)
   const [success, setSuccess] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const timersRef = useRef<number[]>([])
+
+  const clearTimers = () => {
+    timersRef.current.forEach((id) => window.clearTimeout(id))
+    timersRef.current = []
+  }
+
+  useEffect(() => clearTimers, [])
+
+  // The component stays mounted while closed (returns null), so stale timers
+  // from an interrupted submit would fire onClose on a re-opened drawer.
+  const handleClose = () => {
+    clearTimers()
+    setPending(false)
+    setSuccess(false)
+    onClose()
+  }
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
     if (!name.trim()) newErrors.name = 'Nom requis'
-    if (!contact.trim()) newErrors.contact = 'Email ou tél requis'
+    if (!contact.trim()) newErrors.contact = 'Email ou téléphone requis'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact) && !/^\+?[0-9\s().-]{8,}$/.test(contact)) {
       newErrors.contact = 'Email ou téléphone invalide'
     }
@@ -40,27 +57,31 @@ export function InquiryDrawer({ product, isOpen, onClose }: InquiryDrawerProps) 
     setPending(true)
 
     // Simulate API call
-    setTimeout(() => {
-      setPending(false)
-      setSuccess(true)
-      setTimeout(() => {
-        setSuccess(false)
-        setName('')
-        setContact('')
-        setTimeframe('')
-        onClose()
-      }, 1500)
-    }, 800)
+    timersRef.current.push(
+      window.setTimeout(() => {
+        setPending(false)
+        setSuccess(true)
+        timersRef.current.push(
+          window.setTimeout(() => {
+            setSuccess(false)
+            setName('')
+            setContact('')
+            setTimeframe('')
+            onClose()
+          }, 1500),
+        )
+      }, 800),
+    )
   }
 
   if (!isOpen) return null
 
   return (
-    <div className={styles.backdrop} onClick={onClose}>
+    <div className={styles.backdrop} onClick={handleClose}>
       <div className={styles.drawer} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <h2>Informations sur {product.name}</h2>
-          <button className={styles.close} onClick={onClose} aria-label="Fermer">
+          <button className={styles.close} onClick={handleClose} aria-label="Fermer">
             ✕
           </button>
         </div>
@@ -122,7 +143,7 @@ export function InquiryDrawer({ product, isOpen, onClose }: InquiryDrawerProps) 
         ) : (
           <div className={styles.success}>
             <div className={styles.successIcon}>✓</div>
-            <p>Merci! Nous vous contacterons dans les 48h.</p>
+            <p>Merci ! Nous vous contacterons dans les 48 h.</p>
           </div>
         )}
       </div>

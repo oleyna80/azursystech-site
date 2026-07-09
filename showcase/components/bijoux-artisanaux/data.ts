@@ -1,4 +1,11 @@
-import type { Collection, Product } from './types'
+import type { Collection, Product, ProductStatus } from './types'
+
+export const statusLabels: Record<ProductStatus, string> = {
+  available: 'Disponible',
+  made_to_order: 'Sur commande',
+  sold_out: 'Épuisé',
+  preorder: 'Précommande',
+}
 
 export const products: Product[] = [
   {
@@ -26,7 +33,6 @@ export const products: Product[] = [
       care: 'Évitez les parfums et rangez la pièce dans son écrin après chaque port.',
     },
     featured: true,
-    palette: 'linear-gradient(135deg, #efe2cf, #d9b4ab, #fdf8f7)',
   },
   {
     id: 'p-002',
@@ -53,7 +59,6 @@ export const products: Product[] = [
       care: "Évitez l'eau, les parfums et les cosmétiques. Nettoyez doucement avec une chamoisine sèche.",
     },
     featured: true,
-    palette: 'linear-gradient(135deg, #f2e8d5, #fff, #a3ad9e)',
   },
   {
     id: 'p-003',
@@ -79,7 +84,6 @@ export const products: Product[] = [
       care: 'Rangez séparément pour préserver la texture martelée.',
     },
     featured: true,
-    palette: 'linear-gradient(135deg, #f7f3f1, #d4af37, #fdf8f7)',
   },
   {
     id: 'p-004',
@@ -106,7 +110,6 @@ export const products: Product[] = [
       care: "Gardez la pierre à l'abri des chocs et de l'humidité prolongée.",
     },
     featured: false,
-    palette: 'linear-gradient(135deg, #a3ad9e, #fff, #f2e8d5)',
   },
   {
     id: 'p-005',
@@ -133,7 +136,6 @@ export const products: Product[] = [
       care: 'Les conseils définitifs seront confirmés lorsque la pièce sera finalisée.',
     },
     featured: false,
-    palette: 'linear-gradient(135deg, #fdf8f7, #e6e1e0, #d9b4ab)',
   },
   {
     id: 'p-006',
@@ -159,7 +161,6 @@ export const products: Product[] = [
       care: "Nettoyer doucement avec un chiffon doux, éviter le contact prolongé avec l'eau.",
     },
     featured: false,
-    palette: 'linear-gradient(135deg, #fdf8f7, #efe2cf, #d9b4ab)',
   },
   {
     id: 'p-007',
@@ -186,7 +187,6 @@ export const products: Product[] = [
       care: 'Conserver au sec, essuyer après chaque utilisation.',
     },
     featured: false,
-    palette: 'linear-gradient(135deg, #f2e8d5, #f7f3f1, #efe2cf)',
   },
   {
     id: 'p-008',
@@ -213,7 +213,6 @@ export const products: Product[] = [
       care: "Évitez l'exposition prolongée au soleil et aux produits chimiques.",
     },
     featured: false,
-    palette: 'linear-gradient(135deg, #efe2cf, #d9b4ab, #fdf8f7)',
   },
   {
     id: 'p-009',
@@ -240,7 +239,6 @@ export const products: Product[] = [
       care: "Ne pas immerger sous l'eau, nettoyer avec un tissu doux.",
     },
     featured: false,
-    palette: 'linear-gradient(135deg, #a3ad9e, #f7f3f1, #f2e8d5)',
   },
 ]
 

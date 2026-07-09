@@ -27,7 +27,6 @@ export type Product = {
   }
   image?: string
   featured?: boolean
-  palette: string
 }
 
 export type Collection = {
@@ -35,21 +34,4 @@ export type Collection = {
   label: string
   category: ProductCategory | null
   description: string
-}
-
-export type InquiryFormData = {
-  name: string
-  email: string
-  phone: string
-  message: string
-  productId?: string
-}
-
-export type CustomOrderFormData = {
-  name: string
-  email: string
-  phone: string
-  description: string
-  budget: string
-  timeline: string
 }

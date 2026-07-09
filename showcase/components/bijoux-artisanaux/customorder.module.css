@@ -38,9 +38,9 @@
 .wizard,
 .successPanel {
   max-width: 980px;
-  border: 1px solid rgba(45, 38, 33, 0.08);
-  border-radius: 28px;
-  background: rgba(249, 247, 242, 0.94);
+  border: 1px solid rgba(45, 38, 33, 0.1);
+  border-radius: var(--bx-radius-lg);
+  background: rgba(249, 247, 242, 0.9);
   box-shadow: var(--bx-shadow-soft);
 }
 
@@ -116,7 +116,7 @@
   min-height: 58px;
   padding: 16px 18px;
   border: 1px solid var(--bx-border-color);
-  border-radius: 18px;
+  border-radius: var(--bx-radius-md);
   background: var(--bx-bg-primary);
   color: var(--bx-color-espresso);
   font-size: var(--bx-text-sm);
@@ -138,7 +138,8 @@
 
 .optionButtonActive {
   border-color: var(--bx-color-espresso);
-  background: var(--bx-color-champagne);
+  background: var(--bx-color-espresso);
+  color: var(--bx-color-ivory);
 }
 
 .chipGrid {
@@ -172,7 +173,8 @@
 
 .chipButtonActive {
   border-color: var(--bx-color-espresso);
-  background: var(--bx-color-champagne);
+  background: var(--bx-color-espresso);
+  color: var(--bx-color-ivory);
 }
 
 .chipGrid + .field {
@@ -191,7 +193,7 @@
 .field textarea {
   width: 100%;
   border: 1px solid var(--bx-border-color);
-  border-radius: 18px;
+  border-radius: var(--bx-radius-md);
   background: var(--bx-bg-primary);
   color: var(--bx-text-primary);
   font-size: var(--bx-text-base);
@@ -225,7 +227,8 @@
 
 .summaryCard,
 .contactFields {
-  border-radius: 24px;
+  border: 1px solid rgba(45, 38, 33, 0.07);
+  border-radius: var(--bx-radius-lg);
   background: var(--bx-bg-primary);
   padding: 24px;
 }
@@ -268,7 +271,7 @@
 
 .contactFields p {
   margin: 0;
-  border-radius: 18px;
+  border-radius: var(--bx-radius-md);
   background: var(--bx-color-champagne-soft);
   padding: 16px;
   color: rgba(45, 38, 33, 0.68);

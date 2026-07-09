@@ -216,6 +216,13 @@
   color: var(--bx-color-rose);
 }
 
+.optionBtnActive,
+.optionBtnActive:hover {
+  border-color: var(--bx-color-espresso);
+  background: var(--bx-color-espresso);
+  color: var(--bx-color-ivory);
+}
+
 .ctaBtn {
   display: inline-block;
   padding: 12px 28px;
