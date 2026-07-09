@@ -7,25 +7,25 @@
   background-color: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   padding: 20px;
 }
 
 .drawer {
   background: var(--bx-bg-primary);
-  border-radius: var(--bx-radius-lg) var(--bx-radius-lg) 0 0;
+  border-radius: var(--bx-radius-lg);
   width: 100%;
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--bx-shadow-elevation);
   animation: slideUp 300ms var(--bx-ease-out);
 }
 
 @keyframes slideUp {
   from {
-    transform: translateY(100%);
+    transform: translateY(24px);
     opacity: 0;
   }
   to {

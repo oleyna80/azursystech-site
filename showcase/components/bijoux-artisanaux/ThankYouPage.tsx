@@ -1,12 +1,12 @@
-'use client'
-
 import Link from 'next/link'
+import { SiteShell } from './SiteShell'
 import tokenStyles from './tokens.module.css'
 import styles from './thankyou.module.css'
 
 export function ThankYouPage() {
   return (
-    <div className={`${tokenStyles.root} ${styles.page}`}>
+    <SiteShell>
+      <div className={styles.page}>
       <div className={tokenStyles.container}>
         <div className={styles.content}>
           <div className={styles.icon}>✓</div>
@@ -26,6 +26,7 @@ export function ThankYouPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </SiteShell>
   )
 }

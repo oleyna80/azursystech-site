@@ -1,8 +1,7 @@
 /* Product page styles */
 
 .page {
-  min-height: 100vh;
-  padding: 40px var(--bx-container-padding);
+  padding: 40px var(--bx-container-padding) 80px;
 }
 
 .backLink {

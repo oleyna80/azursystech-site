@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { statusLabels } from './data'
 import type { Product } from './types'
 import { InquiryDrawer } from './InquiryDrawer'
+import { SiteShell } from './SiteShell'
 import tokenStyles from './tokens.module.css'
 import styles from './product.module.css'
 
@@ -14,7 +15,8 @@ export function ProductPage({ product }: { product: Product }) {
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null)
 
   return (
-    <div className={`${tokenStyles.root} ${styles.page}`}>
+    <SiteShell>
+      <div className={styles.page}>
       <div className={tokenStyles.container}>
         <Link href="/demo/bijoux-artisanaux/catalogue" className={styles.backLink}>
           ← Catalogue
@@ -132,6 +134,7 @@ export function ProductPage({ product }: { product: Product }) {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </SiteShell>
   )
 }

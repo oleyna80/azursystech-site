@@ -1,11 +1,11 @@
 /* Thank you page styles */
 
 .page {
-  min-height: 100vh;
+  min-height: 55vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px var(--bx-container-padding);
+  padding: 80px var(--bx-container-padding);
 }
 
 .content {

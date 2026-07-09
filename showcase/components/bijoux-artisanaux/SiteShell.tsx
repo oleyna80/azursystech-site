@@ -1,4 +1,7 @@
+'use client'
+
 import type { ReactNode } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { LogoMark } from './LogoMark'
 import tokenStyles from './tokens.module.css'
@@ -8,7 +11,16 @@ type SiteShellProps = {
   children: ReactNode
 }
 
+const navLinks = [
+  { href: '/demo/bijoux-artisanaux', label: 'Accueil' },
+  { href: '/demo/bijoux-artisanaux/catalogue', label: 'Catalogue' },
+  { href: '/demo/bijoux-artisanaux/custom-order', label: 'Sur mesure' },
+  { href: '/demo/bijoux-artisanaux#histoire', label: 'Notre histoire' },
+]
+
 export function SiteShell({ children }: SiteShellProps) {
+  const [menuOpen, setMenuOpen] = useState(false)
+
   return (
     <div className={`${tokenStyles.root} ${styles.page}`}>
       <header className={styles.header}>
@@ -22,16 +34,46 @@ export function SiteShell({ children }: SiteShellProps) {
           </Link>
 
           <nav className={styles.nav}>
-            <Link href="/demo/bijoux-artisanaux">Accueil</Link>
-            <Link href="/demo/bijoux-artisanaux/catalogue">Catalogue</Link>
-            <Link href="/demo/bijoux-artisanaux/custom-order">Sur mesure</Link>
-            <Link href="/demo/bijoux-artisanaux#histoire">Notre histoire</Link>
+            {navLinks.map((link) => (
+              <Link key={link.href} href={link.href}>
+                {link.label}
+              </Link>
+            ))}
           </nav>
 
           <Link href="/demo/bijoux-artisanaux/custom-order" className={styles.navCta}>
             Créer sur mesure
           </Link>
+
+          <button
+            type="button"
+            className={styles.menuToggle}
+            aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            <span className={`${styles.menuToggleBar} ${menuOpen ? styles.menuToggleBarTop : ''}`} />
+            <span className={`${styles.menuToggleBar} ${menuOpen ? styles.menuToggleBarMid : ''}`} />
+            <span className={`${styles.menuToggleBar} ${menuOpen ? styles.menuToggleBarBottom : ''}`} />
+          </button>
         </div>
+
+        {menuOpen && (
+          <nav className={styles.mobileNav} aria-label="Menu mobile">
+            {navLinks.map((link) => (
+              <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
+                {link.label}
+              </Link>
+            ))}
+            <Link
+              href="/demo/bijoux-artisanaux/custom-order"
+              className={styles.mobileNavCta}
+              onClick={() => setMenuOpen(false)}
+            >
+              Créer sur mesure
+            </Link>
+          </nav>
+        )}
       </header>
 
       {children}
