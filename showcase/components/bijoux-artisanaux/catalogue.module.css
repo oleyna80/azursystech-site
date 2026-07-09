@@ -2,11 +2,11 @@
 
 .page {
   min-height: 100vh;
-  padding: 40px var(--bx-container-padding);
+  padding: 36px var(--bx-container-padding) 56px;
 }
 
 .header {
-  margin-bottom: 40px;
+  margin-bottom: 36px;
 }
 
 .header a {
@@ -21,11 +21,11 @@
 
 .header h1 {
   font-family: var(--bx-font-heading);
-  font-size: var(--bx-text-4xl);
+  font-size: clamp(2.25rem, 5vw, 4.5rem);
   max-width: 720px;
   margin: 12px 0 0;
   font-weight: 400;
-  line-height: 0.95;
+  line-height: 1.05;
 }
 
 .eyebrow {
@@ -39,14 +39,14 @@
 
 .intro {
   max-width: 620px;
-  margin: 18px 0 0;
+  margin: 16px 0 0;
   color: var(--bx-text-muted);
-  font-size: var(--bx-text-lg);
+  font-size: var(--bx-text-base);
   line-height: var(--bx-line-height-relaxed);
 }
 
 .filtersSection {
-  margin-bottom: 48px;
+  margin-bottom: 40px;
 }
 
 .filtersSection h2 {
@@ -86,14 +86,14 @@
 
 .productGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
 }
 
 .productCard {
   display: block;
   border: 1px solid var(--bx-border-color);
-  border-radius: var(--bx-radius-lg);
+  border-radius: 28px;
   overflow: hidden;
   transition: all var(--bx-duration-base) var(--bx-ease-out);
   color: inherit;
@@ -122,7 +122,7 @@
 }
 
 .content {
-  padding: 16px;
+  padding: 15px 16px 16px;
 }
 
 .content h3 {
@@ -179,6 +179,12 @@
 
 @media (max-width: 768px) {
   .productGrid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .productGrid {
+    grid-template-columns: 1fr;
   }
 }

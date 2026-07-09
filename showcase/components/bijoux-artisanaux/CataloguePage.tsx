@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { products, collections } from './data'
+import { SiteShell } from './SiteShell'
 import tokenStyles from './tokens.module.css'
 import styles from './catalogue.module.css'
 
@@ -12,10 +13,9 @@ export function CataloguePage() {
   const filtered = activeCategory ? products.filter((p) => p.category === activeCategory) : products
 
   return (
-    <div className={`${tokenStyles.root} ${styles.page}`}>
+    <SiteShell>
       <div className={tokenStyles.container}>
         <div className={styles.header}>
-          <Link href="/demo/bijoux-artisanaux">← Retour</Link>
           <p className={styles.eyebrow}>Le catalogue</p>
           <h1>Explorer les pièces de l’atelier</h1>
           <p className={styles.intro}>
@@ -75,6 +75,6 @@ export function CataloguePage() {
           ))}
         </div>
       </div>
-    </div>
+    </SiteShell>
   )
 }
