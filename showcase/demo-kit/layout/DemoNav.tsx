@@ -6,17 +6,21 @@ type Props = {
 
 export function DemoNav({ site }: Props) {
   const isSalonBeauty = site.slug === 'salon-beaute'
+  const homeHref =
+    site.nav.find((item) => ['accueil', 'главная'].includes(item.label.toLowerCase()))?.href ??
+    `/demo/${site.slug}`
 
   return (
     <header className="demo-nav">
-      <a className="demo-nav__brand" href="#top">
+      <a className="demo-nav__brand" href={homeHref}>
         <span className="demo-nav__mark" aria-hidden="true">
           {isSalonBeauty ? (
-            <svg fill="none" viewBox="0 0 44 44">
-              <path d="M22 3c7 6 7 14 0 19-7-5-7-13 0-19Z" stroke="currentColor" strokeWidth="2.2" />
-              <path d="M22 41c-7-6-7-14 0-19 7 5 7 13 0 19Z" stroke="currentColor" strokeWidth="2.2" />
-              <path d="M3 22c6-7 14-7 19 0-5 7-13 7-19 0Z" stroke="currentColor" strokeWidth="2.2" />
-              <path d="M41 22c-6 7-14 7-19 0 5-7 13-7 19 0Z" stroke="currentColor" strokeWidth="2.2" />
+            <svg fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <circle cx="6" cy="6" r="3" />
+              <circle cx="6" cy="18" r="3" />
+              <line x1="20" x2="8.12" y1="4" y2="15.88" />
+              <line x1="14.47" x2="20" y1="14.48" y2="20" />
+              <line x1="8.12" x2="12" y1="8.12" y2="12" />
             </svg>
           ) : (
             <svg fill="none" viewBox="0 0 36 44">

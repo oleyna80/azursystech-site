@@ -48,7 +48,10 @@ function HomeExperience({ content }: { content: SalonBeautyContent }) {
   return (
     <>
       <section className="salon-hero" aria-labelledby="salon-hero-title">
-        <div className="salon-container salon-hero__grid">
+        <div className="salon-hero__backdrop" aria-hidden="true" />
+        <div className="salon-hero__overlay" aria-hidden="true" />
+        <div className="salon-hero__fade" aria-hidden="true" />
+        <div className="salon-container salon-hero__content">
           <div className="salon-hero__copy">
             <span className="salon-eyebrow">{content.hero.eyebrow}</span>
             <h1 id="salon-hero-title">{content.hero.title}</h1>
@@ -64,17 +67,18 @@ function HomeExperience({ content }: { content: SalonBeautyContent }) {
               </a>
             </div>
           </div>
-          <div className="salon-hero__media">
-            <SalonVisual image={content.hero.image} label={content.hero.image.alt} variant="hero" />
-          </div>
         </div>
       </section>
 
-      <section className="salon-container salon-values" aria-label="Points forts">
-        {content.values.map((value) => (
-          <ValueItem item={value} key={value.label} />
-        ))}
+      <section className="salon-values-band" aria-label="Points forts">
+        <div className="salon-container salon-values">
+          {content.values.map((value) => (
+            <ValueItem item={value} key={value.label} />
+          ))}
+        </div>
       </section>
+
+      <SalonDivider />
 
       <section className="salon-container salon-booking" aria-labelledby="salon-booking-title">
         <div className="salon-booking__copy">
@@ -88,13 +92,15 @@ function HomeExperience({ content }: { content: SalonBeautyContent }) {
         <SalonVisual image={content.booking.image} label={content.booking.image.alt} variant="booking" />
       </section>
 
+      <SalonDivider />
+
       <section className="salon-section" aria-labelledby="salon-popular-title">
         <div className="salon-container">
           <SectionHeading
             eyebrow="Nos prestations"
-            title="Nos services populaires"
+            title="Nos soins populaires"
             titleId="salon-popular-title"
-            action={{ label: 'Voir tous les services', href: '/demo/salon-beaute/services' }}
+            action={{ label: 'Voir tous nos soins', href: '/demo/salon-beaute/services' }}
           />
           <div className="salon-popular-grid">
             {content.popularServices.map((service) => (
@@ -103,6 +109,8 @@ function HomeExperience({ content }: { content: SalonBeautyContent }) {
           </div>
         </div>
       </section>
+
+      <SalonDivider />
 
       <section className="salon-container salon-satisfaction" aria-labelledby="salon-satisfaction-title">
         <div>
@@ -286,6 +294,13 @@ const galleryVisualVariants: SalonVisualVariant[] = [
   'gallery-lounge',
 ]
 
+const valueDescriptions: Record<string, string> = {
+  'Professionnels expérimentés': "Plus de 7 ans d'expertise beauté",
+  'Produits de qualité': 'Sélectionnés pour votre peau',
+  'Ambiance relaxante': 'Un espace pensé pour votre bien-être',
+  'Prise de rendez-vous facile': 'En ligne, en quelques secondes',
+}
+
 function SalonVisual({
   compact = false,
   image,
@@ -424,11 +439,24 @@ function SectionHeading({
   )
 }
 
+function SalonDivider() {
+  return (
+    <div className="salon-divider" aria-hidden="true">
+      <span className="salon-divider__rule" />
+    </div>
+  )
+}
+
 function ValueItem({ item }: { item: SalonBeautyValue }) {
+  const description = valueDescriptions[item.label]
+
   return (
     <div className="salon-value">
       <Icon name={item.icon} />
-      <strong>{item.label}</strong>
+      <div>
+        <strong>{item.label}</strong>
+        {description ? <span>{description}</span> : null}
+      </div>
     </div>
   )
 }
@@ -440,7 +468,7 @@ function ServiceTile({ service }: { service: SalonBeautyService }) {
       <div className="salon-service-tile__body">
         <h3>{service.title}</h3>
         <p>
-          à partir de <strong>{service.price.replace(/^à partir de\s+/i, '')}</strong>
+          À partir de <strong>{service.price.replace(/^à partir de\s+/i, '')}</strong>
         </p>
       </div>
     </article>
@@ -668,32 +696,38 @@ function Icon({ name }: { name: string }) {
 function SalonStyles() {
   return (
     <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap');
 
       [data-demo='salon-beaute'] {
-        --salon-display: 'Cormorant Garamond', 'IM Fell English', Didot, Georgia, serif;
+        --salon-display: 'Playfair Display', Didot, Georgia, serif;
         --salon-body: Inter, 'Segoe UI', system-ui, sans-serif;
-        background: #faf7f4;
-        color: #1f1f1f;
+        background: #f8f0ea;
+        color: #1a1a1a;
         font-family: var(--salon-body);
         /* overflow-x: hidden removed — breaks position: sticky on .demo-nav */
       }
 
       [data-demo='salon-beaute'] .demo-nav {
-        background: rgba(250, 247, 244, 0.85);
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-        border-bottom: 1px solid rgba(232, 221, 214, 0.6);
-        box-shadow: 0 4px 24px rgba(84, 55, 51, 0.06);
-        padding: 1.05rem clamp(1.2rem, 5vw, 4rem);
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        border-bottom: 1px solid transparent;
+        box-shadow: none;
+        left: 0;
+        min-height: 72px;
+        padding: 0 clamp(1.25rem, 5vw, 4rem);
+        position: absolute;
+        right: 0;
+        top: 0;
+        z-index: 30;
       }
 
       [data-demo='salon-beaute'] .demo-nav__mark {
-        color: #9a4f56;
+        color: #8b2535;
       }
 
       [data-demo='salon-beaute'] .demo-nav__brand strong {
-        color: #1f1f1f;
+        color: #1a1a1a;
         font-family: var(--salon-display);
         font-size: 1.55rem;
         letter-spacing: 0;
@@ -710,12 +744,12 @@ function SalonStyles() {
       }
 
       [data-demo='salon-beaute'] .demo-nav nav a {
-        color: #1f1f1f;
-        font-weight: 650;
+        color: #1a1a1a;
+        font-weight: 500;
       }
 
       [data-demo='salon-beaute'] .demo-nav nav a:hover {
-        color: #9a4f56;
+        color: #8b2535;
       }
 
       [data-demo='salon-beaute'] .demo-nav__phone {
@@ -723,17 +757,17 @@ function SalonStyles() {
       }
 
       [data-demo='salon-beaute'] .demo-nav__cta {
-        background: linear-gradient(135deg, #ad666d, #9a4f56);
-        border-radius: 8px;
-        box-shadow: 0 14px 28px rgba(154, 79, 86, 0.22);
-        min-height: 3rem;
+        background: #8b2535;
+        border-radius: 999px;
+        box-shadow: 0 4px 14px rgba(139, 37, 53, 0.28);
+        min-height: 2.75rem;
       }
 
       [data-demo='salon-beaute'] .demo-footer {
         background:
           radial-gradient(circle at 0 0, rgba(154, 79, 86, 0.22), transparent 28rem),
           radial-gradient(circle at 82% 15%, rgba(232, 221, 214, 0.12), transparent 22rem),
-          #1f1f1f;
+          #1a1a1a;
         color: #ffffff;
       }
 
@@ -748,30 +782,26 @@ function SalonStyles() {
       }
 
       [data-demo='salon-beaute'] .demo-return {
-        border-color: rgba(154, 79, 86, 0.22);
-        color: #9a4f56;
+        border-color: rgba(139, 37, 53, 0.22);
+        color: #8b2535;
       }
 
       .salon-page {
-        --salon-display: 'Cormorant Garamond', 'IM Fell English', Didot, Georgia, serif;
+        --salon-display: 'Playfair Display', Didot, Georgia, serif;
         --salon-body: Inter, 'Segoe UI', system-ui, sans-serif;
-        --salon-ink: #1f1f1f;
+        --salon-ink: #1a1a1a;
         --salon-muted: #6b6460;
-        --salon-rose: #9a4f56;
-        --salon-rose-deep: #783d44;
+        --salon-rose: #8b2535;
+        --salon-rose-deep: #a02940;
         --salon-blush: #efd7d3;
         --salon-petal: #fff1ee;
-        --salon-cream: #faf7f4;
+        --salon-cream: #f8f0ea;
         --salon-sage: #8fa57c;
         --salon-sage-deep: #647553;
         --salon-gold: #c99058;
-        --salon-border: #e8ddd6;
+        --salon-border: #e8e8e8;
         --salon-shadow: rgba(84, 55, 51, 0.13);
-        background:
-          radial-gradient(circle at 14% 3%, rgba(239, 215, 211, 0.64), transparent 21rem),
-          radial-gradient(circle at 91% 9%, rgba(201, 144, 88, 0.18), transparent 24rem),
-          radial-gradient(circle at 82% 39%, rgba(143, 165, 124, 0.18), transparent 20rem),
-          linear-gradient(180deg, #fffdfb, #faf7f4 32rem, #f7eeeb 100%);
+        background: #f8f0ea;
         color: var(--salon-ink);
         font-family: var(--salon-body);
         max-width: 100vw;
@@ -837,13 +867,13 @@ function SalonStyles() {
         color: var(--salon-ink);
         font-family: var(--salon-display);
         font-weight: 500;
-        letter-spacing: 0.01em; /* Cormorant Garamond has beautiful natural letter spacing */
+        letter-spacing: 0;
         line-height: 1;
         margin: 0;
       }
 
       .salon-hero h1 {
-        font-size: clamp(3rem, 4.5vw, 4.4rem); /* Slightly larger — Cormorant is lighter weight */
+        font-size: clamp(3rem, 4.5vw, 4.4rem);
         line-height: 1.04;
         max-width: 19ch;
         text-wrap: balance;
@@ -1141,7 +1171,7 @@ function SalonStyles() {
       .salon-room__bottles {
         background:
           linear-gradient(180deg, #d09d79, #f4ded1) 13% 78% / 7% 22% no-repeat,
-          linear-gradient(180deg, #9a4f56, #f3d3c4) 28% 75% / 8% 28% no-repeat,
+          linear-gradient(180deg, #8b2535, #f3d3c4) 28% 75% / 8% 28% no-repeat,
           linear-gradient(180deg, #8fa57c, #f3d3c4) 48% 79% / 7% 21% no-repeat,
           linear-gradient(180deg, #c99058, #f4ded1) 67% 75% / 8% 29% no-repeat;
         bottom: 35%;
@@ -1413,13 +1443,13 @@ function SalonStyles() {
         align-items: center;
         border-radius: 999px;
         display: inline-flex;
-        font-size: 0.95rem;
-        font-weight: 800;
+        font-size: 0.9375rem;
+        font-weight: 500;
         gap: 0.55rem;
         justify-content: center;
         letter-spacing: 0.01em;
-        min-height: 3.25rem;
-        padding: 0 1.8rem;
+        min-height: 3.375rem;
+        padding: 0 2rem;
         white-space: nowrap;
         transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       }
@@ -1428,28 +1458,35 @@ function SalonStyles() {
         transform: translateY(-2px);
       }
 
+      .salon-booking__copy .salon-button,
+      .salon-satisfaction > div .salon-button,
+      .salon-advice > div .salon-button {
+        margin-top: 2rem;
+      }
+
       .salon-button--primary {
-        background: linear-gradient(135deg, #c46d81, var(--salon-rose-deep));
-        box-shadow: 0 14px 32px rgba(159, 83, 104, 0.28);
+        background: var(--salon-rose);
+        box-shadow: 0 4px 20px rgba(139, 37, 53, 0.34);
         color: #ffffff;
       }
 
       .salon-button--primary:hover {
-        background: linear-gradient(135deg, #d07d90, #8a3e52);
-        box-shadow: 0 20px 44px rgba(159, 83, 104, 0.38);
+        background: var(--salon-rose-deep);
+        box-shadow: 0 12px 32px rgba(139, 37, 53, 0.42);
       }
 
       .salon-button--outline {
-        background: rgba(255, 255, 255, 0.72);
-        backdrop-filter: blur(8px);
-        border: 1.5px solid rgba(159, 83, 104, 0.5);
-        color: var(--salon-rose);
+        background: transparent;
+        backdrop-filter: none;
+        border: 1.5px solid rgba(26, 26, 26, 0.45);
+        color: #1a1a1a;
       }
 
       .salon-button--outline:hover {
-        background: rgba(255, 255, 255, 0.9);
+        background: rgba(139, 37, 53, 0.08);
         border-color: var(--salon-rose);
-        box-shadow: 0 8px 24px rgba(159, 83, 104, 0.14);
+        box-shadow: none;
+        color: var(--salon-rose);
       }
 
       .salon-icon {
@@ -1510,6 +1547,72 @@ function SalonStyles() {
       .salon-value strong {
         font-size: 0.95rem;
         line-height: 1.35;
+      }
+
+      .salon-values-band {
+        background: #f8f0ea;
+        border-bottom: 1px solid rgba(139, 37, 53, 0.1);
+        border-top: 1px solid rgba(139, 37, 53, 0.1);
+      }
+
+      .salon-values-band .salon-values {
+        background: transparent;
+        backdrop-filter: none;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        gap: 0;
+        margin-bottom: 0;
+        max-width: 1280px;
+        padding: 0 64px;
+      }
+
+      .salon-values-band .salon-value {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-height: auto;
+        padding: 32px 24px;
+      }
+
+      .salon-values-band .salon-value + .salon-value {
+        border-left: 0;
+      }
+
+      .salon-values-band .salon-value:not(:last-child) {
+        border-right: 1px solid #e8e8e8;
+      }
+
+      .salon-values-band .salon-value svg {
+        height: 24px;
+        width: 24px;
+      }
+
+      .salon-values-band .salon-value strong {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        line-height: 1.3;
+        margin-bottom: 4px;
+      }
+
+      .salon-values-band .salon-value span {
+        color: #6b6460;
+        display: block;
+        font-size: 0.75rem;
+        line-height: 1.35;
+      }
+
+      .salon-divider {
+        background: #f8f0ea;
+        padding: 28px 64px 0;
+      }
+
+      .salon-divider__rule {
+        background: rgba(139, 37, 53, 0.12);
+        height: 1px;
+        margin: 0 auto;
+        max-width: 1280px;
       }
 
       .salon-booking,
@@ -1716,7 +1819,7 @@ function SalonStyles() {
       .salon-advice {
         background:
           radial-gradient(circle at 78% 20%, rgba(143, 165, 124, 0.16), transparent 15rem),
-          linear-gradient(90deg, #faf7f4, #e8ddd6);
+          linear-gradient(90deg, #f8f0ea, #e8e8e8);
         margin-top: 1.6rem;
       }
 
@@ -2095,16 +2198,16 @@ function SalonStyles() {
 
       .salon-form button {
         align-items: center;
-        background: linear-gradient(135deg, #b96378, var(--salon-rose-deep));
+        background: var(--salon-rose);
         border: 0;
-        border-radius: 8px;
+        border-radius: 999px;
         color: #fff;
         cursor: pointer;
         display: inline-flex;
         font-weight: 800;
         gap: 0.55rem;
         justify-content: center;
-        margin-top: 1rem;
+        margin-top: 2rem;
         min-height: 3.35rem;
         width: 100%;
       }
@@ -2125,12 +2228,18 @@ function SalonStyles() {
       }
 
       [data-demo='salon-beaute'] .demo-nav {
-        backdrop-filter: blur(18px);
-        background: rgba(250, 247, 244, 0.9);
-        border-bottom: 0;
-        box-shadow: 0 1px 0 rgba(232, 221, 214, 0.7);
-        min-height: 6.1rem;
-        padding: 1.55rem clamp(1.4rem, 4vw, 4rem);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        background: transparent;
+        border-bottom: 1px solid transparent;
+        box-shadow: none;
+        left: 0;
+        min-height: 72px;
+        padding: 0 clamp(1.25rem, 5vw, 4rem);
+        position: absolute;
+        right: 0;
+        top: 0;
+        z-index: 30;
       }
 
       [data-demo='salon-beaute'] .demo-nav__brand {
@@ -2138,20 +2247,20 @@ function SalonStyles() {
       }
 
       [data-demo='salon-beaute'] .demo-nav__mark {
-        height: 3.3rem;
-        width: 3.3rem;
+        height: 2.25rem;
+        width: 2.25rem;
       }
 
       [data-demo='salon-beaute'] .demo-nav__brand strong {
-        font-size: clamp(1.35rem, 2vw, 1.7rem);
+        font-size: 1.25rem;
         font-weight: 600;
-        line-height: 0.96;
+        line-height: 1.1;
       }
 
       [data-demo='salon-beaute'] .demo-nav__brand small {
-        color: #6b6460;
-        font-size: 0.78rem;
-        line-height: 1.35;
+        color: #201f1f;
+        font-size: 0.6875rem;
+        line-height: 1;
       }
 
       [data-demo='salon-beaute'] .demo-nav nav {
@@ -2160,22 +2269,24 @@ function SalonStyles() {
 
       [data-demo='salon-beaute'] .demo-nav nav a {
         border-bottom: 1px solid transparent;
-        color: #1f1f1f;
-        font-size: 0.91rem;
-        font-weight: 600;
+        color: #1a1a1a;
+        font-size: 0.875rem;
+        font-weight: 500;
         line-height: 1.2;
         padding-bottom: 0.25rem;
       }
 
       [data-demo='salon-beaute'] .demo-nav nav a:hover {
-        border-color: #9a4f56;
+        border-color: #8b2535;
+        color: #8b2535;
       }
 
       [data-demo='salon-beaute'] .demo-nav__cta {
-        border-radius: 10px;
+        background: #8b2535;
+        border-radius: 999px;
         gap: 0.55rem;
-        min-height: 3.4rem;
-        padding-inline: 1.25rem;
+        min-height: 2.75rem;
+        padding-inline: 1.375rem;
       }
 
       [data-demo='salon-beaute'] .demo-nav__cta::before {
@@ -2191,56 +2302,110 @@ function SalonStyles() {
       }
 
       .salon-page {
-        background:
-          radial-gradient(circle at 10% 0, rgba(239, 215, 211, 0.72), transparent 19rem),
-          radial-gradient(circle at 92% 5%, rgba(201, 144, 88, 0.2), transparent 24rem),
-          linear-gradient(180deg, #fffdfb 0, #faf7f4 34rem, #f8f1ee 100%);
+        background: #f8f0ea;
       }
 
       .salon-container {
-        max-width: min(1240px, 100vw);
+        max-width: 1280px;
+        padding-inline: 64px;
       }
 
       .salon-hero {
-        padding: clamp(2.6rem, 5.3vw, 4.7rem) 0 clamp(1.55rem, 3.2vw, 2.65rem);
+        background: #ede8e3;
+        margin-top: 0;
+        min-height: 700px;
+        overflow: hidden;
+        padding: 0;
+        position: relative;
       }
 
-      .salon-hero__grid {
-        gap: clamp(2rem, 5vw, 4.6rem);
-        grid-template-columns: minmax(390px, 0.84fr) minmax(420px, 1.18fr);
+      .salon-hero__backdrop {
+        background: url('/demo/salon-beaute/hero_bg.jpg') center 22% / cover no-repeat;
+        inset: 0;
+        position: absolute;
+        z-index: 0;
+      }
+
+      .salon-hero__overlay {
+        background: linear-gradient(
+          to right,
+          rgba(248, 240, 234, 0.55) 0%,
+          rgba(248, 240, 234, 0.25) 40%,
+          rgba(248, 240, 234, 0) 65%
+        );
+        inset: 0;
+        position: absolute;
+        z-index: 1;
+      }
+
+      .salon-hero__fade {
+        background: linear-gradient(to bottom, transparent 0%, #f8f0ea 100%);
+        bottom: 0;
+        height: 200px;
+        left: 0;
+        pointer-events: none;
+        position: absolute;
+        right: 0;
+        z-index: 3;
+      }
+
+      .salon-hero__content {
+        margin: 0 auto;
+        max-width: 1280px;
+        padding: 168px 64px 80px;
+        position: relative;
+        z-index: 2;
       }
 
       .salon-hero__copy {
-        padding-left: clamp(0rem, 1vw, 1rem);
+        max-width: 580px;
       }
 
       .salon-eyebrow,
       .salon-section-heading span {
-        color: #9a4f56;
-        font-size: 0.95rem;
-        font-weight: 700;
-        letter-spacing: 0;
+        color: #8b2535;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .salon-eyebrow {
+        align-items: center;
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .salon-eyebrow::before {
+        background: #8b2535;
+        content: '';
+        display: inline-block;
+        flex: 0 0 auto;
+        height: 1px;
+        width: 28px;
       }
 
       .salon-hero h1 {
-        font-size: clamp(3rem, 4.6vw, 4.35rem);
-        line-height: 1.03;
-        max-width: 22ch;
+        font-size: 3.875rem;
+        font-weight: 600;
+        line-height: 1.06;
+        margin-bottom: 24px;
+        max-width: 580px;
       }
 
       .salon-hero p,
       .salon-page-hero p,
       .salon-about-hero p {
-        color: #2d2a28;
-        font-size: clamp(1.03rem, 1.45vw, 1.18rem);
-        line-height: 1.75;
-        max-width: 37ch;
+        color: #131212;
+        font-size: 1.0625rem;
+        line-height: 1.65;
+        max-width: 420px;
       }
 
       .salon-hero__media,
       .salon-visual--hero {
-        border-radius: 24px;
-        min-height: clamp(31rem, 44vw, 41rem);
+        display: none;
       }
 
       .salon-visual {
@@ -2343,15 +2508,44 @@ function SalonStyles() {
       }
 
       .salon-booking {
-        border-radius: 18px;
-        grid-template-columns: minmax(290px, 0.43fr) minmax(440px, 1fr);
-        min-height: 18.6rem;
+        background: #f5ede3;
+        border: 0;
+        border-radius: 20px;
+        box-shadow: 0 4px 32px rgba(0, 0, 0, 0.07);
+        grid-template-columns: minmax(320px, 1fr) minmax(480px, 1.4fr);
+        min-height: 380px;
+        padding: 0;
       }
 
       .salon-booking__copy {
-        background: linear-gradient(90deg, rgba(250, 247, 244, 0.96), rgba(250, 247, 244, 0.78), rgba(250, 247, 244, 0.12));
+        background: transparent;
+        padding: 56px 48px;
         position: relative;
         z-index: 2;
+      }
+
+      .salon-booking h2,
+      .salon-satisfaction h2 {
+        font-size: 2.375rem;
+        font-weight: 600;
+        line-height: 1.15;
+      }
+
+      .salon-booking p,
+      .salon-satisfaction p {
+        color: #6b6460;
+        font-size: 0.9375rem;
+        line-height: 1.65;
+      }
+
+      .salon-hero h1 + p,
+      .salon-page-hero h2 + p,
+      .salon-booking h2 + p,
+      .salon-satisfaction h2 + p,
+      .salon-advice h3 + p,
+      .salon-message h3 + p,
+      .salon-philosophy h3 + p {
+        margin-top: 1.5rem;
       }
 
       .salon-booking > .salon-visual,
@@ -2365,47 +2559,94 @@ function SalonStyles() {
       }
 
       .salon-section {
-        padding: clamp(2.25rem, 5vw, 3.6rem) 0;
+        padding: 58px 0 40px;
       }
 
       .salon-services-page,
       .salon-contact {
-        padding: clamp(3.4rem, 6vw, 5.2rem) 0 clamp(2.4rem, 5vw, 4rem);
+        padding: clamp(6.25rem, 9vw, 7.5rem) 0 clamp(2.4rem, 5vw, 4rem);
+      }
+
+      .salon-section#about {
+        padding-top: clamp(6.25rem, 9vw, 7.5rem);
       }
 
       .salon-section-heading {
-        margin-bottom: 1.15rem;
+        margin-bottom: 48px;
       }
 
       .salon-section-heading > div {
-        margin-inline: auto;
-        text-align: center;
+        margin-inline: 0;
+        text-align: left;
       }
 
       .salon-section-heading h2,
       .salon-page-hero h2,
       .salon-about-hero h2 {
-        font-size: clamp(2.65rem, 4.75vw, 4.25rem);
+        font-size: clamp(2.15rem, 4vw, 3.25rem);
       }
 
       .salon-popular-grid {
-        gap: 1.15rem;
+        gap: 28px;
       }
 
       .salon-service-tile {
-        border-radius: 12px;
-        box-shadow: 0 10px 24px rgba(84, 55, 51, 0.08);
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .salon-service-tile:hover {
+        border-color: transparent;
+        box-shadow: none;
+        transform: none;
       }
 
       .salon-service-tile > .salon-visual {
-        aspect-ratio: 1.38;
+        aspect-ratio: auto;
         border-radius: 0;
+        height: 240px;
       }
 
       .salon-service-tile h3,
       .salon-service-row h3,
       .salon-advice h3 {
-        font-size: 1.55rem;
+        font-size: 1.125rem;
+      }
+
+      .salon-service-tile__body {
+        padding: 18px 0 0;
+      }
+
+      .salon-service-tile p {
+        color: var(--salon-rose);
+        font-size: 0.875rem;
+        font-weight: 600;
+      }
+
+      .salon-service-tile strong {
+        font-size: 0.875rem;
+      }
+
+      .salon-satisfaction {
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        gap: 80px;
+        grid-template-columns: minmax(320px, 1fr) minmax(420px, 1fr);
+        margin-bottom: 0;
+        padding: 40px 64px 80px;
+      }
+
+      .salon-satisfaction > div {
+        padding: 0;
+      }
+
+      .salon-satisfaction > .salon-visual {
+        border-radius: 20px;
+        height: 320px;
+        min-height: 320px;
       }
 
       .salon-page-hero {
@@ -2506,27 +2747,59 @@ function SalonStyles() {
       }
 
       [data-demo='salon-beaute'] .demo-footer {
-        padding-top: clamp(2.2rem, 4vw, 3.4rem);
+        background: #1a1a1a;
+        padding: 60px 64px 32px;
       }
 
       [data-demo='salon-beaute'] .demo-footer__inner {
         align-items: start;
-        gap: clamp(1.7rem, 4vw, 3.6rem);
+        gap: 48px;
+        grid-template-columns: 2fr 1fr 1fr 1.2fr;
+        margin: 0 auto;
+        max-width: 1280px;
       }
 
       [data-demo='salon-beaute'] .demo-footer__brand strong::before {
-        color: #d98f87;
-        content: '✤';
+        color: #8b2535;
+        content: '✂';
         display: inline-block;
         font-family: Georgia, serif;
-        font-size: 1.85rem;
+        font-size: 1.25rem;
         font-weight: 400;
         margin-right: 0.6rem;
-        transform: translateY(0.12rem);
+        transform: translateY(0.04rem);
+      }
+
+      [data-demo='salon-beaute'] .demo-footer__brand strong {
+        color: #ffffff;
+        font-family: var(--salon-display);
+        font-size: 0.9375rem;
+        font-weight: 600;
+      }
+
+      [data-demo='salon-beaute'] .demo-footer__brand span,
+      [data-demo='salon-beaute'] .demo-footer__brand p,
+      [data-demo='salon-beaute'] .demo-footer__column a,
+      [data-demo='salon-beaute'] .demo-footer__column span,
+      [data-demo='salon-beaute'] .demo-footer__bottom {
+        color: #777777;
       }
 
       [data-demo='salon-beaute'] .demo-footer__column strong {
         color: #ffffff;
+        font-size: 0.6875rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      [data-demo='salon-beaute'] .demo-footer__social a {
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        color: #777777;
+        height: auto;
+        padding: 0;
+        width: auto;
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -2579,8 +2852,12 @@ function SalonStyles() {
 
       @media (max-width: 860px) {
         .salon-hero {
-          min-height: auto;
-          padding-top: 1.7rem;
+          min-height: 520px;
+          padding: 0;
+        }
+
+        .salon-hero__content {
+          padding: 128px 28px 64px;
         }
 
         .salon-hero__grid,
@@ -2649,6 +2926,10 @@ function SalonStyles() {
         .salon-map {
           min-height: 19rem;
         }
+
+        .salon-values-band .salon-values {
+          padding-inline: 28px;
+        }
       }
 
       @media (max-width: 620px) {
@@ -2698,6 +2979,24 @@ function SalonStyles() {
           padding-inline: 1rem;
         }
 
+        .salon-divider {
+          padding: 24px 20px 0;
+        }
+
+        .salon-booking,
+        .salon-satisfaction {
+          padding-inline: 0;
+        }
+
+        .salon-satisfaction {
+          gap: 28px;
+          padding-bottom: 48px;
+        }
+
+        [data-demo='salon-beaute'] .demo-footer {
+          padding: 42px 20px 28px;
+        }
+
         .salon-hero h1 {
           font-size: clamp(2.2rem, 9vw, 2.85rem);
           max-width: 15ch;
@@ -2706,6 +3005,10 @@ function SalonStyles() {
         .salon-hero p {
           font-size: 0.98rem;
           max-width: 31ch;
+        }
+
+        .salon-hero__content {
+          padding: 110px 20px 48px;
         }
 
         .salon-page-hero h2,
@@ -2740,6 +3043,16 @@ function SalonStyles() {
           font-size: 0.98rem;
           line-height: 1.65;
           max-width: 30ch;
+        }
+
+        .salon-hero h1 + p,
+        .salon-page-hero h2 + p,
+        .salon-booking h2 + p,
+        .salon-satisfaction h2 + p,
+        .salon-advice h3 + p,
+        .salon-message h3 + p,
+        .salon-philosophy h3 + p {
+          margin-top: 1.25rem;
         }
 
         .salon-page-hero > .salon-visual,
@@ -2787,6 +3100,19 @@ function SalonStyles() {
           grid-template-columns: 1fr;
         }
 
+        .salon-values-band .salon-values {
+          padding-inline: 0;
+        }
+
+        .salon-values-band .salon-value {
+          padding: 24px 20px;
+        }
+
+        .salon-values-band .salon-value:not(:last-child) {
+          border-bottom: 1px solid #e8e8e8;
+          border-right: 0;
+        }
+
         .salon-booking__copy,
         .salon-satisfaction > div,
         .salon-advice > div,
@@ -2806,9 +3132,9 @@ function SalonStyles() {
 
         .salon-mobile-cta a {
           align-items: center;
-          background: linear-gradient(135deg, #b96378, var(--salon-rose-deep));
-          border-radius: 8px;
-          box-shadow: 0 16px 34px rgba(119, 57, 76, 0.24);
+          background: var(--salon-rose);
+          border-radius: 999px;
+          box-shadow: 0 16px 34px rgba(139, 37, 53, 0.24);
           color: #ffffff;
           display: flex;
           font-weight: 800;

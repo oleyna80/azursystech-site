@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Salon Beaute">
+  <rect width="64" height="64" rx="16" fill="#F8F0EA"/>
+  <circle cx="27" cy="24" r="10" fill="none" stroke="#8B2535" stroke-width="4"/>
+  <circle cx="37" cy="40" r="10" fill="none" stroke="#8B2535" stroke-width="4"/>
+  <path d="M20 44c8-18 16-26 28-30" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+</svg>
