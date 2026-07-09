@@ -342,7 +342,7 @@ function SalonVisual({
       {showRoomFallback ? <SalonRoomVisual variant={variant} /> : null}
       {showStillLifeFallback ? <SalonStillLifeVisual variant={variant} /> : null}
       {!hasPhoto && !showRoomFallback && !showStillLifeFallback ? (
-        <span className="salon-visual__caption">Salon Beauté</span>
+        <span className="salon-visual__caption">Salon de Beauté</span>
       ) : null}
     </div>
   )

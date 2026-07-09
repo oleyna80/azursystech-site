@@ -147,7 +147,7 @@ export const content: DemoContent = {
     about: {
       title: 'À propos de nous',
       intro:
-        'Salon Beauté est un espace dédié à votre beauté et à votre bien-être. Notre équipe de professionnelles passionnées vous accueille dans un cadre chaleureux, élégant et raffiné.',
+        'Salon de Beauté est un espace dédié à votre beauté et à votre bien-être. Notre équipe de professionnelles passionnées vous accueille dans un cadre chaleureux, élégant et raffiné.',
       image: img(
         local('about_salon.jpg'),
         'Même salon lumineux avec miroirs, postes de coiffure et plantes',
@@ -245,7 +245,7 @@ export const content: DemoContent = {
       info: [
         { icon: 'pin', label: 'Adresse', value: '10 Rue de la Beauté, 75001 Paris' },
         { icon: 'phone', label: 'Téléphone', value: '+33 1 23 45 67 89', href: 'tel:+33123456789' },
-        { icon: 'mail', label: 'Email', value: 'contact@salonbeaute.fr', href: 'mailto:contact@salonbeaute.fr' },
+        { icon: 'mail', label: 'Email', value: 'contact@salondebeaute.fr', href: 'mailto:contact@salondebeaute.fr' },
         { icon: 'clock', label: 'Horaires', value: 'Lundi - Samedi : 9h00 - 20h00\nDimanche : fermé' },
         { icon: 'social', label: 'Suivez-nous', value: 'Instagram · Facebook · WhatsApp' },
       ],
@@ -273,14 +273,14 @@ export const content: DemoContent = {
 
 export const site: DemoSite = {
   slug: 'salon-beaute',
-  title: 'Salon Beauté',
+  title: 'Salon de Beauté',
   subtitle: 'Votre beauté, notre passion',
   category: 'Site avec prise de rendez-vous',
   description:
     'Démonstration de site premium pour salon de beauté : services, tarifs, présentation, avis, contact et demande de rendez-vous.',
   previewImage: {
     src: local('hero_bg.jpg'),
-    alt: 'Aperçu du demo Salon Beauté',
+    alt: 'Aperçu de la démo Salon de Beauté',
     width: 1200,
     height: 800,
   },
@@ -299,7 +299,7 @@ export const site: DemoSite = {
     {
       slug: '',
       label: 'Accueil',
-      title: 'Salon Beauté - Sublimez votre beauté avec expertise',
+      title: 'Salon de Beauté - Sublimez votre beauté avec expertise',
       description:
         'Salon de beauté à Paris : coiffure, coloration, soins du visage, manucure, épilation et demande de rendez-vous.',
       sections: [{ type: 'salonBeauty', contentKey: 'salonBeauty' }],
@@ -315,17 +315,17 @@ export const site: DemoSite = {
     {
       slug: 'about',
       label: 'À propos',
-      title: 'À propos de Salon Beauté',
+      title: 'À propos de Salon de Beauté',
       description:
-        'Découvrez Salon Beauté, son équipe, sa philosophie, son univers et les avis de ses clientes.',
+        'Découvrez Salon de Beauté, son équipe, sa philosophie, son univers et les avis de ses clientes.',
       sections: [{ type: 'salonBeauty', contentKey: 'salonBeauty' }],
     },
     {
       slug: 'contact',
       label: 'Contact',
-      title: 'Contactez Salon Beauté',
+      title: 'Contactez Salon de Beauté',
       description:
-        'Coordonnées, horaires, carte stylisée et formulaire de demande de rendez-vous pour Salon Beauté à Paris.',
+        'Coordonnées, horaires, carte stylisée et formulaire de demande de rendez-vous pour Salon de Beauté à Paris.',
       sections: [{ type: 'salonBeauty', contentKey: 'salonBeauty' }],
     },
   ],
@@ -358,7 +358,7 @@ export const site: DemoSite = {
         ],
       },
     ],
-    copyright: '© 2026 Salon Beauté. Tous droits réservés.',
+    copyright: '© 2026 Salon de Beauté. Tous droits réservés.',
     legalLinks: [
       { label: 'Mentions légales', href: '/demo/salon-beaute/contact' },
       { label: 'Politique de confidentialité', href: '/demo/salon-beaute/contact' },
