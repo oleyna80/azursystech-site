@@ -16,7 +16,11 @@ export function CataloguePage() {
       <div className={tokenStyles.container}>
         <div className={styles.header}>
           <Link href="/demo/bijoux-artisanaux">← Retour</Link>
-          <h1>Catalogue</h1>
+          <p className={styles.eyebrow}>Le catalogue</p>
+          <h1>Explorer les pièces de l’atelier</h1>
+          <p className={styles.intro}>
+            Un mini-catalogue calme et sélectif pour découvrir les collections, les matières et les pièces disponibles sur demande.
+          </p>
         </div>
 
         <div className={styles.filtersSection}>

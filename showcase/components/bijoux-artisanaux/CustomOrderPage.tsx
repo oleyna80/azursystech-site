@@ -15,12 +15,11 @@ export function CustomOrderPage() {
     e.preventDefault()
     setPending(true)
 
-    // Simulate API call
+    // Demo-only feedback; no message is sent from this showcase form.
     setTimeout(() => {
       setPending(false)
       setStep('success')
 
-      // Redirect after 2 seconds
       setTimeout(() => {
         router.push('/demo/bijoux-artisanaux/merci')
       }, 2000)
@@ -38,7 +37,7 @@ export function CustomOrderPage() {
           {step === 'form' ? (
             <>
               <h1>Pièce personnalisée</h1>
-              <p>Decrivez votre vision et nous creeronsquelque chose d&apos;unique pour vous.</p>
+              <p>Décrivez votre vision et nous créerons quelque chose d&apos;unique pour vous.</p>
 
               <form onSubmit={handleSubmit} className={styles.form}>
                 <div className={styles.field}>
@@ -62,7 +61,7 @@ export function CustomOrderPage() {
                     id="description"
                     name="description"
                     rows={4}
-                    placeholder="Decrivez votre projet..."
+                    placeholder="Décrivez votre projet..."
                     required
                   ></textarea>
                 </div>
@@ -79,7 +78,7 @@ export function CustomOrderPage() {
                 </div>
 
                 <div className={styles.field}>
-                  <label htmlFor="timeline">Timeline souhaitée *</label>
+                  <label htmlFor="timeline">Délai souhaité *</label>
                   <select id="timeline" name="timeline" required>
                     <option value="">Sélectionner</option>
                     <option value="2-4-weeks">2-4 semaines</option>
@@ -97,8 +96,8 @@ export function CustomOrderPage() {
           ) : (
             <div className={styles.success}>
               <div className={styles.successIcon}>✓</div>
-              <h2>Merci!</h2>
-              <p>Votre demande a été envoyée. Nous vous recontacterons sous 48h.</p>
+              <h2>Merci !</h2>
+              <p>Votre demande de démonstration est prête. Aucun message réel n&apos;est envoyé depuis ce formulaire.</p>
             </div>
           )}
         </div>

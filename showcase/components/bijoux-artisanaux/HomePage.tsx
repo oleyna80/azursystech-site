@@ -2,62 +2,77 @@
 
 import Link from 'next/link'
 import { products } from './data'
+import { LogoMark } from './LogoMark'
 import tokenStyles from './tokens.module.css'
 import styles from './home.module.css'
+
+const statusLabels = {
+  available: 'Disponible',
+  made_to_order: 'Sur commande',
+  sold_out: 'Épuisé',
+  preorder: 'Précommande',
+} as const
 
 export function HomePage() {
   const featured = products.filter((p) => p.featured)
 
   return (
     <div className={`${tokenStyles.root} ${styles.page}`}>
-      {/* Header */}
       <header className={styles.header}>
         <div className={tokenStyles.container}>
           <Link href="/demo/bijoux-artisanaux" className={styles.logoLink}>
-            <svg className={styles.logoMark} viewBox="0 0 48 48" fill="none">
-              <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M24 8 L28 24 L24 32 L20 24 Z" fill="currentColor" opacity="0.8" />
-            </svg>
+            <LogoMark className={styles.logoMark} curveId="showcase-bijoux-header" />
             <div className={styles.logoText}>
               <div className={styles.logoName}>Atelier Liora</div>
-              <div className={styles.logoSub}>Bijoux</div>
+              <div className={styles.logoSub}>Bijoux artisanaux</div>
             </div>
           </Link>
 
           <nav className={styles.nav}>
             <Link href="/demo/bijoux-artisanaux/catalogue">Catalogue</Link>
             <Link href="/demo/bijoux-artisanaux/custom-order">Pièce personnalisée</Link>
-            <Link href="/demo/bijoux-artisanaux#contact">Contact</Link>
+            <Link href="/demo/bijoux-artisanaux#histoire">Notre histoire</Link>
           </nav>
+
+          <Link href="/demo/bijoux-artisanaux/custom-order" className={styles.navCta}>
+            Créer sur mesure
+          </Link>
         </div>
       </header>
 
-      {/* Hero */}
       <section className={styles.hero}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.05fr 0.95fr', gap: '48px', alignItems: 'center', maxWidth: 'var(--bx-max-w-content)', margin: '0 auto', padding: '0 var(--bx-container-padding)' }}>
-          <div>
+        <div className={styles.heroGrid}>
+          <div className={styles.heroCopy}>
             <p className={styles.eyebrow}>Atelier Liora</p>
-            <h1>Bijoux artisanaux</h1>
+            <h1>Bijoux artisanaux faits main</h1>
             <p>
-              Chaque pièce est façonnée à la main avec soin, en utilisant des matériaux choisis pour leur qualité et leur beauté.
+              Des pièces délicates façonnées avec passion dans notre studio. Une élégance intime pour célébrer vos instants précieux.
             </p>
-            <Link href="/demo/bijoux-artisanaux/catalogue" className={styles.btnPrimary}>
-              Découvrir la collection
-            </Link>
+            <div className={styles.heroActions}>
+              <Link href="/demo/bijoux-artisanaux/catalogue" className={styles.btnPrimary}>
+                Découvrir les collections
+              </Link>
+              <Link href="/demo/bijoux-artisanaux/custom-order" className={styles.btnSecondary}>
+                Créer un bijou sur mesure
+              </Link>
+            </div>
           </div>
           <div className={styles.heroImage}>
             <img
               src="/demo/bijoux-artisanaux/hero.jpg"
-              alt="Atelier Liora"
+              alt="Atelier Liora — bijoux artisanaux"
               loading="lazy"
             />
+            <div className={styles.heroOverlay} />
+            <div className={styles.heroRingOne} />
+            <div className={styles.heroRingTwo} />
+            <p className={styles.heroNote}>Pièces uniques ou petites séries, pensées pour durer.</p>
           </div>
         </div>
       </section>
 
-      {/* Story */}
-      <section className={styles.story}>
-        <div style={{ maxWidth: 'var(--bx-max-w-content)', margin: '0 auto', padding: '80px var(--bx-container-padding)' }}>
+      <section className={styles.story} id="histoire">
+        <div className={styles.sectionShell}>
           <div className={styles.storyGrid}>
             <div className={styles.storyImage}>
               <img
@@ -65,26 +80,39 @@ export function HomePage() {
                 alt="Savoir-faire"
                 loading="lazy"
               />
+              <div className={styles.storyBadge}>Savoir-faire</div>
             </div>
             <div className={styles.storyContent}>
-              <p className={styles.eyebrow}>Savoir-faire</p>
-              <h2>L&apos;histoire de chaque pièce</h2>
+              <p className={styles.eyebrow}>Notre essence</p>
+              <h2>Le toucher avant tout</h2>
               <p>
-                Depuis sa création, Atelier Liora crée des bijoux intemporels. Chaque pièce raconte une histoire de passion,
-                de technique et de respect pour les matériaux naturels.
+                Chaque bijou qui quitte notre atelier raconte une histoire de matière. Les traces subtiles du travail manuel rendent
+                chaque bague, collier ou bracelet profondément unique.
+              </p>
+              <p>
+                Atelier Liora est un espace de création intime où le métal précieux rencontre l&apos;émotion, avec des matériaux choisis
+                pour traverser le temps.
               </p>
               <blockquote className={styles.quote}>
-                Des bijoux qui durent, créés pour traverser les générations.
+                Chaque création naît d&apos;un dialogue entre le métal précieux et l&apos;outil.
+                <span>— Liora, artisane joaillière</span>
               </blockquote>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Featured */}
       <section className={styles.featured}>
-        <div style={{ maxWidth: 'var(--bx-max-w-content)', margin: '0 auto', padding: '80px var(--bx-container-padding)' }}>
-          <h2>Pièces en vedette</h2>
+        <div className={styles.sectionShell}>
+          <div className={styles.sectionHeader}>
+            <div>
+              <p className={styles.eyebrow}>Collections phares</p>
+              <h2>Des créations à découvrir</h2>
+            </div>
+            <Link href="/demo/bijoux-artisanaux/catalogue" className={styles.btnSecondary}>
+              Voir le catalogue
+            </Link>
+          </div>
           <div className={styles.productGrid}>
             {featured.map((product) => (
               <Link
@@ -104,7 +132,7 @@ export function HomePage() {
                 <p>{product.description}</p>
                 <div className={styles.productMeta}>
                   <span className={styles.price}>{product.priceLabel}</span>
-                  <span className={styles.status}>{product.status}</span>
+                  <span className={styles.status}>{statusLabels[product.status]}</span>
                 </div>
               </Link>
             ))}
@@ -112,36 +140,39 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* CTA */}
       <section className={styles.cta}>
-        <div style={{ maxWidth: 'var(--bx-max-w-content)', margin: '0 auto', padding: '80px var(--bx-container-padding)', textAlign: 'center' }}>
-          <h2>Vous ne trouvez pas ce que vous cherchez?</h2>
-          <p>Contactez-nous pour une création personnalisée</p>
-          <Link href="/demo/bijoux-artisanaux/custom-order" className={styles.btnSecondary}>
-            Commander une pièce personnalisée
+        <div className={styles.sectionShell}>
+          <p className={styles.eyebrow}>Création sur mesure</p>
+          <h2>Confiez-nous votre vision comme une lettre à l&apos;atelier.</h2>
+          <p>
+            Choisissez un type de bijou, une intention, des matières et quelques détails. L&apos;artisane vous répondra avec une
+            proposition personnalisée.
+          </p>
+          <Link href="/demo/bijoux-artisanaux/custom-order" className={styles.btnLight}>
+            Préparer ma demande
           </Link>
         </div>
       </section>
 
-      {/* Footer */}
       <footer className={styles.footer}>
-        <div style={{ maxWidth: 'var(--bx-max-w-content)', margin: '0 auto', padding: '48px var(--bx-container-padding) 24px' }}>
+        <div className={styles.footerShell}>
           <div className={styles.footerContent}>
             <div className={styles.footerCol}>
+              <LogoMark className={styles.footerLogo} curveId="showcase-bijoux-footer" />
               <h4>Atelier Liora</h4>
-              <p>Bijoux artisanaux façonnés à la main.</p>
+              <p>Bijoux artisanaux faits main, pièces uniques ou petites séries, façonnées avec patience dans un atelier intime.</p>
             </div>
             <div className={styles.footerCol}>
               <h4>Navigation</h4>
               <nav className={styles.footerNav}>
                 <Link href="/demo/bijoux-artisanaux/catalogue">Catalogue</Link>
-                <Link href="/demo/bijoux-artisanaux/custom-order">Personnalisée</Link>
-                <Link href="/demo/bijoux-artisanaux#contact">Contact</Link>
+                <Link href="/demo/bijoux-artisanaux/custom-order">Création sur mesure</Link>
+                <Link href="/demo/bijoux-artisanaux#histoire">Notre histoire</Link>
               </nav>
             </div>
           </div>
           <div className={styles.footerBottom}>
-            <p>&copy; 2024 Atelier Liora. Tous droits réservés.</p>
+            <p>&copy; 2026 Atelier Liora. Façonné à la main avec passion.</p>
           </div>
         </div>
       </footer>

@@ -44,16 +44,16 @@ export function ProductPage({ slug }: { slug: string }) {
 
             <div className={styles.meta}>
               <div>
-                <label>Style:</label>
+                <label>Style :</label>
                 <span>{product.style}</span>
               </div>
               <div>
-                <label>Matériaux:</label>
+                <label>Matériaux :</label>
                 <span>{product.materials.join(', ')}</span>
               </div>
               <div>
-                <label>Budget:</label>
-                <span>{product.budget}€</span>
+                <label>Prix :</label>
+                <span>{product.priceLabel}</span>
               </div>
             </div>
 
@@ -94,7 +94,7 @@ export function ProductPage({ slug }: { slug: string }) {
                 <h3>Options</h3>
                 {product.options.sizes && (
                   <div>
-                    <label>Tailles disponibles:</label>
+                    <label>Tailles disponibles :</label>
                     <div className={styles.optionsList}>
                       {product.options.sizes.map((size) => (
                         <button key={size} className={styles.optionBtn}>
@@ -106,7 +106,7 @@ export function ProductPage({ slug }: { slug: string }) {
                 )}
                 {product.options.materials && (
                   <div>
-                    <label>Matériaux:</label>
+                    <label>Matériaux :</label>
                     <div className={styles.optionsList}>
                       {product.options.materials.map((material) => (
                         <button key={material} className={styles.optionBtn}>
@@ -123,7 +123,7 @@ export function ProductPage({ slug }: { slug: string }) {
               onClick={() => setInquiryOpen(true)}
               className={styles.ctaBtn}
             >
-              Interesse? Demander plus d&apos;infos
+              Intéressé ? Demander plus d&apos;infos
             </button>
 
             <InquiryDrawer
