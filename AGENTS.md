@@ -362,6 +362,16 @@ navigation, or sitemap entries, run a local crash test:
 - Zero new errors in dev server logs.
 Record the result as `Crash test: PASSED / FAILED` in the commit body or closeout.
 
+**Demo Port Verification Gate.** Before `git commit` on any Work Block that adds
+or ports a showcase demo (new `app/demo/**` route tree or demo component set),
+run at minimum lite verification: `npm run check:types`, `npm run build`, and a
+live smoke on the dev server — key routes return 200, header/footer/fonts
+actually render, interactive controls respond — at mobile (375px) and desktop
+widths. `implementation: DONE` alone does not close the WB: record a
+`verification:` row with this evidence in the orchestrator-log before commit.
+(Adopted 2026-07-09: the bijoux port shipped unverified and a next-day review
+found broken fonts and dead controls.)
+
 Between stages: no confirmation pause unless a Hard Stop is triggered.
 If a stage fails: report the blocker, attempt recovery or skip with documented risk,
 then continue remaining stages.
@@ -640,6 +650,13 @@ or process decisions there during closeout.
 **Rolling window**: `progress.md` keeps the last 15 entries. When exceeding 15,
 move older entries to `memory_bank/archive/progress-YYYY-MM.md`.
 Archived entries are read only when explicitly needed (debugging, audit).
+
+**Committing sessions write log rows.** Any session or tool contour (Claude
+Code, Codex, opencode, manual) that produces a git commit in this repository
+must record at least a WB-opening (preflight or critic) row and a closeout
+(verification) row in `memory_bank/orchestrator-log.md`, and reference the WB
+id in the commit subject or body when practical. Commits without WB linkage
+are flagged by sprint-analysis as out-of-process and degrade retros.
 
 ---
 
