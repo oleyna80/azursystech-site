@@ -1,0 +1,11 @@
+:root {
+  --pl-primary: #0a4ed5;
+  --pl-primary-fg: #FFFFFF;
+  --pl-accent: #10a3a0;
+  --pl-bg: #F6F9FE;
+  --pl-surface: #FFFFFF;
+  --pl-border: #D9E3F2;
+  --pl-radius: 12px;
+  --pl-font-heading: var(--pl-font-heading);
+  --pl-font-body: var(--pl-font-body);
+}

@@ -113,17 +113,20 @@ Modular structure: `src/modules/social/` — domain / application / repositories
 
 ## Architecture: `showcase/`
 
-Config-driven demo site rendering system.
+Standalone demo sites — one pattern for all demos, each self-contained.
 
 ```
-demos/<slug>/site.ts          →  DemoSite (lib/types.ts)
-app/demo/[slug]/page.tsx      →  DemoPageRenderer
-demo-kit/sections/*.tsx       →  section components (Hero, Services, FAQ, …)
+app/demo/<name>/**            →  routes (layout.tsx with next/font + page.tsx per subpage)
+components/<name>/**          →  components, data.ts, types.ts, *.module.css
+public/demo/<name>/           →  static images
 ```
 
-- New demo = new `demos/<slug>/site.ts` directory + section data
-- `lib/theme.ts` — CSS variables from `DemoTheme`
-- `assurance` has standalone pages (`/demo/assurance/**`) with custom `.module.css`
+- New demo = new `app/demo/<name>/` + `components/<name>/` pair
+- Theme = namespaced CSS custom properties per demo (`--pl-*` plomberie, `--sb-*` salon-beaute, `--bx-*` bijoux, `--mo-*` maison-olive); fonts via `next/font` in the demo layout
+- Shared layer: `demo-kit/layout/DemoReturnLink.tsx` + `lib/demo-return-url.ts` (return-to-site link), `lib/types.ts`
+- Demos are static: no fetch/API calls, forms are demo-only (preventDefault + local state)
+- Page titles follow `<Page> — <Site> | AzurSysTech Showcase`
+- Demo links from `web/` live in `web/src/lib/portfolio-data.ts` and `web/src/app/[locale]/_home-data.ts`
 
 ---
 
