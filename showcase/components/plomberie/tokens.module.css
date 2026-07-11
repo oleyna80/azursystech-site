@@ -1,11 +1,19 @@
-:root {
-  --pl-primary: #0a4ed5;
-  --pl-primary-fg: #FFFFFF;
-  --pl-accent: #10a3a0;
-  --pl-bg: #F6F9FE;
-  --pl-surface: #FFFFFF;
-  --pl-border: #D9E3F2;
-  --pl-radius: 12px;
-  --pl-font-heading: var(--pl-font-heading);
-  --pl-font-body: var(--pl-font-body);
+.route {
+  --pl-bg: #f2f4f1;
+  --pl-surface: #fbfcfa;
+  --pl-ink: #102a2c;
+  --pl-muted: #5c6b69;
+  --pl-primary: #006b68;
+  --pl-primary-deep: #005552;
+  --pl-water: #ddece8;
+  --pl-urgent: #f36f45;
+  --pl-border: #cad5d1;
+  --pl-shadow: rgba(16, 42, 44, 0.12);
+  --pl-font-heading: var(--font-pl-manrope);
+  --pl-font-body: var(--font-pl-manrope);
+  --pl-font-mono: var(--font-pl-mono);
+  --pl-radius-sm: 0.75rem;
+  --pl-radius: 1.25rem;
+  --pl-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  color: var(--pl-ink);
 }
