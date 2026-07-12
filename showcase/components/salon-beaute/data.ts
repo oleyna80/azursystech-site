@@ -82,8 +82,8 @@ export const salonBeauteContent: SalonBeautyContent = {
   popularServices: [services[0], services[1], services[3], services[2]],
   servicesPage: {
     eyebrow: 'Prenez soin de vous',
-    title: 'Nos services',
-    subtitle: 'Découvrez notre gamme complète de soins pour sublimer votre beauté.',
+    title: 'Nos soins & services',
+    subtitle: 'Découvrez notre gamme complète de soins, pensée pour révéler votre beauté naturelle.',
     image: img(local('services_header.jpg'), 'Brosses et accessoires de coiffure sur fond clair', 1600, 900),
     services,
     adviceTitle: "Besoin d'un conseil personnalisé ?",
@@ -97,7 +97,7 @@ export const salonBeauteContent: SalonBeautyContent = {
   about: {
     title: 'À propos de nous',
     intro:
-      'Salon de Beauté est un espace dédié à votre beauté et à votre bien-être. Notre équipe de professionnelles passionnées vous accueille dans un cadre chaleureux, élégant et raffiné.',
+      'Salon Beauté est un espace dédié à votre beauté et à votre bien-être. Notre équipe de professionnelles passionnées vous accueille dans un cadre chaleureux, élégant et raffiné.',
     image: img(local('about_salon.jpg'), 'Même salon lumineux avec miroirs, postes de coiffure et plantes', 1600, 1050),
     values: [
       { icon: 'expert', label: 'Professionnalisme' },
@@ -173,7 +173,7 @@ export const salonBeauteContent: SalonBeautyContent = {
     info: [
       { icon: 'pin', label: 'Adresse', value: '10 Rue de la Beauté, 75001 Paris' },
       { icon: 'phone', label: 'Téléphone', value: '+33 1 23 45 67 89', href: 'tel:+33123456789' },
-      { icon: 'mail', label: 'Email', value: 'contact@salondebeaute.fr', href: 'mailto:contact@salondebeaute.fr' },
+      { icon: 'mail', label: 'Email', value: 'contact@salonbeaute.fr', href: 'mailto:contact@salonbeaute.fr' },
       { icon: 'clock', label: 'Horaires', value: 'Lundi - Samedi : 9h00 - 20h00\nDimanche : fermé' },
       { icon: 'social', label: 'Suivez-nous', value: 'Instagram · Facebook · WhatsApp' },
     ],
@@ -185,7 +185,7 @@ export const salonBeauteContent: SalonBeautyContent = {
     note: 'Votre rendez-vous sera confirmé après vérification de nos disponibilités.',
   },
   satisfaction: {
-    title: 'Votre satisfaction est notre engagement',
+    title: 'Votre satisfaction est notre priorité',
     body:
       'Nous mettons notre savoir-faire au service de votre bien-être, avec une attention sincère et personnalisée.',
     cta: { label: 'En savoir plus', href: '/demo/salon-beaute/about' },

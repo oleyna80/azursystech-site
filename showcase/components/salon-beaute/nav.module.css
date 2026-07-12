@@ -1,148 +1,36 @@
-.nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 2rem;
-  padding: 1rem 1.5rem;
-  background: var(--sb-surface);
-  border-bottom: 1px solid var(--sb-border);
-  position: sticky;
-  top: 0;
-  z-index: 50;
-}
+.header { background: transparent; color: #282321; font-family: var(--sb-font-body), Arial, sans-serif; height: 72px; inset: 0 0 auto; position: absolute; z-index: 50; }
+.inner { align-items: center; display: flex; height: 100%; margin: auto; max-width: 1408px; padding: 0 64px; }
+.brand { align-items: center; color: #8b2535; display: flex; gap: 12px; margin-right: auto; text-decoration: none; }
+.mark { height: 36px; width: 36px; }
+.brand > span { display: flex; flex-direction: column; }
+.brand strong { font-family: var(--sb-font-heading), Georgia, serif; font-size: 20px; font-weight: 600; line-height: 1.1; }
+.brand small { color: #887d77; font-size: 9px; letter-spacing: .06em; margin-top: 3px; }
+.desktopNav { align-items: stretch; align-self: stretch; display: flex; gap: 34px; }
+.navLink { align-items: center; color: #514946; display: flex; font-size: 13px; font-weight: 600; position: relative; text-decoration: none; }
+.navLink::after { background: #8b2535; bottom: 0; content: ''; height: 2px; inset-inline: 50%; position: absolute; transition: inset .2s ease; }
+.navLink:hover, .navLink[aria-current='page'] { color: #8b2535; }
+.navLink:hover::after, .navLink[aria-current='page']::after { inset-inline: 0; }
+.actions { align-items: center; display: flex; gap: 22px; margin-left: 42px; }
+.phone { align-items: center; color: #514946; display: flex; font-size: 12px; gap: 7px; text-decoration: none; }
+.phone svg { height: 16px; width: 16px; }
+.cta, .drawerCta { background: #8b2535; border-radius: 999px; color: #fff; font-size: 12px; font-weight: 700; padding: 12px 18px; text-decoration: none; transition: background-color .2s ease, transform .2s ease; }
+.cta:hover, .drawerCta:hover { background: #681927; transform: translateY(-1px); }
+.brand:focus-visible, .navLink:focus-visible, .phone:focus-visible, .cta:focus-visible, .menuButton:focus-visible, .drawer a:focus-visible, .drawer button:focus-visible { outline: 3px solid #cf8290; outline-offset: 3px; }
+.menuButton { background: transparent; border: 0; cursor: pointer; display: none; height: 42px; padding: 9px; width: 42px; }
+.menuButton span { background: #8b2535; display: block; height: 2px; margin: 5px 0; width: 24px; }
+.overlay { background: rgba(35,25,22,.38); border: 0; inset: 72px 0 0; position: fixed; width: 100%; z-index: 51; }
+.drawer { background: #fffdfa; box-shadow: -12px 20px 40px rgba(40,28,24,.14); height: calc(100vh - 72px); max-width: 340px; padding: 28px; position: fixed; right: 0; top: 72px; transform: translateX(105%); transition: transform .25s ease; width: 88%; z-index: 52; }
+.drawer[data-open='true'] { transform: translateX(0); }
+.drawerTop { align-items: center; border-bottom: 1px solid #eadfd9; color: #8b2535; display: flex; font-family: var(--sb-font-heading), Georgia, serif; font-size: 22px; justify-content: space-between; padding-bottom: 20px; }
+.drawerTop button { background: transparent; border: 0; color: #8b2535; cursor: pointer; font-size: 32px; }
+.drawer nav { display: flex; flex-direction: column; padding: 18px 0 26px; }
+.drawer nav a { border-bottom: 1px solid #eadfd9; color: #443b37; font-size: 15px; font-weight: 600; padding: 17px 4px; text-decoration: none; }
+.drawer nav a[aria-current='page'] { color: #8b2535; }
+.drawerPhone { align-items: center; color: #514946; display: flex; font-size: 13px; gap: 8px; margin-bottom: 22px; text-decoration: none; }
+.drawerPhone svg { height: 17px; width: 17px; }
+.drawerCta { display: block; padding: 15px 20px; text-align: center; }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  text-decoration: none;
-  color: var(--sb-primary);
-  font-weight: 600;
-  font-size: 1.125rem;
-  flex-shrink: 0;
-}
-
-.mark {
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--sb-primary);
-}
-
-.mark svg {
-  width: 100%;
-  height: 100%;
-}
-
-.brand span {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.brand strong {
-  line-height: 1.2;
-}
-
-.brand small {
-  font-size: 0.75rem;
-  color: #999;
-  font-weight: normal;
-}
-
-.navMenu {
-  display: flex;
-  gap: 0.5rem;
-  flex: 1;
-}
-
-.navLink {
-  padding: 0.5rem 1rem;
-  text-decoration: none;
-  color: #333;
-  font-weight: 500;
-  font-size: 0.95rem;
-  transition: color 0.3s ease;
-}
-
-.navLink:hover {
-  color: var(--sb-primary);
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-shrink: 0;
-}
-
-.phone {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  text-decoration: none;
-  color: var(--sb-primary);
-  font-weight: 600;
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
-}
-
-.phone svg {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-.phone:hover {
-  color: #6b1d2a;
-}
-
-.cta {
-  padding: 0.625rem 1.25rem;
-  background: var(--sb-primary);
-  color: white;
-  border-radius: 0.5rem;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
-  display: inline-block;
-}
-
-.cta:hover {
-  background: #6b1d2a;
-  transform: translateY(-2px);
-}
-
-@media (max-width: 768px) {
-  .nav {
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-
-  .navMenu {
-    order: 3;
-    width: 100%;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-  }
-
-  .navLink {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
-  }
-
-  .actions {
-    gap: 0.5rem;
-  }
-
-  .phone {
-    font-size: 0.8rem;
-  }
-
-  .cta {
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
-  }
-}
+@media (max-width: 1180px) { .inner { padding: 0 32px; } .phone { display: none; } .actions { margin-left: 28px; } .desktopNav { gap: 24px; } }
+@media (max-width: 860px) { .desktopNav, .actions { display: none; } .menuButton { display: block; } }
+@media (max-width: 480px) { .inner { padding: 0 18px; } .brand strong { font-size: 18px; } .brand small { display: none; } .mark { height: 31px; width: 31px; } }
+@media (prefers-reduced-motion: reduce) { .drawer, .navLink::after, .cta, .drawerCta { transition-duration: .01ms; } }
