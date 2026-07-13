@@ -69,8 +69,9 @@ A Work Block is `Subagent-Required` if any of these triggers apply:
 
 For `Subagent-Required` Work Blocks, default permitted subagent classes are
 read-only Reviewer, Verifier, and Analyst subagents inside the approved scope.
-Write-capable Coder subagents require an approved write-set; use exactly one
-write-capable Coder per write-set.
+Write-capable Coder subagents require an approved write-set. Exactly one
+write-capable Scoped Coder may operate during an implementation stage.
+Parallel agents are read-only.
 
 ### Execution Topology After Plan Approval
 
@@ -82,6 +83,10 @@ implement or verify directly. Instead:
 3. **Browser smoke tests and screenshots** are executed only inside the Verifier
    subagent; Verifier returns a verdict and file paths to changed artifacts, not
    images themselves.
+
+Control-layer files reserved to Control Tower by `File Write Authority` remain
+Control Tower-authored. Maintaining those governance files is not permission to
+implement application or runtime changes inline.
 
 **Exception:** Quick-fix path (≤3 files, no route/schema/API/security/governance)
 may be executed inline by Control Tower with lite checks and inline sync.
@@ -162,7 +167,8 @@ Owner involvement is intentionally light: the Owner starts the process,
 approves Hard Stop actions when needed, and validates the final result. The
 Owner does not manage internal agent handoffs during an approved Work Block.
 
-For write-capable work, use exactly one Scoped Coder subagent per write-set.
+For write-capable work, use exactly one Scoped Coder subagent during an
+implementation stage. Parallel agents are read-only.
 Reviewer and Verifier subagents are read-only for source, runtime, config, DB,
 infra, secrets, and production state unless explicitly approved. Verifier may
 write approved verification artifacts only when the Work Block scopes that
@@ -258,9 +264,10 @@ Production code must:
   build;
 - be explainable in the closeout without relying on hidden prompt history.
 
-Reviewer/Verifier must block acceptance if a production diff looks correct only
-because of the prompt context, is hard to modify safely, or would be costly for a
-future maintainer to own.
+Reviewer must report acceptance-blocking findings if a production diff looks
+correct only because of the prompt context, is hard to modify safely, or would
+be costly for a future maintainer to own. Only Verifier issues the formal
+`READY` or `BLOCKED` gate verdict.
 
 ### Security Review Baseline
 
@@ -338,7 +345,7 @@ must verify this dependency explicitly.
 ```
 Standard:
   Plan & Discover (Control Tower)
-    └─→ Implement (Scoped Coder, per-task)
+    └─→ Implement (exactly one write-capable Scoped Coder)
           └─→ Verify (Verifier gate, tier-scoped)
                 └─→ Sync & Report (SSOT Sync + Owner report)
 
@@ -390,10 +397,12 @@ For non-trivial work, read these files before planning edits:
 4. `docs/session-bootstrap.md` — current session intake and memory-use rules
 5. `.agent/workflows/sdd-protocol.md` — stage flow, verification tiers, quick-fix rules
 6. `.agent/ROSTER.md` — agent/mode and skill routing
-7. Relevant `docs/engineering-memory/*` entries — durable engineering memory
-8. `memory_bank/context.md` — current operational focus and next gate
-9. `memory_bank/progress.md` — rolling operational status log
-10. `memory_bank/decisions.md` — operational decision summaries only
+7. When Codex is the active runtime: `.codex/AGENTS.md` and
+   `.codex/instructions.md` — Codex-specific execution and routing rules
+8. Relevant `docs/engineering-memory/*` entries — durable engineering memory
+9. `memory_bank/context.md` — current operational focus and next gate
+10. `memory_bank/progress.md` — rolling operational status log
+11. `memory_bank/decisions.md` — operational decision summaries only
 
 Read additional specs, plans, tasklists, skills, or code only when they are relevant
 to the approved objective.
@@ -617,16 +626,32 @@ triggers); its subagent contracts live in `.opencode/agents/**` and mirror
 
 Full roster with skill assignments: `.agent/ROSTER.md`
 
-### Model Routing
+### Claude Code Model Routing
 
 | Task Type | Model | Runtime |
 |---|---|---|
 | Explore, inventory, research | `haiku` | Fast context evaluation |
 | Scoped Coder, Verifier, Reviewer, Critic | `sonnet` | Standard implementation, review, verification |
 | Solution Architect (hard architecture only) | `opus` | Complex analysis, multi-domain design |
-| GPT Critic, GPT Verifier, Codex Reviewer | `inherit` | Delegates to Codex MCP (GPT family); DEGRADED path retained when Codex unavailable |
+| Optional external critic/verifier | `inherit` | Explicit second-runtime audit only; it is not the ordinary Codex gate path |
 
 **Model aliases in `.claude/agents/*.md` frontmatter:** `sonnet`, `opus`, `haiku`, `inherit` are native Claude Code agent frontmatter values, resolved by the harness. Do not use full model names (e.g., `claude-sonnet-4-6`) in agent YAML frontmatter.
+
+### Codex Model Routing
+
+- Portable multi-agent structure lives in `.codex/config.toml.template`.
+- Role-level model, reasoning, and sandbox overrides live in private
+  `.codex/agents/*.toml` or user-level Codex config.
+- Exact provider, model, endpoint, and API settings are machine-specific and
+  must not be committed in the base project control layer.
+- Native subagents inherit the parent session's live sandbox and approval
+  overrides. A role profile can express the intended default, but it is not a
+  technical read-only boundary when the parent runs with broader permissions.
+  Run a separate top-level read-only Codex session when technical isolation is
+  required; Reviewer, Critic, Architect, and Verifier policy remains read-only.
+- Native Codex Critic and Verifier are the normal gate route. Claude wrappers
+  and other runtimes are optional, explicitly scoped second opinions; they are
+  not native Codex profiles and must not be duplicated under `.codex/agents/`.
 
 ---
 

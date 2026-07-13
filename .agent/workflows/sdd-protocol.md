@@ -71,7 +71,7 @@ policy/templates/hooks, `docs/session-bootstrap.md`, `scripts/bootstrap.sh`,
 4. **Preflight** — output Stage 0 Preflight block: skills, subagent topology, side-effect class, DB mode, hard stops, write gate status
 5. **Research** — if needed, launch `solution-architect` for pre-implementation analysis
 6. **Critic Review** — launch `critic` agent to independently review Control Tower decisions (scope, skill routing, skip reasons, risk gaps) according to the trigger tables below.
-7. **GPT Critic Review** — launch `gpt-critic` after `critic` when the Work Block is Full tier, the first Work Block in a new domain, or the Claude critic returns RECONSIDER. (SUPPLEMENT alone does not escalate: it is an "approve with additions" verdict; Control Tower resolves the supplements directly.) If Codex MCP is unavailable, record `review-degraded:codex-mcp-unavailable` and continue with the Claude critic result.
+7. **Independent Critic Review** — native Codex Critic is the ordinary read-only gate. Request a second runtime only for an explicit risk trigger (conflicting evidence, high-impact security, or Owner request); record its scope and any degraded result without making Codex MCP a prerequisite.
 8. **Plan Approval** — produce plan, get Owner approval if non-trivial
 
 ### Stage 0 Trigger Tables
@@ -89,13 +89,13 @@ logs, gates, and other lifecycle evidence artifacts are excluded.
 
 No-skip domains are first Work Blocks in authentication/authorization,
 payments/billing, database migration, a new service layer, and deploy or
-infrastructure. GPT critic is required for Full tier, first Work Block in a new
-domain, or Claude critic verdict `SUPPLEMENT`/`RECONSIDER`.
+infrastructure. Native Critic is required by the normal trigger table. An
+independent second-runtime review is risk-driven and explicitly recorded.
 
 ### Exit Conditions
 - Write gate: `READY`
 - Critic verdict: APPROVE or SUPPLEMENT (if RECONSIDER — re-run Stage 0 with corrections)
-- GPT critic second opinion completed or degraded reason recorded when its trigger matched
+- Optional independent second-runtime result recorded when explicitly requested
 - `.agent/critic-gate.md` records evidence-backed critic/GPT critic status before source edits
 - Plan approved (for non-trivial work)
 - All matched skills recorded (used or skipped with reason)
@@ -148,16 +148,13 @@ verifier agent; cannot be replaced by inline tsc.
 | DB writes / migrations | Spawn verifier agent — **mandatory** |
 | Auth / security-sensitive changes | Spawn verifier agent — **mandatory** |
 | Parallel dispatch results (merge step) | Spawn verifier agent — **mandatory** |
-| Side-effect class: live-infra / live-data | Spawn verifier agent + Full tier + `gpt-verifier` — **mandatory** |
+| Side-effect class: live-infra / live-data | Spawn verifier agent + Full tier — **mandatory** |
 
-After the Claude verifier completes, launch `gpt-verifier` when the Work Block
-is Full tier, the first Work Block in a new domain, changes touch auth,
-payments, DB schema, or middleware, or the Claude verifier returns `BLOCKED` or
-`UNVERIFIED`. Record those classifications in `Sensitive Domains` in the
-verification gate. If Codex MCP is unavailable, record
-`review-degraded:codex-mcp-unavailable` and continue with the Claude verifier
-verdict as authoritative. Degraded GPT availability never upgrades a
-non-`READY` verdict.
+Native Codex Verifier is the normal verification gate. Add an explicitly scoped
+second-runtime review only for risk-driven cases (conflicting evidence,
+high-impact security, or Owner request). Record those classifications in
+`Sensitive Domains`; a degraded second opinion never upgrades a non-`READY`
+verdict.
 
 ### Activities
 

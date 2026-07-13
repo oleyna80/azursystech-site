@@ -12,8 +12,9 @@ LOG_FILE="$MEMORY_DIR/orchestrator-log.md"
 deny() {
   local reason="$1"
   jq -n --arg reason "$reason" '{
-    decision: "block",
-    reason: $reason
+    continue: false,
+    stopReason: $reason,
+    systemMessage: $reason
   }'
   exit 0
 }
@@ -126,27 +127,24 @@ require_verifier_identity() {
 
 gpt_verifier_required=0
 case "$verification_tier" in
-  full|FULL) ;;
-  lite|standard|LITE|STANDARD|"") ;;
+  full|FULL|lite|standard|LITE|STANDARD|"") ;;
   PENDING|pending) deny "Verification gate: Verification Tier is PENDING. Classify verification tier before closeout." ;;
   *) deny "Verification gate: invalid Verification Tier '${verification_tier}'. Use lite, standard, or full." ;;
 esac
 case "$new_domain" in
-  true|TRUE|yes|YES) ;;
-  false|FALSE|no|NO|"") ;;
+  true|TRUE|yes|YES|false|FALSE|no|NO|"") ;;
   PENDING|pending) deny "Verification gate: New Domain is PENDING. Classify domain status before closeout." ;;
   *) deny "Verification gate: invalid New Domain '${new_domain}'. Use true or false." ;;
 esac
 case "$verifier_verdict" in
-  BLOCKED) ;;
-  READY|PENDING|"") ;;
+  BLOCKED|READY|PENDING|"") ;;
   *) deny "Verification gate: invalid Claude Verifier Verdict '${verifier_verdict}'. Use READY, BLOCKED, or PENDING." ;;
 esac
 
 case "$gpt_verifier_status" in
   NOT_REQUIRED)
     [ "$gpt_verifier_required" -eq 0 ] \
-      || deny "Verification gate: GPT verifier is required by trigger; NOT_REQUIRED is not allowed."
+      || deny "Verification gate: independent verifier is explicitly required; NOT_REQUIRED is not allowed."
     is_placeholder "$gpt_verifier_reason" \
       && deny "Verification gate: GPT Verifier Reason is required when GPT Verifier Status is NOT_REQUIRED."
     ;;

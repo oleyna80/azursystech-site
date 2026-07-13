@@ -37,21 +37,43 @@ Core rules:
 
 Role rules:
 - Orchestrator plans, assigns scoped subagents, consolidates findings, identifies risks, and proposes next actions.
-- Reviewer is read-only and must not modify files.
+- Reviewer is read-only, must not modify files, and reports
+  acceptance-blocking findings without issuing the formal gate verdict.
 - Verifier is read-only unless explicitly approved to make documentation-only verification updates.
+- Only Verifier issues the formal `READY` or `BLOCKED` gate verdict.
 - Coder may modify only files within the approved scope.
-- Only one Coder may modify repository files during an implementation stage.
+- Exactly one write-capable Scoped Coder may modify repository files during an
+  implementation stage. Parallel agents are read-only.
 - Subagents are read-only by default unless explicitly approved for write-capable work.
+
+Reasoning effort policy:
+- The persistent user-level default for the main Codex Orchestrator is `high`
+  across this machine.
+- Subagent count alone does not justify raising the Orchestrator's reasoning
+  effort. Escalation depends on coordination complexity, risk, and conflicting
+  evidence.
+- Use the highest tier supported by the active runtime (`ultra` where
+  supported) only for a specific Work Block or invocation involving cross-domain
+  architecture, security or production risk, conflicting subagent verdicts,
+  complex dependent decomposition, or repeated verification failure.
+- Apply escalation as a per-invocation override. The persistent `high` default
+  remains unchanged, so subsequent invocations return to it automatically.
 
 Subagent rules:
 - The Orchestrator may assign read-only scoped subagents within an approved objective.
 - Each subagent assignment must define: role, scope, out of scope, expected output, file-change permission.
 - If native subagent/fork workflow is limited or unavailable, use scoped explorer tasks as fallback.
-- Subagents inherit default session settings unless explicitly overridden.
+- Subagents inherit the parent session's effective sandbox and approval policy.
+  Private role profiles express defaults for model, reasoning, and sandbox, but
+  live parent overrides can supersede them. Mission scope, write-set,
+  side-effect, DB, and Hard Stop boundaries remain binding; use a separate
+  top-level read-only session when technical isolation is required.
 - Codex subagents are first-class participants in the Codex runtime. They do
   not make Claude Code mandatory.
-- Do not launch Claude Code from a Codex subagent. The main Codex orchestrator
-  owns external-team delegation through `handoff/`.
+- Native Codex subagents must not launch nested agents or invoke Codex/Claude
+  through MCP or CLI. Claude Code GPT/Codex wrappers live only under
+  `.claude/agents/` and are not native `.codex/agents/` profiles. The main Codex
+  orchestrator owns external-team delegation through `handoff/`.
 
 Codex critic gate:
 - For non-trivial Work Blocks, run Stage 0.5 Codex Critic Review after Stage 0
@@ -65,8 +87,9 @@ Codex critic gate:
 - Preferred mode is a read-only native Codex subagent. If native subagents are
   unavailable, run a same-session fallback critic pass and label it
   `Codex Critic: FALLBACK` in `.codex/write-gate.md` and logs.
-- Critic findings go to `memory_bank/review-log.md`. Orchestrator decisions and
-  responses to critic findings go to `memory_bank/orchestrator-log.md`.
+- Critic returns findings to Control Tower. Control Tower records the summary in
+  `memory_bank/review-log.md` and its response in
+  `memory_bank/orchestrator-log.md` when those paths are in the approved scope.
 - Skip only for valid skip conditions in `.codex/critic.md` or explicit Owner
   approval, and record the skip reason in both `.codex/write-gate.md` and
   `memory_bank/orchestrator-log.md`.

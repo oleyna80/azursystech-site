@@ -9,7 +9,7 @@
 [Orchestrator | Coder | Reviewer | Verifier]
 
 ## Mission Role
-[Architecture Analyst | Security Analyst | Backend Coder | QA Analyst | Docs Analyst]
+[Architecture Analyst | Security Analyst | Frontend Analyst | Design Analyst | Backend Coder | QA Analyst | Docs Analyst]
 Temporary specialization — narrows focus, does not expand authority.
 
 ## Skill(s)
@@ -34,8 +34,13 @@ Temporary specialization — narrows focus, does not expand authority.
 - [ ] `memory_bank/snapshots/snapshot-[wb-id]-[stage]-[date].md` (if parallel dispatch — frozen system state)
 
 ## Allowed Tools / MCP
-- Read, Bash, LSP, Grep, Glob, WebFetch, WebSearch
+- Least privilege only: [exact tools required]
 - MCP: [list relevant MCP servers]
+
+## Effective Runtime Policy
+- Parent live sandbox / approval policy: [effective value]
+- Agent profile defaults: [model, reasoning, sandbox]
+- Technical isolation required: [yes/no; if yes, use a separate top-level read-only session]
 
 ## Approved Write-Set
 ```

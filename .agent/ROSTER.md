@@ -40,7 +40,7 @@
 | Discover/Explore | **haiku** | Fast, cheap research |
 | Implement/Code/Verify | **sonnet** | Fast, capable, cost-effective |
 | Architect/Hard Decisions | **opus** | Strong reasoning for complex decisions |
-| GPT agents (gpt-critic, gpt-verifier) | **inherit** via Codex MCP | Fallback to DEGRADED if Codex unavailable |
+| Optional external critic/verifier | **inherit** | Explicit second-runtime audit only; native Codex agents are the normal path |
 
 ---
 
