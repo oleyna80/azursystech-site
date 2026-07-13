@@ -68,6 +68,19 @@ Subagent rules:
   live parent overrides can supersede them. Mission scope, write-set,
   side-effect, DB, and Hard Stop boundaries remain binding; use a separate
   top-level read-only session when technical isolation is required.
+- Native same-session Reviewer/Verifier output is advisory and cannot close a
+  formal `READY` gate. Record `Required Verifier Isolation` and actual
+  `Verifier Isolation` as one of `same-session-degraded`,
+  `independent-readonly-root`, or `os-isolated`. Sensitive work defaults to a
+  separate top-level readonly root after diff freeze; credentials, live DB,
+  deploy, live infrastructure, and external-provider work require OS isolation
+  with clean HOME/config and no runtime credentials.
+- For `independent-readonly-root`, only Control Tower may launch
+  `scripts/run-independent-verifier.sh` after a frozen diff and a non-blocked
+  `scripts/agent-runtime-doctor.sh` result. It uses an Owner-provisioned,
+  mode-`0700` `CODEX_VERIFIER_HOME`; neither the runner nor a subagent may
+  read, copy, print, create, or alter credentials. This remains a filesystem
+  boundary, not credential or network isolation.
 - Codex subagents are first-class participants in the Codex runtime. They do
   not make Claude Code mandatory.
 - Native Codex subagents must not launch nested agents or invoke Codex/Claude

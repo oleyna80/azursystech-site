@@ -73,6 +73,11 @@ policy/templates/hooks, `docs/session-bootstrap.md`, `scripts/bootstrap.sh`,
 6. **Critic Review** — launch `critic` agent to independently review Control Tower decisions (scope, skill routing, skip reasons, risk gaps) according to the trigger tables below.
 7. **Independent Critic Review** — native Codex Critic is the ordinary read-only gate. Request a second runtime only for an explicit risk trigger (conflicting evidence, high-impact security, or Owner request); record its scope and any degraded result without making Codex MCP a prerequisite.
 8. **Plan Approval** — produce plan, get Owner approval if non-trivial
+9. **Runtime capacity prerequisite** — for runtime/configuration/infrastructure
+   Work Blocks, run `scripts/agent-runtime-doctor.sh` before implementation or
+   formal verification. Record every `WARN`/`BLOCKED` result as
+   `incident: agent-runtime`; repository policy may diagnose capacity, but only
+   an Owner-authorized host action may change host limits.
 
 ### Stage 0 Trigger Tables
 
@@ -136,25 +141,34 @@ independent second-runtime review is risk-driven and explicitly recorded.
 - Implementation complete (Stage 1 DONE)
 - Verification tier specified (lite/standard/full)
 
-### Verifier Mode Decision Table
+### Verifier Isolation Decision Table
 
-How to verify depends on Work Block characteristics. "Mandatory" = must spawn
-verifier agent; cannot be replaced by inline tsc.
+Choose the required isolation before implementation. A native same-session
+Verifier shares the parent runtime and is useful for advisory feedback, but it
+does not close `READY`. Freeze the implementation diff before launching an
+independent root.
 
-| Condition | Verifier Mode |
-|---|---|
-| 1-2 files, no DB, no auth, read-only | Inline tsc + lint |
-| 3+ files, logic changes | Inline tsc + spawn verifier agent (Standard tier) |
-| DB writes / migrations | Spawn verifier agent — **mandatory** |
-| Auth / security-sensitive changes | Spawn verifier agent — **mandatory** |
-| Parallel dispatch results (merge step) | Spawn verifier agent — **mandatory** |
-| Side-effect class: live-infra / live-data | Spawn verifier agent + Full tier — **mandatory** |
+| Condition | Required Verifier Isolation | Formal closeout mode |
+|---|---|---|
+| Quick-fix / non-sensitive, Lite | `same-session-degraded` | `ct-inline` is allowed with `Sensitive Domains: none` |
+| Non-sensitive Standard work | `same-session-degraded` or higher | `ct-inline` only at same-session; use a separate root when independent evidence is needed |
+| Auth, security, hooks, runtime/config, production-sensitive work | `independent-readonly-root` | Separate top-level readonly Codex root after diff freeze |
+| Credentials, live DB, deploy, live infrastructure, external providers | `os-isolated` | Separate OS user/container/equivalent with readonly source, clean `HOME`/Codex config, and no `.env`, SSH, provider, or runtime credentials |
 
-Native Codex Verifier is the normal verification gate. Add an explicitly scoped
-second-runtime review only for risk-driven cases (conflicting evidence,
-high-impact security, or Owner request). Record those classifications in
-`Sensitive Domains`; a degraded second opinion never upgrades a non-`READY`
-verdict.
+`independent-readonly-root` uses the readonly profile (`read-only` sandbox and
+`never` approval) and is a filesystem-write boundary only; it is not proof of
+credential or network isolation. `os-isolated` is required when that stronger
+boundary matters. The hook validates the declared `Required Verifier Isolation`
+and `Verifier Isolation` fields against a closed vocabulary and ordering; it
+does not prove the claimed runtime isolation. Control Tower records the launch
+evidence in the verification report.
+
+For a Codex independent-readonly-root, Control Tower (not a native subagent)
+runs `scripts/run-independent-verifier.sh` after the diff is frozen. The
+command requires an Owner-provisioned, mode-`0700` `CODEX_VERIFIER_HOME` with a
+readonly profile. The runner must never copy, inspect, print, create, or change
+credentials. Its fixture suite is a separate local-mutation test and cannot be
+used as formal readonly evidence.
 
 ### Activities
 
@@ -183,13 +197,16 @@ verdict.
 - [ ] CSRF/origin guard for mutations
 - [ ] Codex adversarial review (if Codex installed) — second opinion from GPT model family
 - [ ] Consolidation: merge Verifier + Codex findings
+- [ ] Runtime/config/infrastructure work: `scripts/agent-runtime-doctor.sh`
+  has no `BLOCKED` result; record `WARN` as `incident: agent-runtime`
 
 ### Exit Conditions
 - Verdict: `READY`, `BLOCKED`, or `UNVERIFIED`
 - All blockers documented with file:line evidence
 - Verification report written to `docs/reports/`
 - GPT verifier second opinion completed or degraded reason recorded when its trigger matched
-- `.agent/verification-gate.md` records evidence-backed verifier/GPT verifier status before closeout
+- `.agent/verification-gate.md` records evidence-backed verifier/GPT verifier status,
+  required isolation, actual isolation, and launch evidence before closeout
 
 ---
 

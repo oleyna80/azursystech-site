@@ -10,12 +10,20 @@
 #
 # Do not store secrets or provider tokens in this file.
 #
-# Keep real model provider settings in user-level Codex config or a private
-# project environment. The framework template may document intended profiles,
-# but it must not ship API keys, proxy URLs, or organization-specific provider
-# definitions.
+# Keep real model/provider settings and role-level model, reasoning, and sandbox
+# overrides in user-level Codex config or private `.codex/agents/*.toml` files.
+# This template must not ship model IDs, API keys, proxy URLs, or
+# organization-specific provider definitions.
 
+[features]
 multi_agent = true
+
+[agents]
+max_threads = 3
+max_depth = 1
+job_max_runtime_seconds = 1800
+interrupt_message = true
+
 # [mcp_servers.context7]
 # command = "npx"
 # args = ["-y", "@upstash/context7-mcp"]

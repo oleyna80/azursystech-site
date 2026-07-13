@@ -46,6 +46,10 @@ same-session fallback critic pass and label it explicitly in `.codex/write-gate.
 | Expected work is large or multi-domain | Split read-only analysis by domain; keep one writer |
 | SSOT sync (Stage 3) | Control Tower updates approved memory/log paths after evidence exists |
 
+Native same-session verifier results are advisory: they share the parent
+runtime's effective sandbox and approval policy and cannot close a formal
+`READY` gate.
+
 ### When NOT to spawn
 
 - Quick-fix pipeline (≤3 files, trivial change) — run inline
@@ -100,11 +104,25 @@ multi-file external-team results.
 
 ### Verification tier routing
 
-| Tier | Verifier approach |
-|---|---|
-| Lite | Run `git diff --check` inline, no sub-agent needed |
-| Standard | Spawn one verifier agent: types + lint + build |
-| Full | Spawn one verifier agent: full check suite |
+| Risk / tier | Required isolation | Verifier approach |
+|---|---|---|
+| Lite, non-sensitive | `same-session-degraded` | Run `git diff --check` inline; only `ct-inline` may close READY |
+| Standard, non-sensitive | `same-session-degraded` or higher | Native verifier is advisory; use a top-level root for independent evidence |
+| Sensitive / Full | `independent-readonly-root` | After diff freeze, launch a separate top-level readonly Codex root with `--profile readonly` |
+| Credentials, live DB, deploy, live infrastructure, external providers | `os-isolated` | Separate OS user/container/equivalent: readonly source, clean HOME/Codex config, no `.env`, SSH, provider, or runtime credentials |
+
+The verification hook checks the declared `Required Verifier Isolation` and
+`Verifier Isolation` fields, including actual-at-least-required ordering. It
+cannot prove the runtime claim. `independent-readonly-root` protects source
+writes only; it is not credential or network isolation.
+
+For Codex, the canonical sensitive-work command is Control-Tower-only:
+`scripts/run-independent-verifier.sh` after `scripts/agent-runtime-doctor.sh`
+has no `BLOCKED` status and the diff is frozen. It requires an
+Owner-provisioned mode-`0700` `CODEX_VERIFIER_HOME`; the command never copies,
+reads, prints, creates, or modifies credentials. Do not delegate this command
+to a native subagent. Its local fixture suite is mutation-capable test evidence,
+not formal readonly verification evidence.
 
 ---
 

@@ -142,6 +142,20 @@ client-facing side effects.
 - **Used:** [list]
 - **Skipped:** [list with reasons]
 
+## Design Brief / Design Skill Stack
+- **Applies:** [yes | no; required for non-trivial frontend/design/showcase
+  work]
+- **Design brief artifact:** [not applicable | path to brief/report/section]
+- **Design Analyst required:** [yes | no; why]
+- **Source fidelity mode:** [exact-port | inspired-adaptation | redesign |
+  greenfield | not applicable]
+- **Base design skill:** [not applicable | skill/reference]
+- **Style/taste skill:** [not applicable | skill/reference]
+- **Component/system skill:** [not applicable | skill/reference]
+- **Motion/source-tool skill:** [not applicable | skill/reference]
+- **Rejected skills:** [none | list with reasons]
+- **Visual QA gates:** [desktop/mobile/header/nav/forms/contrast/routes/etc.]
+
 ## Verification Plan
 - **Canonical checks:** [exact commands expected for this repository and
   Verification Tier]

@@ -84,6 +84,11 @@ implement or verify directly. Instead:
    subagent; Verifier returns a verdict and file paths to changed artifacts, not
    images themselves.
 
+Native same-session verification is advisory: it shares the parent runtime's
+effective sandbox and approval policy. Formal `READY` closeout uses the
+Verifier Isolation Tiers below; sensitive Work Blocks default to an independent
+top-level readonly root after the implementation diff is frozen.
+
 Control-layer files reserved to Control Tower by `File Write Authority` remain
 Control Tower-authored. Maintaining those governance files is not permission to
 implement application or runtime changes inline.
@@ -213,6 +218,30 @@ Temporary specialization and tool availability never expand authority. A
 `Coder / Backend Coder` may write only inside the approved write-set. An agent
 must not grant itself broader authority because it can run `psql`, `ssh`,
 `docker`, `curl`, MCP tools, or vendor CLIs.
+
+### Verifier Isolation Tiers
+
+Verifier isolation is a declared runtime property, not a role. The verification
+gate checks its recorded fields but cannot prove process, filesystem, network,
+or credential isolation; the Control Tower must record the launch evidence.
+
+| Level | Meaning and permitted use |
+|---|---|
+| `same-session-degraded` | The verifier/critic shares the parent session's effective sandbox and approval policy. A native subagent at this level is advisory only and cannot close `READY`. `ct-inline` is permitted only for `Sensitive Domains: none`. |
+| `independent-readonly-root` | A separate top-level Codex root launched after the diff is frozen with the readonly profile (`sandbox_mode = "read-only"`, `approval_policy = "never"`). For Codex, Control Tower launches `scripts/run-independent-verifier.sh` from that root after `scripts/agent-runtime-doctor.sh` reports no `BLOCKED` prerequisite. The runner requires an Owner-provisioned, mode-`0700` `CODEX_VERIFIER_HOME`; it never reads, copies, creates, or changes credentials. This is a filesystem-write boundary, not a credential or network boundary; it layers user configuration and must not be represented as OS isolation. This is the default minimum for sensitive domains. |
+| `os-isolated` | A separate OS user, container, or equivalent isolation with read-only source, clean `HOME`/Codex config, and no `.env`, SSH, provider, or other runtime credentials available. Required for credentials, live DB, deploy, live infrastructure, and external-provider work. |
+
+For `Status: READY`, `.agent/verification-gate.md` must record both
+`Required Verifier Isolation` and actual `Verifier Isolation`; actual isolation
+must be at least the required level. Owner waivers do not bypass this rule.
+
+`scripts/run-independent-verifier.sh` is a Control Tower command, never a
+native-subagent command: native agents must not launch a nested Codex CLI. Its
+mutable fixture tests run only in disposable local test directories; they are
+not part of a formal readonly verification run. A runtime-capacity shortfall
+from `scripts/agent-runtime-doctor.sh` is recorded as `incident: agent-runtime`
+in closeout evidence so future sprint analysis can classify the infrastructure
+cause instead of attributing it to a verifier role.
 
 ### Hard Stops — require explicit Owner approval before proceeding
 
@@ -515,12 +544,16 @@ Three SDLC rules are enforced deterministically at the tool-call boundary
    Silent scope expansion after APPROVE is impossible. SKIPPED
    (Owner-approved) Work Blocks are exempt from the amendment check.
 
-3. **Verifier identity** (`verification-gate.sh`, `Status: READY`). The gate
-   must record `Verifier: subagent | ct-inline` and classify
-   `Sensitive Domains` (`none` or a list; compared case-insensitively).
-   When Sensitive Domains is not `none`, `ct-inline` additionally requires a
-   same-day Owner waiver:
-   `| YYYY-MM-DD | <WB-id> | verifier-waiver: APPROVED - <reason> | Owner |`
+3. **Verifier identity and isolation** (`verification-gate.sh`, `Status: READY`).
+   The gate must record `Verifier: subagent | ct-inline`, classify
+   `Sensitive Domains` (`none` or a list; compared case-insensitively), and
+   record `Required Verifier Isolation` plus `Verifier Isolation`. Both values
+   use exactly `same-session-degraded`, `independent-readonly-root`, or
+   `os-isolated`; actual isolation must be at least required isolation. A native
+   same-session subagent is advisory and cannot close `READY`; sensitive domains
+   require at least `independent-readonly-root`; `ct-inline` is limited to
+   non-sensitive same-session verification. Owner waiver entries do not bypass
+   isolation.
 
 All orchestrator-log lookups treat log entries and write-set paths as
 literals, not patterns: WB ids match as pipe-delimited fixed strings

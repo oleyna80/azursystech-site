@@ -1,0 +1,12 @@
+[Unit]
+Description=Bounded output capture for the independent Codex verifier
+Before=local-fs.target
+
+[Mount]
+What=tmpfs
+Where=/run/codex-verifier-output
+Type=tmpfs
+Options=size=4M,mode=0700,uid=1000,gid=1000,nosuid,nodev,noexec
+
+[Install]
+WantedBy=local-fs.target

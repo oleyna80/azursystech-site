@@ -1,6 +1,6 @@
 # .agent/ROSTER.md — Agent & Skill Registry (10 Skills)
 
-> Curated registry of all agents and 10 skills (9 consolidated + sprint-analysis). Authority model: Control Tower (plan/sync), Scoped Coder (execute), Verifier (independent check), Reviewer (read-only analysis). Model routing: haiku (discover), sonnet (coder/verifier/reviewer), opus (architect). GPT agents inherit via Codex MCP (DEGRADED path when unavailable).
+> Curated registry of all agents and 10 skills (9 consolidated + sprint-analysis). Authority model: Control Tower (plan/sync), Design Analyst (read-only design routing/brief), Scoped Coder (execute), Verifier (independent check), Reviewer (read-only analysis). Model routing: haiku (discover), sonnet (coder/verifier/reviewer/design), opus (architect). GPT agents inherit via Codex MCP (DEGRADED path when unavailable).
 
 ---
 
@@ -9,7 +9,7 @@
 | # | Skill | Triggers | Primary Agent | Mode(s) | Key References |
 |---|---|---|---|---|---|
 | 1 | **impeccable** | Vendor wrapper (OpenCode local) | Scoped Coder (when wrapper available) | Local vendor skill | (keep as-is, local only) |
-| 2 | **design-direction** | "build landing", "redesign", "brutalist/minimalist", "fix animation", "pick theme" | Scoped Coder | Greenfield, Redesign, Style, Theme | taste, emil, theme-factory, redesign, brutalist, minimalist, frontend-design |
+| 2 | **design-direction** | "build landing", "redesign", "brutalist/minimalist", "fix animation", "pick theme", "choose design skill stack", "design brief" | Design Analyst (routing/brief), Scoped Coder (implementation) | Greenfield, Redesign, Style, Theme, Design Brief | taste, emil, theme-factory, redesign, brutalist, minimalist, frontend-design |
 | 3 | **discovery** | "research before coding", "best stack/API", "how does X interact", "code map" | Control Tower / Architect | Strategic, Tactical, Map | architecture, technical, graphify |
 | 4 | **security-pass** | "pentest report", "fix findings", "verify hardening", auth/payments/DB changes | Reviewer (triage), Coder (harden), Verifier (verify) | Triage, Harden, Verify, Codex, Handoff-smoke | triage, harden, verify, codex, handoff-smoke |
 | 5 | **memory-ops** | "log decision", "freeze state", "housekeep memory", "sync closeout", "review friction" | Control Tower | Log, Snapshot, Bank, SSOT-sync, Ops-review | log, snapshot, bank-manager, ssot-sync, ops-review |
@@ -26,6 +26,7 @@
 | Agent | Role | Authority | Hard Stops |
 |---|---|---|---|
 | **Control Tower** | Orchestrator, SSOT owner | Plan approval, stage flow, subagent dispatch, scope gate, closeout | plan approval, scope expansion, tier selection, critic verdict |
+| **Design Analyst** | Read-only design strategist | Design read, design-skill stack selection, source fidelity mode, Design Brief, visual QA plan | No repository writes; hand off to Scoped Coder |
 | **Scoped Coder** | Implementation executor | Write approved write-set only | None (execute within scope only) |
 | **Verifier** | Acceptance gate | AC validation, checks, security, verdict (READY/BLOCKED/UNVERIFIED) | BLOCKED verdict halts pipeline |
 | **Reviewer** | Read-only analyst | Code audit, security triage, feedback (no changes) | None (advisory only) |
@@ -76,9 +77,11 @@
 | Brief | → Skill | Mode | Agent |
 |---|---|---|---|
 | "build landing page" | design-direction | Greenfield | Coder |
+| "prepare design brief" | design-direction | Design Brief | Design Analyst |
+| "which design skill should this use?" | design-direction | Design Brief | Design Analyst |
 | "fix this button animation" | design-direction | Style (emil) | Coder |
 | "this site needs redesign" | design-direction | Redesign | Coder |
-| "pick theme for demo" | design-direction | Theme | Coder |
+| "pick theme for demo" | design-direction | Theme | Design Analyst -> Coder |
 | "what's the best stack?" | discovery | Strategic | Control Tower |
 | "how does code interact?" | discovery | Tactical | Control Tower |
 | "check pentest report" | security-pass | Triage | Reviewer |

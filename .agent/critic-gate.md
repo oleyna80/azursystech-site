@@ -1,44 +1,44 @@
-# Critic Gate — template (Stage 0 fills session-local values; reset to this template before commit). OWNED BY CONTROL TOWER — subagents must not edit this file.
+# Critic Gate — active Work Block. OWNED BY CONTROL TOWER — subagents must not edit this file.
 
 Status: READY
-Work Block: WB-2026-07-13-codex-sdlc-alignment
+Work Block: WB-2026-07-13-agent-runtime-resilience
 Verification Tier: full
 New Domain: false
-Subagent Topology Status: PLANNED
-Critic Verdict: APPROVE
-Critic Report: docs/reports/WB-2026-07-13-codex-sdlc-alignment-critic.md
-GPT Critic Status: READY
-GPT Critic Report: docs/reports/WB-2026-07-13-codex-sdlc-alignment-critic.md
+Subagent Topology Status: COMPLETE (Critic, Scoped Coder, advisory Verifier)
+Critic Verdict: SUPPLEMENT
+Critic Report: docs/reports/WB-2026-07-13-agent-runtime-resilience-critic.md
+GPT Critic Status: NOT_REQUIRED
+GPT Critic Reason: native Critic completed the required Stage 0.5 review; no second-runtime critic is required
 No-Skip: false
-Skills Routing: checked=openai-docs,roster,gate-templates; matched=openai-docs; used=openai-docs; skipped=non-documentation skills not relevant
+Skills Routing: checked=git-safety,systematic-debugging,memory-ops,subagent-mission-brief,gate-templates,openai-docs; matched=systematic-debugging,memory-ops,subagent-mission-brief,gate-templates,openai-docs; used=systematic-debugging,memory-ops,subagent-mission-brief,gate-templates,openai-docs; skipped=git-safety no commit,sprint-analysis read-only evidence only
 Session: any
 Expires: 2026-07-20
 
 Approved Write-Set:
 - AGENTS.md
-- .agent/ROSTER.md
-- .agent/workflows/sdd-protocol.md
 - .agent/critic-gate.md
 - .agent/verification-gate.md
-- .claude/hooks/hard-stop.sh
-- .claude/hooks/verification-gate.sh
-- .claude/hooks/tests/gate-fixtures.sh
-- .claude/hooks/tests/hard-stop-fixtures.sh
+- .agent/workflows/sdd-protocol.md
 - .codex/AGENTS.md
-- .codex/hooks.json
-- .codex/hooks/critic-gate.sh
-- .codex/hooks/hard-stop.sh
-- .codex/hooks/secret-scan.sh
-- .codex/hooks/typecheck.sh
-- .codex/hooks/verification-gate.sh
-- .codex/hooks/tests/gate-fixtures.sh
-- .codex/hooks/tests/hard-stop-fixtures.sh
+- .codex/config.toml.template
 - .codex/instructions.md
-- docs/reports/WB-2026-07-13-codex-sdlc-alignment-critic.md
+- .codex/write-gate.md
+- .codex/agents/verifier.toml
+- docs/engineering-memory/runtime-command-adapters.md
 - docs/templates/subagent-mission-brief-template.md
+- docs/plans/WB-2026-07-13-agent-runtime-resilience.md
+- docs/reports/WB-2026-07-13-agent-runtime-resilience-critic.md
+- docs/reports/WB-2026-07-13-agent-runtime-resilience-verification.md
+- memory_bank/context.md
+- memory_bank/progress.md
+- memory_bank/decisions.md
+- memory_bank/orchestrator-log.md
+- memory_bank/review-log.md
+- scripts/run-independent-verifier.sh
+- scripts/agent-runtime-doctor.sh
+- scripts/agent-runtime-sysctl.conf
+- scripts/tests/agent-runtime-fixtures.sh
+- scripts/systemd/run-codex\x2dverifier\x2doutput.mount
 - /home/azur/.codex/config.toml
-- /home/azur/.codex/techlead.config.toml
-- /home/azur/.codex/coder.config.toml
-- /home/azur/.codex/readonly.config.toml
-- /home/azur/.codex/fast.config.toml
-- /home/azur/.codex/docs.config.toml
+- /etc/sysctl.d/99-codex-agent-runtime.conf
+- /etc/systemd/system/run-codex\x2dverifier\x2doutput.mount
