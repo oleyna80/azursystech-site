@@ -1,23 +1,19 @@
 # Codex Stage 0 Write Gate
 
 Status: READY
-Expires: 2026-07-20
-Work Block: WB-2026-07-13-agent-runtime-resilience
-Approved Scope: docs/plans/WB-2026-07-13-agent-runtime-resilience.md
+Expires: 2026-07-22
+Work Block: WB-2026-07-15-cleanup-commit-closeout
+Approved Scope: exact 29-path Commit-Closeout set in .agent/critic-gate.md; four literal commit packets only; all other dirty paths excluded
 Codex Critic: READY
-Critic Verdict: SUPPLEMENT
-Critic Report: docs/reports/WB-2026-07-13-agent-runtime-resilience-critic.md
+Critic Verdict: APPROVE
+Critic Report: docs/reports/WB-2026-07-15-worktree-cleanup-preflight-critic.md
 Critic Skip Reason: not applicable
-Orchestrator Response: adopted dedicated owner-provisioned verifier runtime, Control-Tower-only runner, local-only verifier profile alignment, and host reread requirement
+Orchestrator Response: Owner explicitly approved staging and commit on 2026-07-15; fresh native Commit-Closeout Critic approved literal per-path staging and four atomic commits. Push remains unauthorized.
 Orchestrator Log: memory_bank/orchestrator-log.md
 Review Log: memory_bank/review-log.md
 
-Owner approved the recovery amendment on 2026-07-13: a dedicated mode-`0700`,
-`nosuid,nodev,noexec` tmpfs at `/run/codex-verifier-output`, bounded to 4 MiB,
-will hold only the runner's final-message capture. The runner must reject every
-other output directory, verify the mounted tmpfs capacity before launch, and
-retain the post-run message limit. The Owner completed the interactive host
-installation and enabled the unit. Host-access fixtures and the doctor passed;
-the separate top-level readonly Codex root returned `FORMAL_VERDICT: READY`.
-This write gate is closed for the approved Work Block. Commit and push remain
-separately unauthorized.
+This gate authorizes exactly four literal staging and commit packets in the
+fresh Critic report. It does not authorize `git add -A`, push, deletion,
+deployment, credential changes, memory-bank publication, or `.agents/**`
+curation. Before each commit, the Scoped Coder must confirm the cached path
+set exactly equals its packet and run the packet's required checks.
