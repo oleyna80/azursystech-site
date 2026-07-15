@@ -17,6 +17,10 @@ allowed-tools:
 # design-direction: Consolidated UI/UX & Aesthetic Engineering
 
 > Merged skill combining taste-skill (landing pages, design reads), emil-design-eng (animation & polish), theme-factory (presets), frontend-design (high-quality distinctive UIs), brutalist-skill (Swiss typography, industrial), minimalist-skill (editorial, clean), and redesign-skill (audit & upgrade).
+>
+> Pilot routing: Design Analyst uses this skill to choose the design-skill stack
+> and produce a Design Brief before Scoped Coder implements non-trivial
+> frontend/showcase work.
 
 ---
 
@@ -53,6 +57,24 @@ allowed-tools:
 ---
 
 ## Core Rules (All Aesthetics)
+
+### 0. Design Analyst Routing Contract
+For non-trivial design work, source-design porting, or broad visual redesign,
+Control Tower may dispatch a read-only Design Analyst before coding.
+
+The Design Analyst must produce or propose a Design Brief using
+`docs/templates/design-brief-template.md` and must choose:
+- source fidelity mode: exact-port, inspired-adaptation, redesign, or
+  greenfield;
+- one base design skill/reference;
+- at most one style/taste skill;
+- at most one component/system skill;
+- at most one motion/source-tool skill;
+- rejected skills and collision guards;
+- visual QA gates for Review and Verification.
+
+The Design Analyst does not edit source files. Scoped Coder implements only
+after the design direction and approved write-set are clear.
 
 ### 1. Design Read First (Taste Skill)
 Before touching code or proposing aesthetics, state the design read in one line:
@@ -207,7 +229,7 @@ All consolidated content from merged skills is organized into reference files in
 
 **Hard stop:** NO (design direction is iterative).
 
-**Primary agent:** Scoped Coder (implementation); Control Tower (pre-flight decisions).
+**Primary agent:** Design Analyst (routing/brief); Scoped Coder (implementation); Control Tower (pre-flight decisions).
 
 ---
 
