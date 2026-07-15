@@ -1,6 +1,6 @@
 const SHOWCASE_BASE_URL =
   process.env.NEXT_PUBLIC_SHOWCASE_BASE_URL ??
-  (process.env.NODE_ENV === "development" ? "http://localhost:3007" : "");
+  (process.env.NODE_ENV === "development" ? "http://localhost:3002" : "");
 
 const showcaseDemoUrl = (slug: string) => `${SHOWCASE_BASE_URL}/demo/${slug}`;
 
