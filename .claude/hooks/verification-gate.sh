@@ -95,33 +95,54 @@ gpt_degraded_reason=$(field "GPT Verifier Degraded Reason")
 quick_fix=$(field "Quick-Fix")
 verifier=$(field "Verifier")
 sensitive_domains=$(field "Sensitive Domains" | tr '[:upper:]' '[:lower:]')
+required_verifier_isolation=$(field "Required Verifier Isolation" | tr '[:upper:]' '[:lower:]')
+verifier_isolation=$(field "Verifier Isolation" | tr '[:upper:]' '[:lower:]')
 
 [ -n "$wb_id" ] || deny "Verification gate: Work Block is required before closeout."
 
-# Verifier identity (AGENTS.md Hook-Enforced Gate Rules): READY closeout must
-# record who verified; sensitive domains require an independent subagent or a
-# same-day Owner waiver in the orchestrator-log (fixed-string lookups).
-require_verifier_identity() {
+# Verifier identity and declared isolation (AGENTS.md Hook-Enforced Gate Rules).
+# This validates a closed-vocabulary attestation; a hook cannot prove process,
+# credential, or filesystem isolation.
+isolation_rank() {
+  case "$1" in
+    same-session-degraded) printf '1' ;;
+    independent-readonly-root) printf '2' ;;
+    os-isolated) printf '3' ;;
+    *) return 1 ;;
+  esac
+}
+
+require_verifier_isolation() {
   case "$sensitive_domains" in
     "["*|pending|"") deny "Verification gate: Sensitive Domains is ${sensitive_domains:-missing}. Classify sensitive domains (none | list) before closeout." ;;
   esac
 
+  local required_rank actual_rank
+  required_rank=$(isolation_rank "$required_verifier_isolation") \
+    || deny "Verification gate: Required Verifier Isolation is ${required_verifier_isolation:-missing}. Use same-session-degraded, independent-readonly-root, or os-isolated."
+  actual_rank=$(isolation_rank "$verifier_isolation") \
+    || deny "Verification gate: Verifier Isolation is ${verifier_isolation:-missing}. Use same-session-degraded, independent-readonly-root, or os-isolated."
+
+  [ "$actual_rank" -ge "$required_rank" ] \
+    || deny "Verification gate: Verifier Isolation (${verifier_isolation}) is below Required Verifier Isolation (${required_verifier_isolation})."
+
   case "$verifier" in
-    subagent) ;;
+    subagent)
+      [ "$verifier_isolation" != "same-session-degraded" ] \
+        || deny "Verification gate: same-session native subagent verification is advisory and cannot close READY. Use an independent readonly root or OS isolation."
+      ;;
     ct-inline)
-      if [ "$sensitive_domains" != "none" ]; then
-        local today
-        today=$(date +%F)
-        grep "^| ${today} |" "$LOG_FILE" 2>/dev/null \
-          | grep -F -- "| ${wb_id} |" \
-          | grep -F "verifier-waiver: APPROVED" \
-          | grep -qE '\| Owner \|[[:space:]]*$' \
-          || deny "Verification gate: Sensitive Domains (${sensitive_domains}) require Verifier: subagent. For ct-inline, record a same-day Owner waiver in ${LOG_FILE}: | ${today} | ${wb_id} | verifier-waiver: APPROVED - <reason> | Owner |"
-      fi
+      [ "$sensitive_domains" = "none" ] \
+        || deny "Verification gate: ct-inline is only allowed for Sensitive Domains: none; Owner waivers do not bypass this rule."
+      [ "$verifier_isolation" = "same-session-degraded" ] \
+        || deny "Verification gate: ct-inline must record Verifier Isolation: same-session-degraded."
       ;;
     PENDING|pending|"["*|"") deny "Verification gate: Verifier is ${verifier:-missing}. Set Verifier: subagent or ct-inline before closeout." ;;
     *) deny "Verification gate: invalid Verifier '${verifier}'. Use subagent or ct-inline." ;;
   esac
+
+  [ "$sensitive_domains" = "none" ] || [ "$actual_rank" -ge 2 ] \
+    || deny "Verification gate: Sensitive Domains (${sensitive_domains}) require at least independent-readonly-root isolation."
 }
 
 gpt_verifier_required=0
@@ -171,7 +192,7 @@ case "$status" in
       PENDING|"") deny "Verification gate: Claude Verifier Verdict is ${verifier_verdict:-missing}. Record verifier verdict before closeout." ;;
       *) deny "Verification gate: invalid Claude Verifier Verdict '${verifier_verdict}'. Use READY or BLOCKED." ;;
     esac
-    require_verifier_identity
+    require_verifier_isolation
     exit 0
     ;;
 

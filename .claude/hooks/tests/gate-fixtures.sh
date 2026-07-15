@@ -58,7 +58,7 @@ Approved Write-Set:
 EOF
 }
 
-# write_verif_gate <status> <verdict> <verifier> <sensitive> <quick_fix>
+# write_verif_gate <status> <verdict> <verifier> <sensitive> <quick_fix> [required_isolation] [actual_isolation]
 write_verif_gate() {
   cat > "$SANDBOX/.agent/verification-gate.md" <<EOF
 # Verification Gate — test fixture
@@ -76,6 +76,8 @@ GPT Verifier Degraded Reason: none
 Quick-Fix: $5
 Stage 3 Mode: fixture
 Verifier: $3
+Required Verifier Isolation: ${6:-same-session-degraded}
+Verifier Isolation: ${7:-same-session-degraded}
 EOF
 }
 
@@ -213,11 +215,31 @@ log_entry "| $TODAY | WB-B | critic: SKIPPED - fixture | Owner |"
 log_entry "| $TODAY | WB-TEST-gate | critic: SKIPPED - Owner approved - fixture | Owner |"
 assert "CG 3 consecutive critic SKIPs" DENY "$(run_critic src/allowed.ts)"
 
-# ── verification-gate: Verifier identity ─────────────────────────────
+# ── verification-gate: verifier identity and isolation ──────────────
+
+reset_sandbox; write_verif_report
+write_verif_gate READY READY subagent none false independent-readonly-root independent-readonly-root
+assert "VG READY subagent independent readonly root" ALLOW "$(run_verif)"
 
 reset_sandbox; write_verif_report
 write_verif_gate READY READY subagent none false
-assert "VG READY subagent, sensitive none" ALLOW "$(run_verif)"
+assert "VG native same-session subagent is advisory" DENY "$(run_verif)"
+
+reset_sandbox; write_verif_report
+write_verif_gate READY READY subagent none false independent-readonly-root same-session-degraded
+assert "VG actual isolation below required" DENY "$(run_verif)"
+
+reset_sandbox; write_verif_report
+write_verif_gate READY READY subagent "auth, hooks" false same-session-degraded same-session-degraded
+assert "VG sensitive same-session verification" DENY "$(run_verif)"
+
+reset_sandbox; write_verif_report
+write_verif_gate READY READY subagent "auth, hooks" false independent-readonly-root independent-readonly-root
+assert "VG sensitive independent readonly root" ALLOW "$(run_verif)"
+
+reset_sandbox; write_verif_report
+write_verif_gate READY READY subagent "live DB, deploy" false os-isolated os-isolated
+assert "VG OS-isolated verifier satisfies highest tier" ALLOW "$(run_verif)"
 
 reset_sandbox; write_verif_report
 write_verif_gate READY BLOCKED subagent none false
@@ -232,11 +254,15 @@ write_verif_gate READY READY ct-inline NONE false
 assert "VG READY ct-inline, sensitive NONE upper" ALLOW "$(run_verif)"
 
 reset_sandbox; write_verif_report
+write_verif_gate READY READY ct-inline none false independent-readonly-root independent-readonly-root
+assert "VG ct-inline cannot claim independent root" DENY "$(run_verif)"
+
+reset_sandbox; write_verif_report
 write_verif_gate READY READY PENDING none false
 assert "VG READY Verifier PENDING" DENY "$(run_verif)"
 
 reset_sandbox; write_verif_report
-write_verif_gate READY READY subagent none false
+write_verif_gate READY READY subagent none false independent-readonly-root independent-readonly-root
 sed -i '/^Verifier:/d' "$SANDBOX/.agent/verification-gate.md"
 assert "VG READY Verifier line missing" DENY "$(run_verif)"
 
@@ -251,7 +277,7 @@ assert "VG ct-inline sensitive, no waiver" DENY "$(run_verif)"
 reset_sandbox; write_verif_report
 write_verif_gate READY READY ct-inline "auth, hooks" false
 log_entry "| $TODAY | WB-TEST-gate | verifier-waiver: APPROVED - owner accepts ct-inline for hooks | Owner |"
-assert "VG ct-inline sensitive, same-day waiver" ALLOW "$(run_verif)"
+assert "VG legacy verifier waiver cannot bypass isolation" DENY "$(run_verif)"
 
 reset_sandbox; write_verif_report
 write_verif_gate READY READY ct-inline "auth, hooks" false
@@ -264,12 +290,21 @@ log_entry "| $TODAY | WB-OTHER | verifier-waiver: APPROVED - wrong wb | Owner |"
 assert "VG ct-inline sensitive, wrong-WB waiver" DENY "$(run_verif)"
 
 reset_sandbox; write_verif_report
-write_verif_gate READY READY subagent "auth, hooks" false
-assert "VG subagent sensitive, no waiver needed" ALLOW "$(run_verif)"
+write_verif_gate READY READY subagent "auth, hooks" false independent-readonly-root independent-readonly-root
+assert "VG sensitive subagent requires no legacy waiver" ALLOW "$(run_verif)"
 
 reset_sandbox; write_verif_report
 write_verif_gate READY READY subagent "[none | list]" false
 assert "VG sensitive domains placeholder" DENY "$(run_verif)"
+
+reset_sandbox; write_verif_report
+write_verif_gate READY READY subagent none false independent-readonly-root independent-readonly-root
+sed -i '/^Required Verifier Isolation:/d' "$SANDBOX/.agent/verification-gate.md"
+assert "VG required verifier isolation missing" DENY "$(run_verif)"
+
+reset_sandbox; write_verif_report
+write_verif_gate READY READY subagent none false independent-readonly-root mystery-isolation
+assert "VG verifier isolation unknown" DENY "$(run_verif)"
 
 # ── verification-gate: regressions ───────────────────────────────────
 
