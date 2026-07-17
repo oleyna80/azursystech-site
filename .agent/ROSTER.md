@@ -1,10 +1,10 @@
-# .agent/ROSTER.md — Agent & Skill Registry (10 Skills)
+# .agent/ROSTER.md — Agent & Skill Registry (23 Skills)
 
-> Curated registry of all agents and 10 skills (9 consolidated + sprint-analysis). Authority model: Control Tower (plan/sync), Design Analyst (read-only design routing/brief), Scoped Coder (execute), Verifier (independent check), Reviewer (read-only analysis). Model routing: haiku (discover), sonnet (coder/verifier/reviewer/design), opus (architect). GPT agents inherit via Codex MCP (DEGRADED path when unavailable).
+> Curated registry of 23 skills (10 core + 13 media-production planning skills). Authority model: Control Tower (plan/sync), Design Analyst (read-only design routing/brief), Scoped Coder (execute), Verifier (independent check), Reviewer (read-only analysis). Model routing: haiku (discover), sonnet (coder/verifier/reviewer/design), opus (architect). GPT agents inherit via Codex MCP (DEGRADED path when unavailable).
 
 ---
 
-## The 10 Skills
+## The 23 Skills
 
 | # | Skill | Triggers | Primary Agent | Mode(s) | Key References |
 |---|---|---|---|---|---|
@@ -18,6 +18,19 @@
 | 8 | **webapp-testing** | QA, smoke tests, visual regression | Verifier / QA Analyst | Browser tests, acceptance | (kept as-is, no merge) |
 | 9 | **subagent-mission-brief** | Subagent dispatch, mission framing | Control Tower | Mission definition, scope isolation | (kept as-is, no merge) |
 | 10 | **sprint-analysis** | "проанализируй спринт", "что сделали за неделю", velocity, план/факт, retro with numbers | Control Tower | Period analytics (log + git) | scripts/extract.sh |
+| 11 | **media-production-orchestrator** | Website/video media objective, production pipeline | Control Tower | Planning only | production-contract; future WB required for execution |
+| 12 | **media-art-director** | Hero motion, product reveal, motion-medium choice | Design Analyst / Control Tower | Planning | static/reduced-motion alternative |
+| 13 | **media-rights-compliance** | Source rights, consent, licensing, watermark, provider terms | Reviewer / Control Tower | Advisory planning | No legal certainty; future approved evidence research |
+| 14 | **short-video-scriptwriter** | 3–15 second loop, reveal, visual beats | Design Analyst | Planning | beat/loop contract |
+| 15 | **storyboard-director** | Multi-beat, safe-zone, responsive or continuity storyboard | Design Analyst | Planning | frame plan and review evidence |
+| 16 | **cinematography-director** | Camera, lens, light, motion, factual fidelity | Design Analyst | Planning | shot specification |
+| 17 | **video-creative-brief** | Production-ready media brief | Control Tower / Design Analyst | Planning | bounded budget and approval role |
+| 18 | **video-prompt-engineer** | Prompt package and immutable motion constraints | Design Analyst | Planning | provider-neutral prompt only |
+| 19 | **video-provider-router** | Provider/model route, cost, watermark, terms | Control Tower / Reviewer | Planning only | No research/config/external action without future WB |
+| 20 | **video-generator** | Approved generation package | Scoped Coder in future WB | Future execution contract | No paid call, credential, upload/download now |
+| 21 | **video-quality-control** | Generated-candidate review | Verifier in future WB | Future review contract | No ffprobe/file processing now |
+| 22 | **video-postproduction** | Delivery variants, posters, encoding budget | Scoped Coder in future WB | Future processing contract | No encoder/Bash/output now |
+| 23 | **web-video-integration** | Responsive, accessible website video integration | Scoped Coder in future WB | Future integration contract | No source/assets integration now |
 
 ---
 
@@ -93,6 +106,15 @@
 | "freeze state for parallel" | memory-ops | Snapshot | Control Tower |
 | "sync SSOT on closeout" | memory-ops | SSOT-sync | Control Tower |
 | "проанализируй спринт" | sprint-analysis | Period analytics | Control Tower |
+| "нужно ли видео на странице?" | media-art-director | Planning | Design Analyst |
+| "подготовь видео-бриф" | video-creative-brief | Planning | Control Tower / Design Analyst |
+| "сценарий короткого ролика" | short-video-scriptwriter | Planning | Design Analyst |
+| "сториборд/кадры/безопасная зона" | storyboard-director | Planning | Design Analyst |
+| "камера, свет, объектив" | cinematography-director | Planning | Design Analyst |
+| "промпт для видео" | video-prompt-engineer | Planning | Design Analyst |
+| "права, согласие, watermark" | media-rights-compliance | Advisory planning | Reviewer |
+| "выбор провайдера/модели видео" | video-provider-router | Planning only | Control Tower |
+| "сгенерируй/скачай/обработай/встрой видео" | media-production-orchestrator | Future approved WB required | Control Tower |
 
 ---
 

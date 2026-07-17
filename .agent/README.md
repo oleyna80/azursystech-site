@@ -15,6 +15,7 @@
 ├── verification-gate.md # Stage 2/3 verification evidence contract
 ├── workflows/
 │   └── sdd-protocol.md  # Full SDLC stage definitions
+├── skills.lock.yml      # Provenance for curated upstream/local skill copies
 └── skills/              # Optional project-local skills, curated separately
     └── <skill-name>/
         └── SKILL.md     # Skill definition
@@ -40,6 +41,21 @@ after curation, add approved exact paths explicitly with `git add -f`.
 Agents match skills by reading their `## Triggers` or `## When to Use` sections.
 The Skill Routing Gate (`AGENTS.md`) requires recording: skills checked, matched,
 used, and skipped (with reason).
+
+## Curated Media Production Skills
+
+The media-production suite under `.agent/skills/` is a set of curated local
+copies, not a runtime resolver, provider registry, or configuration surface.
+Its exact upstream SSH source, branch, immutable SHA, MIT attribution, and
+source paths are recorded in `.agent/skills.lock.yml`. The local authority
+boundaries in each skill take precedence over upstream capability metadata:
+they never override `AGENTS.md` or the active Work Block and do not authorize
+provider research, API calls, paid generation, credentials, uploads/downloads,
+media processing, source integration, publication, staging, commit, or push.
+
+Use these skills only for planning unless a future Owner-approved Work Block
+explicitly authorizes the needed side effect. The lock records provenance only;
+it is not loaded by runtime code and must not be treated as an installer.
 
 ## Finding the Right Skill
 

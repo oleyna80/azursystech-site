@@ -1,0 +1,43 @@
+schema_version: 1
+
+library:
+  source: git@github.com:oleyna80/agentic-sdlc-framework.git
+  branch: agent/media-production-skills
+  revision: 49850ff6fa0816bbe7feee2d54af2d792444bb5a
+  license: MIT
+  pin_policy: owner-approved-sha-only-exception
+  release_tag: null
+  exception_reason: Source revision has no release tag; the Owner approved this immutable SHA for the current curation Work Block.
+  local_copy_policy: Curated project-local copies only; this lock is provenance, not a runtime resolver or provider configuration.
+
+skills:
+  - name: media-production-orchestrator
+    source_path: skills/media-production-orchestrator/SKILL.md
+    references:
+      - skills/media-production-orchestrator/reference/production-contract.md
+  - name: media-art-director
+    source_path: skills/media-art-director/SKILL.md
+  - name: media-rights-compliance
+    source_path: skills/media-rights-compliance/SKILL.md
+  - name: short-video-scriptwriter
+    source_path: skills/short-video-scriptwriter/SKILL.md
+  - name: storyboard-director
+    source_path: skills/storyboard-director/SKILL.md
+  - name: cinematography-director
+    source_path: skills/cinematography-director/SKILL.md
+  - name: video-creative-brief
+    source_path: skills/video-creative-brief/SKILL.md
+  - name: video-prompt-engineer
+    source_path: skills/video-prompt-engineer/SKILL.md
+  - name: video-provider-router
+    source_path: skills/video-provider-router/SKILL.md
+    references:
+      - skills/video-provider-router/reference/provider-registry.template.yml
+  - name: video-generator
+    source_path: skills/video-generator/SKILL.md
+  - name: video-quality-control
+    source_path: skills/video-quality-control/SKILL.md
+  - name: video-postproduction
+    source_path: skills/video-postproduction/SKILL.md
+  - name: web-video-integration
+    source_path: skills/web-video-integration/SKILL.md
