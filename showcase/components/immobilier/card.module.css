@@ -1,0 +1,144 @@
+/* PropertyCard */
+
+.card {
+  background-color: var(--rv-bg-surface);
+  border-radius: var(--rv-radius-md);
+  overflow: hidden;
+  border: 1px solid var(--rv-border-hairline);
+  transition: box-shadow var(--rv-dur-base) var(--rv-ease-out),
+              transform var(--rv-dur-base) var(--rv-ease-out);
+}
+
+.card:hover {
+  box-shadow: var(--rv-shadow-card);
+  transform: translateY(-2px);
+}
+
+.cardLink {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  outline-offset: 3px;
+}
+
+.cardLink:focus-visible {
+  outline: 2px solid var(--rv-color-terra);
+}
+
+.cardImage {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  background-color: var(--rv-color-stone-pale);
+  overflow: hidden;
+}
+
+.cardImg {
+  object-fit: cover;
+  transition: transform var(--rv-dur-slow) var(--rv-ease-out);
+}
+
+.card:hover .cardImg {
+  transform: scale(1.04);
+}
+
+.badge {
+  position: absolute;
+  top: var(--rv-space-3);
+  left: var(--rv-space-3);
+  padding: var(--rv-space-1) var(--rv-space-3);
+  font-size: var(--rv-text-xs);
+  font-weight: var(--rv-weight-semibold);
+  letter-spacing: 0.04em;
+  border-radius: var(--rv-radius-pill);
+}
+
+.badgeSale {
+  background-color: var(--rv-color-terra-pale);
+  color: var(--rv-color-terra-dark);
+}
+
+.badgeRent {
+  background-color: var(--rv-color-ocean-pale);
+  color: var(--rv-color-ocean);
+}
+
+.cardBody {
+  padding: var(--rv-space-5) var(--rv-space-5) var(--rv-space-6);
+}
+
+.cardCity {
+  font-size: var(--rv-text-xs);
+  font-weight: var(--rv-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rv-color-stone);
+  margin-bottom: var(--rv-space-2);
+}
+
+.cardTitle {
+  font-family: var(--rv-font-display, ui-serif, serif);
+  font-size: var(--rv-text-lg);
+  font-weight: var(--rv-weight-normal);
+  line-height: var(--rv-leading-snug);
+  color: var(--rv-text-primary);
+  margin-bottom: var(--rv-space-3);
+}
+
+.cardFacts {
+  display: flex;
+  align-items: center;
+  gap: var(--rv-space-2);
+  font-size: var(--rv-text-sm);
+  color: var(--rv-text-muted);
+  margin-bottom: var(--rv-space-4);
+}
+
+.cardPrice {
+  font-size: var(--rv-text-md);
+  font-weight: var(--rv-weight-semibold);
+  color: var(--rv-text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* ── Featured variant (home page lead card) ──────────────── */
+
+.card.cardFeatured .cardImage {
+  aspect-ratio: 5 / 6; /* taller portrait — feels editorial, not portal */
+}
+
+.card.cardFeatured .cardTitle {
+  font-size: var(--rv-text-2xl);
+  line-height: var(--rv-leading-snug);
+  margin-bottom: var(--rv-space-4);
+}
+
+.card.cardFeatured .cardPrice {
+  font-size: var(--rv-text-xl);
+}
+
+.card.cardFeatured .cardBody {
+  padding: var(--rv-space-6) var(--rv-space-6) var(--rv-space-8);
+}
+
+.card.cardFeatured .cardFacts {
+  font-size: var(--rv-text-base);
+  margin-bottom: var(--rv-space-5);
+}
+
+/* On tablet where side is row, reset to standard proportions */
+@media (max-width: 768px) {
+  .card.cardFeatured .cardImage {
+    aspect-ratio: 3 / 2;
+  }
+
+  .card.cardFeatured .cardTitle {
+    font-size: var(--rv-text-lg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .cardImg {
+    transition: none;
+  }
+}

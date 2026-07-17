@@ -1,0 +1,224 @@
+/* ContactForm + ContactPage */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rv-space-5);
+}
+
+.compact {
+  gap: var(--rv-space-4);
+}
+
+/* ── Fields ──────────────────────────────────────────────── */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rv-space-2);
+}
+
+.label {
+  font-size: var(--rv-text-sm);
+  font-weight: var(--rv-weight-medium);
+  color: var(--rv-text-primary);
+}
+
+.input,
+.textarea {
+  padding: var(--rv-space-3) var(--rv-space-4);
+  font-size: var(--rv-text-base);
+  color: var(--rv-text-primary);
+  background-color: var(--rv-bg-surface);
+  border: 1px solid var(--rv-border-soft);
+  border-radius: var(--rv-radius-sm);
+  outline: none;
+  transition: border-color var(--rv-dur-fast);
+  width: 100%;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: var(--rv-color-ink);
+  box-shadow: 0 0 0 3px var(--rv-color-ink-06);
+}
+
+.inputError {
+  border-color: var(--rv-color-error);
+}
+
+.inputError:focus {
+  border-color: var(--rv-color-error);
+  box-shadow: 0 0 0 3px rgba(186, 26, 26, 0.06);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.error {
+  font-size: var(--rv-text-xs);
+  color: var(--rv-color-error);
+}
+
+/* ── Submit ──────────────────────────────────────────────── */
+
+.form button.submit {
+  padding: var(--rv-space-4) var(--rv-space-8);
+  font-size: var(--rv-text-base);
+  font-weight: var(--rv-weight-medium);
+  color: var(--rv-color-white);
+  background-color: var(--rv-color-terra);
+  border-radius: var(--rv-radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--rv-dur-fast), transform var(--rv-dur-fast) ease;
+  outline-offset: 3px;
+  width: 100%;
+}
+
+.submit:hover {
+  background-color: var(--rv-color-terra-dark);
+  transform: translateY(-1px);
+}
+
+.submit:focus-visible {
+  outline: 2px solid var(--rv-color-terra);
+}
+
+/* ── Success ─────────────────────────────────────────────── */
+
+.success {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--rv-space-3);
+  padding: var(--rv-space-6);
+  background-color: var(--rv-bg-raised);
+  border-radius: var(--rv-radius-md);
+  border: 1px solid var(--rv-border-hairline);
+}
+
+.successIcon {
+  flex-shrink: 0;
+}
+
+.successTitle {
+  font-size: var(--rv-text-md);
+  font-weight: var(--rv-weight-semibold);
+  color: var(--rv-text-primary);
+}
+
+.successBody {
+  font-size: var(--rv-text-sm);
+  color: var(--rv-text-muted);
+  line-height: var(--rv-leading-relaxed);
+}
+
+/* ── Full contact page layout ────────────────────────────── */
+
+.page {
+  padding: var(--rv-space-20) 0 var(--rv-space-32);
+}
+
+.formContainer {
+  background-color: var(--rv-bg-surface);
+  border: 1px solid var(--rv-border-soft);
+  border-radius: var(--rv-radius-lg);
+  padding: var(--rv-space-8);
+  box-shadow: var(--rv-shadow-card);
+}
+
+.pageInner {
+  display: grid;
+  grid-template-columns: 1fr 480px;
+  gap: var(--rv-space-20);
+  align-items: start;
+}
+
+.pageInfo {}
+
+.pageLabel {
+  font-size: var(--rv-text-xs);
+  font-weight: var(--rv-weight-semibold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rv-color-terra);
+  margin-bottom: var(--rv-space-4);
+}
+
+.pageTitle {
+  font-size: var(--rv-text-4xl);
+  letter-spacing: -0.02em;
+  margin-bottom: var(--rv-space-5);
+}
+
+.pageSubtitle {
+  font-size: var(--rv-text-md);
+  color: var(--rv-text-secondary);
+  line-height: var(--rv-leading-relaxed);
+  margin-bottom: var(--rv-space-10);
+}
+
+.pageAgents {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rv-space-6);
+}
+
+.pageAgent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rv-space-1);
+}
+
+.pageAgentName {
+  font-size: var(--rv-text-base);
+  font-weight: var(--rv-weight-semibold);
+  color: var(--rv-text-primary);
+}
+
+.pageAgentRole {
+  font-size: var(--rv-text-sm);
+  color: var(--rv-text-muted);
+  margin-bottom: var(--rv-space-1);
+}
+
+.pageAgentContact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rv-space-1);
+}
+
+.pageAgentLink {
+  font-size: var(--rv-text-sm);
+  color: var(--rv-color-terra);
+  outline-offset: 2px;
+}
+
+.pageAgentLink:hover {
+  text-decoration: underline;
+}
+
+.pageAgentLink:focus-visible {
+  outline: 2px solid var(--rv-color-terra);
+}
+
+@media (max-width: 900px) {
+  .pageInner {
+    grid-template-columns: 1fr;
+  }
+
+  .pageTitle {
+    font-size: var(--rv-text-3xl);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input,
+  .textarea,
+  .submit {
+    transition: none;
+  }
+}

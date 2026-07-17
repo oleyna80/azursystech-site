@@ -1,0 +1,320 @@
+/* PropertyPage — detail layout */
+
+/* ── Breadcrumb ──────────────────────────────────────────── */
+
+.breadcrumb {
+  padding: var(--rv-space-5) 0;
+  border-bottom: 1px solid var(--rv-border-hairline);
+}
+
+.breadLink {
+  font-size: var(--rv-text-sm);
+  color: var(--rv-text-muted);
+  transition: color var(--rv-dur-fast);
+  outline-offset: 3px;
+}
+
+.breadLink:hover {
+  color: var(--rv-text-primary);
+}
+
+.breadLink:focus-visible {
+  outline: 2px solid var(--rv-color-terra);
+}
+
+/* ── Two-column layout ───────────────────────────────────── */
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: var(--rv-space-12);
+  padding-top: var(--rv-space-10);
+  padding-bottom: var(--rv-space-24);
+  align-items: start;
+}
+
+/* ── Main column ─────────────────────────────────────────── */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rv-space-10);
+}
+
+/* ── Property header ─────────────────────────────────────── */
+
+.propHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--rv-space-4);
+}
+
+.propCity {
+  font-size: var(--rv-text-xs);
+  font-weight: var(--rv-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rv-color-stone);
+  margin-bottom: var(--rv-space-2);
+}
+
+.propTitle {
+  font-size: var(--rv-text-3xl);
+  letter-spacing: -0.02em;
+  line-height: var(--rv-leading-snug);
+}
+
+.badge {
+  flex-shrink: 0;
+  padding: var(--rv-space-1) var(--rv-space-4);
+  font-size: var(--rv-text-xs);
+  font-weight: var(--rv-weight-semibold);
+  letter-spacing: 0.04em;
+  border-radius: var(--rv-radius-pill);
+  white-space: nowrap;
+}
+
+.badgeSale {
+  background-color: var(--rv-color-terra-pale);
+  color: var(--rv-color-terra-dark);
+}
+
+.badgeRent {
+  background-color: var(--rv-color-ocean-pale);
+  color: var(--rv-color-ocean);
+}
+
+/* ── Facts bar ───────────────────────────────────────────── */
+
+.facts {
+  display: flex;
+  gap: var(--rv-space-8);
+  padding: var(--rv-space-5) 0;
+  border-top: 1px solid var(--rv-border-hairline);
+  border-bottom: 1px solid var(--rv-border-hairline);
+  flex-wrap: wrap;
+}
+
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rv-space-1);
+}
+
+.factLabel {
+  font-size: var(--rv-text-xs);
+  font-weight: var(--rv-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rv-text-muted);
+}
+
+.factValue {
+  font-size: var(--rv-text-xl);
+  font-family: var(--rv-font-display, ui-serif, serif);
+  font-weight: var(--rv-weight-normal);
+  color: var(--rv-text-primary);
+}
+
+/* ── Sections ────────────────────────────────────────────── */
+
+.sectionTitle {
+  font-size: var(--rv-text-lg);
+  font-family: var(--rv-font-body, ui-sans-serif, sans-serif);
+  font-weight: var(--rv-weight-semibold);
+  letter-spacing: 0;
+  margin-bottom: var(--rv-space-4);
+  color: var(--rv-text-primary);
+}
+
+.description {
+  font-size: var(--rv-text-md);
+  color: var(--rv-text-secondary);
+  line-height: var(--rv-leading-relaxed);
+}
+
+.featuresSection {}
+
+.features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--rv-space-2) var(--rv-space-8);
+  list-style: none;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: var(--rv-space-2);
+  font-size: var(--rv-text-sm);
+  color: var(--rv-text-secondary);
+}
+
+.featureDot {
+  color: var(--rv-color-terra);
+  font-size: var(--rv-text-xl);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ── Contact panel ───────────────────────────────────────── */
+
+.panel {
+  position: relative;
+}
+
+.panelSticky {
+  position: sticky;
+  top: calc(var(--rv-header-h) + var(--rv-space-6));
+  background-color: var(--rv-bg-surface);
+  border: 1px solid var(--rv-border-soft);       /* was hairline — now clearly visible */
+  border-radius: var(--rv-radius-lg);
+  box-shadow: var(--rv-shadow-card);             /* lifts panel off the canvas */
+  padding: var(--rv-space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--rv-space-6);
+}
+
+.panelPrice {
+  font-family: var(--rv-font-display, ui-serif, serif);
+  font-size: var(--rv-text-2xl);
+  font-weight: var(--rv-weight-normal);
+  color: var(--rv-color-ink);                    /* ensure full-ink weight */
+  letter-spacing: -0.02em;
+  padding-bottom: var(--rv-space-5);
+  border-bottom: 1px solid var(--rv-border-soft); /* match outer border */
+}
+
+/* Terracotta accent line above price */
+.panelPriceLabel {
+  display: block;
+  font-size: var(--rv-text-xs);
+  font-weight: var(--rv-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rv-color-terra);
+  margin-bottom: var(--rv-space-2);
+}
+
+.panelAgent {
+  padding: var(--rv-space-4) var(--rv-space-5);
+  margin: 0 calc(-1 * var(--rv-space-2));        /* bleed to feel embedded */
+  background-color: var(--rv-color-ink-06);      /* very subtle ink tint */
+  border-radius: var(--rv-radius-md);
+}
+
+.panelAgentName {
+  font-size: var(--rv-text-base);
+  font-weight: var(--rv-weight-semibold);
+  color: var(--rv-text-primary);
+  margin-bottom: var(--rv-space-1);
+}
+
+.panelAgentRole {
+  font-size: var(--rv-text-sm);
+  color: var(--rv-text-muted);
+  margin-bottom: var(--rv-space-3);
+}
+
+.panelPhone {
+  font-size: var(--rv-text-sm);
+  color: var(--rv-color-terra);
+  font-weight: var(--rv-weight-medium);
+  outline-offset: 2px;
+}
+
+.panelPhone:hover {
+  text-decoration: underline;
+}
+
+.panelPhone:focus-visible {
+  outline: 2px solid var(--rv-color-terra);
+}
+
+/* ── Locality illustration ───────────────────────────────── */
+
+.locality {
+  margin-top: var(--rv-space-16);
+}
+
+.localityImage {
+  position: relative;
+  width: 100%;
+  height: 28vh;
+  min-height: 160px;
+  max-height: 320px;
+  border-radius: var(--rv-radius-lg);
+  overflow: hidden;
+  background-color: var(--rv-color-stone-pale);
+}
+
+.localityImg {
+  object-fit: cover;
+  object-position: center 60%;
+  filter: saturate(0.85) brightness(0.97);
+}
+
+.localityCaption {
+  margin-top: var(--rv-space-3);
+  font-size: var(--rv-text-xs);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--rv-text-muted);
+  text-align: right;
+  padding-right: var(--rv-space-2);
+}
+
+/* ── Related ─────────────────────────────────────────────── */
+
+.related {
+  padding: var(--rv-space-16) 0 var(--rv-space-24);
+  border-top: 1px solid var(--rv-border-hairline);
+}
+
+.relatedTitle {
+  font-size: var(--rv-text-2xl);
+  letter-spacing: -0.02em;
+  margin-bottom: var(--rv-space-8);
+}
+
+.relatedGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--rv-space-6);
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .panel {
+    order: -1;
+  }
+
+  .panelSticky {
+    position: static;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+    gap: var(--rv-space-5);
+  }
+}
+
+@media (max-width: 600px) {
+  .panelSticky {
+    grid-template-columns: 1fr;
+  }
+
+  .features {
+    grid-template-columns: 1fr;
+  }
+
+  .relatedGrid {
+    grid-template-columns: 1fr;
+  }
+}

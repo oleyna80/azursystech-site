@@ -1,0 +1,164 @@
+/* CataloguePage */
+
+.page {
+  padding: var(--rv-space-16) 0 var(--rv-space-24);
+}
+
+/* Variant intro — shown on /vente and /location only */
+.intro {
+  padding-bottom: var(--rv-space-10);
+  border-bottom: 1px solid var(--rv-border-hairline);
+  margin-bottom: var(--rv-space-10);
+  max-width: 580px;
+}
+
+.introHeading {
+  font-size: var(--rv-text-4xl);
+  letter-spacing: -0.025em;
+  color: var(--rv-color-ink);
+  margin-bottom: var(--rv-space-4);
+}
+
+.introBody {
+  font-size: var(--rv-text-md);
+  color: var(--rv-text-secondary);
+  line-height: var(--rv-leading-relaxed);
+}
+
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--rv-space-6);
+  margin-bottom: var(--rv-space-12);
+  padding-bottom: var(--rv-space-8);
+  border-bottom: 1px solid var(--rv-border-hairline);
+}
+
+.title {
+  font-size: var(--rv-text-4xl);
+  letter-spacing: -0.02em;
+  color: var(--rv-color-ink);
+}
+
+.filters {
+  display: flex;
+  gap: var(--rv-space-3);
+  flex-wrap: wrap;
+}
+
+/* Specific selector to override global button resets in tokens.module.css */
+.filters button.filter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--rv-space-3) var(--rv-space-6);
+  font-size: var(--rv-text-sm);
+  font-weight: var(--rv-weight-medium);
+  color: var(--rv-color-ink-80);
+  background-color: var(--rv-bg-surface);
+  border: 1px solid var(--rv-border-soft);
+  border-radius: var(--rv-radius-pill);
+  cursor: pointer;
+  transition: color var(--rv-dur-base) var(--rv-ease-out),
+              background-color var(--rv-dur-base) var(--rv-ease-out),
+              border-color var(--rv-dur-base) var(--rv-ease-out),
+              transform var(--rv-dur-fast) var(--rv-ease-out);
+  outline-offset: 3px;
+}
+
+.filters button.filter:hover {
+  color: var(--rv-color-ink);
+  background-color: var(--rv-color-stone-pale);
+  border-color: var(--rv-color-stone);
+  transform: translateY(-1px);
+}
+
+.filters button.filter:focus-visible {
+  outline: 2px solid var(--rv-color-terra);
+}
+
+.filters button.filterActive {
+  color: var(--rv-color-white);
+  background-color: var(--rv-color-ink);
+  border-color: var(--rv-color-ink);
+}
+
+.filters button.filterActive:hover {
+  background-color: var(--rv-color-ink);
+  color: var(--rv-color-white);
+  transform: none;
+}
+
+/* ── Grid ────────────────────────────────────────────────── */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--rv-space-8);
+  list-style: none;
+}
+
+/* ── Empty state ─────────────────────────────────────────── */
+
+.empty {
+  padding: var(--rv-space-24) 0;
+  text-align: center;
+}
+
+.emptyTitle {
+  font-size: var(--rv-text-xl);
+  margin-bottom: var(--rv-space-3);
+}
+
+.emptyBody {
+  font-size: var(--rv-text-base);
+  color: var(--rv-text-muted);
+  margin-bottom: var(--rv-space-8);
+}
+
+.empty button.emptyReset {
+  padding: var(--rv-space-3) var(--rv-space-8);
+  font-size: var(--rv-text-sm);
+  font-weight: var(--rv-weight-medium);
+  color: var(--rv-color-white);
+  background-color: var(--rv-color-terra);
+  border-radius: var(--rv-radius-sm);
+  transition: background-color var(--rv-dur-fast);
+  outline-offset: 3px;
+}
+
+.empty button.emptyReset:hover {
+  background-color: var(--rv-color-terra-dark);
+}
+
+.empty button.emptyReset:focus-visible {
+  outline: 2px solid var(--rv-color-terra);
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filter,
+  .emptyReset {
+    transition: none;
+  }
+}

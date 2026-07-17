@@ -1,0 +1,259 @@
+/* AgencePage */
+
+/* ── Hero ────────────────────────────────────────────────── */
+
+.hero {
+  padding: var(--rv-space-12) 0;
+  border-bottom: 1px solid var(--rv-border-hairline);
+}
+
+.heroInner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--rv-space-12);
+  align-items: center;
+}
+
+.heroText {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--rv-space-6) 0;
+}
+
+.heroLabel {
+  font-size: var(--rv-text-xs);
+  font-weight: var(--rv-weight-semibold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rv-color-terra);
+  margin-bottom: var(--rv-space-4);
+}
+
+.heroTitle {
+  font-size: var(--rv-text-4xl);
+  letter-spacing: -0.02em;
+  margin-bottom: var(--rv-space-5);
+  color: var(--rv-color-ink);
+}
+
+.heroSub {
+  font-size: var(--rv-text-md);
+  color: var(--rv-text-secondary);
+  line-height: var(--rv-leading-relaxed);
+}
+
+.heroImage {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background-color: var(--rv-color-stone-pale);
+  border-radius: var(--rv-radius-lg);
+  box-shadow: var(--rv-shadow-card);
+}
+
+.heroImg {
+  object-fit: cover;
+}
+
+/* ── Shared section title ─────────────────────────────────── */
+
+.sectionTitle {
+  font-size: var(--rv-text-2xl);
+  letter-spacing: -0.02em;
+  margin-bottom: var(--rv-space-10);
+  color: var(--rv-text-primary);
+}
+
+/* ── Approach ────────────────────────────────────────────── */
+
+.approachSection {
+  padding: var(--rv-space-24) 0;
+  border-bottom: 1px solid var(--rv-border-hairline);
+}
+
+.approachGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--rv-space-12);
+}
+
+.approachItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rv-space-3);
+}
+
+.approachNum {
+  font-family: var(--rv-font-display, ui-serif, serif);
+  font-size: var(--rv-text-3xl);
+  color: var(--rv-color-stone-light);
+  line-height: 1;
+}
+
+.approachTitle {
+  font-family: var(--rv-font-display, ui-serif, serif);
+  font-size: var(--rv-text-xl);
+  font-weight: var(--rv-weight-normal);
+  color: var(--rv-text-primary);
+}
+
+.approachBody {
+  font-size: var(--rv-text-base);
+  color: var(--rv-text-secondary);
+  line-height: var(--rv-leading-relaxed);
+}
+
+/* ── Team ────────────────────────────────────────────────── */
+
+.team {
+  padding: var(--rv-space-24) 0;
+  border-bottom: 1px solid var(--rv-border-hairline);
+}
+
+.agentGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--rv-space-12);
+}
+
+.agentCard {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: var(--rv-space-8);
+  align-items: start;
+}
+
+.agentImage {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--rv-radius-md);
+  overflow: hidden;
+  background-color: var(--rv-color-stone-pale);
+}
+
+.agentImg {
+  object-fit: cover;
+  object-position: top;
+}
+
+.agentContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rv-space-2);
+}
+
+.agentName {
+  font-family: var(--rv-font-display, ui-serif, serif);
+  font-size: var(--rv-text-xl);
+  font-weight: var(--rv-weight-normal);
+  color: var(--rv-text-primary);
+}
+
+.agentRole {
+  font-size: var(--rv-text-sm);
+  color: var(--rv-text-muted);
+  margin-bottom: var(--rv-space-2);
+}
+
+.agentBio {
+  font-size: var(--rv-text-base);
+  color: var(--rv-text-secondary);
+  line-height: var(--rv-leading-relaxed);
+  margin-bottom: var(--rv-space-3);
+}
+
+.agentLinks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rv-space-1);
+}
+
+.agentLink {
+  font-size: var(--rv-text-sm);
+  color: var(--rv-color-terra);
+  outline-offset: 2px;
+}
+
+.agentLink:hover {
+  text-decoration: underline;
+}
+
+.agentLink:focus-visible {
+  outline: 2px solid var(--rv-color-terra);
+}
+
+/* ── CTA ─────────────────────────────────────────────────── */
+
+.cta {
+  padding: var(--rv-space-28) 0;
+  background-color: var(--rv-bg-dark);
+  text-align: center;
+}
+
+.cta .ctaTitle {
+  font-size: var(--rv-text-3xl);
+  letter-spacing: -0.02em;
+  margin-bottom: var(--rv-space-8);
+  color: var(--rv-text-on-dark);
+}
+
+.ctaBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--rv-space-4) var(--rv-space-10);
+  font-size: var(--rv-text-base);
+  font-weight: var(--rv-weight-medium);
+  color: var(--rv-color-white);
+  background-color: var(--rv-color-terra);
+  border-radius: var(--rv-radius-sm);
+  transition: background-color var(--rv-dur-fast), transform var(--rv-dur-fast) ease;
+  outline-offset: 3px;
+}
+
+.ctaBtn:hover {
+  background-color: var(--rv-color-terra-dark);
+  transform: translateY(-1px);
+}
+
+.ctaBtn:focus-visible {
+  outline: 2px solid var(--rv-color-terra);
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .heroInner {
+    grid-template-columns: 1fr;
+  }
+
+  .heroText {
+    padding-right: 0;
+    padding-top: var(--rv-space-12);
+    padding-bottom: var(--rv-space-8);
+  }
+
+  .heroImage {
+    aspect-ratio: 16 / 9;
+  }
+
+  .approachGrid {
+    grid-template-columns: 1fr;
+    gap: var(--rv-space-8);
+  }
+
+  .agentGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .agentCard {
+    grid-template-columns: 120px 1fr;
+    gap: var(--rv-space-5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ctaBtn {
+    transition: none;
+  }
+}
