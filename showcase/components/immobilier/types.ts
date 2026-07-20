@@ -34,6 +34,7 @@ export type Agent = {
 
 export type UI = {
   nav: {
+    wordmark: string
     home: string
     catalogue: string
     buy: string
@@ -73,6 +74,8 @@ export type UI = {
     gallery_prev: string
     gallery_next: string
     image_of: string
+    gallery_photos: string
+    gallery_photo: string
   }
   agency: {
     title: string
@@ -82,6 +85,8 @@ export type UI = {
   contact: {
     title: string
     subtitle: string
+    demo_notice_title: string
+    demo_notice_body: string
     name_label: string
     name_placeholder: string
     email_label: string

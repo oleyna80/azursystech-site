@@ -1,46 +1,44 @@
 # Critic Gate — active Work Block. OWNED BY CONTROL TOWER — subagents must not edit this file.
 
 Status: READY
-Work Block: WB-2026-07-15-cleanup-commit-closeout
+Work Block: WB-2026-07-20-immobilier-demo-review-remediation
 Verification Tier: standard
-New Domain: false
-Subagent Topology Status: COMPLETE (native Commit-Closeout Critic APPROVE; all three child Work Blocks have recorded READY evidence)
-Critic Verdict: APPROVE
-Critic Report: docs/reports/WB-2026-07-15-worktree-cleanup-preflight-critic.md
+New Domain: false — existing local demo remediation only
+Subagent Topology Status: REQUIRED / Critic supplement adopted; one Scoped Coder then read-only Verifier and independent readonly root required
+Critic Verdict: SUPPLEMENT — adopted
+Critic Report: docs/reports/WB-2026-07-20-immobilier-demo-review-remediation-critic.md
 GPT Critic Status: NOT_REQUIRED
-GPT Critic Reason: native Commit-Closeout Critic approved four literal commit packets; no second-runtime critic trigger applies
-No-Skip: false
-Skills Routing: checked=git-safety,gate-templates,memory-ops; matched=git-safety; used=git-safety scoped-commit protocol; skipped=gate-templates no matching project SKILL.md,memory-ops ignored logs cannot be staged
+GPT Critic Reason: native Critic completed the scoped review; no separate external critic runtime requested
+No-Skip: true
+Owner Authorization: 2026-07-20 — Owner confirmed existing pages remain, approved expanded write-set, and authorized implementation.
+Skills Routing: checked=git-safety,design-direction,webapp-testing,subagent-mission-brief,memory-ops,frontend-skill; matched=git-safety,design-direction,webapp-testing,subagent-mission-brief,memory-ops,frontend-skill; used=git-safety,design-direction,webapp-testing,subagent-mission-brief,memory-ops,frontend-skill; skipped=media-provider-backend-security-deploy categories not relevant after inspection
 Session: any
-Expires: 2026-07-22
+Expires: 2026-07-27
 
 Approved Write-Set:
 - .agent/critic-gate.md
-- .agent/skills/design-direction/SKILL.md
 - .agent/verification-gate.md
-- .claude/agents/design-analyst.md
-- .claude/hooks/tests/gate-fixtures.sh
-- .claude/hooks/verification-gate.sh
-- .codex/hooks/tests/gate-fixtures.sh
-- .codex/hooks/verification-gate.sh
-- .codex/write-gate.md
-- docs/tasklist/WB-2026-07-15-worktree-cleanup.tasklist.md
-- docs/templates/design-brief-template.md
-- docs/plans/WB-2026-07-10-design-agent-routing-pilot.md
-- docs/plans/WB-2026-07-13-verifier-isolation-tiers.md
-- docs/plans/WB-2026-07-15-worktree-cleanup-preflight.md
-- docs/plans/WB-2026-07-15-cleanup-verifier-isolation.md
-- docs/plans/WB-2026-07-15-cleanup-design-routing.md
-- docs/plans/WB-2026-07-15-cleanup-showcase-port.md
-- docs/reports/WB-2026-07-13-verifier-isolation-tiers-critic.md
-- docs/reports/WB-2026-07-13-verifier-isolation-tiers-verification.md
-- docs/reports/WB-2026-07-15-worktree-cleanup-preflight-critic.md
-- docs/reports/WB-2026-07-15-cleanup-verifier-isolation-critic.md
-- docs/reports/WB-2026-07-15-cleanup-verifier-isolation-verification.md
-- docs/reports/WB-2026-07-15-cleanup-design-routing-critic.md
-- docs/reports/WB-2026-07-15-cleanup-design-routing-verification.md
-- docs/reports/WB-2026-07-15-cleanup-showcase-port-critic.md
-- docs/reports/WB-2026-07-15-cleanup-showcase-port-verification.md
-- .opencode/agents/design-analyst.md
-- web/src/app/[locale]/_home-data.ts
-- web/src/lib/portfolio-data.ts
+- memory_bank/orchestrator-log.md
+- docs/plans/WB-2026-07-20-immobilier-demo-review-remediation.md
+- docs/tasklist/WB-2026-07-20-immobilier-demo-review-remediation.tasklist.md
+- docs/reports/WB-2026-07-20-immobilier-demo-review-remediation-critic.md
+- docs/reports/WB-2026-07-20-immobilier-demo-review-remediation-traceability.md
+- docs/reports/WB-2026-07-20-immobilier-demo-review-remediation-verification.md
+- showcase/components/immobilier/ContactForm.tsx
+- showcase/components/immobilier/ContactPage.tsx
+- showcase/components/immobilier/contact.module.css
+- showcase/components/immobilier/data.ts
+- showcase/components/immobilier/Gallery.tsx
+- showcase/components/immobilier/SiteShell.tsx
+- showcase/components/immobilier/shell.module.css
+- showcase/components/immobilier/AgencePage.tsx
+- showcase/components/immobilier/agency.module.css
+- showcase/components/immobilier/PropertyPage.tsx
+- showcase/components/immobilier/property.module.css
+- showcase/components/immobilier/types.ts
+- showcase/app/demo/immobilier/icon.svg
+
+Supplement controls applied: historical evidence is immutable; the new
+traceability report links former and current media assertions. All displayed
+demo contacts become static, bilingual disclosure precedes personal fields,
+and the gallery must retain the exact invoker and contain Tab navigation.

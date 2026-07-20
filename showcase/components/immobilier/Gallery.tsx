@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import Image from 'next/image'
 import type { UI } from './types'
 import styles from './gallery.module.css'
@@ -14,8 +14,9 @@ type GalleryProps = {
 export function Gallery({ images, title, t }: GalleryProps) {
   const [open, setOpen] = useState(false)
   const [index, setIndex] = useState(0)
+  const dialogRef = useRef<HTMLDivElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
-  const openBtnRef = useRef<HTMLButtonElement>(null)
+  const openerRef = useRef<HTMLButtonElement | null>(null)
   const dialogId = `rv-gallery-${title.replace(/\s+/g, '-').toLowerCase().slice(0, 20)}`
   const headingId = `${dialogId}-heading`
   const counterId = `${dialogId}-counter`
@@ -28,30 +29,61 @@ export function Gallery({ images, title, t }: GalleryProps) {
     setIndex((i) => (i === images.length - 1 ? 0 : i + 1))
   }, [images.length])
 
-  const openAt = (i: number) => {
+  const openAt = (i: number, opener: HTMLButtonElement) => {
+    openerRef.current = opener
     setIndex(i)
     setOpen(true)
   }
 
-  const close = () => {
+  const close = useCallback(() => {
     setOpen(false)
-    // Return focus to the thumbnail that opened the lightbox
-    requestAnimationFrame(() => openBtnRef.current?.focus())
-  }
+  }, [])
 
-  // Keyboard handling
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close()
-      if (e.key === 'ArrowLeft') prev()
-      if (e.key === 'ArrowRight') next()
-    }
-    window.addEventListener('keydown', onKey)
-    // Move focus inside dialog
     closeRef.current?.focus()
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, prev, next])
+    return () => {
+      requestAnimationFrame(() => openerRef.current?.focus())
+    }
+  }, [open])
+
+  const handleDialogKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      close()
+      return
+    }
+
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault()
+      prev()
+      return
+    }
+
+    if (event.key === 'ArrowRight') {
+      event.preventDefault()
+      next()
+      return
+    }
+
+    if (event.key !== 'Tab') return
+
+    const controls = Array.from(
+      dialogRef.current?.querySelectorAll<HTMLButtonElement>('button:not([disabled])') ?? [],
+    ).filter((control) => control.getClientRects().length > 0)
+    if (controls.length === 0) return
+
+    const first = controls[0]
+    const last = controls[controls.length - 1]
+    const active = document.activeElement
+    if (event.shiftKey && (active === first || !dialogRef.current?.contains(active))) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && (active === last || !dialogRef.current?.contains(active))) {
+      event.preventDefault()
+      first.focus()
+    }
+  }
 
   // Prevent body scroll when lightbox open
   useEffect(() => {
@@ -70,9 +102,8 @@ export function Gallery({ images, title, t }: GalleryProps) {
         {/* Primary large image */}
         <button
           type="button"
-          ref={openBtnRef}
           className={`${styles.thumb} ${styles.thumbPrimary}`}
-          onClick={() => openAt(0)}
+          onClick={(event) => openAt(0, event.currentTarget)}
           aria-label={`${t.gallery_open} — ${title} 1 ${t.image_of} ${images.length}`}
         >
           <div className={styles.thumbInner}>
@@ -101,7 +132,7 @@ export function Gallery({ images, title, t }: GalleryProps) {
                 key={src}
                 type="button"
                 className={styles.thumb}
-                onClick={() => openAt(i + 1)}
+                onClick={(event) => openAt(i + 1, event.currentTarget)}
                 aria-label={`${t.gallery_open} — ${title} ${i + 2} ${t.image_of} ${images.length}`}
               >
                 <div className={styles.thumbInner}>
@@ -123,10 +154,12 @@ export function Gallery({ images, title, t }: GalleryProps) {
       {open && (
         <div
           className={styles.lightbox}
+          ref={dialogRef}
           role="dialog"
           aria-modal="true"
           aria-labelledby={headingId}
           aria-describedby={counterId}
+          onKeyDown={handleDialogKeyDown}
           onClick={(e) => { if (e.target === e.currentTarget) close() }}
         >
           {/* SR-only heading */}
@@ -191,16 +224,15 @@ export function Gallery({ images, title, t }: GalleryProps) {
 
           {/* Dots */}
           {images.length > 1 && (
-            <div className={styles.lbDots} role="tablist" aria-label={`${images.length} photos`}>
+            <div className={styles.lbDots} role="group" aria-label={t.gallery_photos}>
               {images.map((_, i) => (
                 <button
                   key={i}
                   type="button"
-                  role="tab"
                   className={`${styles.lbDot} ${i === index ? styles.lbDotActive : ''}`}
                   onClick={() => setIndex(i)}
-                  aria-label={`Photo ${i + 1}`}
-                  aria-selected={i === index}
+                  aria-label={`${t.gallery_photo} ${i + 1}`}
+                  aria-pressed={i === index}
                 />
               ))}
             </div>

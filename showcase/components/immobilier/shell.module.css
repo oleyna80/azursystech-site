@@ -316,20 +316,9 @@
   color: var(--rv-text-secondary);
 }
 
-.footerAddress a {
+.footerContactText {
   font-size: var(--rv-text-sm);
   color: var(--rv-text-secondary);
-  transition: color var(--rv-dur-fast) var(--rv-ease-out);
-  outline-offset: 2px;
-}
-
-.footerAddress a:hover {
-  color: var(--rv-color-terra);
-}
-
-.footerAddress a:focus-visible {
-  outline: 2px solid var(--rv-color-terra);
-  border-radius: var(--rv-radius-sm);
 }
 
 .footerBottom {

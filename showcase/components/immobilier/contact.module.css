@@ -10,6 +10,27 @@
   gap: var(--rv-space-4);
 }
 
+.demoNotice {
+  padding: var(--rv-space-4);
+  background-color: var(--rv-color-ink-06);
+  border-left: 2px solid var(--rv-color-terra);
+}
+
+.demoNoticeTitle {
+  font-size: var(--rv-text-xs);
+  font-weight: var(--rv-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rv-text-primary);
+  margin-bottom: var(--rv-space-1);
+}
+
+.demoNoticeBody {
+  font-size: var(--rv-text-sm);
+  color: var(--rv-text-secondary);
+  line-height: var(--rv-leading-relaxed);
+}
+
 /* ── Fields ──────────────────────────────────────────────── */
 
 .field {
@@ -191,18 +212,9 @@
   gap: var(--rv-space-1);
 }
 
-.pageAgentLink {
+.pageAgentContactText {
   font-size: var(--rv-text-sm);
-  color: var(--rv-color-terra);
-  outline-offset: 2px;
-}
-
-.pageAgentLink:hover {
-  text-decoration: underline;
-}
-
-.pageAgentLink:focus-visible {
-  outline: 2px solid var(--rv-color-terra);
+  color: var(--rv-text-secondary);
 }
 
 @media (max-width: 900px) {

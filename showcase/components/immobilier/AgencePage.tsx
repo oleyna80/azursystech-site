@@ -103,12 +103,8 @@ export function AgencePage({ lang }: AgencePageProps) {
                   <p className={styles.agentRole}>{agent.role[lang]}</p>
                   <p className={styles.agentBio}>{agent.bio[lang]}</p>
                   <div className={styles.agentLinks}>
-                    <a href={`tel:${agent.phone.replace(/\s/g, '')}`} className={styles.agentLink}>
-                      {agent.phone}
-                    </a>
-                    <a href={`mailto:${agent.email}`} className={styles.agentLink}>
-                      {agent.email}
-                    </a>
+                    <span className={styles.agentContactText}>{agent.phone}</span>
+                    <span className={styles.agentContactText}>{agent.email}</span>
                   </div>
                 </div>
               </article>

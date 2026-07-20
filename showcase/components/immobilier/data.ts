@@ -273,6 +273,7 @@ export const agents: Agent[] = [
 export const ui: Record<Lang, UI> = {
   fr: {
     nav: {
+      wordmark: 'Atelier Rivage — accueil',
       home: 'Accueil',
       catalogue: 'Biens',
       buy: 'Acheter',
@@ -312,6 +313,8 @@ export const ui: Record<Lang, UI> = {
       gallery_prev: 'Photo précédente',
       gallery_next: 'Photo suivante',
       image_of: 'sur',
+      gallery_photos: 'Photos du bien',
+      gallery_photo: 'Photo',
     },
     agency: {
       title: 'Atelier Rivage',
@@ -321,6 +324,8 @@ export const ui: Record<Lang, UI> = {
     contact: {
       title: 'Nous contacter',
       subtitle: 'Une question, une visite, une recherche spécifique — écrivez-nous.',
+      demo_notice_title: 'Démo uniquement',
+      demo_notice_body: "Vos informations restent dans votre navigateur. Les coordonnées affichées ne sont pas des canaux de demande réels et aucun retour humain n'est prévu.",
       name_label: 'Nom complet',
       name_placeholder: 'Prénom Nom',
       email_label: 'Adresse e-mail',
@@ -330,8 +335,8 @@ export const ui: Record<Lang, UI> = {
       message_label: 'Message',
       message_placeholder: 'Décrivez votre recherche ou votre question…',
       submit: 'Envoyer',
-      success_title: 'Message reçu',
-      success_body: "Nous vous répondrons dans les meilleurs délais. Ceci est une démo — aucune donnée n'est transmise.",
+      success_title: 'Statut de la démo',
+      success_body: "Cette démo conserve vos informations dans votre navigateur. Aucun message n'est envoyé et aucun retour humain n'est prévu.",
       error_required: 'Ce champ est obligatoire.',
       error_email: 'Saisissez une adresse e-mail valide.',
     },
@@ -362,6 +367,7 @@ export const ui: Record<Lang, UI> = {
   },
   en: {
     nav: {
+      wordmark: 'Atelier Rivage — home',
       home: 'Home',
       catalogue: 'Properties',
       buy: 'Buy',
@@ -401,6 +407,8 @@ export const ui: Record<Lang, UI> = {
       gallery_prev: 'Previous photo',
       gallery_next: 'Next photo',
       image_of: 'of',
+      gallery_photos: 'Property photos',
+      gallery_photo: 'Photo',
     },
     agency: {
       title: 'Atelier Rivage',
@@ -410,6 +418,8 @@ export const ui: Record<Lang, UI> = {
     contact: {
       title: 'Get in touch',
       subtitle: 'A question, a viewing, a specific search — write to us.',
+      demo_notice_title: 'Demo only',
+      demo_notice_body: 'Your information remains in your browser. Displayed contact details are not real enquiry channels, and no human response is promised.',
       name_label: 'Full name',
       name_placeholder: 'First Last',
       email_label: 'Email address',
@@ -419,8 +429,8 @@ export const ui: Record<Lang, UI> = {
       message_label: 'Message',
       message_placeholder: 'Describe your search or question…',
       submit: 'Send',
-      success_title: 'Message received',
-      success_body: "We'll respond as soon as possible. This is a demo — no data is transmitted.",
+      success_title: 'Demo status',
+      success_body: 'This demo keeps your information in your browser. No message is sent and no human response is promised.',
       error_required: 'This field is required.',
       error_email: 'Enter a valid email address.',
     },

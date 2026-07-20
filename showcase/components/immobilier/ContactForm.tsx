@@ -88,6 +88,11 @@ export function ContactForm({ lang, listingTitle, compact = false }: ContactForm
         ? (lang === 'fr' ? 'Formulaire de contact' : 'Contact form')
         : t.title}
     >
+      <div className={styles.demoNotice}>
+        <p className={styles.demoNoticeTitle}>{t.demo_notice_title}</p>
+        <p className={styles.demoNoticeBody}>{t.demo_notice_body}</p>
+      </div>
+
       {/* Name */}
       <div className={styles.field}>
         <label htmlFor="rv-field-name" className={styles.label}>

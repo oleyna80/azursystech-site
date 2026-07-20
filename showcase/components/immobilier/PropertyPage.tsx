@@ -115,9 +115,7 @@ export function PropertyPage({ lang, slug }: PropertyPageProps) {
               <div className={styles.panelAgent}>
                 <p className={styles.panelAgentName}>{agent.name}</p>
                 <p className={styles.panelAgentRole}>{agent.role[lang]}</p>
-                <a href={`tel:${agent.phone.replace(/\s/g, '')}`} className={styles.panelPhone}>
-                  {agent.phone}
-                </a>
+                <p className={styles.panelContactText}>{agent.phone}</p>
               </div>
             )}
 

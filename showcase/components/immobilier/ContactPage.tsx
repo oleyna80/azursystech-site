@@ -23,12 +23,8 @@ export function ContactPage({ lang }: ContactPageProps) {
                 <p className={styles.pageAgentName}>{agent.name}</p>
                 <p className={styles.pageAgentRole}>{agent.role[lang]}</p>
                 <div className={styles.pageAgentContact}>
-                  <a href={`tel:${agent.phone.replace(/\s/g, '')}`} className={styles.pageAgentLink}>
-                    {agent.phone}
-                  </a>
-                  <a href={`mailto:${agent.email}`} className={styles.pageAgentLink}>
-                    {agent.email}
-                  </a>
+                  <span className={styles.pageAgentContactText}>{agent.phone}</span>
+                  <span className={styles.pageAgentContactText}>{agent.email}</span>
                 </div>
               </div>
             ))}

@@ -49,7 +49,7 @@ export function SiteShell({ children, lang }: SiteShellProps) {
       <header className={styles.header}>
         <div className={`${tk.container} ${styles.headerInner}`}>
           {/* Wordmark */}
-          <Link href={base} className={styles.wordmark} aria-label="Atelier Rivage — accueil">
+          <Link href={base} className={styles.wordmark} aria-label={t.nav.wordmark}>
             <svg
               aria-hidden="true"
               className={styles.wordmarkIcon}
@@ -171,8 +171,8 @@ export function SiteShell({ children, lang }: SiteShellProps) {
             <p className={styles.footerLinksTitle}>{t.footer.contact_title}</p>
             <address className={styles.footerAddress}>
               <p>06 — Côte d'Azur</p>
-              <a href="tel:+33493000001">+33 4 93 00 00 01</a>
-              <a href="mailto:contact@atelier-rivage.fr">contact@atelier-rivage.fr</a>
+              <p className={styles.footerContactText}>+33 4 93 00 00 01</p>
+              <p className={styles.footerContactText}>contact@atelier-rivage.fr</p>
             </address>
           </div>
         </div>

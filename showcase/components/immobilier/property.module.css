@@ -218,19 +218,10 @@
   margin-bottom: var(--rv-space-3);
 }
 
-.panelPhone {
+.panelContactText {
   font-size: var(--rv-text-sm);
-  color: var(--rv-color-terra);
+  color: var(--rv-text-secondary);
   font-weight: var(--rv-weight-medium);
-  outline-offset: 2px;
-}
-
-.panelPhone:hover {
-  text-decoration: underline;
-}
-
-.panelPhone:focus-visible {
-  outline: 2px solid var(--rv-color-terra);
 }
 
 /* ── Locality illustration ───────────────────────────────── */
