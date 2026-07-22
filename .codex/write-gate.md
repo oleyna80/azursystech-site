@@ -1,19 +1,12 @@
 # Codex Stage 0 Write Gate
 
 Status: READY
-Expires: 2026-07-22
-Work Block: WB-2026-07-15-cleanup-commit-closeout
-Approved Scope: exact 29-path Commit-Closeout set in .agent/critic-gate.md; four literal commit packets only; all other dirty paths excluded
+Expires: 2026-07-29
+Work Block: WB-2026-07-22-retarget-thank-you-services-link
+Approved Scope: exact write-set in .agent/critic-gate.md; change only the existing dead Services href in thank-you to the Owner-specified existing /fr#services anchor and create the Owner-authorized local commit. Preserve all dirty hunks. Routes, sitemap, copy, forms, providers, configuration, live action, and push are excluded.
 Codex Critic: READY
-Critic Verdict: APPROVE
-Critic Report: docs/reports/WB-2026-07-15-worktree-cleanup-preflight-critic.md
+Critic Verdict: SUPPLEMENT
+Critic Report: docs/reports/WB-2026-07-22-retarget-thank-you-services-link-critic.md
 Critic Skip Reason: not applicable
-Orchestrator Response: Owner explicitly approved staging and commit on 2026-07-15; fresh native Commit-Closeout Critic approved literal per-path staging and four atomic commits. Push remains unauthorized.
+Orchestrator Response: Native Critic supplement adopted: fixed French destination is Owner-intentional, preserve dirty baseline, and verify the href plus rendered anchor navigation. One Scoped Coder then a read-only Verifier are required.
 Orchestrator Log: memory_bank/orchestrator-log.md
-Review Log: memory_bank/review-log.md
-
-This gate authorizes exactly four literal staging and commit packets in the
-fresh Critic report. It does not authorize `git add -A`, push, deletion,
-deployment, credential changes, memory-bank publication, or `.agents/**`
-curation. Before each commit, the Scoped Coder must confirm the cached path
-set exactly equals its packet and run the packet's required checks.
