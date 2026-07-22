@@ -64,7 +64,7 @@ function buildNavLinks(locale: HeaderLocale) {
   const t = {
     fr: { automation: "Automatisation IA", websites: "Sites web", portfolio: "Portfolio", services: "Services", faq: "FAQ", contact: "Contact" },
     ru: { automation: "AI-автоматизация", websites: "Сайты", portfolio: "Портфолио", services: "Услуги", faq: "FAQ", contact: "Контакты" },
-    en: { automation: "AI automation", websites: "Web applications", portfolio: "", services: "Services", faq: "FAQ", contact: "" },
+    en: { automation: "AI automation", websites: "Web applications", portfolio: "", services: "Services", faq: "FAQ", contact: "Contact" },
   }[locale];
   if (locale === "en") {
     return [
@@ -72,6 +72,7 @@ function buildNavLinks(locale: HeaderLocale) {
       { href: "/en#services", label: t.websites },
       { href: "/en/ai-automation", label: t.services },
       { href: "/en#faq", label: t.faq },
+      { href: "/en#contact", label: t.contact },
     ];
   }
   // Portfolio sits after "websites": feature discovery before meta links (faq/contact).

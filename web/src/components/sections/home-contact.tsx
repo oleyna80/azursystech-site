@@ -5,7 +5,7 @@ import type { ContactSubmitApiResult } from "@/lib/contact-submit";
 
 type Segment = "particulier" | "tpe";
 type SubmitState = "" | "submitting" | "success" | "error";
-type ContactLocale = "fr" | "ru";
+export type ContactLocale = "fr" | "ru" | "en";
 
 const CONTACT = {
   phoneDisplay: "+33 7 80 72 09 94",
@@ -32,12 +32,10 @@ const CONTACT_COPY = {
     companySection: "Informations pour l’entreprise",
     companyName: "Nom de l’entreprise",
     businessType: "Type de lieu",
-    workstations: "Nombre de postes",
-    businessAddress: "Adresse du site",
-    service: "Quel type d’aide ? *",
+    service: "Votre projet *",
     description: "Description courte du besoin *",
-    deviceCount: "Nombre d’appareils",
-    onsite: "Déplacement nécessaire",
+    preferredContactLanguage: "Langue de contact préférée *",
+    preferredContactLanguagePlaceholder: "Choisissez une langue",
     urgency: "Urgence",
     submitIdle: "Envoyer la demande",
     submitLoading: "Envoi en cours...",
@@ -53,7 +51,6 @@ const CONTACT_COPY = {
       email: "email@example.com",
       city: "Par exemple : Nice",
       companyName: "Nom de l’entreprise",
-      businessAddress: "Pour évaluer un déplacement",
       description: "Décrivez brièvement ce qu’il faut faire ou le problème rencontré",
     },
     businessTypes: [
@@ -64,39 +61,13 @@ const CONTACT_COPY = {
       { value: "coworking", label: "Espace partagé" },
       { value: "other", label: "Autre" },
     ],
-    counts: [
-      { value: "", label: "Choisissez un nombre..." },
-      { value: "1", label: "1" },
-      { value: "2-3", label: "2-3" },
-      { value: "4-10", label: "4-10" },
-      { value: "10+", label: "10+" },
-    ],
-    deviceCounts: [
-      { value: "", label: "Peu importe" },
-      { value: "1", label: "1" },
-      { value: "2-3", label: "2-3" },
-      { value: "4-10", label: "4-10" },
-      { value: "10+", label: "10+" },
-    ],
     serviceOptions: [
       { value: "", label: "Choisissez une option..." },
       { value: "automatisation_ia", label: "Automatisation IA / agent pour demandes entrantes" },
       { value: "site_web", label: "Site web / landing page" },
       { value: "site_automation_bundle", label: "Site + formulaire + automatisation" },
-      { value: "depannage_pc", label: "Dépannage / diagnostic PC" },
-      { value: "installation_pc", label: "Configuration d’un nouveau PC" },
-      { value: "reseau_local", label: "Wi-Fi / réseau local" },
-      { value: "imprimante", label: "Imprimantes / connexion d’appareils" },
-      { value: "poste_travail", label: "Poste de travail / plusieurs appareils" },
-      { value: "petite_infra_tpe", label: "Environnement IT pour petite entreprise" },
-      { value: "partage_fichiers", label: "Dossiers partagés / accès aux fichiers" },
       { value: "autre", label: "Autre" },
     ],
-    onsiteOptions: {
-      yes: "Oui",
-      no: "Non",
-      notSure: "Je ne sais pas",
-    },
     urgencyOptions: [
       { value: "", label: "Standard" },
       { value: "urgent", label: "Urgent" },
@@ -119,12 +90,10 @@ const CONTACT_COPY = {
     companySection: "Параметры бизнеса",
     companyName: "Название компании",
     businessType: "Формат места",
-    workstations: "Рабочих мест",
-    businessAddress: "Адрес объекта",
-    service: "Какая помощь нужна? *",
+    service: "Ваш проект *",
     description: "Краткое описание задачи *",
-    deviceCount: "Сколько устройств",
-    onsite: "Нужен выезд",
+    preferredContactLanguage: "Предпочтительный язык связи *",
+    preferredContactLanguagePlaceholder: "Выберите язык",
     urgency: "Срочность",
     submitIdle: "Отправить заявку",
     submitLoading: "Отправка...",
@@ -140,7 +109,6 @@ const CONTACT_COPY = {
       email: "email@example.com",
       city: "Например: Ницца",
       companyName: "Название",
-      businessAddress: "Для оценки выезда",
       description: "Коротко опишите, что нужно сделать или какая проблема возникла",
     },
     businessTypes: [
@@ -151,43 +119,75 @@ const CONTACT_COPY = {
       { value: "coworking", label: "Общее рабочее пространство" },
       { value: "other", label: "Другое" },
     ],
-    counts: [
-      { value: "", label: "Выберите число..." },
-      { value: "1", label: "1" },
-      { value: "2-3", label: "2-3" },
-      { value: "4-10", label: "4-10" },
-      { value: "10+", label: "10+" },
-    ],
-    deviceCounts: [
-      { value: "", label: "Не важно" },
-      { value: "1", label: "1" },
-      { value: "2-3", label: "2-3" },
-      { value: "4-10", label: "4-10" },
-      { value: "10+", label: "10+" },
-    ],
     serviceOptions: [
       { value: "", label: "Выберите вариант..." },
       { value: "automatisation_ia", label: "AI-автоматизация / агент для заявок" },
       { value: "site_web", label: "Сайт / landing page" },
       { value: "site_automation_bundle", label: "Сайт + форма + автоматизация" },
-      { value: "depannage_pc", label: "Ремонт / диагностика ПК" },
-      { value: "installation_pc", label: "Настройка нового ПК" },
-      { value: "reseau_local", label: "Wi-Fi / локальная сеть" },
-      { value: "imprimante", label: "Принтеры / подключение устройств" },
-      { value: "poste_travail", label: "Рабочее место / несколько устройств" },
-      { value: "petite_infra_tpe", label: "IT-среда для малого бизнеса" },
-      { value: "partage_fichiers", label: "Общие папки / доступ к файлам" },
       { value: "autre", label: "Другое" },
     ],
-    onsiteOptions: {
-      yes: "Да",
-      no: "Нет",
-      notSure: "Не знаю",
-    },
     urgencyOptions: [
       { value: "", label: "Обычная" },
       { value: "urgent", label: "Срочно" },
       { value: "planning", label: "Можно запланировать" },
+    ],
+  },
+  en: {
+    eyebrow: "Contact",
+    title: "Tell us what you need in plain language",
+    intro: "A short description is enough. We will clarify the details and suggest a clear next step.",
+    directChannels: "Direct contact",
+    urgentWhatsapp: "WhatsApp for urgent requests",
+    segmentLabel: "You are contacting us as *",
+    segmentBusiness: "Business / team",
+    segmentOther: "Individual / other request",
+    name: "Your name *",
+    phone: "Phone *",
+    email: "Email (optional)",
+    city: "City *",
+    companySection: "Business details",
+    companyName: "Company name",
+    businessType: "Type of premises",
+    service: "Your project *",
+    description: "Brief description of your request *",
+    preferredContactLanguage: "Preferred contact language *",
+    preferredContactLanguagePlaceholder: "Choose a language",
+    urgency: "Timing",
+    submitIdle: "Send request",
+    submitLoading: "Sending...",
+    privacy: "By sending this request, you agree to the processing of your data so that we can contact you about your request.",
+    successTitle: "Request sent",
+    successText: "Thank you. We have received your request and will review the details before getting back to you.",
+    fallbackError: "We could not send your request. Please try again or contact us on WhatsApp.",
+    urgentHint: "If your request is urgent, it is best to contact us directly:",
+    urgentCta: "Message us on WhatsApp",
+    placeholders: {
+      name: "Name",
+      phone: "+33 6 XX XX XX XX",
+      email: "email@example.com",
+      city: "For example: Nice",
+      companyName: "Company name",
+      description: "Briefly describe what you need or the issue you are facing",
+    },
+    businessTypes: [
+      { value: "", label: "Choose an option..." },
+      { value: "office", label: "Office" },
+      { value: "shop", label: "Shop" },
+      { value: "cabinet", label: "Practice" },
+      { value: "coworking", label: "Shared workspace" },
+      { value: "other", label: "Other" },
+    ],
+    serviceOptions: [
+      { value: "", label: "Choose an option..." },
+      { value: "automatisation_ia", label: "AI automation / agent for incoming enquiries" },
+      { value: "site_web", label: "Website / landing page" },
+      { value: "site_automation_bundle", label: "Website + form + automation" },
+      { value: "autre", label: "Other" },
+    ],
+    urgencyOptions: [
+      { value: "", label: "Standard" },
+      { value: "urgent", label: "Urgent" },
+      { value: "planning", label: "Can be planned" },
     ],
   },
 } as const;
@@ -347,20 +347,6 @@ export function HomeContactSection({ locale }: { locale: ContactLocale }) {
                       ))}
                     </select>
                   </div>
-                  <div>
-                    <label className="mb-2 block text-base font-bold text-graphite">{copy.workstations}</label>
-                    <select name="workstation_count" className="w-full rounded-xl border border-graphite/10 bg-surface px-4 py-3 focus:border-accent-teal focus:outline-none">
-                      {copy.counts.map((option) => (
-                        <option key={option.value || option.label} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-base font-bold text-graphite">{copy.businessAddress}</label>
-                    <input type="text" name="business_address" className="w-full rounded-xl border border-graphite/10 bg-surface px-4 py-3 focus:border-accent-teal focus:outline-none" placeholder={copy.placeholders.businessAddress} />
-                  </div>
                 </div>
               </div>
             ) : null}
@@ -382,24 +368,15 @@ export function HomeContactSection({ locale }: { locale: ContactLocale }) {
                 <textarea required name="problem_description" rows={4} minLength={15} className="w-full resize-none rounded-xl border border-graphite/10 bg-surface px-4 py-3 shadow-sm transition-colors focus:border-accent-teal focus:outline-none" placeholder={copy.placeholders.description} />
               </div>
 
-              <div className="grid gap-6 sm:grid-cols-3">
+              <div className="grid gap-6 sm:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-base font-bold text-graphite">{copy.deviceCount}</label>
-                  <select name="device_count" className="w-full rounded-xl border border-graphite/10 bg-surface px-4 py-3 focus:border-accent-teal focus:outline-none">
-                    {copy.deviceCounts.map((option) => (
-                      <option key={option.value || option.label} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
+                  <label className="mb-2 block text-base font-bold text-graphite">{copy.preferredContactLanguage}</label>
+                  <select required name="preferred_contact_language" defaultValue="" className="w-full rounded-xl border border-graphite/10 bg-surface px-4 py-3 focus:border-accent-teal focus:outline-none">
+                    <option value="" disabled>{copy.preferredContactLanguagePlaceholder}</option>
+                    <option value="ru">Русский</option>
+                    <option value="fr">Français</option>
+                    <option value="en">English</option>
                   </select>
-                </div>
-                <div>
-                  <label className="mb-2 block text-base font-bold text-graphite">{copy.onsite}</label>
-                  <div className="mt-2 flex gap-4 text-base font-medium">
-                    <label className="flex items-center gap-2"><input type="radio" name="onsite_required" value="yes" className="text-accent-teal" /> {copy.onsiteOptions.yes}</label>
-                    <label className="flex items-center gap-2"><input type="radio" name="onsite_required" value="no" className="text-accent-teal" /> {copy.onsiteOptions.no}</label>
-                    <label className="flex items-center gap-2"><input type="radio" name="onsite_required" value="not_sure" className="text-accent-teal" /> {copy.onsiteOptions.notSure}</label>
-                  </div>
                 </div>
                 <div>
                   <label className="mb-2 block text-base font-bold text-graphite">{copy.urgency}</label>

@@ -328,9 +328,7 @@ export default async function LocaleHomePage({
           </div>
           <div className="flex justify-center">
             <a
-              href={isEnglish ? WHATSAPP : `/${l}#contact`}
-              target={isEnglish ? "_blank" : undefined}
-              rel={isEnglish ? "noreferrer" : undefined}
+              href={`/${l}#contact`}
               className="flex justify-center rounded-full bg-graphite px-6 py-3 text-center font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-graphite/90"
             >
               {copy.faqCta}
@@ -354,7 +352,7 @@ export default async function LocaleHomePage({
           <p className="mt-1 text-sm font-medium text-white/40">{copy.localSeo.tagline}</p>
         </div>
       </section>
-      {!isEnglish ? <HomeContactSection locale={l} /> : null}
+      <HomeContactSection locale={l} />
     </main>
   );
 }
