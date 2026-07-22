@@ -26,8 +26,8 @@ const FOOTER_COPY = {
       { href: "/portfolio", label: "Portfolio" },
       { href: "/brief", label: "Brief" },
       { href: "/#services", label: "Tous les services" },
-      { href: "/pricing", label: "Tarifs" },
-      { href: "/faq", label: "FAQ" },
+      { href: "/#pricing", label: "Tarifs" },
+      { href: "/#faq", label: "FAQ" },
       { href: "/#contact", label: "Contact" },
     ],
     legalLinks: [
@@ -48,8 +48,8 @@ const FOOTER_COPY = {
       { href: "/portfolio", label: "Портфолио" },
       { href: "/brief", label: "Бриф" },
       { href: "/#services", label: "Все услуги" },
-      { href: "/pricing", label: "Цены" },
-      { href: "/faq", label: "FAQ" },
+      { href: "/#pricing", label: "Цены" },
+      { href: "/#faq", label: "FAQ" },
       { href: "/#contact", label: "Контакты" },
     ],
     legalLinks: [

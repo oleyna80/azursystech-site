@@ -211,7 +211,7 @@ export default async function ThankYouPage() {
               {copy.homeCta}
             </Link>
             <Link
-              href="/faq"
+              href={`/${locale}#faq`}
               className="rounded-lg border border-[#D8D0C4] bg-[#FFFDFC] px-5 py-3 text-sm font-semibold text-[#1F2A37] transition hover:bg-[#F6F1E8]"
             >
               {copy.faqCta}
