@@ -1,4 +1,5 @@
 | 2026-07-13 | push-approval | push: APPROVED origin main - fixture | Control Tower |
+| 2026-07-22 | WB-2026-07-22-english-core-implementation | verification: READY - Owner-authorized localhost/browser smoke passed for `/en` and `/en/ai-automation` at desktop and 375px; FR/RU switch, EN conversion boundary, console, and overflow checks passed; Owner authorized one scoped local commit, push excluded | Control Tower |
 | 2026-07-13 | WB-2026-07-13-verifier-isolation-tiers | preflight: READY - scoped policy/config/hook hardening; no DB or Hard Stops | Control Tower |
 | 2026-07-13 | WB-2026-07-13-verifier-isolation-tiers | implementation: DONE - one Scoped Coder completed approved write-set | Control Tower |
 | 2026-07-13 | WB-2026-07-13-verifier-isolation-tiers | verification: BLOCKED - independent readonly Codex root did not return a final verdict | Control Tower |

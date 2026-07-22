@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-const SUPPORTED_LOCALES = ["fr", "ru"] as const;
+const SUPPORTED_LOCALES = ["fr", "ru", "en"] as const;
 type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 
 export function generateStaticParams() {

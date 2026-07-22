@@ -1,19 +1,19 @@
 # Verification Gate — active Work Block. OWNED BY CONTROL TOWER — subagents must not edit this file.
 
 Status: READY
-Work Block: WB-2026-07-22-retire-legacy-information-routes
+Work Block: WB-2026-07-22-english-core-implementation
 Verification Tier: standard
 New Domain: false
-New Domain Rationale: existing public route retirement only; no new runtime, provider, schema, configuration, or security boundary
+New Domain Rationale: existing public locale surface only; no provider, schema, configuration, or new security boundary
 Quick-Fix: false
-Verifier: ct-inline
+Verifier: subagent
 Sensitive Domains: none
-Required Verifier Isolation: same-session-degraded
-Verifier Isolation: same-session-degraded
-Claude Verifier Verdict: READY (advisory) — same-session native Verifier passed static, test, lint, build, type, and diff checks
+Required Verifier Isolation: independent-readonly-root
+Verifier Isolation: independent-readonly-root
+Claude Verifier Verdict: READY — formal independent readonly root returned FORMAL_VERDICT: READY for the frozen EN source diff
 GPT Verifier Status: NOT_REQUIRED
-GPT Verifier Reason: Standard non-sensitive route retirement; native advisory evidence was consolidated through the permitted Control Tower inline fallback
-Verification Report: docs/reports/WB-2026-07-22-retire-legacy-information-routes-verification.md
-Formal Verdict: READY — review-degraded:inline-fallback
+GPT Verifier Reason: Independent readonly-root verification is the approved formal gate for this standard non-sensitive Work Block
+Verification Report: docs/reports/WB-2026-07-22-english-core-implementation-verification.md
+Formal Verdict: READY — independent-readonly-root
 
-Evidence: focused sitemap test, lint, build, typecheck, source/diff scans, six 404 proofs, all-sitemap status matrix, rendered footer and thank-you anchors, and browser console smoke passed. Owner subsequently approved local staging and commit of this closed scope. No provider, DB, deployment, or push is authorized.
+Evidence: focused EN locale, AI page, and sitemap tests, lint, typecheck, production build, source/diff/SEO/CORS review, and formal independent readonly verification passed. Owner-authorized localhost/browser smoke subsequently passed for `/en` and `/en/ai-automation` at desktop and 375px: both routes returned 200, rendered `lang="en"`, exposed no form or chat, kept WhatsApp-only EN CTAs, had no horizontal overflow, routed locale controls to `/fr` and `/ru`, and had zero console errors. Only one scoped local commit is authorized; no provider, DB, deployment, client message, or push is authorized.

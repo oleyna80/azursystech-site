@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+const LOCALE_HEADER = "x-azursystech-route-locale";
+const ROUTE_LOCALES = new Set(["fr", "ru", "en"]);
+
 const DEFAULT_ALLOWED_ORIGINS = [
   "https://azursystech.fr",
   "https://www.azursystech.fr",
@@ -42,6 +45,13 @@ function withCorsHeaders(response: NextResponse, origin: string, request: NextRe
 }
 
 export function proxy(request: NextRequest): NextResponse {
+  const locale = request.nextUrl.pathname.split("/")[1];
+  if (ROUTE_LOCALES.has(locale)) {
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set(LOCALE_HEADER, locale);
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
   const origin = request.headers.get("origin");
   const allowedOrigins = getAllowedOrigins();
 
@@ -61,5 +71,5 @@ export function proxy(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: "/api/:path*",
+  matcher: ["/api/:path*", "/fr/:path*", "/ru/:path*", "/en/:path*"],
 };

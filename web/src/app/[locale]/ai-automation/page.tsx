@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
-type PageLocale = "fr" | "ru";
+type PageLocale = "fr" | "ru" | "en";
 type CaseIconType = "inbox" | "support" | "report" | "customer";
 
 const WHATSAPP = "https://wa.me/33780720994";
 const BASE_URL = "https://azursystech.fr";
-const SUPPORTED_LOCALES = ["fr", "ru"] as const;
+const SUPPORTED_LOCALES = ["fr", "ru", "en"] as const;
 
-const CONTENT = {
+export const CONTENT = {
   fr: {
     meta: {
       title: "Automatisation des processus métier avec des agents IA | AzurSysTech",
@@ -169,6 +169,74 @@ const CONTENT = {
     finalPrimaryCta: "Discuter du besoin",
     finalSecondaryCta: "Écrire sur WhatsApp",
     finalNote: "L’étape suivante après le bouton « Discuter du besoin » est un brief court sur un seul processus.",
+  },
+  en: {
+    meta: {
+      title: "AI workflow automation for small businesses | AzurSysTech",
+      description: "AzurSysTech designs practical AI workflows for incoming requests, qualification and repeatable business processes.",
+    },
+    jsonLd: {
+      webPageName: "AI workflow automation for small businesses | AzurSysTech",
+      webPageDescription: "Practical AI workflows for incoming requests, qualification and repeatable business processes with human control.",
+      serviceName: "AI workflow automation for small businesses",
+      serviceType: "AI-assisted intake, qualification and repeatable workflow automation",
+      serviceDescription: "A practical first layer for handling incoming requests and repeatable work, with human review at important steps.",
+      areaServed: "Remote projects",
+      inLanguage: "en",
+    },
+    backLink: "AzurSysTech",
+    heroEyebrow: "AI automation",
+    heroTitle: "AI workflows for the parts of your business that repeat",
+    heroIntro: "AzurSysTech helps small businesses turn incoming requests, routine follow-up and repeatable internal steps into clear AI-assisted workflows without rebuilding everything at once.",
+    trustBullets: ["Start with one clear workflow", "Designed for small businesses", "People retain control of important decisions"],
+    heroPrimaryCta: "Discuss your workflow on WhatsApp",
+    heroAnchorTitle: "What to automate first",
+    heroAnchorIntro: "Start with one repeatable workflow, not a complete business overhaul.",
+    heroAnchors: [
+      { href: "#incoming-requests", label: "Incoming requests" },
+      { href: "#support", label: "Initial client support" },
+      { href: "#reports", label: "Reports and summaries" },
+      { href: "#customer-evaluation", label: "Lead qualification" },
+    ],
+    heroAnchorNote: "Sensitive and commercial decisions remain human.",
+    casesLabel: "What we automate",
+    casesTitle: "Practical AI workflows for small businesses",
+    cases: [
+      { id: "incoming-requests", title: "AI-assisted incoming requests", copy: "Collect requests from a website, WhatsApp or email, clarify useful details and prepare a structured handoff for the team.", control: "Human control: priority, pricing, timelines and complex cases.", icon: "inbox" as CaseIconType },
+      { id: "support", title: "Initial client support", copy: "Common questions follow clear guidance, while non-standard requests are routed to the right person.", control: "Human control: complaints, disputes and accountability.", icon: "support" as CaseIconType },
+      { id: "reports", title: "Reports and concise summaries", copy: "Regular information from forms, spreadsheets or a CRM is collected into a useful summary for the owner or team lead.", control: "Human control: checking figures, interpretation and decisions.", icon: "report" as CaseIconType },
+      { id: "customer-evaluation", title: "Lead qualification", copy: "An AI workflow asks clarifying questions and prepares a short context summary for a human follow-up.", control: "Human control: the commercial offer, terms and final contact.", icon: "customer" as CaseIconType },
+    ],
+    guardrailsLabel: "A practical approach",
+    guardrailsTitle: "AI handles routine work while your team stays in control",
+    guardrailItems: ["It supports repeatable work without replacing people.", "It helps structure a request while important decisions remain human.", "It prepares summaries and next steps without making commercial promises.", "It starts with one understandable workflow rather than a wholesale transformation."],
+    methodEyebrow: "From idea to launch",
+    methodTitle: "One workflow at a time",
+    methodNodes: ["Scope", "Pilot", "Logic", "Test", "Launch"],
+    methodCard: "We start with one workflow, validate the logic against real cases, and expand only after the result is clear.",
+    methodCta: "Discuss your workflow on WhatsApp",
+    stepsTitle: "How implementation works",
+    steps: [
+      { num: "01", title: "Map the workflow", desc: "Identify which process takes time today and where useful context gets lost." },
+      { num: "02", title: "Choose a focused pilot", desc: "Select a small, understandable first scenario instead of a broad transformation." },
+      { num: "03", title: "Design the logic", desc: "Define what the AI workflow does, what it gathers and where a person takes over." },
+      { num: "04", title: "Build and test", desc: "Assemble the workflow, test it with realistic cases and refine it." },
+      { num: "05", title: "Launch with clear control", desc: "Use the workflow in real conditions with explicit boundaries and human review." },
+    ],
+    faqLabel: "FAQ",
+    faqTitle: "Common questions",
+    faqs: [
+      { q: "What is an AI workflow for a business?", a: "It is a software-assisted process for repeatable work such as receiving requests, clarifying details and preparing a concise handoff for the team." },
+      { q: "Can we start with one process?", a: "Yes. A clear, repeatable first workflow is usually the most useful place to start." },
+      { q: "Can an AI assistant respond to clients on its own?", a: "Only within defined boundaries. Prices, timelines, unusual cases and sensitive decisions should remain with a person." },
+      { q: "Do we need to replace our whole stack?", a: "No. In many cases the sensible first step is to improve one existing workflow." },
+    ],
+    finalTitle: "Choose the first workflow worth automating",
+    finalIntro: "Start with one process, without committing to a full automation programme or a major rebuild.",
+    finalDetail: "If incoming requests, repeated conversations or manual follow-up take too much time, that is a good place to begin.",
+    finalPrimaryCta: "Discuss your workflow on WhatsApp",
+    finalSecondaryCta: "Write on WhatsApp",
+    finalNote: "For this English launch, WhatsApp is the project contact channel.",
   },
   ru: {
     meta: {
@@ -338,7 +406,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const l: PageLocale = locale === "ru" ? "ru" : "fr";
+  const l: PageLocale = locale === "ru" || locale === "en" ? locale : "fr";
   return {
     ...CONTENT[l].meta,
     alternates: {
@@ -346,13 +414,14 @@ export async function generateMetadata({
       languages: {
         fr: `${BASE_URL}/fr/ai-automation`,
         ru: `${BASE_URL}/ru/ai-automation`,
+        en: `${BASE_URL}/en/ai-automation`,
         "x-default": `${BASE_URL}/fr/ai-automation`,
       },
     },
   };
 }
 
-function buildJsonLd(locale: PageLocale, copy: (typeof CONTENT)[PageLocale]) {
+export function buildJsonLd(locale: PageLocale, copy: (typeof CONTENT)[PageLocale]) {
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -388,17 +457,12 @@ function buildJsonLd(locale: PageLocale, copy: (typeof CONTENT)[PageLocale]) {
           "@type": "AdministrativeArea",
           name: copy.jsonLd.areaServed,
         },
-        availableChannel: [
-          {
-            "@type": "ServiceChannel",
-            serviceUrl: `${BASE_URL}/contact`,
-          },
-          {
-            "@type": "ServiceChannel",
-            name: "WhatsApp",
-            serviceUrl: WHATSAPP,
-          },
-        ],
+        availableChannel: locale === "en"
+          ? [{ "@type": "ServiceChannel", name: "WhatsApp", serviceUrl: WHATSAPP }]
+          : [
+              { "@type": "ServiceChannel", serviceUrl: `${BASE_URL}/contact` },
+              { "@type": "ServiceChannel", name: "WhatsApp", serviceUrl: WHATSAPP },
+            ],
         url: `${BASE_URL}/${locale}/ai-automation`,
       },
     ],
@@ -511,12 +575,14 @@ function MethodPanel({
   nodes,
   card,
   cta,
+  href,
 }: {
   eyebrow: string;
   title: string;
   nodes: ReadonlyArray<string>;
   card: string;
   cta: string;
+  href: string;
 }) {
   return (
     <div className="relative overflow-hidden rounded-[2rem] bg-graphite p-6 text-white shadow-premium-soft md:p-8">
@@ -549,12 +615,14 @@ function MethodPanel({
           <p className="text-sm font-medium leading-6 text-white/72">
             {card}
           </p>
-          <Link
-            href="/brief"
+          <a
+            href={href}
+            target={href === WHATSAPP ? "_blank" : undefined}
+            rel={href === WHATSAPP ? "noreferrer" : undefined}
             className="mt-5 inline-flex items-center justify-center rounded-full bg-accent-teal px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-accent-teal/90"
           >
             {cta}
-          </Link>
+          </a>
         </div>
       </div>
       <style>{`
@@ -578,6 +646,7 @@ export default async function AiAutomationPage({
   const l = locale as PageLocale;
   const copy = CONTENT[l];
   const jsonLd = buildJsonLd(l, copy);
+  const projectHref = l === "en" ? WHATSAPP : "/brief";
 
   return (
     <main className="text-graphite">
@@ -633,15 +702,17 @@ export default async function AiAutomationPage({
               </ul>
 
               <div className="mt-7 flex flex-col gap-3 sm:mt-10 sm:flex-row">
-                <Link
-                  href="/brief"
+                <a
+                  href={projectHref}
+                  target={l === "en" ? "_blank" : undefined}
+                  rel={l === "en" ? "noreferrer" : undefined}
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-accent-teal px-7 py-3.5 text-base font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-accent-teal/90"
                 >
                   {copy.heroPrimaryCta}
                   <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
                     <path fill="currentColor" d="M5 11h11.2l-4.6-4.6L13 5l7 7-7 7-1.4-1.4 4.6-4.6H5v-2z" />
                   </svg>
-                </Link>
+                </a>
               </div>
             </div>
 
@@ -728,6 +799,7 @@ export default async function AiAutomationPage({
               nodes={copy.methodNodes}
               card={copy.methodCard}
               cta={copy.methodCta}
+              href={projectHref}
             />
 
             <div>
@@ -808,15 +880,17 @@ export default async function AiAutomationPage({
             </p>
 
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
-              <Link
-                href="/brief"
+              <a
+                href={projectHref}
+                target={l === "en" ? "_blank" : undefined}
+                rel={l === "en" ? "noreferrer" : undefined}
                 className="inline-flex items-center gap-2 rounded-full bg-accent-teal px-7 py-3.5 text-base font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-accent-teal/90"
               >
                 {copy.finalPrimaryCta}
                 <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
                   <path fill="currentColor" d="M5 11h11.2l-4.6-4.6L13 5l7 7-7 7-1.4-1.4 4.6-4.6H5v-2z" />
                 </svg>
-              </Link>
+              </a>
               <a
                 href={WHATSAPP}
                 target="_blank"

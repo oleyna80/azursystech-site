@@ -10,8 +10,10 @@ describe("sitemap", () => {
       expect.arrayContaining([
         "https://azursystech.fr/fr",
         "https://azursystech.fr/ru",
+        "https://azursystech.fr/en",
         "https://azursystech.fr/fr/ai-automation",
         "https://azursystech.fr/ru/ai-automation",
+        "https://azursystech.fr/en/ai-automation",
         "https://azursystech.fr/ai-automation",
         "https://azursystech.fr/brief",
         "https://azursystech.fr/contact",
@@ -36,5 +38,16 @@ describe("sitemap", () => {
     expect(urls).not.toContain("https://azursystech.fr/faq");
     expect(urls).not.toContain("https://azursystech.fr/thank-you");
     expect(urls.some((url) => url.includes("/api/"))).toBe(false);
+  });
+
+  it("lists only the two approved English launch routes", () => {
+    const englishUrls = sitemap()
+      .map((entry) => entry.url)
+      .filter((url) => url.startsWith("https://azursystech.fr/en"));
+
+    expect(englishUrls).toEqual([
+      "https://azursystech.fr/en",
+      "https://azursystech.fr/en/ai-automation",
+    ]);
   });
 });

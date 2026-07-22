@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { HOME_CONTENT } from "./_home-data"
+import { buildHomeJsonLd, HOME_CONTENT } from "./_home-data"
 
 describe("HOME_CONTENT showcase section", () => {
   const locales = ["fr", "ru"] as const
@@ -42,4 +42,25 @@ describe("HOME_CONTENT showcase section", () => {
       })
     })
   }
+})
+
+describe("HOME_CONTENT English launch content", () => {
+  const copy = HOME_CONTENT.en
+
+  it("contains complete native English copy for the visible sections", () => {
+    expect(copy.heroTitle).toMatch(/AI automation/i)
+    expect(copy.businessTitle).toBeTruthy()
+    expect(copy.automationTitle).toBeTruthy()
+    expect(copy.pricingItems.length).toBeGreaterThan(0)
+    expect(copy.faqs.length).toBeGreaterThan(0)
+    expect(copy.showcaseDemos).toEqual([])
+  })
+
+  it("publishes English service structured data without obsolete IT repair claims", () => {
+    const jsonLd = JSON.stringify(buildHomeJsonLd("en"))
+
+    expect(jsonLd).toContain('"inLanguage":"en"')
+    expect(jsonLd).toContain("AI automation")
+    expect(jsonLd).not.toMatch(/repair|hardware|wi-?fi|network support|local IT/i)
+  })
 })

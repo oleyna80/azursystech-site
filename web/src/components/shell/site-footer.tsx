@@ -2,8 +2,8 @@
 
 import { usePathname } from "next/navigation";
 
-type FooterLocale = "fr" | "ru";
-const LOCALE_SLUGS = new Set(["fr", "ru"]);
+type FooterLocale = "fr" | "ru" | "en";
+const LOCALE_SLUGS = new Set(["fr", "ru", "en"]);
 
 const CONTACT = {
   phoneDisplay: "+33 7 80 72 09 94",
@@ -15,7 +15,7 @@ const CONTACT = {
 
 const FOOTER_COPY = {
   fr: {
-    about: "Sites web, automatisation IA et support IT local pour les petites entreprises à Nice et dans les environs.",
+    about: "Sites web et automatisation IA pour les petites entreprises à Nice et à distance.",
     navigationTitle: "Navigation",
     documentsTitle: "Documents",
     contactTitle: "Contact",
@@ -37,7 +37,7 @@ const FOOTER_COPY = {
     ],
   },
   ru: {
-    about: "Сайты, AI-автоматизация и локальная IT-поддержка для малого бизнеса в Ницце и рядом.",
+    about: "Сайты и AI-автоматизация для малого бизнеса в Ницце и удалённо.",
     navigationTitle: "Навигация",
     documentsTitle: "Документы",
     contactTitle: "Контакты",
@@ -58,6 +58,20 @@ const FOOTER_COPY = {
       { href: "/terms", label: "Условия оказания услуг" },
     ],
   },
+  en: {
+    about: "Web applications and AI automation for small businesses, delivered remotely from Nice.",
+    navigationTitle: "Explore",
+    documentsTitle: "",
+    contactTitle: "Project contact",
+    serviceArea: "Remote projects from Nice, France",
+    links: [
+      { href: "/#automation", label: "AI automation" },
+      { href: "/#services", label: "Web applications" },
+      { href: "/ai-automation", label: "Automation offer" },
+      { href: "/#faq", label: "FAQ" },
+    ],
+    legalLinks: [],
+  },
 } as const;
 
 function getLocaleFromPath(pathname: string): FooterLocale | null {
@@ -68,6 +82,10 @@ function getLocaleFromPath(pathname: string): FooterLocale | null {
 function localizeFooterHref(href: string, locale: FooterLocale) {
   if (href.startsWith("/#")) {
     return `/${locale}${href.slice(1)}`;
+  }
+
+  if (locale === "en" && href === "/ai-automation") {
+    return "/en/ai-automation";
   }
 
   return href;
@@ -86,7 +104,7 @@ export function SiteFooter({ locale }: { locale: FooterLocale }) {
             <span className="mb-4 block text-2xl font-bold text-white">AzurSysTech</span>
             <p className="text-sm leading-7 text-white/72">{copy.about}</p>
           </div>
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className={`grid gap-8 ${activeLocale === "en" ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"}`}>
             <div className="grid gap-4">
               <h2 className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/92">{copy.navigationTitle}</h2>
               <div className="grid gap-3">
@@ -100,25 +118,31 @@ export function SiteFooter({ locale }: { locale: FooterLocale }) {
                 })}
               </div>
             </div>
-            <div className="grid gap-4">
-              <h2 className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/92">{copy.documentsTitle}</h2>
-              <div className="grid gap-3">
-                {copy.legalLinks.map((link) => (
-                  <a key={link.href} href={link.href} className="text-base font-semibold text-white/78 transition-colors hover:text-white">
-                    {link.label}
-                  </a>
-                ))}
+            {activeLocale !== "en" ? (
+              <div className="grid gap-4">
+                <h2 className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/92">{copy.documentsTitle}</h2>
+                <div className="grid gap-3">
+                  {copy.legalLinks.map((link) => (
+                    <a key={link.href} href={link.href} className="text-base font-semibold text-white/78 transition-colors hover:text-white">
+                      {link.label}
+                    </a>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div className="grid gap-4 sm:col-span-2 lg:col-span-1">
+            ) : null}
+            <div className={`grid gap-4 ${activeLocale === "en" ? "" : "sm:col-span-2 lg:col-span-1"}`}>
               <h2 className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/92">{copy.contactTitle}</h2>
               <div className="grid gap-3 text-base font-semibold text-white/82">
-                <a href={CONTACT.phoneHref} className="transition-colors hover:text-white">
-                  {CONTACT.phoneDisplay}
-                </a>
-                <a href={`mailto:${CONTACT.email}`} className="transition-colors hover:text-white">
-                  {CONTACT.email}
-                </a>
+                {activeLocale !== "en" ? (
+                  <>
+                    <a href={CONTACT.phoneHref} className="transition-colors hover:text-white">
+                      {CONTACT.phoneDisplay}
+                    </a>
+                    <a href={`mailto:${CONTACT.email}`} className="transition-colors hover:text-white">
+                      {CONTACT.email}
+                    </a>
+                  </>
+                ) : null}
                 <a href={CONTACT.whatsappHref} target="_blank" rel="noreferrer" className="transition-colors hover:text-white">
                   {CONTACT.whatsappDisplay}
                 </a>

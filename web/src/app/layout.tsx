@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import Script from "next/script";
 import { ChatWidgetContainer } from "@/components/chat-widget";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -26,8 +26,14 @@ export const metadata: Metadata = {
   description: defaultMeta.description,
 };
 
-function resolveShellLocale(value: string | undefined) {
-  return resolveLocale(value) === "ru" ? "ru" : "fr";
+type ShellLocale = "fr" | "ru" | "en";
+
+function resolveShellLocale(routeLocale: string | null, cookieLocale: string | undefined): ShellLocale {
+  if (routeLocale === "fr" || routeLocale === "ru" || routeLocale === "en") {
+    return routeLocale;
+  }
+
+  return resolveLocale(cookieLocale) === "ru" ? "ru" : "fr";
 }
 
 export default async function RootLayout({
@@ -36,7 +42,11 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const cookieStore = await cookies();
-  const locale = resolveShellLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const requestHeaders = await headers();
+  const locale = resolveShellLocale(
+    requestHeaders.get("x-azursystech-route-locale"),
+    cookieStore.get(LOCALE_COOKIE_KEY)?.value,
+  );
 
   return (
     <html lang={locale}>
@@ -65,9 +75,11 @@ export default async function RootLayout({
           <SiteHeader initialLocale={locale} />
           <div className="flex-1">{children}</div>
           <SiteFooter locale={locale} />
-          <ErrorBoundary label="chat-widget">
-            <ChatWidgetContainer />
-          </ErrorBoundary>
+          {locale !== "en" ? (
+            <ErrorBoundary label="chat-widget">
+              <ChatWidgetContainer />
+            </ErrorBoundary>
+          ) : null}
         </div>
       </body>
     </html>

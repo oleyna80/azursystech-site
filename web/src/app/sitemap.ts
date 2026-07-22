@@ -12,8 +12,10 @@ type SitemapEntry = {
 const ROUTES: SitemapEntry[] = [
   { path: "/fr", changeFrequency: "monthly", priority: 1.0 },
   { path: "/ru", changeFrequency: "monthly", priority: 0.9 },
+  { path: "/en", changeFrequency: "monthly", priority: 0.8 },
   { path: "/fr/ai-automation", changeFrequency: "monthly", priority: 0.8 },
   { path: "/ru/ai-automation", changeFrequency: "monthly", priority: 0.7 },
+  { path: "/en/ai-automation", changeFrequency: "monthly", priority: 0.7 },
   { path: "/ai-automation", changeFrequency: "monthly", priority: 0.7 },
   { path: "/brief", changeFrequency: "monthly", priority: 0.7 },
   { path: "/contact", changeFrequency: "monthly", priority: 0.8 },

@@ -1,8 +1,8 @@
 # Codex Write Gate
 
 Status: READY
-Active Work Block: WB-2026-07-22-retire-legacy-information-routes
-Approved scope: Retire root /about, /pricing, and /faq with their exact sitemap, test, footer-anchor, and thank-you FAQ CTA updates; prepare an Owner-authorized local commit only.
-Out of scope: contact route or form, provider/email behavior, English implementation, deployment, and push.
-Critic report: docs/reports/WB-2026-07-22-retire-legacy-information-routes-critic.md
-Verification report: docs/reports/WB-2026-07-22-retire-legacy-information-routes-verification.md
+Active Work Block: WB-2026-07-22-english-core-implementation
+Approved scope: Close the frozen information-only EN core for `/en` and `/en/ai-automation`, including their exact locale routing, typed content, metadata, navigation, sitemap/test hunks, and required closeout records; prepare one Owner-authorized local commit.
+Out of scope: contact route or form, chat, provider/email behavior, legacy-route retirement hunks, database, deployment, client-facing sends, and push.
+Critic report: docs/reports/WB-2026-07-22-english-core-implementation-critic.md
+Verification report: docs/reports/WB-2026-07-22-english-core-implementation-verification.md

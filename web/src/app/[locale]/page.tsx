@@ -5,21 +5,26 @@ import { HomeContactSection } from "@/components/sections/home-contact";
 import { PortfolioCard } from "@/components/portfolio/portfolio-card";
 import { ShowcaseSection } from "@/components/sections/showcase";
 import { PORTFOLIO_PROJECTS } from "@/lib/portfolio-data";
-import { HOME_CONTENT, HOME_JSON_LD, type HomeLocale } from "./_home-data";
+import { buildHomeJsonLd, HOME_CONTENT, type HomeLocale } from "./_home-data";
 
-const SUPPORTED_LOCALES = ["fr", "ru"] as const;
+const SUPPORTED_LOCALES = ["fr", "ru", "en"] as const;
 const BASE_URL = "https://azursystech.fr";
+const WHATSAPP = "https://wa.me/33780720994";
 
 const META = {
   fr: {
     title: "Automatisation IA et sites web pour petites entreprises à Nice | AzurSysTech",
     description:
-      "Sites web, formulaires intelligents, agents IA et support IT local pour petites entreprises à Nice et dans les environs.",
+      "Sites web, formulaires intelligents et agents IA pour petites entreprises à Nice et dans les environs.",
   },
   ru: {
     title: "AI-автоматизация и сайты для малого бизнеса в Ницце | AzurSysTech",
     description:
-      "Сайты, умные формы, AI-агенты и локальная IT-поддержка для малого бизнеса в Ницце и соседних городах.",
+      "Сайты, умные формы и AI-агенты для малого бизнеса в Ницце и соседних городах.",
+  },
+  en: {
+    title: "Web applications, websites and AI automation | AzurSysTech",
+    description: "AzurSysTech builds focused web applications, business websites and AI automation workflows for small businesses.",
   },
 } as const;
 
@@ -29,7 +34,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const l: HomeLocale = locale === "ru" ? "ru" : "fr";
+  const l: HomeLocale = locale === "ru" || locale === "en" ? locale : "fr";
   return {
     ...META[l],
     alternates: {
@@ -37,6 +42,7 @@ export async function generateMetadata({
       languages: {
         fr: `${BASE_URL}/fr`,
         ru: `${BASE_URL}/ru`,
+        en: `${BASE_URL}/en`,
         "x-default": `${BASE_URL}/fr`,
       },
     },
@@ -52,12 +58,14 @@ export default async function LocaleHomePage({
   if (!SUPPORTED_LOCALES.includes(locale as HomeLocale)) notFound();
   const l = locale as HomeLocale;
   const copy = HOME_CONTENT[l];
+  const isEnglish = l === "en";
+  const projectHref = isEnglish ? WHATSAPP : "/brief";
 
   return (
     <main className="bg-base text-graphite">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(HOME_JSON_LD) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildHomeJsonLd(l)) }}
       />
       <script
         type="application/ld+json"
@@ -103,15 +111,17 @@ export default async function LocaleHomePage({
               {copy.heroIntro}
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/brief"
+              <a
+                href={projectHref}
+                target={isEnglish ? "_blank" : undefined}
+                rel={isEnglish ? "noreferrer" : undefined}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-accent-teal px-7 py-3.5 text-base font-bold text-white shadow-premium-soft transition-transform duration-200 hover:-translate-y-0.5 hover:bg-accent-teal/90 active:scale-95"
               >
                 {copy.primaryCta}
                 <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
                   <path fill="currentColor" d="M5 11h11.2l-4.6-4.6L13 5l7 7-7 7-1.4-1.4 4.6-4.6H5v-2z" />
                 </svg>
-              </Link>
+              </a>
               <Link
                 href={`/${l}#services`}
                 className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/8 px-7 py-3.5 text-base font-bold text-white transition-all duration-150 ease-out hover:bg-white/12 active:scale-[0.97]"
@@ -155,12 +165,12 @@ export default async function LocaleHomePage({
                   </ul>
                 </div>
               </div>
-              <Link href="/brief" className="mt-10 inline-flex items-center gap-2 text-base font-bold text-accent-teal hover:text-graphite">
+              <a href={projectHref} target={isEnglish ? "_blank" : undefined} rel={isEnglish ? "noreferrer" : undefined} className="mt-10 inline-flex items-center gap-2 text-base font-bold text-accent-teal hover:text-graphite">
                 {copy.businessCta}
                 <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
                   <path fill="currentColor" d="M5 11h11.2l-4.6-4.6L13 5l7 7-7 7-1.4-1.4 4.6-4.6H5v-2z" />
                 </svg>
-              </Link>
+              </a>
             </div>
             <div className="overflow-hidden rounded-[2rem] bg-surface shadow-premium-soft ring-1 ring-graphite/5">
               <img src="/business.png" alt={copy.businessImageAlt} loading="lazy" decoding="async" className="aspect-[4/3] w-full object-cover" />
@@ -213,15 +223,15 @@ export default async function LocaleHomePage({
       </section>
 
       {/* Showcase */}
-      <ShowcaseSection
+      {!isEnglish ? <ShowcaseSection
         eyebrow={copy.showcaseEyebrow}
         title={copy.showcaseTitle}
         intro={copy.showcaseIntro}
         demos={copy.showcaseDemos}
-      />
+      /> : null}
 
       {/* Portfolio teaser */}
-      <section id="portfolio" className="border-t border-white/10 bg-[#081120] py-20 text-white md:py-28">
+      {!isEnglish ? <section id="portfolio" className="border-t border-white/10 bg-[#081120] py-20 text-white md:py-28">
         <div className="container mx-auto px-4 md:px-8">
           <div className="mb-12 max-w-3xl">
             <p className="mb-4 text-sm font-bold uppercase tracking-[0.18em] text-[#4f8cff]">{copy.portfolioEyebrow}</p>
@@ -245,7 +255,7 @@ export default async function LocaleHomePage({
             </Link>
           </div>
         </div>
-      </section>
+      </section> : null}
 
       {/* How it works */}
       <section id="how-it-works" className="bg-graphite py-20 text-white md:py-28">
@@ -274,12 +284,14 @@ export default async function LocaleHomePage({
               <p className="mb-4 text-sm font-bold uppercase tracking-[0.18em] text-accent-terra/90">{copy.pricingEyebrow}</p>
               <h2 className="text-3xl font-extrabold tracking-tight text-graphite md:text-5xl md:leading-[1.02]">{copy.pricingTitle}</h2>
               <p className="mt-6 text-lg leading-8 text-graphite/72">{copy.pricingIntro}</p>
-              <Link
-                href="/brief"
+              <a
+                href={projectHref}
+                target={isEnglish ? "_blank" : undefined}
+                rel={isEnglish ? "noreferrer" : undefined}
                 className="mt-8 inline-flex rounded-full bg-graphite px-7 py-3.5 text-base font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-graphite/90"
               >
                 {copy.pricingCta}
-              </Link>
+              </a>
               <div className="mt-8 border-t border-graphite/8 pt-5 text-sm font-medium leading-6 text-graphite/55">{copy.pricingNote}</div>
             </div>
             <div className="border-t border-graphite/10">
@@ -315,12 +327,14 @@ export default async function LocaleHomePage({
             ))}
           </div>
           <div className="flex justify-center">
-            <Link
-              href={`/${l}#contact`}
+            <a
+              href={isEnglish ? WHATSAPP : `/${l}#contact`}
+              target={isEnglish ? "_blank" : undefined}
+              rel={isEnglish ? "noreferrer" : undefined}
               className="flex justify-center rounded-full bg-graphite px-6 py-3 text-center font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-graphite/90"
             >
               {copy.faqCta}
-            </Link>
+            </a>
           </div>
         </div>
       </section>
@@ -340,8 +354,7 @@ export default async function LocaleHomePage({
           <p className="mt-1 text-sm font-medium text-white/40">{copy.localSeo.tagline}</p>
         </div>
       </section>
-
-      <HomeContactSection locale={l} />
+      {!isEnglish ? <HomeContactSection locale={l} /> : null}
     </main>
   );
 }

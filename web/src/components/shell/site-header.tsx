@@ -5,19 +5,23 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LOCALE_COOKIE_KEY } from "@/i18n";
 
-type HeaderLocale = "fr" | "ru";
+type HeaderLocale = "fr" | "ru" | "en";
 
 const CONTACT = {
   whatsappHref: "https://wa.me/33780720994",
 };
 
-const LOCALE_OPTIONS: HeaderLocale[] = ["fr", "ru"];
-const LOCALE_SLUGS = new Set(["fr", "ru"]);
+const LOCALE_OPTIONS: HeaderLocale[] = ["fr", "ru", "en"];
+const LOCALE_SLUGS = new Set(["fr", "ru", "en"]);
 const COOKIE_BACKED_ROUTES = ["/brief"] as const;
 
 function getLocaleFromPath(pathname: string): HeaderLocale | null {
   const seg = pathname.split("/")[1];
   return LOCALE_SLUGS.has(seg) ? (seg as HeaderLocale) : null;
+}
+
+function supportsEnglishRoute(pathname: string): boolean {
+  return /\/(fr|ru|en)(?:\/ai-automation)?$/.test(pathname);
 }
 
 function buildLocalizedPath(pathname: string, next: HeaderLocale): string {
@@ -29,7 +33,7 @@ function buildLocalizedPath(pathname: string, next: HeaderLocale): string {
   if (COOKIE_BACKED_ROUTES.includes(pathname as (typeof COOKIE_BACKED_ROUTES)[number])) {
     return pathname;
   }
-  return `/${next}`;
+  return next === "en" ? pathname : `/${next}`;
 }
 
 const HEADER_COPY = {
@@ -47,13 +51,29 @@ const HEADER_COPY = {
     whatsappCta: "WhatsApp",
     submitCta: "Описать проект",
   },
+  en: {
+    navAriaLabel: "Main navigation",
+    menuOpenLabel: "Open menu",
+    menuCloseLabel: "Close menu",
+    whatsappCta: "WhatsApp",
+    submitCta: "Discuss a project",
+  },
 } as const;
 
 function buildNavLinks(locale: HeaderLocale) {
   const t = {
     fr: { automation: "Automatisation IA", websites: "Sites web", portfolio: "Portfolio", services: "Services", faq: "FAQ", contact: "Contact" },
     ru: { automation: "AI-автоматизация", websites: "Сайты", portfolio: "Портфолио", services: "Услуги", faq: "FAQ", contact: "Контакты" },
+    en: { automation: "AI automation", websites: "Web applications", portfolio: "", services: "Services", faq: "FAQ", contact: "" },
   }[locale];
+  if (locale === "en") {
+    return [
+      { href: "/en#automation", label: t.automation },
+      { href: "/en#services", label: t.websites },
+      { href: "/en/ai-automation", label: t.services },
+      { href: "/en#faq", label: t.faq },
+    ];
+  }
   // Portfolio sits after "websites": feature discovery before meta links (faq/contact).
   return [
     { href: `/${locale}#automation`, label: t.automation },
@@ -73,10 +93,15 @@ export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
   const [locale, setLocale] = useState<HeaderLocale>(routeLocale ?? initialLocale);
   const copy = HEADER_COPY[locale];
   const navLinks = useMemo(() => buildNavLinks(locale), [locale]);
+  const localeOptions = supportsEnglishRoute(pathname) ? LOCALE_OPTIONS : LOCALE_OPTIONS.filter((option) => option !== "en");
 
   useEffect(() => {
     setLocale(routeLocale ?? initialLocale);
   }, [routeLocale, initialLocale]);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -151,7 +176,7 @@ export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
 
         <div className="flex items-center gap-2 md:gap-3">
           <div className="hidden rounded-full border border-white/10 bg-white/5 p-1 sm:inline-flex">
-            {LOCALE_OPTIONS.map((option) => (
+            {localeOptions.map((option) => (
               <button
                 key={option}
                 type="button"
@@ -173,12 +198,23 @@ export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
           >
             {copy.whatsappCta}
           </a>
+          {locale === "en" ? (
+            <a
+              href={CONTACT.whatsappHref}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex rounded-full bg-accent-teal px-4 py-2.5 text-xs font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-accent-teal/90 sm:px-5 sm:text-sm"
+            >
+              {copy.submitCta}
+            </a>
+          ) : (
           <Link
             href="/brief"
             className="inline-flex rounded-full bg-accent-teal px-4 py-2.5 text-xs font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-accent-teal/90 sm:px-5 sm:text-sm"
           >
             {copy.submitCta}
           </Link>
+          )}
           <button
             type="button"
             onClick={() => setIsMenuOpen((prev) => !prev)}
@@ -204,7 +240,7 @@ export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
         {isMenuOpen ? (
           <div className="absolute left-4 right-4 top-full mt-3 rounded-[1.5rem] border border-white/15 bg-graphite/95 p-4 shadow-[0_24px_80px_rgba(10,16,22,0.45)] backdrop-blur-xl lg:hidden">
             <div className="mb-4 inline-flex rounded-full border border-white/10 bg-white/5 p-1">
-              {LOCALE_OPTIONS.map((option) => (
+              {localeOptions.map((option) => (
                 <button
                   key={option}
                   type="button"
