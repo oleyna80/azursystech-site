@@ -15,11 +15,9 @@ describe("sitemap", () => {
         "https://azursystech.fr/about",
         "https://azursystech.fr/ai-automation",
         "https://azursystech.fr/brief",
-        "https://azursystech.fr/business",
         "https://azursystech.fr/contact",
         "https://azursystech.fr/data-deletion",
         "https://azursystech.fr/faq",
-        "https://azursystech.fr/home",
         "https://azursystech.fr/legal",
         "https://azursystech.fr/portfolio",
         "https://azursystech.fr/portfolio/plomberie",
@@ -34,6 +32,8 @@ describe("sitemap", () => {
       ]),
     );
     expect(urls).not.toContain("https://azursystech.fr/");
+    expect(urls).not.toContain("https://azursystech.fr/home");
+    expect(urls).not.toContain("https://azursystech.fr/business");
     expect(urls).not.toContain("https://azursystech.fr/thank-you");
     expect(urls.some((url) => url.includes("/api/"))).toBe(false);
   });
