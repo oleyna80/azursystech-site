@@ -7,7 +7,6 @@ const LLM_TIMEOUT_MS = 8_000;
 const MAX_LLM_REPLY_LENGTH = 1_200;
 const MAX_LLM_HISTORY_ITEMS = 12;
 const MAX_LLM_HISTORY_ITEM_LENGTH = 900;
-const PUBLIC_CONTACT_FORM_URL = "https://azursystech.fr/contact";
 const PUBLIC_BRIEF_FORM_URL = "https://azursystech.fr/brief";
 
 type LlmChatMessage = {
@@ -62,14 +61,18 @@ function getProviderConfig():
   };
 }
 
-function describeNextStep(nextStep: AgentNextStep): string {
+function getPublicContactFormUrl(locale: NormalizedIntakeMessage["locale"]): string {
+  return locale === "ru" ? "https://azursystech.fr/ru#contact" : "https://azursystech.fr/fr#contact";
+}
+
+function describeNextStep(nextStep: AgentNextStep, contactFormUrl: string): string {
   switch (nextStep) {
     case "contact_form":
-      return `Offer the contact form link ${PUBLIC_CONTACT_FORM_URL} or the Contact menu item. Do not mention the brief unless the user explicitly asks about the brief or asks what to write there.`;
+      return `Offer the contact form link ${contactFormUrl} or the Contact menu item. Do not mention the brief unless the user explicitly asks about the brief or asks what to write there.`;
     case "brief":
-      return `Offer a choice: contact form ${PUBLIC_CONTACT_FORM_URL} or optional brief ${PUBLIC_BRIEF_FORM_URL}. Help the client phrase brief fields if they ask.`;
+      return `Offer a choice: contact form ${contactFormUrl} or optional brief ${PUBLIC_BRIEF_FORM_URL}. Help the client phrase brief fields if they ask.`;
     case "handoff":
-      return `Keep the answer short and route the client to the contact form ${PUBLIC_CONTACT_FORM_URL}.`;
+      return `Keep the answer short and route the client to the contact form ${contactFormUrl}.`;
     case "clarify":
     default:
       return "Continue with one concise intent question before pushing forms. Do not start by listing channels.";
@@ -78,6 +81,7 @@ function describeNextStep(nextStep: AgentNextStep): string {
 
 function buildSystemPrompt(input: WebChatLlmInput): string {
   const locale = input.message.locale === "ru" ? "Russian" : "French";
+  const contactFormUrl = getPublicContactFormUrl(input.message.locale);
   const draft = input.decision.briefDraft;
   const knownProblem = draft.problemStatement ? redactLlmContext(draft.problemStatement) : "not known yet";
   const safetyNotes = [
@@ -100,12 +104,12 @@ function buildSystemPrompt(input: WebChatLlmInput): string {
     "Do not ask for or repeat passwords, tokens, API keys, payment data, legal IDs, private documents, or other confidential data.",
     "Do not provide prices, deadlines, guarantees, technology stack commitments, legal advice, or final solutions. Say that details depend on the task and a specialist will clarify after the request.",
     "Do not work with gray, illegal, spam, fraud, hacking, or evasion requests. Deflect briefly and ask only about legal AzurSysTech services.",
-    `If the request is about practical IT service/support, including Wi-Fi, printers, local networks, workstation setup, or on-site support, do not reject it as out of scope. Route to the contact form link ${PUBLIC_CONTACT_FORM_URL} or the Contact menu item.`,
-    `If the request is about general website/service questions, route to the contact form link ${PUBLIC_CONTACT_FORM_URL} or the Contact menu item.`,
-    `If the request is clearly about automation, offer a choice between the contact form ${PUBLIC_CONTACT_FORM_URL} and the optional brief ${PUBLIC_BRIEF_FORM_URL}.`,
+    `If the request is about practical IT service/support, including Wi-Fi, printers, local networks, workstation setup, or on-site support, do not reject it as out of scope. Route to the contact form link ${contactFormUrl} or the Contact menu item.`,
+    `If the request is about general website/service questions, route to the contact form link ${contactFormUrl} or the Contact menu item.`,
+    `If the request is clearly about automation, offer a choice between the contact form ${contactFormUrl} and the optional brief ${PUBLIC_BRIEF_FORM_URL}.`,
     "The brief is optional; never present it as mandatory.",
     "Keep the reply concise: 2-5 short sentences. Ask at most one question unless the user explicitly asks for a checklist.",
-    `Backend-approved next step: ${draft.nextStep}. ${describeNextStep(draft.nextStep)}`,
+    `Backend-approved next step: ${draft.nextStep}. ${describeNextStep(draft.nextStep, contactFormUrl)}`,
     `Known problem statement: ${knownProblem}.`,
     safetyNotes ? `Safety context: ${safetyNotes}` : "",
   ]
@@ -151,7 +155,7 @@ function isUnsafeAssistantOutput(reply: string): boolean {
     /(?:напишите|оставьте|укажите|пришлите|envoyez|indiquez|laissez|send|share).{0,80}(?:телефон|phone|email|e-mail|telegram|телеграм|whatsapp|ватсап|парол|password|token|api\s*key|iban|card|карта)/iu.test(
       normalized,
     ) &&
-    !/(?:форм[ауы]|formulaire|form|поле|champ|\/contact|brief|\/brief)/iu.test(normalized)
+    !/(?:форм[ауы]|formulaire|form|поле|champ|\/(?:fr|ru)#contact|brief|\/brief)/iu.test(normalized)
   ) {
     return true;
   }
@@ -159,9 +163,11 @@ function isUnsafeAssistantOutput(reply: string): boolean {
   return false;
 }
 
-function expandPublicFormLinks(reply: string): string {
+function expandPublicFormLinks(reply: string, locale: NormalizedIntakeMessage["locale"]): string {
+  const contactFormUrl = getPublicContactFormUrl(locale);
+
   return reply
-    .replace(/(^|[\s([{"'«])\/contact\b/giu, `$1${PUBLIC_CONTACT_FORM_URL}`)
+    .replace(/(^|[\s([{"'«])\/(?:contact|#contact)\b/giu, `$1${contactFormUrl}`)
     .replace(/(^|[\s([{"'«])\/brief\b/giu, `$1${PUBLIC_BRIEF_FORM_URL}`);
 }
 
@@ -199,6 +205,7 @@ export async function generateWebChatLlmReply(input: WebChatLlmInput): Promise<W
     };
     const reply = expandPublicFormLinks(
       sanitizeLlmText(String(payload.choices?.[0]?.message?.content ?? ""), MAX_LLM_REPLY_LENGTH),
+      input.message.locale,
     );
     if (!reply) {
       return { ok: false, reason: "empty_output" };

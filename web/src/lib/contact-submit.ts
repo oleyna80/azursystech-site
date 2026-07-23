@@ -8,6 +8,7 @@ export const CONTACT_DEFAULT_STATUS = "New" as const;
 const SOURCES = [CONTACT_SUBMIT_SOURCE, CONTACT_CHAT_SOURCE, CONTACT_WHATSAPP_SOURCE] as const;
 
 const SEGMENTS = ["particulier", "tpe"] as const;
+export const PREFERRED_CONTACT_LANGUAGES = ["ru", "fr", "en"] as const;
 const SERVICE_TYPES = [
   "automatisation_ia",
   "site_web",
@@ -41,6 +42,7 @@ export type ContactSubmitPayload = {
   email?: string;
   city: string;
   segment: ContactSubmitSegment;
+  preferred_contact_language: (typeof PREFERRED_CONTACT_LANGUAGES)[number];
   service_type: (typeof SERVICE_TYPES)[number];
   problem_description: string;
   device_count?: (typeof DEVICE_COUNTS)[number];
@@ -71,13 +73,15 @@ type ValidationResult =
 const CONTACT_COPY = {
   fr: {
     fallbackMessage:
-      "L’envoi via le formulaire n’a pas abouti. Utilisez le téléphone +33 7 80 72 09 94, WhatsApp +33 7 80 72 09 94, l’email contact@azursystech.fr ou la page /contact.",
+      "L’envoi via le formulaire n’a pas abouti. Utilisez le téléphone +33 7 80 72 09 94, WhatsApp +33 7 80 72 09 94, l’email contact@azursystech.fr ou le formulaire de la page d’accueil.",
     validation: {
       nameRequired: "Indiquez votre nom",
       phoneRequired: "Indiquez votre téléphone",
       phoneFormat: "Vérifiez le format du téléphone",
       emailFormat: "Vérifiez le format de l’email",
       cityRequired: "Indiquez votre ville",
+      preferredContactLanguageRequired: "Choisissez la langue de contact préférée",
+      preferredContactLanguageInvalid: "Langue de contact non valide",
       sourceInvalid: "Source de demande non valide",
       segmentRequired: "Choisissez le type de demande",
       serviceRequired: "Choisissez un service",
@@ -106,13 +110,15 @@ const CONTACT_COPY = {
   },
   ru: {
     fallbackMessage:
-      "Сейчас не удалось отправить заявку через форму. Используйте резервные каналы: телефон +33 7 80 72 09 94, WhatsApp +33 7 80 72 09 94, email contact@azursystech.fr или страницу /contact.",
+      "Сейчас не удалось отправить заявку через форму. Используйте резервные каналы: телефон +33 7 80 72 09 94, WhatsApp +33 7 80 72 09 94, email contact@azursystech.fr или форму на главной странице.",
     validation: {
       nameRequired: "Укажите имя",
       phoneRequired: "Укажите телефон",
       phoneFormat: "Проверьте формат телефона",
       emailFormat: "Проверьте формат email",
       cityRequired: "Укажите город",
+      preferredContactLanguageRequired: "Выберите предпочтительный язык связи",
+      preferredContactLanguageInvalid: "Недопустимый язык связи",
       sourceInvalid: "Недопустимый источник обращения",
       segmentRequired: "Выберите тип обращения",
       serviceRequired: "Выберите услугу",
@@ -220,6 +226,7 @@ export function validateAndBuildContactPayload(
   const sourceRaw = readOptionalField(formData, "source");
   const city = readTextField(formData, "city");
   const segmentRaw = readTextField(formData, "segment");
+  const preferredContactLanguageRaw = readTextField(formData, "preferred_contact_language");
   const serviceTypeRaw = readTextField(formData, "service_type");
   const problemDescription = readTextField(formData, "problem_description");
 
@@ -261,6 +268,12 @@ export function validateAndBuildContactPayload(
 
   if (!isOneOf(segmentRaw, SEGMENTS)) {
     issues.push({ field: "segment", message: copy.segmentRequired });
+  }
+
+  if (!preferredContactLanguageRaw) {
+    issues.push({ field: "preferred_contact_language", message: copy.preferredContactLanguageRequired });
+  } else if (!isOneOf(preferredContactLanguageRaw, PREFERRED_CONTACT_LANGUAGES)) {
+    issues.push({ field: "preferred_contact_language", message: copy.preferredContactLanguageInvalid });
   }
 
   if (!isOneOf(serviceTypeRaw, SERVICE_TYPES)) {
@@ -324,6 +337,7 @@ export function validateAndBuildContactPayload(
     phone,
     city,
     segment,
+    preferred_contact_language: preferredContactLanguageRaw as ContactSubmitPayload["preferred_contact_language"],
     service_type: serviceTypeRaw as ContactSubmitPayload["service_type"],
     problem_description: problemDescription,
     ...(email ? { email } : {}),

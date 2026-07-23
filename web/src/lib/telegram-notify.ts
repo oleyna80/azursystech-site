@@ -110,6 +110,7 @@ function buildLeadMessage(input: TelegramLeadNotificationInput): string {
     `source: ${input.payload.source}`,
     `status: ${input.payload.status}`,
     `client_type: ${input.payload.segment}`,
+    `preferred_contact_language: ${input.payload.preferred_contact_language}`,
     `service_type: ${input.payload.service_type}`,
     `urgency: ${input.payload.urgency ?? "not_provided"}`,
     `contact_name: ${input.payload.name}`,

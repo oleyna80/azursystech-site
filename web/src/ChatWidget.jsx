@@ -38,6 +38,7 @@ export default function ChatWidget({ locale, t }) {
     city: '',
     segment: '',
     serviceType: '',
+    preferredContactLanguage: '',
   });
   const messagesEndRef = useRef(null);
   const contactCopy = t('contact');
@@ -52,7 +53,7 @@ export default function ChatWidget({ locale, t }) {
   const scrollToContactForm = () => {
     setIsOpen(false);
     setIsHandoffOpen(false);
-    window.location.href = '/contact';
+    window.location.href = locale === 'ru' ? '/ru#contact' : '/fr#contact';
   };
 
   const openBrief = () => {
@@ -116,6 +117,7 @@ export default function ChatWidget({ locale, t }) {
       city: '',
       segment: '',
       serviceType: '',
+      preferredContactLanguage: '',
     });
   }, [locale, t]);
 
@@ -181,6 +183,7 @@ export default function ChatWidget({ locale, t }) {
     formData.set('phone', handoffForm.phone.trim());
     formData.set('city', handoffForm.city.trim());
     formData.set('segment', handoffForm.segment);
+    formData.set('preferred_contact_language', handoffForm.preferredContactLanguage);
     formData.set('service_type', handoffForm.serviceType);
     formData.set(
       'problem_description',
@@ -394,6 +397,21 @@ export default function ChatWidget({ locale, t }) {
                   </option>
                 ))}
               </select>
+              <label className="grid gap-1 text-xs font-bold text-graphite">
+                {contactFormCopy.labels.preferredContactLanguage}
+                <select
+                  required
+                  value={handoffForm.preferredContactLanguage}
+                  onChange={handleHandoffChange('preferredContactLanguage')}
+                  className="w-full bg-surface border border-graphite/10 rounded-xl px-4 py-2.5 text-sm font-normal text-graphite focus:outline-none focus:border-accent-teal"
+                >
+                  {contactFormCopy.preferredContactLanguageOptions.map((option) => (
+                    <option key={option.value || 'empty'} value={option.value} disabled={!option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
               <div className="pt-1 space-y-2">
                 <button

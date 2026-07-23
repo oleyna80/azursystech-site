@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 type ChatStage = "intake_intro" | "handoff" | "safe_fallback";
@@ -15,14 +14,8 @@ const CONTACT = {
 };
 
 export function ChatWidgetShell() {
-  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [stage, setStage] = useState<ChatStage>("intake_intro");
-  const isContactPage = pathname === "/contact";
-
-  if (pathname === "/health" || pathname === "/legal" || pathname === "/privacy") {
-    return null;
-  }
 
   const openWidget = () => {
     setIsOpen(true);
@@ -31,9 +24,7 @@ export function ChatWidgetShell() {
 
   return (
     <div
-      className={`fixed right-3 z-40 sm:right-6 ${
-        isContactPage ? "bottom-24 sm:bottom-6" : "bottom-20 sm:bottom-6"
-      }`}
+      className="fixed bottom-20 right-3 z-40 sm:bottom-6 sm:right-6"
     >
       {isOpen ? (
         <section
@@ -99,7 +90,7 @@ export function ChatWidgetShell() {
                 </ul>
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Link
-                    href="/contact"
+                    href="/ru#contact"
                     className="rounded-lg bg-[#1F6F78] px-3 py-2 text-center text-sm font-semibold text-white hover:bg-[#185A61]"
                   >
                     Открыть форму заявки
@@ -149,7 +140,7 @@ export function ChatWidgetShell() {
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Link
-                    href="/contact"
+                    href="/ru#contact"
                     className="rounded-lg bg-[#1F6F78] px-3 py-2 text-center text-sm font-semibold text-white hover:bg-[#185A61]"
                   >
                     Оставить заявку

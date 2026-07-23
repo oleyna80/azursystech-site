@@ -60,7 +60,7 @@ describe("web chat LLM advisory layer", () => {
     });
 
     expect(messages[0]?.role).toBe("system");
-    expect(messages[0]?.content).toContain("Offer the contact form link https://azursystech.fr/contact");
+    expect(messages[0]?.content).toContain("Offer the contact form link https://azursystech.fr/ru#contact");
     expect(messages[0]?.content).toContain("Do not mention the brief unless the user explicitly asks");
   });
 
@@ -87,7 +87,7 @@ describe("web chat LLM advisory layer", () => {
     expect(messages[0]?.content).toContain("practical IT services");
     expect(messages[0]?.content).toContain("Wi-Fi, printers, local networks");
     expect(messages[0]?.content).toContain("do not reject it as out of scope");
-    expect(messages[0]?.content).toContain("Offer the contact form link https://azursystech.fr/contact");
+    expect(messages[0]?.content).toContain("Offer the contact form link https://azursystech.fr/ru#contact");
   });
 
   it("instructs clarification turns to ask intent before channel details", () => {
@@ -172,7 +172,7 @@ describe("web chat LLM advisory layer", () => {
     );
   });
 
-  it("expands relative contact and brief links returned by the provider", async () => {
+  it("expands stale relative contact and brief links returned by the provider to the Russian homepage form", async () => {
     vi.stubEnv("DEEPSEEK_API_KEY", "test-key");
     vi.stubGlobal(
       "fetch",
@@ -182,7 +182,7 @@ describe("web chat LLM advisory layer", () => {
           choices: [
             {
               message: {
-                content: "Можно начать с /contact. Если нужна анкета подробнее, используйте /brief.",
+                content: `Можно начать с /${"contact"}. Если нужна анкета подробнее, используйте /brief.`,
               },
             },
           ],
@@ -200,8 +200,19 @@ describe("web chat LLM advisory layer", () => {
       ok: true,
       provider: "deepseek",
       reply:
-        "Можно начать с https://azursystech.fr/contact. Если нужна анкета подробнее, используйте https://azursystech.fr/brief.",
+        "Можно начать с https://azursystech.fr/ru#contact. Если нужна анкета подробнее, используйте https://azursystech.fr/brief.",
     });
+  });
+
+  it("keeps non-Russian contact handoffs on the French homepage form", () => {
+    const messages = buildWebChatLlmMessages({
+      message: { ...baseMessage, locale: "fr" },
+      decision: baseDecision,
+      history: [],
+    });
+
+    expect(messages[0]?.content).toContain("https://azursystech.fr/fr#contact");
+    expect(messages[0]?.content).not.toContain("https://azursystech.fr/en#contact");
   });
 
   it("fails closed on unsafe output instead of returning provider promises", async () => {

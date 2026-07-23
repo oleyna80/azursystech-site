@@ -299,7 +299,7 @@ export function BriefForm({ locale }: { locale: BriefLocale }) {
                 {copy.resetButton}
               </button>
               <Link
-                href="/#contact"
+                href={`/${locale}#contact`}
                 className="inline-flex items-center justify-center rounded-full border border-[#D8D0C4] bg-white px-5 py-3 text-sm font-semibold text-[#1F2A37] transition-colors hover:bg-[#F6F1E8]"
               >
                 {copy.directButton}
