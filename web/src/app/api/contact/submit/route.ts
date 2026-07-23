@@ -24,6 +24,10 @@ import {
 } from "@/lib/api-security";
 import { isRateLimitedPersistent } from "@/lib/request-rate-limit";
 import { sendTelegramLeadNotification } from "@/lib/telegram-notify";
+import {
+  sendResendAdminNotification,
+  sendResendClientConfirmation,
+} from "@/lib/resend-email";
 
 type IntegrationResult =
   | { kind: "success"; requestId: string }
@@ -271,6 +275,70 @@ async function sendTelegramNotificationForNewLead(context: NotificationDispatchC
   });
 }
 
+async function sendResendNotificationsForLead(context: NotificationDispatchContext): Promise<void> {
+  if (!context.leadId || !context.inserted) {
+    return;
+  }
+
+  try {
+    const adminResult = await sendResendAdminNotification({
+      requestId: context.requestId,
+      leadId: context.leadId,
+      payload: context.payload,
+      integrationOutcome: context.integrationKind,
+    });
+
+    if (adminResult.status === "sent") {
+      await safeRecordLeadEvent(context.leadId, "notification.email.admin.sent", {
+        request_id: context.requestId,
+        storage_mode: context.storageMode,
+        integration_kind: context.integrationKind,
+        email_id: adminResult.emailId,
+      });
+    } else if (adminResult.status === "failed") {
+      await safeRecordLeadEvent(context.leadId, "notification.email.admin.failed", {
+        request_id: context.requestId,
+        storage_mode: context.storageMode,
+        integration_kind: context.integrationKind,
+        error: adminResult.error,
+        ...(typeof adminResult.httpStatus === "number" ? { http_status: adminResult.httpStatus } : {}),
+      });
+    }
+
+    const clientResult = await sendResendClientConfirmation({
+      requestId: context.requestId,
+      leadId: context.leadId,
+      payload: context.payload,
+    });
+
+    if (clientResult.status === "sent") {
+      await safeRecordLeadEvent(context.leadId, "notification.email.client.sent", {
+        request_id: context.requestId,
+        storage_mode: context.storageMode,
+        integration_kind: context.integrationKind,
+        email_id: clientResult.emailId,
+      });
+    } else if (clientResult.status === "failed") {
+      await safeRecordLeadEvent(context.leadId, "notification.email.client.failed", {
+        request_id: context.requestId,
+        storage_mode: context.storageMode,
+        integration_kind: context.integrationKind,
+        error: clientResult.error,
+        ...(typeof clientResult.httpStatus === "number" ? { http_status: clientResult.httpStatus } : {}),
+      });
+    } else if (clientResult.status === "skipped") {
+      await safeRecordLeadEvent(context.leadId, "notification.email.client.skipped", {
+        request_id: context.requestId,
+        storage_mode: context.storageMode,
+        integration_kind: context.integrationKind,
+        reason: clientResult.reason,
+      });
+    }
+  } catch {
+    console.error("Resend notifications dispatch failed");
+  }
+}
+
 export async function POST(request: Request) {
   const cookieStore = await cookies();
   const fallbackLocale = resolveContactLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
@@ -380,6 +448,14 @@ export async function POST(request: Request) {
       storageMode: intakeStorageMode,
       integrationKind: "integration_not_ready",
     });
+    await sendResendNotificationsForLead({
+      leadId,
+      inserted,
+      payload: validated.payload,
+      requestId,
+      storageMode: intakeStorageMode,
+      integrationKind: "integration_not_ready",
+    });
     if (intakeStorageMode === "sql_primary") {
       return jsonResult(200, {
         status: "success",
@@ -406,6 +482,14 @@ export async function POST(request: Request) {
       storageMode: intakeStorageMode,
       integrationKind: "submit_failed",
     });
+    await sendResendNotificationsForLead({
+      leadId,
+      inserted,
+      payload: validated.payload,
+      requestId,
+      storageMode: intakeStorageMode,
+      integrationKind: "submit_failed",
+    });
     if (intakeStorageMode === "sql_primary") {
       return jsonResult(200, {
         status: "success",
@@ -425,6 +509,14 @@ export async function POST(request: Request) {
     storage_mode: intakeStorageMode,
   });
   await sendTelegramNotificationForNewLead({
+    leadId,
+    inserted,
+    payload: validated.payload,
+    requestId,
+    storageMode: intakeStorageMode,
+    integrationKind: "accepted",
+  });
+  await sendResendNotificationsForLead({
     leadId,
     inserted,
     payload: validated.payload,
