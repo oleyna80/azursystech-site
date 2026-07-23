@@ -54,10 +54,10 @@ const TILE_MARKS: Record<string, ReactNode> = {
       <path d="M26 34l4 4 9-10" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
-  comptabilite: (
+  immobilier: (
     <svg viewBox="0 0 64 64" aria-hidden="true" className="h-12 w-12">
       <circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" strokeWidth="4" />
-      <path d="M32 15v34M18 23h28M22 23l-8 16h16l-8-16zm20 0l-8 16h16l-8-16z" fill="none" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
+      <path d="M18 44V26l14-10 14 10v18H36V34h-8v10H18z" fill="none" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
     </svg>
   ),
 };

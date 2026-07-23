@@ -7,7 +7,7 @@ const SHOWCASE_ROUTE_SLUG_BY_CARD_SLUG = {
   bistrot: "maison-olive",
   "bijoux-artisanaux": "bijoux-artisanaux",
   assurance: "assurance",
-  comptabilite: "comptabilite",
+  immobilier: "immobilier",
 } as const
 
 describe("HOME_CONTENT showcase section", () => {
