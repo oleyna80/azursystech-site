@@ -4,7 +4,7 @@ mode: subagent
 permission:
   edit: deny
   bash: ask
-model: openai/gpt-5.4
+model: opencode-go/qwen3.7-max
 color: "#EAB308"
 ---
 

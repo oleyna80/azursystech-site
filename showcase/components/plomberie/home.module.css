@@ -633,6 +633,14 @@
   overflow: hidden;
   background: var(--pl-surface);
 }
+@media (min-width: 721px) {
+  .coverage {
+    padding-bottom: clamp(2rem, 3vw, 3rem);
+  }
+  .reviewSection {
+    padding-top: clamp(2rem, 3vw, 3rem);
+  }
+}
 .reviewHeader {
   max-width: 36rem;
 }

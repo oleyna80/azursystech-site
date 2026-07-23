@@ -7,7 +7,7 @@ permission:
   edit: deny
   bash: ask
   webfetch: ask
-color: pink
+color: "#EAB318"
 ---
 
 # Design Analyst

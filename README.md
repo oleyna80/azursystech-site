@@ -8,7 +8,7 @@ AzurSysTech is a local IT services project for small businesses and private clie
 
 - Website runtime: `web/` Next.js app, Docker/VPS deployment.
 - Intake baseline: `/api/contact/submit` with SQL-primary storage and optional downstream integrations.
-- Current public lead paths: `/contact`, `/brief`, chat handoff, phone, WhatsApp.
+- Current public lead paths: homepage contact forms (`/fr#contact`, `/ru#contact`), `/brief`, chat handoff, phone, WhatsApp.
 - AI automation content: `/ai-automation` plus `/brief` discovery flow.
 
 ## Repository Overview
