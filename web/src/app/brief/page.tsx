@@ -29,7 +29,7 @@ const PAGE_COPY = {
     footerNote:
       "Après l'envoi, le brief part en revue manuelle. Nous l'utilisons pour clarifier le besoin et proposer un premier pas raisonnable. Cela ne vaut pas promesse de prix, de délai ou d'acceptation du projet.",
     formError:
-      "Le formulaire est temporairement indisponible. Contactez-nous directement via la page contact.",
+      "Le formulaire est temporairement indisponible. Contactez-nous directement depuis le formulaire de la page d’accueil.",
   },
   ru: {
     meta: {
@@ -51,7 +51,7 @@ const PAGE_COPY = {
     ],
     footerNote:
       "После отправки бриф попадёт на ручную проверку. Мы используем его, чтобы уточнить задачу и предложить разумный первый шаг. Это не обещание цены, сроков или принятия проекта.",
-    formError: "Форма временно недоступна. Свяжитесь с нами напрямую через страницу контактов.",
+    formError: "Форма временно недоступна. Свяжитесь с нами напрямую через форму на главной странице.",
   },
 } as const satisfies Record<BriefLocale, {
   meta: { title: string; description: string };

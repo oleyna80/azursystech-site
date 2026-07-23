@@ -37,7 +37,7 @@ const THANK_YOU_COPY = {
     fallbackTitle: "Canaux de secours",
     fallbackText:
       "Si vous devez compléter la demande ou changer de canal, utilisez l’une des options ci-dessous.",
-    contactPageCta: "Ouvrir la page contact",
+    contactPageCta: "Ouvrir le formulaire de contact",
     callCta: `Appeler : ${CONTACT.phoneDisplay}`,
     whatsappCta: `WhatsApp : ${CONTACT.whatsappDisplay}`,
     emailCta: `Email : ${CONTACT.email}`,
@@ -71,7 +71,7 @@ const THANK_YOU_COPY = {
     fallbackTitle: "Резервные способы связи",
     fallbackText:
       "Если нужно дополнить заявку или сменить канал общения, используйте любой вариант ниже.",
-    contactPageCta: "Перейти на страницу контактов",
+    contactPageCta: "Перейти к форме связи",
     callCta: `Позвонить: ${CONTACT.phoneDisplay}`,
     whatsappCta: `WhatsApp: ${CONTACT.whatsappDisplay}`,
     emailCta: `Email: ${CONTACT.email}`,
@@ -162,7 +162,7 @@ export default async function ThankYouPage() {
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <Link
-              href="/contact"
+              href={`/${locale}#contact`}
               className="rounded-lg border border-[#D8D0C4] bg-[#FFFDFC] px-4 py-3 text-sm font-semibold text-[#1F2A37] transition hover:bg-[#F6F1E8]"
             >
               {copy.contactPageCta}

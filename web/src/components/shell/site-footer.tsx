@@ -28,7 +28,7 @@ const FOOTER_COPY = {
       { href: "/#services", label: "Tous les services" },
       { href: "/#pricing", label: "Tarifs" },
       { href: "/#faq", label: "FAQ" },
-      { href: "/#contact", label: "Contact" },
+      { href: "/fr#contact", label: "Contact" },
     ],
     legalLinks: [
       { href: "/privacy", label: "Politique de confidentialité" },
@@ -50,7 +50,7 @@ const FOOTER_COPY = {
       { href: "/#services", label: "Все услуги" },
       { href: "/#pricing", label: "Цены" },
       { href: "/#faq", label: "FAQ" },
-      { href: "/#contact", label: "Контакты" },
+      { href: "/ru#contact", label: "Контакты" },
     ],
     legalLinks: [
       { href: "/privacy", label: "Политика конфиденциальности" },

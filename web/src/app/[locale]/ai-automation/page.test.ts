@@ -25,4 +25,8 @@ describe("English AI automation route", () => {
     expect(jsonLd).not.toContain("/contact");
   });
 
+  it("uses the matching homepage contact anchor for French and Russian JSON-LD", () => {
+    expect(JSON.stringify(buildJsonLd("fr", CONTENT.fr))).toContain("https://azursystech.fr/fr#contact");
+    expect(JSON.stringify(buildJsonLd("ru", CONTENT.ru))).toContain("https://azursystech.fr/ru#contact");
+  });
 });

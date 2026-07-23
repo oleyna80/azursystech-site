@@ -1,6 +1,15 @@
 import { describe, it, expect } from "vitest"
 import { buildHomeJsonLd, HOME_CONTENT } from "./_home-data"
 
+const SHOWCASE_ROUTE_SLUG_BY_CARD_SLUG = {
+  plomberie: "plomberie",
+  "salon-beaute": "salon-beaute",
+  bistrot: "maison-olive",
+  "bijoux-artisanaux": "bijoux-artisanaux",
+  assurance: "assurance",
+  comptabilite: "comptabilite",
+} as const
+
 describe("HOME_CONTENT showcase section", () => {
   const locales = ["fr", "ru"] as const
 
@@ -34,10 +43,19 @@ describe("HOME_CONTENT showcase section", () => {
         expect(new Set(slugs).size).toBe(slugs.length)
       })
 
-      it("all demoUrls route to the matching showcase demo", () => {
+      it("all demoUrls route to their expected showcase demos", () => {
+        expect(copy.showcaseDemos.map((d) => d.slug)).toEqual(
+          Object.keys(SHOWCASE_ROUTE_SLUG_BY_CARD_SLUG),
+        )
+
         for (const d of copy.showcaseDemos) {
           const url = new URL(d.demoUrl, "http://localhost:3000")
-          expect(url.pathname).toBe(`/demo/${d.slug}`)
+          const expectedRouteSlug =
+            SHOWCASE_ROUTE_SLUG_BY_CARD_SLUG[
+              d.slug as keyof typeof SHOWCASE_ROUTE_SLUG_BY_CARD_SLUG
+            ]
+
+          expect(url.pathname).toBe(`/demo/${expectedRouteSlug}`)
         }
       })
     })

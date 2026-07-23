@@ -337,21 +337,6 @@ export default async function LocaleHomePage({
         </div>
       </section>
 
-      {/* Local SEO — dark separator */}
-      <section className="bg-graphite py-8 text-center md:py-10">
-        <div className="container mx-auto px-4 md:px-8">
-          <p className="text-sm font-medium leading-7 text-white/50">
-            {copy.localSeo.cities.map((city, i) => (
-              <span key={city}>
-                <strong className="font-semibold text-white/65">{city}</strong>
-                {i < copy.localSeo.cities.length - 1 && ", "}
-              </span>
-            ))}
-            {" "}&amp; {copy.localSeo.region}
-          </p>
-          <p className="mt-1 text-sm font-medium text-white/40">{copy.localSeo.tagline}</p>
-        </div>
-      </section>
       <HomeContactSection locale={l} />
     </main>
   );

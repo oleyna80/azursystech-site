@@ -380,7 +380,7 @@ function buildJsonLd(locale: PageLocale, copy: (typeof CONTENT)[PageLocale]) {
         availableChannel: [
           {
             "@type": "ServiceChannel",
-            serviceUrl: "https://azursystech.fr/contact",
+            serviceUrl: "https://azursystech.fr/fr#contact",
           },
           {
             "@type": "ServiceChannel",

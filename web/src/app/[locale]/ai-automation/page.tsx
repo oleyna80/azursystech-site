@@ -460,7 +460,7 @@ export function buildJsonLd(locale: PageLocale, copy: (typeof CONTENT)[PageLocal
         availableChannel: locale === "en"
           ? [{ "@type": "ServiceChannel", name: "WhatsApp", serviceUrl: WHATSAPP }]
           : [
-              { "@type": "ServiceChannel", serviceUrl: `${BASE_URL}/contact` },
+              { "@type": "ServiceChannel", serviceUrl: `${BASE_URL}/${locale}#contact` },
               { "@type": "ServiceChannel", name: "WhatsApp", serviceUrl: WHATSAPP },
             ],
         url: `${BASE_URL}/${locale}/ai-automation`,

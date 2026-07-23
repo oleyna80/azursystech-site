@@ -43,7 +43,7 @@ npm run check:ci
 | Route | Purpose |
 | --- | --- |
 | `/` | Homepage |
-| `/contact` | Main contact/intake form |
+| `/fr#contact`, `/ru#contact` | Main contact/intake form on the localized homepage |
 | `/ai-automation` | AI automation service/pillar page |
 | `/brief` | AI automation discovery brief |
 | `/api/contact/submit` | Contact/intake submit endpoint |
