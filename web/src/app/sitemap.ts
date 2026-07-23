@@ -18,7 +18,6 @@ const ROUTES: SitemapEntry[] = [
   { path: "/en/ai-automation", changeFrequency: "monthly", priority: 0.7 },
   { path: "/ai-automation", changeFrequency: "monthly", priority: 0.7 },
   { path: "/brief", changeFrequency: "monthly", priority: 0.7 },
-  { path: "/contact", changeFrequency: "monthly", priority: 0.8 },
   { path: "/data-deletion", changeFrequency: "yearly", priority: 0.3 },
   { path: "/legal", changeFrequency: "yearly", priority: 0.3 },
   { path: "/portfolio", changeFrequency: "monthly", priority: 0.8 },
