@@ -1,0 +1,70 @@
+# Repository-safe skeleton: values are opaque references, hashes, or redacted identifiers only.
+package:
+  package_ref: PACKAGE_REF_REQUIRED
+  asset_ref: ASSET_REF_REQUIRED
+  storage_class: private_access_controlled_outside_git
+  intended_purpose_ref: INTENDED_PURPOSE_REF_REQUIRED
+  release_authority: human_exact_candidate_approval_required
+
+authorization:
+  execution_work_block_ref: WORK_BLOCK_REF_REQUIRED
+  request_authorization_ref: AUTHORIZATION_REF_REQUIRED
+
+provider:
+  provider_ref: PROVIDER_REF_REQUIRED
+  route_ref: ROUTE_REF_REQUIRED
+  service_ref: SERVICE_REF_REQUIRED
+  model_ref: MODEL_REF_REQUIRED
+  model_status: NEEDS_PROVIDER_CONFIRMATION
+  billing_context_ref: BILLING_CONTEXT_REF_REQUIRED
+
+terms_and_model_evidence:
+  evidence_ref: TERMS_EVIDENCE_REF_REQUIRED
+  official_url_ref: OFFICIAL_URL_REF_REQUIRED
+  retrieved_at: TIMESTAMP_REQUIRED
+  content_sha256: SHA256_REQUIRED
+  eligibility_decision: NEEDS_PROVIDER_CONFIRMATION
+
+preview_lifecycle:
+  applies: true_or_false
+  status_evidence_ref: STATUS_EVIDENCE_REF_REQUIRED_IF_APPLICABLE
+  status_checked_at: TIMESTAMP_REQUIRED_IF_APPLICABLE
+  change_monitoring_ref: MONITORING_REF_REQUIRED_IF_APPLICABLE
+  revalidation_triggers_ref: REVALIDATION_REF_REQUIRED_IF_APPLICABLE
+  migration_or_fallback_ref: FALLBACK_REF_REQUIRED_IF_APPLICABLE
+
+generation_trace:
+  prompt_ref: PROMPT_REF_REQUIRED
+  parameters_ref: PARAMETERS_REF_REQUIRED
+  provider_operation_ref: OPERATION_REF_REQUIRED
+  requested_at: TIMESTAMP_REQUIRED
+  completed_at: TIMESTAMP_REQUIRED
+
+input_rights_and_consent:
+  input_rights_ref: INPUT_RIGHTS_REF_REQUIRED
+  consent_ref: CONSENT_REF_OR_NOT_APPLICABLE
+
+output_integrity:
+  original_output_sha256: SHA256_REQUIRED
+  release_output_sha256: SHA256_REQUIRED
+  transformation_chain_ref: TRANSFORMATION_CHAIN_REF_REQUIRED
+
+provenance_and_qa:
+  provenance_or_synthid_result: RESULT_REF_OR_NOT_AVAILABLE
+  provenance_evidence_ref: PROVENANCE_REF_OR_NOT_AVAILABLE
+  qa_ref: QA_REF_REQUIRED
+
+release_control:
+  exact_candidate_ref: CANDIDATE_REF_REQUIRED
+  exact_candidate_sha256: SHA256_REQUIRED
+  human_approval_ref: HUMAN_APPROVAL_REF_REQUIRED
+  approval_timestamp: TIMESTAMP_REQUIRED
+  release_state: pending
+  revocation_control_ref: REVOCATION_CONTROL_REF_REQUIRED
+
+evidence_governance:
+  evidence_index_ref: EVIDENCE_INDEX_REF_REQUIRED
+  retention_rule_ref: RETENTION_RULE_REF_REQUIRED
+  access_rule_ref: ACCESS_RULE_REF_REQUIRED
+  integrity_attestation_ref: OS_ISOLATED_ATTESTATION_REF_OR_NOT_RUN
+  legal_clearance_status: NOT_ESTABLISHED_BY_THIS_MANIFEST

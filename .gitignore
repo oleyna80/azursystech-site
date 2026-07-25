@@ -156,3 +156,10 @@ out/
 # OS
 .DS_Store
 Thumbs.db
+
+# Private receipts, evidence, and local build artifacts
+ai_studio_chek/
+private_evidence/
+.artifacts/
+
+

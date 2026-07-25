@@ -197,5 +197,7 @@
 | 2026-07-24 | WB-2026-07-24-immobilier-veo-canonical-evidence-manifest | verification: READY - Owner refreshed the frozen verifier, recorded source/frozen SHA-256 equality `931ed134804a0ab7c0cfc09c98aed25cf9a1c99012caf8a1799f9d8412e834a6`, and ran sterile OS-isolated candidate mode with exact PASS and exit 0. Bounded text-record integrity linkage only; candidate remains NEEDS_PROVIDER_CONFIRMATION and no release authority exists. | Control Tower |
 | 2026-07-25 | push-approval | push: APPROVED origin main - Owner requested git push | Owner |
 | 2026-07-25 | branch-consolidation | remote refs: APPROVED delete origin/archive/integration-azr-002-023-handoff-2026-04-15, origin/codex/azr-003-013-phone-sync, and origin/integration/azr-002-023-handoff; local branch feature/web_contact_form deleted | Owner |
+| 2026-07-25 | push-approval | push: APPROVED origin main - Owner requested documentation commit and push | Owner |
+
 
 

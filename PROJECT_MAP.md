@@ -64,6 +64,7 @@ Start with the smallest mode that can safely deliver the Work Block:
 | `.opencode/` | runtime | OpenCode control layer: command adapters and subagent contracts in `agents/` (committed), mirroring `.claude/agents/`; plugin runtime state self-ignored. |
 | `opencode.json` | runtime | OpenCode root config: permission floor mirroring Hard Stops, share disabled, autoupdate pinned; no provider/credential settings. |
 | `docs/engineering-memory/` | normative | Durable project engineering memory for all agent runtimes. |
+| `docs/policies/` | reference | Readable companion policy documents; non-normative and subordinate to their canonical Markdown instruction. |
 | `docs/plans/` | evidence | Work Block plans and execution records. |
 | `docs/templates/` | normative | Reusable Work Block, report, and mission templates. |
 | `memory_bank/` | local runtime | Operational context/logs created by bootstrap; not durable authority. |

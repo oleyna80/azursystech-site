@@ -124,6 +124,16 @@ reads, prints, creates, or modifies credentials. Do not delegate this command
 to a native subagent. Its local fixture suite is mutation-capable test evidence,
 not formal readonly verification evidence.
 
+When an approved Work Block requires literal `os-isolated` integrity evidence,
+do not launch Codex or another AI CLI. The Owner may approve the opt-in host
+provisioning in `scripts/provision-os-isolated-verifier.sh --apply`; its normal
+`--check` is non-mutating. Then only root may run
+`scripts/run-os-isolated-verifier.sh`. It snapshots a fixed safe allowlist and
+runs fixed coreutils under `env -i` as the dedicated nologin user. It must
+return its bounded `PASS` attestation or `BLOCKED`; no same-user fallback is
+permitted. This process/integrity signal is not legal clearance, media review,
+or release authority, and a paid or Preview service does not change that.
+
 ---
 
 ## Context Hygiene

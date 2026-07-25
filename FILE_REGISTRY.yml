@@ -108,6 +108,18 @@ entries:
       - docs/templates/work-block-template.md
       - memory_bank/decisions.md
 
+  docs/policies/**:
+    role: readable_companion_policy_documents
+    status: reference
+    owner: architect
+    boundary: >
+      Readable companion/reference documents only; they are non-normative and
+      defer to their named canonical Markdown instruction.
+    update_when:
+      - a companion policy document is added or its canonical source changes
+    related:
+      - docs/engineering-memory/**
+
   docs/plans/**:
     role: work_block_plans_and_execution_records
     status: evidence

@@ -170,6 +170,17 @@ readonly profile. The runner must never copy, inspect, print, create, or change
 credentials. Its fixture suite is a separate local-mutation test and cannot be
 used as formal readonly evidence.
 
+For `os-isolated` integrity evidence, use the fixed scripts
+`scripts/provision-os-isolated-verifier.sh` and
+`scripts/run-os-isolated-verifier.sh` only after explicit Owner approval for
+the local privileged provisioning. `--check` is non-mutating; `--apply` creates
+only the dedicated nologin verifier account and root-owned clean hierarchy.
+The runner snapshots only its literal safe allowlist and runs fixed coreutils
+with `env -i` as that account. It never executes repository code, Codex,
+provider, network, credential, or media operations. Its bounded result is an
+integrity/process attestation, not legal clearance or automatic release
+authority; `BLOCKED` has no same-user fallback.
+
 ### Activities
 
 #### Lite Tier

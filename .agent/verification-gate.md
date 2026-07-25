@@ -1,19 +1,17 @@
 # Verification Gate — active Work Block. OWNED BY CONTROL TOWER — subagents must not edit this file.
 
 Status: READY
-Work Block: WB-2026-07-22-en-home-contact-surface
-Verification Tier: standard
+Work Block: WB-2026-07-24-immobilier-veo-canonical-evidence-manifest
+Verification Tier: full
 New Domain: false
-New Domain Rationale: existing shared contact component and existing homepage route; this Work Block only enables the component for the established English locale.
+New Domain Rationale: extends the bounded local host-isolation lane with a no-argument materializer for five exact status records; no provider, public model, or application integration.
 Quick-Fix: false
-Verifier: ct-inline
-Sensitive Domains: none
-Required Verifier Isolation: same-session-degraded
-Verifier Isolation: same-session-degraded
-Claude Verifier Verdict: READY (advisory same-session review; baseline attribution confirmed)
+Verifier: subagent
+Sensitive Domains: private-evidence,local-host-isolation,media-rights,external-provider
+Required Verifier Isolation: os-isolated
+Verifier Isolation: os-isolated
+Claude Verifier Verdict: READY — independent Verifier passed code, syntax, fixtures, candidate-only frozen-runbook, scoped-diff checks, clean candidate success exit, and candidate/process failure cleanup. Owner then refreshed the frozen verifier copy, confirmed the source/frozen SHA-256 pair `931ed134804a0ab7c0cfc09c98aed25cf9a1c99012caf8a1799f9d8412e834a6`, and ran candidate mode in the sterile `unshare --net` lane: exact PASS output and exit 0 with no trap error.
 GPT Verifier Status: NOT_REQUIRED
-GPT Verifier Reason: no sensitive domain; the advisory native verifier and Control Tower inline formal review confirmed the UI contract within the declared same-session limitation.
-Verification Report: docs/reports/WB-2026-07-22-en-home-contact-surface-verification.md
-Formal Verdict: READY
-
-Evidence: focused Vitest (1/1), typecheck, lint (0 errors), diff hygiene, EN source/navigation contract, `/en` desktop/mobile browser smoke, no-overflow, zero console errors, zero contact-submit requests, and `/fr`/`/ru` 200 proof passed. Local SEO removal is pre-existing ambient work and excluded; report: docs/reports/WB-2026-07-22-en-home-contact-surface-verification.md.
+GPT Verifier Reason: external review does not replace the required isolated deterministic attestation.
+Verification Report: docs/reports/WB-2026-07-24-immobilier-veo-canonical-evidence-manifest-verification.md
+Formal Verdict: READY — bounded candidate-record integrity linkage only. The Owner's refreshed frozen verifier copy matched the reviewed source and its OS-isolated candidate run emitted only `PASS|os-isolated-verifier|candidate-evidence=PASS` with exit 0. This does not establish media provenance, quality, billing, rights, provider eligibility, integration, publication, or release approval; candidate status remains `NEEDS_PROVIDER_CONFIRMATION`.

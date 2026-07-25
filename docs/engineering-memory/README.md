@@ -50,6 +50,7 @@ verify the current state and update this directory during closeout.
 - `temporary-decisions.md` - track time-boxed exceptions and revisit triggers.
 - `reproducibility-log.md` - stable commands and evidence needed by future
   agents.
+- [AI Video Production Operating Instruction](ai-video-production-operating-instruction.md) - canonical, evidence-gated rules for future Veo/Gemini or other AI-video production and release; its readable non-normative Markdown companion is the [AI Video Generation and Publication Policy](../policies/ai-video-generation-and-publication-policy.md).
 
 ## Closeout Rule
 

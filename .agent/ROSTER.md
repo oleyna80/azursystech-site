@@ -116,6 +116,11 @@
 | "выбор провайдера/модели видео" | video-provider-router | Planning only | Control Tower |
 | "сгенерируй/скачай/обработай/встрой видео" | media-production-orchestrator | Future approved WB required | Control Tower |
 
+For any future AI-video generation or release, use the evidence and stop
+conditions in [AI Video Production Operating Instruction](../docs/engineering-memory/ai-video-production-operating-instruction.md).
+That instruction is a governance boundary, not authority to access a provider,
+use a key, spend budget, write media, or publish an asset.
+
 ---
 
 ## Runtime Command Adapters
