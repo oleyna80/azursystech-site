@@ -31,16 +31,10 @@ runtime — not to a shell `codex` CLI. No shell pipe, no plugin dependency.
 
 ## Skills (`.opencode/skills/`)
 
-36 skill directories mirrored from `.agent/skills/`. Canonical source is
-`.agent/skills/`; `.opencode/skills/` is a re-generated mirror for native
-opencode `Skill` tool loading. Skill-curation Work Blocks edit `.agent/skills/`
-then re-copy to `.opencode/skills/`. Four folders were renamed to match their
-frontmatter `name:` (opencode requires the match):
-
-- `brutalist-skill` -> `industrial-brutalist-ui`
-- `minimalist-skill` -> `minimalist-ui`
-- `output-skill` -> `full-output-enforcement`
-- `redesign-skill` -> `redesign-existing-projects`
+27 skill directories mirrored from canonical `.agent/skills/` (re-synced 2026-08-05).
+Canonical source is `.agent/skills/`; `.opencode/skills/` is a re-generated mirror
+for native opencode `Skill` tool loading. Skill-curation Work Blocks edit
+`.agent/skills/` then re-copy to `.opencode/skills/`.
 
 `.agent/ROSTER.md` and `FILE_REGISTRY.yml` reflect both the opencode layer and
 the rename. `.claude/skills/` (vendor skills with executable assets) stays

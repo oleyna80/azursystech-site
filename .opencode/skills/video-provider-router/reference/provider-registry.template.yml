@@ -1,0 +1,52 @@
+# Declarative planning template only; no provider, endpoint, account, secret, output location, generation request, or runtime resolver is configured here.
+# Curated from agentic-sdlc-framework@49850ff6fa0816bbe7feee2d54af2d792444bb5a (MIT).
+# This template never overrides AGENTS.md or an active Work Block. Populate it only in a future Owner-approved provider-governance Work Block.
+schema_version: 1
+freshness_window_days: 30
+
+production_policy:
+  visible_watermark: forbidden
+  invisible_provenance_mark: allowed
+  unknown_commercial_terms: blocked
+  preview_or_beta: blocked_by_default
+  require_official_sources: true
+  human_approval_before_publish: true
+
+providers:
+  provider-id:
+    display_name:
+    official_api_url:
+    official_terms_url:
+    official_pricing_url:
+    verified_at:
+    account_region:
+    data_use:
+      training_on_inputs:
+      retention:
+      deletion:
+    contractual:
+      commercial_use:
+      user_output_rights:
+      ip_indemnity:
+      important_exclusions: []
+    models:
+      model-id:
+        status: generally_available | preview | beta | deprecated
+        modes: []
+        durations_seconds: []
+        aspect_ratios: []
+        resolutions: []
+        reference_images:
+        first_last_frame:
+        native_audio:
+        visible_watermark:
+        provenance_mark:
+        unit_price:
+        notes: []
+
+aggregators:
+  aggregator-id:
+    official_terms_url:
+    verified_at:
+    contractual_wrapper:
+    notes: []
