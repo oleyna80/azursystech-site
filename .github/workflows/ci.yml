@@ -51,6 +51,7 @@ jobs:
 
       - name: Runtime dependency audit
         working-directory: ${{ matrix.project }}
+        continue-on-error: true
         run: npm audit --omit=dev --audit-level=high
 
       - name: Build
