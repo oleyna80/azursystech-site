@@ -1,9 +1,7 @@
-# Solution Architect Agent Memory
+# Solution Architect Memory
 
-Memory index for the Solution Architect agent. One line per memory, under ~150
-chars.
+Persistent, project-local memory for architecture decisions, constraints, and
+cross-session context.
 
----
-
-*No memories yet. Memories will accumulate as architecture reviews are
-performed.*
+Keep entries evidence-based and cite the source file, command, or owner
+decision that supports each durable fact.

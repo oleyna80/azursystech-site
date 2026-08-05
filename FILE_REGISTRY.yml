@@ -1,391 +1,570 @@
-# Machine-readable navigation registry for important files and path patterns.
-# This is intentionally selective: register authority-bearing files and major
-# project zones, not every file.
-
 version: 1
 scope: azursystech
 project:
-  name: "AzurSysTech"
-  slug: "azursystech"
-  root: "."
-  root_note: "Repository root; do not commit workstation-specific absolute paths."
-
+  name: AzurSysTech
+  slug: azursystech
+  root: .
+  root_note: Repository root; do not commit workstation-specific absolute paths.
 statuses:
-  normative: "source of truth or policy-bearing file"
-  runtime: "runtime-specific agent, CI, deploy, or tool configuration"
-  reference: "background knowledge; does not override policy"
-  evidence: "plan, report, or historical execution artifact"
-  log: "operational history; not current authority"
-  derived: "generated or discovered from other sources"
-  local_state: "machine-local or runtime state; do not publish by default"
-  source: "project source code or tests"
-  secret_boundary: "must not contain committed live secrets"
-
+  normative: source of truth or policy-bearing file
+  runtime: runtime-specific agent, CI, deploy, or tool configuration
+  reference: background knowledge; does not override policy
+  evidence: plan, report, or historical execution artifact
+  log: operational history; not current authority
+  derived: generated or discovered from other sources
+  local_state: machine-local or runtime state; do not publish by default
+  source: project source code or tests
+  secret_boundary: must not contain committed live secrets
 authority_order:
-  - explicit_owner_instruction
-  - AGENTS.md
-  - approved_work_block_plan
-  - PROJECT_MAP.md
-  - FILE_REGISTRY.yml
-  - docs_engineering_memory
-  - runtime_policy_files
-  - reference_docs_examples_logs_generated_artifacts
-
+- explicit_owner_instruction
+- AGENTS.md
+- approved_work_block_plan
+- PROJECT_MAP.md
+- FILE_REGISTRY.yml
+- docs_engineering_memory
+- runtime_policy_files
+- reference_docs_examples_logs_generated_artifacts
 entries:
   AGENTS.md:
-    role: root_agent_policy
+    role: project_operating_contract
     status: normative
     owner: owner
     update_when:
-      - role permissions change
-      - approval gates change
-      - hard stops change
-      - project source boundaries change
+    - role permissions change
+    - approval gates change
+    - hard stops change
+    - project source boundaries change
     related:
-      - PROJECT_MAP.md
-      - FILE_REGISTRY.yml
-      - docs/session-bootstrap.md
-
+    - governance/README.md
+    - .agent/workflows/sdd-protocol.md
+    - .agent/ROSTER.md
   PROJECT_MAP.md:
     role: human_readable_project_map
     status: normative
     owner: architect
     update_when:
-      - major directories change
-      - authority model changes
-      - runtime layers change
-      - generated or local-only boundaries change
+    - major directories change
+    - authority model changes
+    - runtime layers change
+    - generated or local-only boundaries change
     related:
-      - FILE_REGISTRY.yml
-      - docs/session-bootstrap.md
-
+    - FILE_REGISTRY.yml
+    - docs/session-bootstrap.md
   FILE_REGISTRY.yml:
     role: machine_readable_navigation_registry
     status: normative
     owner: architect
     update_when:
-      - key files or path patterns are added moved or removed
-      - file authority status changes
-      - update triggers change
+    - key files or path patterns are added moved or removed
+    - file authority status changes
+    - update triggers change
     related:
-      - PROJECT_MAP.md
-      - docs/session-bootstrap.md
-
+    - PROJECT_MAP.md
+    - docs/session-bootstrap.md
   README.md:
     role: repository_overview
     status: reference
     owner: owner
     update_when:
-      - public or human quickstart changes
-      - repository purpose changes
+    - public or human quickstart changes
+    - repository purpose changes
     related:
-      - web/README.md
-      - PROJECT_MAP.md
-
+    - web/README.md
+    - PROJECT_MAP.md
   docs/session-bootstrap.md:
-    role: new_session_intake_flow
+    role: new_session_intake_guidance
     status: normative
     owner: architect
     update_when:
-      - new-session read order changes
-      - git or diff preflight changes
-      - memory usage policy changes
+    - new-session read order changes
+    - git or diff preflight changes
+    - memory usage policy changes
     related:
-      - PROJECT_MAP.md
-      - FILE_REGISTRY.yml
-
+    - PROJECT_MAP.md
+    - FILE_REGISTRY.yml
   docs/engineering-memory/**:
-    role: durable_project_engineering_memory
-    status: normative
+    role: durable_engineering_memory
+    status: durable_reference
     owner: architect
     update_when:
-      - durable engineering decision is accepted
-      - source-of-truth chain changes
-      - temporary decision is added reviewed or retired
-      - reproducibility procedure changes
+    - durable engineering decision is accepted
+    - source-of-truth chain changes
+    - temporary decision is added reviewed or retired
+    - reproducibility procedure changes
     related:
-      - docs/session-bootstrap.md
-      - docs/templates/work-block-template.md
-      - memory_bank/decisions.md
-
+    - docs/session-bootstrap.md
+    - docs/templates/work-block-template.md
+    - memory_bank/decisions.md
   docs/policies/**:
     role: readable_companion_policy_documents
     status: reference
     owner: architect
-    boundary: >
-      Readable companion/reference documents only; they are non-normative and
-      defer to their named canonical Markdown instruction.
-    update_when:
-      - a companion policy document is added or its canonical source changes
-    related:
-      - docs/engineering-memory/**
+    boundary: 'Readable companion/reference documents only; they are non-normative
+      and defer to their named canonical Markdown instruction.
 
+      '
+    update_when:
+    - a companion policy document is added or its canonical source changes
+    related:
+    - docs/engineering-memory/**
   docs/plans/**:
-    role: work_block_plans_and_execution_records
-    status: evidence
+    role: approved_implementation_plans_and_work_blocks
+    status: derived
     owner: orchestrator
     update_when:
-      - a Work Block is planned or closed
-      - acceptance or verification evidence changes
+    - a Work Block is planned or closed
+    - acceptance or verification evidence changes
     related:
-      - docs/templates/work-block-template.md
-      - docs/engineering-memory/**
-
+    - docs/templates/work-block-template.md
+    - docs/engineering-memory/**
   docs/templates/**:
     role: reusable_agentic_sdlc_templates
     status: normative
     owner: orchestrator
     update_when:
-      - Work Block planning requirements change
-      - report or mission contracts change
-      - verification evidence requirements change
+    - Work Block planning requirements change
+    - report or mission contracts change
+    - verification evidence requirements change
     related:
-      - .agent/workflows/sdd-protocol.md
-
+    - .agent/workflows/sdd-protocol.md
   scripts/bootstrap.sh:
-    role: workflow_layer_health_check
+    role: generated_project_profile_aware_health_check
     status: normative
-    owner: orchestrator
+    owner: verifier
     update_when:
-      - required workflow files change
-      - local runtime scaffold changes
-      - project navigation files change
+    - required workflow files change
+    - local runtime scaffold changes
+    - project navigation files change
     related:
-      - PROJECT_MAP.md
-      - FILE_REGISTRY.yml
-      - docs/session-bootstrap.md
-
+    - PROJECT_MAP.md
+    - FILE_REGISTRY.yml
+    - docs/session-bootstrap.md
   .agent/README.md:
     role: runtime_neutral_agent_layer_guide
     status: normative
     owner: architect
     update_when:
-      - agent workflow layer boundaries change
-      - skill curation policy changes
+    - agent workflow layer boundaries change
+    - skill curation policy changes
     related:
-      - AGENTS.md
-      - .agent/ROSTER.md
-
+    - AGENTS.md
+    - .agent/ROSTER.md
   .agent/ROSTER.md:
-    role: runtime_neutral_agent_roster
+    role: logical_role_and_skill_router
     status: normative
     owner: architect
     update_when:
-      - roster changes
-      - workflow routing changes
-      - skill candidate list changes
-      - gate policy changes
+    - roster changes
+    - workflow routing changes
+    - skill candidate list changes
+    - gate policy changes
     related:
-      - AGENTS.md
-      - .agent/workflows/sdd-protocol.md
-
+    - AGENTS.md
+    - .agent/workflows/sdd-protocol.md
   .agent/critic-gate.md:
-    role: stage0_critic_gate_contract
-    status: normative
+    role: human_readable_critic_gate_compatibility_view
+    status: operational_log
     owner: orchestrator
     update_when:
-      - critic gate evidence contract changes
-      - GPT critic routing changes
+    - critic gate evidence contract changes
+    - GPT critic routing changes
     related:
-      - AGENTS.md
-      - .agent/workflows/sdd-protocol.md
-
+    - AGENTS.md
+    - .agent/workflows/sdd-protocol.md
   .agent/verification-gate.md:
-    role: stage2_verification_gate_contract
-    status: normative
+    role: human_readable_review_verification_evaluation_and_drift_gate_view
+    status: operational_log
     owner: verifier
     update_when:
-      - verification gate evidence contract changes
-      - GPT verifier routing changes
+    - verification gate evidence contract changes
+    - GPT verifier routing changes
     related:
-      - AGENTS.md
-      - .agent/workflows/sdd-protocol.md
-
+    - AGENTS.md
+    - .agent/workflows/sdd-protocol.md
   .agent/workflows/**:
     role: runtime_neutral_sdlc_workflows
     status: normative
     owner: architect
     update_when:
-      - stage definitions change
-      - workflow routing changes
-      - gate policy changes
+    - stage definitions change
+    - workflow routing changes
+    - gate policy changes
     related:
-      - AGENTS.md
-
+    - AGENTS.md
   .agent/skills/**:
-    role: project_local_agent_skill_wrappers
-    status: legacy_tracked_or_deferred
-    owner: orchestrator
-    boundary: ignored_until_skill_curation_wb; existing tracked paths require separate cleanup or curation
+    role: profile_selected_portable_skills
+    status: runtime_adapter
+    owner: architect
+    boundary: ignored_until_skill_curation_wb; existing tracked paths require separate
+      cleanup or curation
     update_when:
-      - a skill-curation Work Block approves exact skill paths
-      - skill routing changes after approved curation
+    - a skill-curation Work Block approves exact skill paths
+    - skill routing changes after approved curation
     related:
-      - .agent/ROSTER.md
-      - docs/plans/**
-
+    - .agent/ROSTER.md
+    - docs/plans/**
+    selection_source: .agent/bootstrap-profile.json
   .agents/**:
     role: codex_skill_discovery_adapters
     status: committed_control_layer
     owner: orchestrator
-    boundary: >
-      committed: thin Codex-compatible wrappers that point to canonical
-      .agent/skills/** contracts; no provider/model/API settings, secrets,
-      local machine paths, generated output, or runtime cache belongs here
-    update_when:
-      - Codex project skill discovery adapters change
-      - canonical .agent/skills/** invocation path changes
-      - runtime command adapter policy changes
-    related:
-      - .agent/skills/**
-      - .agent/ROSTER.md
-      - docs/engineering-memory/runtime-command-adapters.md
+    boundary: 'committed: thin Codex-compatible wrappers that point to canonical .agent/skills/**
+      contracts; no provider/model/API settings, secrets, local machine paths, generated
+      output, or runtime cache belongs here
 
+      '
+    update_when:
+    - Codex project skill discovery adapters change
+    - canonical .agent/skills/** invocation path changes
+    - runtime command adapter policy changes
+    related:
+    - .agent/skills/**
+    - .agent/ROSTER.md
+    - docs/engineering-memory/runtime-command-adapters.md
   .codex/**:
-    role: codex_runtime_policy
-    status: runtime
+    role: codex_project_runtime_configuration
+    status: conditional_generated
     owner: orchestrator
     update_when:
-      - Codex write gate changes
-      - Codex critic contract changes
-      - local hook policy changes
+    - Codex write gate changes
+    - Codex critic contract changes
+    - local hook policy changes
     related:
-      - AGENTS.md
-      - .agent/workflows/sdd-protocol.md
-
+    - AGENTS.md
+    - .agent/workflows/sdd-protocol.md
+    selected_by_component: runtime:codex
+    authority: none_without_active_work_block
   .claude/**:
-    role: claude_code_runtime_policy
-    status: committed_control_layer
+    role: claude_code_project_runtime_configuration
+    status: conditional_generated
     owner: architect
-    boundary: >
-      committed: settings.json, hooks/, agents/, commands/, security guidance,
-      agent-memory MEMORY.md indexes; local: settings.local.json,
-      agent-memory session state; .claude/skills/** stays a separate
-      curated scope (exact paths approved per Work Block, added with git add -f)
-    update_when:
-      - Claude hook policy (hard-stop, critic/verification gates, typecheck) changes
-      - subagent role contracts in .claude/agents/ change
-      - project command adapters in .claude/commands/ change
-      - a skill curation Work Block approves exact .claude/skills paths
-    related:
-      - AGENTS.md
-      - .agent/critic-gate.md
-      - .agent/verification-gate.md
-      - memory_bank/external-team-log.md
+    boundary: 'committed: settings.json, hooks/, agents/, commands/, security guidance,
+      agent-memory MEMORY.md indexes; local: settings.local.json, agent-memory session
+      state; .claude/skills/** stays a separate curated scope (exact paths approved
+      per Work Block, added with git add -f)
 
+      '
+    update_when:
+    - Claude hook policy (hard-stop, critic/verification gates, typecheck) changes
+    - subagent role contracts in .claude/agents/ change
+    - project command adapters in .claude/commands/ change
+    - a skill curation Work Block approves exact .claude/skills paths
+    related:
+    - AGENTS.md
+    - .agent/critic-gate.md
+    - .agent/verification-gate.md
+    - memory_bank/external-team-log.md
+    selected_by_component: runtime:claude-code
+    authority: none_without_active_work_block
   opencode.json:
-    role: opencode_permission_floor
-    status: committed_control_layer
-    owner: architect
-    boundary: >
-      committed root config: permission floor mirroring AGENTS.md Hard Stops
-      (deny push-to-main/force-push/reset-hard/ssh/deploy/live-DB/direct
-      Codex CLI; ask by default; allow read-only commands), share disabled,
-      autoupdate pinned; no provider/model/credential settings (auth lives
-      in ~/.local/share/opencode)
-    update_when:
-      - AGENTS.md Hard Stops change (keep deny patterns in sync with
-        .claude/hooks/hard-stop.sh)
-      - opencode config schema changes
-    related:
-      - AGENTS.md
-      - .claude/hooks/hard-stop.sh
-      - .agent/ROSTER.md
+    role: opencode_project_instructions_permissions_and_inert_integrations
+    status: conditional_generated
+    owner: maintainer
+    boundary: 'committed root config: permission floor mirroring AGENTS.md Hard Stops
+      (deny push-to-main/force-push/reset-hard/ssh/deploy/live-DB/direct Codex CLI;
+      ask by default; allow read-only commands), share disabled, autoupdate pinned;
+      no provider/model/credential settings (auth lives in ~/.local/share/opencode)
 
+      '
+    update_when:
+    - AGENTS.md Hard Stops change (keep deny patterns in sync with .claude/hooks/hard-stop.sh)
+    - opencode config schema changes
+    related:
+    - AGENTS.md
+    - .claude/hooks/hard-stop.sh
+    - .agent/ROSTER.md
+    selected_by_component: runtime:opencode
   .opencode/**:
     role: opencode_runtime_policy
     status: committed_control_layer
     owner: architect
-    boundary: >
-      committed: commands/ (project command adapters), agents/ (subagent
-      contracts mirroring .claude/agents with
-      opencode frontmatter — color as hex/theme token, permission block) and
-      skills/ (skill mirrors synced from .agent/skills/ for native opencode
-      Skill tool loading; .agent/skills/ is canonical, .opencode/skills/ is a
-      re-generated mirror — skill-curation Work Blocks edit .agent/skills/
-      then re-copy to .opencode/skills/);
-      local: plugin runtime state (node_modules, package*.json, bun.lock —
-      self-ignored via generated .opencode/.gitignore); no provider or
-      credential config belongs here (root .gitignore pre-empts
-      config.toml/opencode.json/*.local*)
-    update_when:
-      - project command adapters in .opencode/commands/ change
-      - subagent role contracts change (keep in sync with .claude/agents/)
-      - opencode frontmatter schema requirements change
-      - .agent/skills/ change (re-sync to .opencode/skills/ to avoid drift)
-    related:
-      - AGENTS.md
-      - .agent/ROSTER.md
-      - .agent/skills/
-      - .claude/agents/
-      - docs/engineering-memory/runtime-command-adapters.md
+    boundary: 'committed: commands/ (project command adapters), agents/ (subagent
+      contracts mirroring .claude/agents with opencode frontmatter — color as hex/theme
+      token, permission block) and skills/ (skill mirrors synced from .agent/skills/
+      for native opencode Skill tool loading; .agent/skills/ is canonical, .opencode/skills/
+      is a re-generated mirror — skill-curation Work Blocks edit .agent/skills/ then
+      re-copy to .opencode/skills/); local: plugin runtime state (node_modules, package*.json,
+      bun.lock — self-ignored via generated .opencode/.gitignore); no provider or
+      credential config belongs here (root .gitignore pre-empts config.toml/opencode.json/*.local*)
 
+      '
+    update_when:
+    - project command adapters in .opencode/commands/ change
+    - subagent role contracts change (keep in sync with .claude/agents/)
+    - opencode frontmatter schema requirements change
+    - .agent/skills/ change (re-sync to .opencode/skills/ to avoid drift)
+    related:
+    - AGENTS.md
+    - .agent/ROSTER.md
+    - .agent/skills/
+    - .claude/agents/
+    - docs/engineering-memory/runtime-command-adapters.md
   memory_bank/**:
-    role: operational_agent_memory
-    status: local_state
+    role: local_operational_context_and_logs
+    status: operational_log
     owner: orchestrator
     update_when:
-      - active focus changes
-      - progress log changes
-      - non-durable decision summary changes
-      - external team report is received
+    - active focus changes
+    - progress log changes
+    - non-durable decision summary changes
+    - external team report is received
     related:
-      - docs/engineering-memory/**
-      - docs/plans/**
-
+    - docs/engineering-memory/**
+    - docs/plans/**
   web/**:
     role: production_website_source
     status: source
     owner: engineering
     update_when:
-      - website routes, content, UI, intake, API, or deployment behavior changes
+    - website routes, content, UI, intake, API, or deployment behavior changes
     related:
-      - web/README.md
-      - Dockerfile
-      - docker-compose.vps.yml
-
+    - web/README.md
+    - Dockerfile
+    - docker-compose.vps.yml
   admin/**:
     role: internal_admin_app_source
     status: source
     owner: engineering
     update_when:
-      - admin UI, admin routes, or admin deployment behavior changes
+    - admin UI, admin routes, or admin deployment behavior changes
     related:
-      - Dockerfile.admin
-
+    - Dockerfile.admin
   showcase/**:
     role: showcase_and_portfolio_source
     status: source
     owner: engineering
     update_when:
-      - demos, portfolio pages, or showcase runtime behavior changes
+    - demos, portfolio pages, or showcase runtime behavior changes
     related:
-      - docs/engineering-memory/source-of-truth-chains.md
-
+    - docs/engineering-memory/source-of-truth-chains.md
   scripts/**:
     role: project_automation_and_ops_scripts
     status: runtime
     owner: engineering
     update_when:
-      - build, deploy, backup, verification, or VPS operations change
+    - build, deploy, backup, verification, or VPS operations change
     related:
-      - scripts/bootstrap.sh
-      - docs/engineering-memory/reproducibility-log.md
-
+    - scripts/bootstrap.sh
+    - docs/engineering-memory/reproducibility-log.md
   .github/workflows/**:
     role: github_actions_ci
     status: runtime
     owner: engineering
     update_when:
-      - CI checks or release automation changes
+    - CI checks or release automation changes
     related:
-      - docs/engineering-memory/reproducibility-log.md
-
+    - docs/engineering-memory/reproducibility-log.md
   .env*:
     role: local_or_environment_secret_boundary
     status: secret_boundary
     owner: owner
     update_when:
-      - never commit live secrets
+    - never commit live secrets
     related:
-      - README.md
+    - README.md
+  .agent/bootstrap-profile.json:
+    role: resolved_installation_profile_components_skills_and_path_contract
+    status: generated
+    owner: tooling
+    authority: none
+  governance/**:
+    role: runtime_neutral_governance_core
+    status: normative
+    owner: architect
+    availability: always
+  governance/evaluation.md:
+    role: deterministic_output_and_observable_trajectory_evaluation_contract
+    status: normative
+    owner: architect
+    authority: assurance_only
+  .agent/workflows/sdd-protocol.md:
+    role: canonical_define_execute_assure_close_contract
+    status: normative
+    owner: architect
+  .agent/active-work-block.default.json:
+    role: portable_fail_closed_restore_default
+    status: normative
+    owner: orchestrator
+  .agent/active-work-block.json:
+    role: executable_work_block_source_write_integration_assurance_gate
+    status: operational_log
+    owner: orchestrator
+    authority: work_block_state
+  .agent/hooks/**:
+    role: provider_neutral_machine_gate_implementation
+    status: runtime_adapter
+    owner: maintainer
+    availability: always
+  docs/specs/**:
+    role: approved_product_and_technical_specifications
+    status: normative
+    owner: architect
+  docs/architecture/**:
+    role: accepted_architecture_decisions_and_contracts
+    status: normative
+    owner: architect
+  docs/tasklist/**:
+    role: active_task_decomposition
+    status: derived
+    owner: orchestrator
+  docs/evals/**:
+    role: approved_evaluation_plans_benchmarks_fixtures_and_observable_events
+    status: evidence
+    owner: verifier
+    restrictions:
+    - no_hidden_reasoning
+    - no_secrets
+    - no_unredacted_protected_payloads
+  docs/reports/**:
+    role: critic_review_verification_evaluation_drift_integration_and_closeout_evidence
+    status: evidence
+    owner: verifier
+  docs/reports/evaluations/**:
+    role: output_and_observable_trajectory_evaluation_reports
+    status: evidence
+    owner: verifier
+  docs/templates/work-block-template.md:
+    role: portable_work_block_contract
+    status: normative
+    owner: orchestrator
+  docs/templates/verification-report-template.md:
+    role: verification_report_contract
+    status: normative
+    owner: verifier
+  docs/templates/evaluation-plan-template.json:
+    role: evaluation_plan_schema_example
+    status: normative
+    owner: architect
+  docs/templates/evaluation-report-template.json:
+    role: evaluation_report_schema_example
+    status: normative
+    owner: verifier
+  docs/templates/trajectory-event-template.json:
+    role: observable_trajectory_event_schema_example
+    status: normative
+    owner: verifier
+  docs/templates/spec-drift-report-template.md:
+    role: specification_drift_report_contract
+    status: normative
+    owner: reviewer
+  docs/templates/closeout-report-template.md:
+    role: closeout_report_contract
+    status: normative
+    owner: orchestrator
+  docs/templates/repair-record-template.md:
+    role: controlled_ndr_repair_record_contract
+    status: normative
+    owner: orchestrator
+  docs/templates/combined-assurance-report-template.md:
+    role: independent_ndr_combined_review_and_verification_contract
+    status: normative
+    owner: verifier
+  scripts/repair-lifecycle.py:
+    role: fail_closed_ndr_repair_record_validator
+    status: normative
+    owner: maintainer
+  docs/templates/integration-admission-template.md:
+    role: integration_admission_trust_permission_and_evidence_contract
+    status: normative
+    owner: owner
+  runtimes/**:
+    role: runtime_capability_and_fallback_documentation
+    status: runtime_adapter
+    owner: architect
+    availability: always
+    note: documentation_presence_does_not_mean_runtime_surface_installed
+  integrations/**:
+    role: optional_external_capability_and_transport_documentation
+    status: integration_adapter
+    owner: architect
+    availability: always
+  CLAUDE.md:
+    role: claude_code_runtime_entrypoint
+    status: conditional_generated
+    owner: maintainer
+    selected_by_component: runtime:claude-code
+  .opencode/agents/**:
+    role: opencode_logical_role_subagents
+    status: conditional_generated
+    owner: maintainer
+    selected_by_component: runtime:opencode
+  .mcp.json:
+    role: empty_opt_in_project_mcp_registry
+    status: conditional_generated
+    owner: owner
+    selected_by_component: integration:mcp-config
+    authority: none_until_exact_tool_admission
+  scripts/validate-installation-profile.py:
+    role: generated_installation_profile_path_kind_blocked_default_and_evaluation_default_validator
+    status: normative
+    owner: verifier
+  scripts/validate-evaluation.py:
+    role: generated_evaluation_plan_report_and_closeout_validator
+    status: normative
+    owner: verifier
+    authority: assurance_only
+  source_directories:
+    role: project_source_and_tests
+    status: source
+    owner: coder
+    patterns:
+    - '{{SOURCE_DIRS}}'
+  generated_outputs:
+    role: build_cache_and_discovery_artifacts
+    status: generated
+    owner: tooling
+    patterns:
+    - node_modules/**
+    - .next/**
+    - dist/**
+    - build/**
+    - coverage/**
+    - graphify-out/**
+  local_secrets:
+    role: credentials_private_environment_and_runtime_state
+    status: local_state
+    owner: owner
+    patterns:
+    - .env
+    - .env.*
+    - '*.pem'
+    - '*.key'
+    - secrets/**
+    - credentials/**
+installation_profile:
+  state_file: .agent/bootstrap-profile.json
+  semantics: installation_composition_only
+  authority: none
+  health_check: scripts/bootstrap.sh
+  validator: scripts/validate-installation-profile.py
+  rules:
+  - selected_component_paths_must_exist_in_fresh_scaffold
+  - required_paths_must_match_expected_filesystem_kind
+  - known_unselected_component_paths_must_be_absent_in_fresh_scaffold
+  - blocked_default_work_block_must_validate_before_restore
+  - evaluation_contract_is_available_in_every_profile
+  - installation_does_not_grant_work_block_authority
+  - integration_activation_requires_separate_admission
+evaluation_assurance:
+  contract: governance/evaluation.md
+  plan_directory: docs/evals/**
+  report_directory: docs/reports/evaluations/**
+  validator: scripts/validate-evaluation.py
+  templates:
+  - docs/templates/evaluation-plan-template.json
+  - docs/templates/evaluation-report-template.json
+  - docs/templates/trajectory-event-template.json
+  evidence_boundary: observable_events_only
+  hidden_reasoning_required: false
+  authority: none
+repair_assurance:
+  mode: controlled_ndr_only
+  repair_record_template: docs/templates/repair-record-template.md
+  combined_assurance_template: docs/templates/combined-assurance-report-template.md
+  validator: scripts/repair-lifecycle.py
+  limits:
+    implementation_passes: 1
+    ndr_corrections: 1
+    stabilization_items: 3
+    stabilization_corrections: 2
+  authority: none

@@ -1,228 +1,320 @@
 # Work Block Template
 
-> Fill in before Stage 0 Preflight.
+> Fill this before non-trivial repository mutation. The Work Block binds the
+> runtime-neutral governance contract to one concrete objective.
 
-## Meta
+## Metadata
+
 - **Work Block ID:** [wb-xxx]
 - **Date:** [YYYY-MM-DD]
-- **Owner:** [name]
-- **Execution Mode:** [end-to-end autonomous | staged approval | read-only review | advisory]
-- **Side-Effect Class:** [read-only | local-docs | workflow-script-control | production-code | local-test | public-repo | live-infra | live-data | client-facing | destructive]
-- **DB Action Mode:** [none | local_temp | live_readonly | live_migration_apply | runtime_app | emergency_remediation]
+- **Owner:** [name/reference]
+- **Orchestrator:** [logical role binding]
+- **Governance Profile:** [Advisory | Controlled | Managed | Assured | Distributed]
+- **Execution Mode:** [conductor | orchestrator | staged approval | read-only review | advisory]
 - **Verification Tier:** [lite | standard | full]
+- **Evaluation Required:** [yes | no; risk/non-determinism reason]
 
 ## Lifecycle State
-- **Current Stage:** [Stage 0 | Stage 1 | Stage 2 | Stage 3]
-- **Stage Execution State:** [blocked | ready | in_progress | completed]
+
+- **Current Stage:** [Define | Execute | Assure | Close]
+- **Stage State:** [blocked | ready | in_progress | completed]
 - **Write Gate:** [READY | BLOCKED]
-- **Owner Approval Evidence:** [message/reference | not required]
-- **Critic Gate:** [PENDING | READY | SKIPPED | APPROVE | SUPPLEMENT | RECONSIDER]
-- **Verification Gate:** [PENDING | READY | SKIPPED]
+- **Critic Gate:** [PENDING | READY | BLOCKED | SKIPPED | DEGRADED]
+- **Review Gate:** [PENDING | READY | CHANGES_REQUIRED | BLOCKED | UNVERIFIED | SKIPPED]
 - **Verification Verdict:** [PENDING | READY | BLOCKED | UNVERIFIED]
-- **Stage 3 Mode:** [pending | success-closeout | reporting-only]
+- **Evaluation Verdict:** [PENDING | READY | BLOCKED | UNVERIFIED | NOT_REQUIRED]
+- **Drift Gate:** [PENDING | READY | BLOCKED | UNVERIFIED | SKIPPED]
+- **Closeout Mode:** [pending | success-closeout | reporting-only]
+- **Owner Approval Evidence:** [message/reference | not required]
 
 ## Objective
-[What user or technical outcome does this Work Block produce?]
+
+[What user or technical outcome must this Work Block produce?]
 
 ## Expected Final Result
-[What exact end state should be true when this Work Block is complete? Write it
-as the target state the Owner can recognize. Include user-visible result,
-published/deployed state if relevant, verification evidence, docs/logs updated,
-and what must be left clean.]
+
+[Describe the exact recognizable end state, including user-visible behavior,
+repository/runtime state, evidence, documentation, and what must remain clean.]
 
 ## Done Criteria
-- [ ] [Measurable completion condition 1]
-- [ ] [Measurable completion condition 2]
-- [ ] [Repo/runtime state is clean or documented]
 
-## Preflight State
-- **Git baseline:** [clean | dirty; command and summary]
-- **Pre-existing dirty files:** [none | list files and owner/status]
-- **Untracked local artifacts:** [none | list ignored/untracked artifacts]
-- **Proceed rule:** [why this Work Block can proceed without touching unrelated
-  changes, or what must be resolved first]
+- [ ] [Measurable outcome]
+- [ ] [Required deterministic, output, and trajectory evidence exists]
+- [ ] [Repository/runtime state is clean or documented]
+
+## Normative Baseline
+
+- **Approved Specification:** [path]
+- **Specification Status:** [draft | proposed | approved | superseded]
+- **Specification Revision:** [commit/hash/version]
+- **Accepted Architecture Decisions:** [paths/IDs]
+- **External Contracts:** [API/schema/legal/provider/user contract or not applicable]
+- **Derived Implementation Plan:** [path]
+- **Approved Evaluation Plan:** [not required | docs/evals/<id>/plan.json]
+- **Active Tasklist:** [path]
+
+Rule: approved specification and accepted architecture decisions outrank plans,
+tasklists, evaluation reports, and operational logs.
+
+## Repository Preflight
+
+- **Git baseline:** [branch/commit/status]
+- **Pre-existing dirty files:** [none | list with ownership]
+- **Untracked artifacts:** [none | list]
+- **Current diff:** [none | summary/reference]
+- **Proceed rule:** [why unrelated changes will not be touched]
 
 ## Dependency Check
+
 ### Must Resolve Before Start
-- [Dependency, permission, credential, access, design, or decision required
-  before implementation starts]
 
-### Can Resolve During Work
-- [Non-blocking uncertainty the Orchestrator may solve without pausing unless
-  it hits a Hard Stop]
+- [Permission, requirement, access, design, environment, or decision]
 
-## Runtime / Data Mutation Boundary
-- **Applies:** [yes | no; required for DB, payment, order, stock, CRM, live
-  service, or production data changes]
-- **Agent authority:** [planner/draft/read-only only | approved code authoring
-  only | not applicable]
-- **Structured action:** [ActionSpec/resource/operation/scope/risk, or not
-  applicable]
-- **Trusted executor:** [backend service/API/repository/job that performs the
-  mutation, or not applicable]
-- **Policy and approval:** [deny/read-only/requires approval/execute rules]
-- **Audit path:** [where proposed action, policy decision, approval, executor,
-  and result are logged]
-- **Forbidden direct path:** [raw SQL/manual row mutation/unrestricted provider
-  API/direct agent tool call, or not applicable]
+### May Resolve During Work
+
+- [Non-blocking uncertainty and stop condition]
 
 ## Scope
+
 ### In Scope
-- [Item 1]
+
+- [Item]
 
 ### Out of Scope
-- [Item 1]
+
+- [Item]
 
 ## Write-Set
-```
+
+```text
 [Approved files/directories]
 ```
 
-For Quick-Fix classification, count planned implementation/write-set files
-only. Exclude lifecycle evidence such as reports, logs, and gate files. A
-Quick-Fix may include at most 2 planned write-set files and must not touch
-logic, routes, schema, APIs, security, governance, DB, deploy, secrets, or
-client-facing side effects.
+- **One Coder per write-set:** [yes]
+- **Parallel writers:** [no | separate worktrees and non-overlapping write-sets]
+- **Scope guard:** [git diff/status/path validation]
 
-## Navigation Impact
-- **Files added/moved/removed:** [none | list]
-- **PROJECT_MAP.md update needed:** [yes | no; why]
-- **FILE_REGISTRY.yml update needed:** [yes | no; why]
-- **Session bootstrap or profile docs update needed:** [yes | no; why]
-- **Engineering memory update needed:** [yes | no; why]
-- **Generated/derived/local-only boundary changed:** [yes | no; why]
+Lifecycle reports, evaluation evidence, logs, and gate artifacts are counted
+separately from implementation files when applying Quick-Fix and trigger thresholds.
 
-## Commit / Stage Scope
-- **Files to stage/commit:** [explicit list or pathspec]
-- **Files to leave unstaged:** [pre-existing dirty files, local artifacts,
-  generated output, secrets]
-- **Commit readiness evidence:** [for non-trivial Work Blocks, cite the final
-  `memory_bank/orchestrator-log.md` verification row or explicit SKIPPED
-  reason before scoped commit; for quick-fix/trivial work, state why the
-  lighter path applies]
-- **Scope guard:** [command/check used before staging, for example
-  `git diff --name-only` and `git status --short`]
+## Risk and Authority
 
-## Acceptance Criteria
-- [ ] [AC 1]
-- [ ] [AC 2]
-
-## Risks and Mitigations
-| Risk | Impact | Mitigation | Stop Condition |
-|---|---|---|---|
-| [Risk] | [Impact] | [Mitigation] | [When to stop and ask Owner] |
+- **Side-Effect Class:** [read-only | local-docs | production-code | local-test | public-repo | live-infra | live-data | client-facing | destructive]
+- **DB/Data Action Mode:** [none | local_temp | live_readonly | live_migration_apply | runtime_app | emergency_remediation]
+- **Sensitive Domains:** [none | auth | payments | DB/schema | webhooks | provider | deploy | security | client communications | other]
+- **Output Non-Determinism:** [none | bounded | material; why]
+- **Autonomous Tool/Trajectory Risk:** [none | bounded | material; why]
+- **Threat Model Required:** [yes | no; reason]
+- **Rollback / Recovery:** [procedure]
 
 ## Hard Stops in Scope
-- [ ] Production deploy
-- [ ] Live DB migration
-- [ ] Credential rotation
-- [ ] Destructive git ops
-- [ ] Commit or push
-- [ ] Public release/publication
-- [ ] Client communications
 
-## Subagent Strategy
-- **Classification:** [Subagent-Required | Single-Agent]
-- **Triggers matched:** [list]
-- **Use Claude Code team:** [yes | no | conditional; why]
-- **Claude Code process scope:** [not applicable | include internal CC logs and
-  memory in write-set/allowed_scope: `memory_bank/orchestrator-log.md`,
-  `memory_bank/review-log.md`, `.agent/critic-gate.md`,
-  `.agent/verification-gate.md`, `.claude/agent-memory/**`]
-- **Claude Code external report:** [not applicable |
-  `memory_bank/external-team-log.md` entry required]
-- **Use Codex/GPT critic or verifier:** [yes | no | conditional; why]
-- **Dispatch plan:** [agents, order, parallel groups]
-- **Budget posture:** [normal | cheap CC/DeepSeek OK | constrained]
-- **Skip reasons:** [only if any expected agent/critic/verifier is skipped]
+- [ ] Production deploy or live service restart
+- [ ] Live DB migration or live-data mutation
+- [ ] Credential/token/secret change
+- [ ] Destructive git/filesystem/database operation
+- [ ] Commit or push
+- [ ] Push to default branch
+- [ ] Public release/publication
+- [ ] Client/user communication
+- [ ] Payment/order/stock/CRM/external consequential mutation
+- [ ] Material specification, evaluation-plan, or scope expansion
+
+For each checked item, record approval state and evidence. Evaluation cannot open
+or waive a Hard Stop.
+
+## Runtime Capability Snapshot
+
+- **Primary Runtime:** [codex | claude-code | opencode | generic | other]
+- **Runtime Adapter:** [path/reference]
+- **Runtime Version:** [observed version | unknown]
+- **Native Subagents:** [available | unavailable | unknown]
+- **Separate Sessions:** [available | unavailable | unknown]
+- **Worktrees / Isolated Roots:** [available | unavailable | unknown]
+- **Hooks / Tool Guards:** [available | unavailable | unknown]
+- **Sandbox / Permission Controls:** [description]
+- **Observable Event Sources:** [tool log/gate log/CI/artifacts/none]
+- **MCP / Plugin / External Tools:** [available inventory or none]
+- **Known Limitations:** [list]
+- **Capability Evidence:** [version/config/smoke/reference]
+
+## Integration Profile and Admission
+
+- **Integration Profile:** [none | official plugin | MCP | file handoff | hosted connector | direct runtime CLI | manual handoff]
+- **Approved Integration IDs:** [none | stable IDs matching machine Work Block]
+- **Admission Records:** [none | paths based on integration-admission-template.md]
+- **Logical Functions Served:** [none | Critic/Reviewer/Verifier/Evaluator/etc.]
+- **From / To Boundary:** [runtime/service endpoints]
+- **Exact Tools / Actions:** [none | list]
+- **Authority:** [read-only | approved write-set | reports only | other]
+- **Data Sent Externally:** [none | exact content boundary]
+- **Secret / Authentication Source:** [none | local runtime/keychain/env name, no values]
+- **Network / External Directory Boundary:** [deny/ask/approved endpoints or paths]
+- **Timeout / Cancellation / Retry:** [behavior]
+- **Disable / Recovery Procedure:** [steps]
+- **Integration Smoke Evidence:** [not required for none | path/result]
+
+Rules:
+
+- generated projects default to `none`;
+- availability does not imply permission;
+- every automated non-`none` integration requires an admission record;
+- external runtime CLI IDs and admission paths must also be present in
+  `.agent/active-work-block.json`;
+- integration access does not expand the bound logical role or write-set.
+
+## Function Bindings
+
+| Function | Logical Role | Runtime | Model Class | Actual Model | Isolation | Authority | Adapter / Integration / Launch Evidence |
+|---|---|---|---|---|---|---|---|
+| Orchestration | Orchestrator | [runtime] | [class] | [optional] | [level] | workflow | [reference] |
+| Architecture | Architect | [runtime] | [class] | [optional] | [level] | read-only/drafts | [reference] |
+| Critic | Critic | [runtime] | [class] | [optional] | [level] | read-only | [reference] |
+| Implementation | Coder | [runtime] | [class] | [optional] | [level] | write-set | [reference] |
+| Review | Reviewer | [runtime] | [class] | [optional] | [level] | read-only | [reference] |
+| Verification | Verifier | [runtime] | [class] | [optional] | [level] | read-only | [reference] |
+| Evaluation | Verifier/Evaluator specialization | [runtime] | [class] | [optional] | [level] | read-only/evidence | [reference] |
+| Drift Audit | Reviewer/Verifier specialization | [runtime] | [class] | [optional] | [level] | read-only | [reference] |
+
+Use `not required` for functions legitimately skipped by profile and triggers.
+Model/provider/integration names do not define roles or authority.
+
+## Degraded / Fallback Plan
+
+- **Missing capability:** [none | capability]
+- **Preferred execution:** [method]
+- **Fallback:** [same-context | separate-session | alternate runtime | manual | other]
+- **Degraded label:** [none | exact label]
+- **Residual limitation:** [what independence/evidence is not established]
+- **Follow-up required:** [yes/no]
 
 ## Skills
+
 - **Checked:** [list]
 - **Matched:** [list]
 - **Used:** [list]
 - **Skipped:** [list with reasons]
 
-## Design Brief / Design Skill Stack
-- **Applies:** [yes | no; required for non-trivial frontend/design/showcase
-  work]
-- **Design brief artifact:** [not applicable | path to brief/report/section]
-- **Design Analyst required:** [yes | no; why]
-- **Source fidelity mode:** [exact-port | inspired-adaptation | redesign |
-  greenfield | not applicable]
-- **Base design skill:** [not applicable | skill/reference]
-- **Style/taste skill:** [not applicable | skill/reference]
-- **Component/system skill:** [not applicable | skill/reference]
-- **Motion/source-tool skill:** [not applicable | skill/reference]
-- **Rejected skills:** [none | list with reasons]
-- **Visual QA gates:** [desktop/mobile/header/nav/forms/contrast/routes/etc.]
+## Implementation Plan
 
-## Verification Plan
-- **Canonical checks:** [exact commands expected for this repository and
-  Verification Tier]
-- **Scoped fallback checks:** [acceptable narrower checks if canonical checks
-  are blocked or disproportionate]
-- **Browser smoke:** [required pages/flows/screenshots for frontend work, or
-  not applicable]
-- **Evidence expected:** [logs, screenshots, command output, reports, result
-  files]
-- **Skipped checks:** [none | checks skipped with reason and residual risk]
+| Task | Owner Role | Write-Set | Dependencies | Expected Evidence | Status |
+|---|---|---|---|---|---|
+| [Task] | [role] | [paths] | [deps] | [evidence] | [planned] |
 
-## Rollback / Recovery
-[How to undo if this goes wrong?]
+## Acceptance Criteria
+
+- [ ] [AC-001]
+- [ ] [AC-002]
+
+## Assurance Plan
+
+### Critic
+
+- **Required:** [yes/no; trigger]
+- **Inputs:** [spec/plan/risk/topology/integration admissions/evaluation design]
+- **Expected report:** [path]
+
+### Independent Review
+
+- **Required:** [yes/no; trigger]
+- **Frozen diff:** [reference]
+- **Review dimensions:** [correctness/security/architecture/maintainability/integration/evaluation boundaries]
+- **Expected report:** [path]
+
+### Technical Verification
+
+- **Canonical checks:** [exact commands/flows]
+- **Runtime/browser/API/integration smoke:** [required/optional/not applicable]
+- **Positive and negative cases:** [list]
+- **Evidence expected:** [logs/screenshots/report/artifacts]
+- **Allowed fallback checks:** [narrower checks and residual risk]
+- **Skipped checks:** [none | reason]
+
+### Agent Evaluation
+
+- **Required:** [yes/no; trigger]
+- **Evaluation ID / Plan:** [not required | ID and path]
+- **Subject/Frozen Revision:** [revision]
+- **Deterministic Checks:** [criterion IDs and commands]
+- **Output Criteria:** [criterion IDs, thresholds, evaluator types]
+- **Trajectory Requirements:** [required/prohibited observable events]
+- **Event Sources:** [paths/logs/artifacts]
+- **Rubric Revision:** [revision]
+- **Benchmark/Dataset Revision:** [revision | not-applicable]
+- **LM Judge Policy:** [disabled | identity/prompt revision/calibration]
+- **Isolation:** [actual or required boundary]
+- **Expected Report:** [docs/reports/evaluations/<id>.json]
+- **No Hidden Reasoning:** [confirmed; observable events only]
+
+### Specification Drift Audit
+
+- **Required:** [yes/no; trigger]
+- **Inputs:** [spec/decisions/plans/diff/tests/evals/docs]
+- **Expected report:** [path]
+- **Valid skip reason:** [Quick Fix only, or not applicable]
+
+## Navigation and Documentation Impact
+
+- **Files added/moved/removed:** [none | list]
+- **PROJECT_MAP update:** [yes/no; why]
+- **FILE_REGISTRY update:** [yes/no; why]
+- **Specification update:** [yes/no; approval state]
+- **Architecture decision update:** [yes/no; path]
+- **Runtime / integration adapter update:** [yes/no; paths]
+- **Evaluation contract/update:** [yes/no; paths]
+- **User/engineering documentation update:** [yes/no; paths]
+- **Engineering memory candidate:** [yes/no; classification]
+- **Generated/local boundary change:** [yes/no; why]
+
+## Commit / Publication Scope
+
+- **Files to stage:** [explicit paths]
+- **Files to leave unstaged:** [list]
+- **Commit/push approval:** [not requested | requested | approved evidence]
+- **Release/deploy approval:** [not applicable | required | evidence]
 
 ## Execution Log
-| Time | Stage | Action / Decision | Evidence | Status |
-|---|---|---|---|---|
-| [time] | [stage] | [what happened] | [command, file, review, or artifact] | [status] |
 
-## Closeout and Retrospective
-Complete this before the Work Block is considered closed. Keep this evidence
-based: record what happened, not private reasoning or unsupported claims.
-Use `none` or `not applicable` when there is no real signal; do not invent
-lessons to fill the form.
+| Time | Stage | Function | Runtime / Integration | Action / Decision | Evidence | Status |
+|---|---|---|---|---|---|---|
+| [time] | [stage] | [function] | [runtime/integration] | [action] | [reference] | [status] |
 
-### Result Summary
-- **Final Result:** [actual end state compared with Expected Final Result]
+Record observable trajectory events or references only. Do not include hidden
+reasoning, private chain-of-thought, model scratchpads, secrets, or protected payloads.
+
+## Closeout
+
+### Result
+
+- **Final Result:** [actual vs expected]
 - **Closeout Classification:** [SUCCESS | REPORTING_ONLY]
-- **Task Status:** [completed only when verdict READY | blocked]
-- **Verification Evidence:** [commands, logs, reports, artifacts]
-- **WB/commit linkage:** [commit hash when committed, or "not committed yet";
-  if committed, cite the verification row or explicit skip reason that made the
-  commit ready]
-- **Residual Risks:** [known gaps, deferred checks, assumptions]
+- **Task Status:** [completed only when required gates pass | blocked/incomplete]
+- **Review Verdict:** [verdict/path]
+- **Verification Verdict:** [verdict/path]
+- **Evaluation Verdict:** [READY/BLOCKED/UNVERIFIED/NOT_REQUIRED and path]
+- **Drift Verdict:** [verdict/path]
+- **Integration Evidence:** [none | admission/smoke/result paths]
+- **Residual Risks:** [list]
+- **Inspection Gaps:** [list]
 
-### Critic and Review Value
-- **Critic used:** [yes | no | fallback; agent/model if relevant]
-- **Critic verdict:** [APPROVE | SUPPLEMENT | RECONSIDER | SKIPPED]
-- **What the critic caught:** [specific useful findings, or "nothing material"]
-- **What the critic missed:** [only if discovered later]
-- **Skip/fallback reason:** [required if critic was skipped or unavailable]
+### Specification and SSOT Sync
 
-### Agent Improvement Candidates
-Record only evidence-backed follow-ups from this Work Block.
+- **Specification changed:** [no | approved change path/revision]
+- **Architecture decisions synchronized:** [yes/no/not applicable]
+- **Implementation/evaluation plans and tasklist synchronized:** [yes/no]
+- **Runtime/integration documentation synchronized:** [yes/no/not applicable]
+- **Reports linked:** [paths]
 
-| Candidate | Class | Evidence | Disposition |
-|---|---|---|---|
-| [short label] | [skill-update | skill-create | skill-archive | agent-prompt | template | workflow | hook | no-action] | [source file, log row, or report] | [propose | defer | reject | no-action] |
+### Knowledge and Retrospective
 
-### Lessons Learned
-- **What worked:** [process/tooling/agent behavior worth preserving]
-- **What did not work:** [friction, missed context, weak gate, slow step]
-- **What not to repeat:** [concrete mistake or weak pattern to avoid]
-- **Evidence wording check:** [use "demonstrated" for one run, "validated"
-  for repeatable scripted checks; avoid "proved/guaranteed" unless
-  mathematically or formally justified]
-- **Framework updates made:** [template, hook, skill, doc, runner, memory]
-- **Framework updates to consider:** [future improvements not done in this WB]
-- **Reusable knowledge created:** [skill, checklist, report, memory entry, none
-  / not applicable]
-- **Engineering memory classification:** [promoted | operational-only |
-  not-applicable; cite `docs/engineering-memory/*` when promoted]
-- **Navigation updates:** [PROJECT_MAP.md, FILE_REGISTRY.yml, session bootstrap,
-  profile docs, none / not applicable]
-- **Follow-up Work Blocks:** [links or IDs]
+- **What worked:** [evidence-based]
+- **What failed or caused friction:** [evidence-based]
+- **What not to repeat:** [specific]
+- **Reusable knowledge:** [path | none]
+- **Engineering memory classification:** [promoted | operational-only | not-applicable]
+- **Framework updates to consider:** [list]
+- **Follow-up Work Blocks:** [IDs/paths]
 
-`SUCCESS` requires verification verdict `READY`. For `BLOCKED` or
-`UNVERIFIED`, use `REPORTING_ONLY`, keep the task blocked, record corrective
-action or an unresolved dependency, and do not claim promotion, merge, deploy,
-release readiness, successful closure, or completed task status.
+`SUCCESS` requires all required assurance gates, including evaluation when required,
+to pass. Otherwise use `REPORTING_ONLY`; do not claim merge, deploy, release, or
+completion readiness.

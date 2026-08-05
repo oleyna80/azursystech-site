@@ -1,7 +1,7 @@
-# Verifier Agent Memory
+# Verifier Memory
 
-Memory index for the Verifier agent. One line per memory, under ~150 chars.
+Persistent, project-local memory for verification constraints, recurring test
+commands, known environment limitations, and release-quality evidence.
 
----
-
-*No memories yet. Memories will accumulate as verifications are performed.*
+Keep entries evidence-based and cite the source file, command, or owner
+decision that supports each durable fact.

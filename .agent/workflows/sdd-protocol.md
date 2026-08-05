@@ -1,287 +1,440 @@
-# SDLC Protocol — Stage Definitions
+# SDLC Protocol — Runtime-Neutral Stage Contract
 
-> Defines the 4-stage pipeline: Plan & Discover, Implement, Verify, Sync & Report.
-> Referenced by AGENTS.md § Stage Flow.
+> Canonical generated-project lifecycle. It defines management functions,
+> evidence, gates, and state transitions independently of the agent runtime.
 
----
+## Core Principle
 
-## Workflow Mapping
+The lifecycle requires functions and artifacts, not a fixed number of agents.
+One capable runtime may execute several functions for low-risk work. Higher-risk
+work requires stronger independence as recorded in the active Work Block.
 
-Project shorthand maps to the 4-stage SDD pipeline as follows:
-
-| Project workflow | SDD stage |
-|---|---|
-| Plan / Spec | Stage 0: Plan & Discover |
-| Implementation | Stage 1: Implement |
-| Review / Verification | Stage 2: Verify |
-| Closeout / SSOT Sync / Owner report | Stage 3: Sync & Report |
-
-`.agent/critic-gate.md` and `.agent/verification-gate.md` are evidence
-contracts. A runtime may enforce them with hooks, but the policy is valid even
-when no mechanical hook script is installed.
-
-## Stage State Machine
-
-```
-blocked → ready → in_progress → completed
-  ↑                      ↓
-  └──────── retry ───────┘
+```text
+Stage 0 — Define
+Stage 1 — Execute
+Stage 2 — Assure
+Stage 3 — Close
 ```
 
-States:
-- **blocked** — dependency not met, Hard Stop triggered, or Owner approval needed
-- **ready** — dependencies cleared, write gate open, ready to execute
-- **in_progress** — currently executing
-- **completed** — required stage work and evidence are complete; this does not
-  imply that verification passed
+## State Model
 
-Track these fields separately:
+Stage execution state:
 
-- **Stage execution state:** `blocked | ready | in_progress | completed`
+```text
+blocked -> ready -> in_progress -> completed
+   ^                              |
+   +------------- retry ----------+
+```
+
+Track gates and outcomes separately:
+
+- **Write gate:** `READY | BLOCKED`
+- **Critic gate:** `READY | BLOCKED | SKIPPED | DEGRADED`
+- **Review gate:** `READY | CHANGES_REQUIRED | BLOCKED | UNVERIFIED | SKIPPED`
 - **Verification verdict:** `READY | BLOCKED | UNVERIFIED`
-- **Stage 3 mode:** `success-closeout | reporting-only`
+- **Evaluation verdict:** `READY | BLOCKED | UNVERIFIED | NOT_REQUIRED`
+- **Drift gate:** `READY | BLOCKED | UNVERIFIED | SKIPPED`
+- **Closeout mode:** `success-closeout | reporting-only`
 
-Only `READY` permits `success-closeout`. `BLOCKED` or `UNVERIFIED` permits
-Stage 3 reporting work only: the task remains blocked, corrective action or an
-unresolved dependency is recorded, and no promotion, merge, deploy,
-release-ready statement, successful closure, or completed task state is allowed.
+Only all required gates in a passing state permit `success-closeout`.
+`BLOCKED`, `UNVERIFIED`, or unresolved `CHANGES_REQUIRED` permits diagnostics,
+corrective planning, evidence capture, and reporting-only closeout. It does not
+permit merge-ready, deploy-ready, release-ready, or completed-task claims.
+
+Evaluation is assurance evidence. It does not grant source-write authority,
+integration admission, credentials, deployment permission, or a Hard Stop exception.
+Trajectory evaluation uses observable events only and must never request hidden
+reasoning, private chain-of-thought, or model scratchpads.
+
+## Governance Profiles
+
+The Work Block selects the smallest sufficient governance profile:
+
+- **Advisory:** read-only analysis; no repository mutation.
+- **Controlled:** one bounded executor, explicit scope/write-set, basic review and deterministic checks.
+- **Managed:** approved specification and plan, Critic, Reviewer, Verifier, and evaluation for non-deterministic or consequential agent behavior.
+- **Assured:** stronger independence, fixed evaluation rubric/benchmark revisions, drift audit, runtime evidence.
+- **Distributed:** multiple runtimes/worktrees/teams with explicit handoff, observable-event provenance, and consolidation.
+
+Runtime choice is separate from governance profile.
+
+### Narrow Deterministic Repair
+
+NDR is a Controlled submode for deterministic, reversible low- or medium-risk
+repairs only. The Work Block must define an exact CI/bootstrap/runtime-validation
+allowlist, prohibited domains, root cause, deterministic verification commands,
+and stop condition in one repair record. It excludes architecture, product, auth,
+security-boundary, public API, schema, data, deploy, and dependency-upgrade work.
+
+NDR has one implementation pass, at most one correction, and one independent
+read-only combined assurance report covering review and verification. Integration
+Stabilization may group at most three eligible repair records and two correction
+rounds; a limit or eligibility failure returns to Owner decision.
 
 ---
 
-## Stage 0: Plan & Discover
+# Stage 0 — Define
 
-**Owner:** Control Tower
-**Write authority:** approved control-layer paths such as `AGENTS.md`,
-`PROJECT_MAP.md`, `FILE_REGISTRY.yml`, `.agent/README.md`,
-`.agent/ROSTER.md`, `.agent/critic-gate.md`, `.agent/verification-gate.md`,
-`.agent/workflows/**`, approved `.agent/skills/**`, safe `.codex/**`
-policy/templates/hooks, `docs/session-bootstrap.md`, `scripts/bootstrap.sh`,
-`docs/engineering-memory/**`, `docs/plans/**`, `docs/specs/**`,
-`docs/tasklist/**`, `docs/templates/**`, and `memory_bank/**`
+## Owner
 
-### Entry Conditions
-- Work Block framed by Owner or Control Tower
-- Session Start Read Set loaded
+Orchestrator. Architect and Critic functions may be delegated.
 
-### Activities
-1. **Parallel Decomposition Matrix** — classify: domains, files, side-effect class, DB mode, hard stops, verification tier
-2. **Skill Routing Gate** — check `.agent/ROSTER.md`, match approved or local
-   skill files when present, record decisions and unavailable skill files
-3. **Subagent Topology** — classify `Subagent-Required` triggers, plan dispatch
-4. **Preflight** — output Stage 0 Preflight block: skills, subagent topology, side-effect class, DB mode, hard stops, write gate status
-5. **Research** — if needed, launch `solution-architect` for pre-implementation analysis
-6. **Critic Review** — launch `critic` agent to independently review Control Tower decisions (scope, skill routing, skip reasons, risk gaps) according to the trigger tables below.
-7. **Independent Critic Review** — native Codex Critic is the ordinary read-only gate. Request a second runtime only for an explicit risk trigger (conflicting evidence, high-impact security, or Owner request); record its scope and any degraded result without making Codex MCP a prerequisite.
-8. **Plan Approval** — produce plan, get Owner approval if non-trivial
-9. **Runtime capacity prerequisite** — for runtime/configuration/infrastructure
-   Work Blocks, run `scripts/agent-runtime-doctor.sh` before implementation or
-   formal verification. Record every `WARN`/`BLOCKED` result as
-   `incident: agent-runtime`; repository policy may diagnose capacity, but only
-   an Owner-authorized host action may change host limits.
+## Purpose
 
-### Stage 0 Trigger Tables
+Convert a request into an approved, bounded, auditable Work Block before source
+changes begin.
 
-File-count triggers count planned implementation/write-set files only. Reports,
-logs, gates, and other lifecycle evidence artifacts are excluded.
+## Required Inputs
 
-| Critic required when any condition matches | Skip rule |
+- current Owner instruction;
+- repository state and relevant current source;
+- applicable governance and runtime adapter documents;
+- relevant accepted specifications and architecture decisions;
+- current operational context when resuming work.
+
+## Activities
+
+1. **Frame the objective**
+   - expected final result;
+   - measurable done criteria;
+   - in-scope and out-of-scope boundaries.
+
+2. **Resolve source of truth**
+   - identify or create the active specification;
+   - record specification status and revision;
+   - identify accepted architecture decisions;
+   - treat plans and tasklists as derived artifacts.
+
+3. **Classify risk and authority**
+   - side-effect class;
+   - DB/data action mode;
+   - Hard Stops;
+   - rollback/recovery expectations;
+   - required governance profile.
+
+4. **Negotiate runtime capability**
+   - active runtime and adapter;
+   - subagent/session/worktree support;
+   - hooks and sandbox availability;
+   - model class and budget posture;
+   - actual isolation available;
+   - observable-event capability;
+   - fallback path for missing capability.
+
+5. **Define execution topology**
+   - logical functions required;
+   - runtime binding for each function;
+   - one Coder per write-set;
+   - parallel work only for independent scopes;
+   - consolidation owner.
+
+6. **Route skills**
+   - checked;
+   - matched;
+   - used;
+   - skipped with reason.
+
+7. **Create the implementation and assurance plans**
+   - ordered tasks;
+   - explicit write-set;
+   - dependencies;
+   - review and verification plan;
+   - evaluation requirement and approved plan path;
+   - drift triggers.
+
+8. **Run Critic function when triggered**
+   - challenge scope, assumptions, authority, risk, topology, verification, and evaluation design;
+   - record `APPROVE`, `SUPPLEMENT`, or `RECONSIDER`;
+   - rerun Define for material gaps.
+
+## Evaluation Triggers
+
+Output or trajectory evaluation is required when any condition applies:
+
+- output is materially non-deterministic;
+- an agent selects tools or execution paths autonomously;
+- consequential automation depends on process compliance;
+- production users depend on agent-generated responses or decisions;
+- an approved benchmark, dataset, rubric, or LM judge is part of acceptance;
+- Managed, Assured, or Distributed governance requires it by risk classification.
+
+When evaluation is not required, record the reason explicitly. Runtime or model name
+alone neither requires nor waives evaluation.
+
+## Exit Conditions
+
+- active specification identified and approved or marked with explicit approval requirement;
+- architecture baseline identified;
+- Work Block complete;
+- write-set approved;
+- runtime capability and isolation recorded;
+- verification/review/evaluation/drift plan recorded;
+- Critic gate resolved when triggered;
+- write gate `READY`.
+
+No source changes are allowed while the write gate is `BLOCKED`.
+
+---
+
+# Stage 1 — Execute
+
+## Owner
+
+Coder. Exactly one write-capable Coder per write-set.
+
+## Entry Conditions
+
+- write gate `READY`;
+- approved specification and implementation plan;
+- explicit write-set;
+- side-effect and Hard Stop classification;
+- required runtime capability available or an approved degraded fallback recorded;
+- approved evaluation plan available when evaluation is required.
+
+## Activities
+
+1. Read the active specification, plan, acceptance criteria, and relevant source.
+2. Implement only inside the approved write-set.
+3. Preserve existing project patterns unless the specification approves a change.
+4. Do not silently change requirements or architecture.
+5. When a legitimate requirement change is discovered, stop and return to Define.
+6. Run scoped self-checks.
+7. Capture required observable tool, gate, check, retry, side-effect, and evidence events.
+8. Redact secrets and protected data from operational evidence.
+9. Freeze the implementation diff for assurance.
+10. Report `DONE`, `DONE_WITH_CONCERNS`, `NEEDS_CONTEXT`, or `BLOCKED`.
+
+## Exit Conditions
+
+- planned changes implemented or blockers documented;
+- no unapproved scope expansion;
+- frozen diff or changed-file list available;
+- self-check evidence recorded;
+- required observable evaluation events attributable to the Work Block;
+- implementation result handed to Stage 2.
+
+A failed Execute stage blocks assurance from passing. Stage 2 may still inspect
+partial work for diagnostics, but cannot produce a successful verdict.
+
+---
+
+# Stage 2 — Assure
+
+Stage 2 contains four distinct functions:
+
+```text
+2A Independent Review
+2B Technical Verification
+2C Agent Evaluation
+2D Specification Drift Audit
+```
+
+They may be executed by separate agents or by separate passes of one runtime,
+but actual independence and limitations must be recorded.
+
+## 2A — Independent Review
+
+### Purpose
+
+Inspect the frozen diff for engineering quality and risk.
+
+### Reviewer Checks
+
+- defects and regressions;
+- incorrect assumptions and edge cases;
+- architecture and dependency violations;
+- security and privacy risks;
+- maintainability and unnecessary complexity;
+- missing tests, evaluation evidence, or observability;
+- scope expansion;
+- unsafe generated boilerplate or prompt-shaped abstractions.
+
+### Verdicts
+
+- `READY`
+- `CHANGES_REQUIRED`
+- `BLOCKED`
+- `UNVERIFIED`
+
+`CHANGES_REQUIRED` returns the Work Block to Execute for correction, followed by
+review of the updated frozen diff.
+
+## 2B — Technical Verification
+
+### Purpose
+
+Demonstrate that acceptance criteria and observable contracts hold.
+
+### Evidence Tiers
+
+- **Lite:** changed-file scope, targeted types/lint/build, relevant tests, obvious regressions.
+- **Standard:** Lite plus API/schema, positive/negative cases, runtime smoke, errors/logging, security baseline.
+- **Full:** Standard plus threat model, security classification, auth/origin guards, migrations/rollback, independent runtime evidence, approved production-like smoke.
+
+### Verdicts
+
+- `READY`
+- `BLOCKED`
+- `UNVERIFIED`
+
+Unavailable evidence is `UNVERIFIED`, not `READY`.
+
+## 2C — Agent Evaluation
+
+### Purpose
+
+Evaluate the delivered artifact and observable agent trajectory against the
+approved evaluation plan.
+
+### Evidence Classes
+
+- deterministic check results;
+- output rubric results;
+- observable trajectory events and event-source provenance;
+- benchmark/dataset and rubric revisions;
+- evaluator identity, judge policy, actual runtime, model class, and isolation;
+- inspection gaps, blocked checks, and residual risks.
+
+### Rules
+
+- deterministic correctness cannot pass solely through an LM judge;
+- trajectory pass requires all blocking required events and no prohibited event;
+- missing or inaccessible event sources are `BLOCKED` or `UNVERIFIED`;
+- a fluent final response is not trajectory evidence;
+- private chain-of-thought and hidden reasoning are never required evidence;
+- changing criteria, thresholds, datasets, or judge policy creates a new plan revision.
+
+### Verdicts
+
+- `READY`
+- `BLOCKED`
+- `UNVERIFIED`
+
+Required evaluation cannot be skipped. Optional evaluation may be `SKIPPED` only
+with a recorded reason in the active Work Block.
+
+## 2D — Specification Drift Audit
+
+### Purpose
+
+Compare:
+
+```text
+Specification <-> Architecture decisions <-> Plan <-> Code <-> Tests/Evals <-> Documentation
+```
+
+Use `spec-drift-audit` and the standard drift report template.
+
+### Required Triggers
+
+- public behavior, route, API, schema, persistence, or runtime contract changed;
+- auth, payment, DB, provider, webhook, security, or architecture changed;
+- specification changed during implementation;
+- behavior was added outside the approved plan;
+- evaluation criteria or evidence reveal an undocumented contract;
+- 3 or more implementation files changed;
+- Assured or Distributed profile.
+
+### Verdicts
+
+- `ALIGNED` -> drift gate `READY`;
+- `ALIGNMENT_REQUIRED` -> drift gate `BLOCKED` until corrected and rerun;
+- `BLOCKED` -> drift gate `BLOCKED`;
+- `UNVERIFIED` -> drift gate `UNVERIFIED`.
+
+A Quick Fix may skip drift audit only when it has no behavior, contract, schema,
+security, runtime, architecture, evaluation, or governance impact.
+
+## Isolation Requirements
+
+| Work type | Review / verification / evaluation expectation |
 |---|---|
-| 3+ planned implementation files | Owner approval required to skip |
-| Side-effect class is production code write or higher | Owner approval required to skip |
-| New subagent topology | Owner approval required to skip |
-| 2+ matched skills are skipped | Owner approval required to skip |
-| Security, auth, payments, DB, deploy, or external provider work | Owner approval required to skip unless listed as no-skip |
+| Controlled, low-risk | separate pass; same-context allowed but recorded |
+| Managed, non-sensitive | separate-subagent or separate-session preferred |
+| Assured or sensitive | independent-readonly-root or separate-runtime preferred |
+| credentials, live data, deploy mutation | OS-isolated where practical and no production credentials for read-only assurance |
+| parallel writers | separate-worktree per write-set plus consolidation |
 
-No-skip domains are first Work Blocks in authentication/authorization,
-payments/billing, database migration, a new service layer, and deploy or
-infrastructure. Native Critic is required by the normal trigger table. An
-independent second-runtime review is risk-driven and explicitly recorded.
+## Stage 2 Exit Conditions
 
-### Exit Conditions
-- Write gate: `READY`
-- Critic verdict: APPROVE or SUPPLEMENT (if RECONSIDER — re-run Stage 0 with corrections)
-- Optional independent second-runtime result recorded when explicitly requested
-- `.agent/critic-gate.md` records evidence-backed critic/GPT critic status before source edits
-- Plan approved (for non-trivial work)
-- All matched skills recorded (used or skipped with reason)
+- review gate resolved;
+- verification verdict recorded;
+- evaluation verdict recorded when required;
+- drift gate resolved when triggered;
+- findings include evidence and inspection gaps;
+- corrections rerun through the applicable assurance functions;
+- parallel results consolidated when relevant.
 
 ---
 
-## Stage 1: Implement
+# Stage 3 — Close
 
-**Owner:** Scoped Coder (one per write-set)
-**Write authority:** Approved write-set only (see File Write Authority in AGENTS.md)
+## Owner
 
-### Entry Conditions
-- Write gate: `READY`
-- Approved plan or task description
-- Approved write-set
-- Side-effect class and DB mode classified
+Orchestrator.
 
-### Activities
-1. Read plan, task description, AC, relevant code
-2. Implement changes within approved write-set
-3. Run Pre-Edit Lifecycle Check for recently created files
-4. Self-check: scope not expanded, no secret leakage, no Hard Stop triggered
-5. Report: `DONE` / `DONE_WITH_CONCERNS` / `NEEDS_CONTEXT` / `BLOCKED`
+## Activities
 
-### Exit Conditions
-- All planned changes implemented
-- No scope creep
-- Report filed with change summary
+1. Determine closeout mode.
+2. Synchronize derived artifacts with the approved specification and delivered state.
+3. Update task status.
+4. Promote durable, reusable engineering knowledge.
+5. Record operational results and residual risks.
+6. Produce closeout report and Owner summary.
 
----
+## Source-of-Truth Synchronization Order
 
-## Stage 2: Verify
+1. current Owner instruction or approved change request;
+2. approved specification;
+3. accepted architecture decisions and external contracts;
+4. approved implementation and evaluation plans;
+5. tasklist;
+6. review, verification, evaluation, drift, and closeout reports;
+7. engineering memory;
+8. operational memory and logs.
 
-**Owner:** Verifier (read-only)
-**Write authority:** `docs/reports/*` (verification artifacts only)
+Plans and tasklists never silently override an approved specification.
 
-### Entry Conditions
-- Implementation complete (Stage 1 DONE)
-- Verification tier specified (lite/standard/full)
+## Successful Closeout Conditions
 
-### Verifier Isolation Decision Table
+- implementation completed inside scope;
+- review gate `READY` or valid documented skip;
+- verification verdict `READY`;
+- required evaluation status/verdict `READY`;
+- drift gate `READY` or valid documented skip;
+- required Hard Stop actions either not performed or explicitly approved;
+- residual risks documented;
+- normative and derived artifacts synchronized.
 
-Choose the required isolation before implementation. A native same-session
-Verifier shares the parent runtime and is useful for advisory feedback, but it
-does not close `READY`. Freeze the implementation diff before launching an
-independent root.
-
-| Condition | Required Verifier Isolation | Formal closeout mode |
-|---|---|---|
-| Quick-fix / non-sensitive, Lite | `same-session-degraded` | `ct-inline` is allowed with `Sensitive Domains: none` |
-| Non-sensitive Standard work | `same-session-degraded` or higher | `ct-inline` only at same-session; use a separate root when independent evidence is needed |
-| Auth, security, hooks, runtime/config, production-sensitive work | `independent-readonly-root` | Separate top-level readonly Codex root after diff freeze |
-| Credentials, live DB, deploy, live infrastructure, external providers | `os-isolated` | Separate OS user/container/equivalent with readonly source, clean `HOME`/Codex config, and no `.env`, SSH, provider, or runtime credentials |
-
-`independent-readonly-root` uses the readonly profile (`read-only` sandbox and
-`never` approval) and is a filesystem-write boundary only; it is not proof of
-credential or network isolation. `os-isolated` is required when that stronger
-boundary matters. The hook validates the declared `Required Verifier Isolation`
-and `Verifier Isolation` fields against a closed vocabulary and ordering; it
-does not prove the claimed runtime isolation. Control Tower records the launch
-evidence in the verification report.
-
-For a Codex independent-readonly-root, Control Tower (not a native subagent)
-runs `scripts/run-independent-verifier.sh` after the diff is frozen. The
-command requires an Owner-provisioned, mode-`0700` `CODEX_VERIFIER_HOME` with a
-readonly profile. The runner must never copy, inspect, print, create, or change
-credentials. Its fixture suite is a separate local-mutation test and cannot be
-used as formal readonly evidence.
-
-For `os-isolated` integrity evidence, use the fixed scripts
-`scripts/provision-os-isolated-verifier.sh` and
-`scripts/run-os-isolated-verifier.sh` only after explicit Owner approval for
-the local privileged provisioning. `--check` is non-mutating; `--apply` creates
-only the dedicated nologin verifier account and root-owned clean hierarchy.
-The runner snapshots only its literal safe allowlist and runs fixed coreutils
-with `env -i` as that account. It never executes repository code, Codex,
-provider, network, credential, or media operations. Its bounded result is an
-integrity/process attestation, not legal clearance or automatic release
-authority; `BLOCKED` has no same-user fallback.
-
-### Activities
-
-#### Lite Tier
-- [ ] Changed files match task description
-- [ ] No obvious regressions
-- [ ] Types pass (`npx tsc --noEmit`)
-- [ ] Build succeeds
-- [ ] Tests pass
-
-#### Standard Tier (extends Lite)
-- [ ] Route contract: URLs return expected status codes
-- [ ] Schema contract: field keys, types match spec
-- [ ] Anchor targets exist
-- [ ] No new dev server errors
-- [ ] Security baseline: no secrets, injections, parameterized queries
-- [ ] Production Maintainability Standard met
-
-#### Full Tier (extends Standard)
-- [ ] STRIDE-lite threat model verified
-- [ ] Security review checklist complete
-- [ ] `scripts/secret-scan.sh staged` clean
-- [ ] `npm audit --omit=dev --audit-level=high` clean
-- [ ] Runtime proof via `curl -fsSI`
-- [ ] CSP/security headers verified
-- [ ] CSRF/origin guard for mutations
-- [ ] Codex adversarial review (if Codex installed) — second opinion from GPT model family
-- [ ] Consolidation: merge Verifier + Codex findings
-- [ ] Runtime/config/infrastructure work: `scripts/agent-runtime-doctor.sh`
-  has no `BLOCKED` result; record `WARN` as `incident: agent-runtime`
-
-### Exit Conditions
-- Verdict: `READY`, `BLOCKED`, or `UNVERIFIED`
-- All blockers documented with file:line evidence
-- Verification report written to `docs/reports/`
-- GPT verifier second opinion completed or degraded reason recorded when its trigger matched
-- `.agent/verification-gate.md` records evidence-backed verifier/GPT verifier status,
-  required isolation, actual isolation, and launch evidence before closeout
+Otherwise use `reporting-only` and keep the task blocked or incomplete.
 
 ---
 
-## Merge Protocol (Parallel Agents Only)
+# Quick-Fix Path
 
-**Owner:** Control Tower
-**Write authority:** `docs/reports/*`, `memory_bank/*`
+A Quick Fix is allowed only when all are true:
 
-> Runs between Stage 2 and Stage 3 when 2+ subagents were dispatched in parallel.
-> Skip for single-agent or sequential Work Blocks.
+- at most 2 implementation files;
+- no behavior, route, API, schema, persistence, security, architecture, runtime,
+  dependency, evaluation, governance, or public contract impact;
+- no Hard Stop;
+- rollback is trivial;
+- targeted deterministic checks are available.
 
-### Entry Conditions
-- All parallel subagents completed (or timed out)
-- Snapshot exists from pre-dispatch (via `context-snapshot`)
+```text
+Scope statement -> Implement -> targeted self-review/checks -> sync -> close
+```
 
-### Activities
-1. **Collect** — gather all subagent reports from `docs/reports/` or direct outputs
-2. **Deduplicate** — group findings by `file:line`; same finding from multiple agents → one merged entry
-3. **Detect conflicts** — same file, different verdicts → apply conflict resolution rules:
-   - READY vs ISSUES → ISSUES wins (conservative)
-   - ISSUES vs BLOCKED → BLOCKED wins
-   - Two different ISSUES on same file → both included
-   - Unresolvable contradiction → escalate to Control Tower (hard stop)
-4. **Classify** — rate each finding: P0 (must fix) / P1 (should fix) / P2 (might fix) / Accepted
-5. **Produce consolidation report** — save to `docs/reports/consolidation-[wb-id]-[stage]-[date].md`
-6. **Update logs** — `orchestrator-log.md` + `review-log.md`
-
-### Exit Conditions
-- Consolidation report written
-- All conflicts resolved or escalated
-- BLOCKED verdicts addressed (corrective Work Block or Owner acceptance)
-- Consolidation decision: PROCEED / ESCALATE / RERUN
+The Orchestrator must record why the full lifecycle and evaluation were not required.
 
 ---
 
-## Stage 3: Sync & Report
+# Failure and Degraded Modes
 
-**Owner:** Control Tower
-**Write authority:** `docs/reports/*`, `memory_bank/*`, `docs/tasklist/*`
-
-### Entry Conditions
-- Verification evidence complete with verdict `READY`, `BLOCKED`, or `UNVERIFIED`
-- If parallel agents were used: consolidation report written, conflicts resolved
-
-### Activities
-1. **Classify closeout** — `success-closeout` only for `READY`; otherwise
-   `reporting-only`
-2. **SSOT Sync** — update tasklist status, memory_bank context/progress/decisions
-3. **Crash Test Gate** — if routes changed: run local crash test
-4. **Closeout Report** — summarize: what was done, verification result, consolidation (if parallel), risks accepted, follow-ups
-5. **Owner Report** — present closeout summary
-
-### Exit Conditions
-- Memory bank updated
-- Tasklist updated; non-`READY` tasks remain blocked
-- Closeout report written
-- Owner notified
-
----
-
-## Quick-Fix Path
-
-Skip Stages 0, 2, 3 only for trivial changes: at most 2 planned
-implementation/write-set files, excluding lifecycle evidence, and no logic,
-route, schema, API, security, or governance impact.
-Flow: Implement (Lite self-check) → Inline sync → Done.
-Still applies: Hard Stops, secret scan, no scope expansion.
+- A failed stage blocks downstream success claims.
+- Work may continue for diagnostics, corrective planning, evidence capture, or reporting.
+- Missing subagent/model/plugin capability does not remove the logical function.
+- Use the strongest available fallback and record actual runtime and isolation.
+- A degraded review or evaluation cannot upgrade a blocked verification result.
+- Missing observable trajectory evidence cannot be described as a pass.
+- No agent may grant itself authority because a tool is technically available.

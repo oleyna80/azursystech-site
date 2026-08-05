@@ -1,122 +1,128 @@
 #!/usr/bin/env bash
+# Bootstrap health check for a generated Agentic SDLC project.
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-MODE="check"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+PROFILE_FILE="$ROOT/.agent/bootstrap-profile.json"
+PROFILE_VALIDATOR="$ROOT/scripts/validate-installation-profile.py"
+ACTIVE_WORK_BLOCK="$ROOT/.agent/active-work-block.json"
+DEFAULT_WORK_BLOCK="$ROOT/.agent/active-work-block.default.json"
 
-usage() {
-  cat <<'EOF'
-Usage: scripts/bootstrap.sh [--check|--init]
+echo "==> Bootstrap: verifying Agentic SDLC layer at $ROOT"
 
-  --check  Verify committed workflow files and local runtime memory. No files are created. Default.
-  --init   Create missing ignored memory_bank starter files, then verify.
-EOF
+[ -f "$PROFILE_FILE" ] || {
+  echo "FAIL: missing .agent/bootstrap-profile.json" >&2
+  exit 1
+}
+[ -f "$PROFILE_VALIDATOR" ] || {
+  echo "FAIL: missing scripts/validate-installation-profile.py" >&2
+  exit 1
+}
+[ -f "$DEFAULT_WORK_BLOCK" ] || {
+  echo "FAIL: missing .agent/active-work-block.default.json" >&2
+  exit 1
 }
 
-case "${1:---check}" in
-  --check)
-    MODE="check"
-    ;;
-  --init)
-    MODE="init"
-    ;;
-  -h|--help)
-    usage
-    exit 0
-    ;;
-  *)
-    echo "Unknown option: $1" >&2
-    usage >&2
-    exit 2
-    ;;
-esac
+# Validate portable selected/unselected composition and the tracked BLOCKED
+# Work Block default before creating or restoring any ignored local state.
+python3 "$PROFILE_VALIDATOR" "$ROOT"
 
-require_path() {
-  path="$1"
-  if [ ! -e "${ROOT_DIR}/${path}" ]; then
-    echo "Missing required local path: ${path}" >&2
-    return 1
+# Projects may use memory_bank/ (framework default) or memory-bank/ (legacy).
+MEMORY_DIR="memory_bank"
+HAS_HYPHEN=false
+HAS_UNDERSCORE=false
+[ -d "$ROOT/memory-bank" ] && HAS_HYPHEN=true
+[ -d "$ROOT/memory_bank" ] && HAS_UNDERSCORE=true
+
+if $HAS_HYPHEN && ! $HAS_UNDERSCORE; then
+  MEMORY_DIR="memory-bank"
+  echo "  DETECTED: memory-bank/ (hyphen convention)"
+elif $HAS_UNDERSCORE && ! $HAS_HYPHEN; then
+  echo "  Using: memory_bank/ (underscore convention)"
+elif $HAS_HYPHEN && $HAS_UNDERSCORE; then
+  if [ -f "$ROOT/memory-bank/activeContext.md" ] || [ -f "$ROOT/memory-bank/productContext.md" ]; then
+    MEMORY_DIR="memory-bank"
+    echo "  DETECTED: both exist. Using memory-bank/ (has project content)."
+  else
+    echo "  Both exist. Using memory_bank/ (framework default)."
   fi
-}
-
-ensure_memory_file() {
-  path="$1"
-  title="$2"
-  file="${ROOT_DIR}/${path}"
-  if [ -f "${file}" ]; then
-    return 0
-  fi
-
-  if [ "${MODE}" = "init" ]; then
-    mkdir -p "$(dirname "${file}")"
-    {
-      echo "# ${title}"
-      echo
-      echo "Created by scripts/bootstrap.sh as local operational agent memory."
-      echo "Promote durable engineering decisions to docs/engineering-memory/."
-      echo
-    } > "${file}"
-    echo "Created local runtime memory file: ${path}"
-    return 0
-  fi
-
-  echo "Missing local runtime memory file: ${path}" >&2
-  echo "Run scripts/bootstrap.sh --init to create ignored starter files." >&2
-  return 1
-}
-
-ensure_memory_dir() {
-  path="$1"
-  dir="${ROOT_DIR}/${path}"
-  if [ -d "${dir}" ]; then
-    return 0
-  fi
-
-  if [ "${MODE}" = "init" ]; then
-    mkdir -p "${dir}"
-    echo "Created local runtime memory directory: ${path}"
-    return 0
-  fi
-
-  echo "Missing local runtime memory directory: ${path}" >&2
-  echo "Run scripts/bootstrap.sh --init to create ignored starter files." >&2
-  return 1
-}
-
-echo "AzurSysTech bootstrap preflight"
-echo "Repository: ${ROOT_DIR}"
-echo "Mode: ${MODE}"
-
-require_path "AGENTS.md"
-require_path "PROJECT_MAP.md"
-require_path "FILE_REGISTRY.yml"
-require_path "docs/session-bootstrap.md"
-require_path "docs/engineering-memory/README.md"
-require_path ".agent/workflows/sdd-protocol.md"
-require_path ".agent/ROSTER.md"
-require_path ".agent/critic-gate.md"
-require_path ".agent/verification-gate.md"
-require_path ".codex/critic.md"
-require_path ".codex/write-gate.md"
-
-ensure_memory_file "memory_bank/context.md" "Operational Context"
-ensure_memory_file "memory_bank/progress.md" "Operational Progress"
-ensure_memory_file "memory_bank/decisions.md" "Operational Decision Summaries"
-ensure_memory_file "memory_bank/orchestrator-log.md" "Orchestrator Log"
-ensure_memory_file "memory_bank/review-log.md" "Review Log"
-ensure_memory_file "memory_bank/external-team-log.md" "External Team Log"
-ensure_memory_dir "memory_bank/snapshots"
-
-if [ -f "${ROOT_DIR}/.agentsignore" ]; then
-  echo "Found .agentsignore"
 else
-  echo "Missing .agentsignore; agents may over-read local context." >&2
+  echo "  Creating: memory_bank/ (framework default)"
 fi
 
-if [ -f "${ROOT_DIR}/.codexignore" ]; then
-  echo "Found .codexignore"
-else
-  echo "Missing .codexignore; Codex context pruning is incomplete." >&2
+mkdir -p "$ROOT/$MEMORY_DIR/snapshots"
+
+ensure_operational_file() {
+  local relative="$1"
+  local title="$2"
+  local path="$ROOT/$MEMORY_DIR/$relative"
+  if [ ! -f "$path" ]; then
+    printf '# %s\n\n' "$title" > "$path"
+    echo "  RESTORED: $MEMORY_DIR/$relative"
+  fi
+}
+
+ensure_operational_file "context.md" "Current Context"
+ensure_operational_file "progress.md" "Progress"
+ensure_operational_file "decisions.md" "Operational Decisions"
+ensure_operational_file "orchestrator-log.md" "Orchestrator Log"
+ensure_operational_file "review-log.md" "Review Log"
+ensure_operational_file "external-team-log.md" "External Team Log"
+touch "$ROOT/$MEMORY_DIR/snapshots/.gitkeep"
+
+if [ ! -f "$ACTIVE_WORK_BLOCK" ]; then
+  cp "$DEFAULT_WORK_BLOCK" "$ACTIVE_WORK_BLOCK"
+  echo "  RESTORED: .agent/active-work-block.json (BLOCKED default)"
 fi
 
-echo "Bootstrap preflight passed."
+INSTALLATION_PROFILE="$(python3 - "$PROFILE_FILE" <<'PY'
+import json
+import pathlib
+import sys
+value = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+print(value["resolved_profile"])
+PY
+)"
+RUNTIMES="$(python3 - "$PROFILE_FILE" <<'PY'
+import json
+import pathlib
+import sys
+value = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+print(", ".join(value["runtimes"]))
+PY
+)"
+
+mkdir -p "$ROOT/.agent"
+cat > "$ROOT/.agent/project-config.md" << PROJECTCONFIG
+# Project Configuration
+
+> Auto-generated by scripts/bootstrap.sh. Do not edit manually.
+
+- **MEMORY_DIR:** \`$MEMORY_DIR\`
+- **INSTALLATION_PROFILE:** \`$INSTALLATION_PROFILE\`
+- **INSTALLED_RUNTIME_GUIDANCE:** \`$RUNTIMES\`
+
+The installation profile records scaffold composition only. It does not grant
+Work Block authority, integration admission, credentials, or side-effect
+permission.
+PROJECTCONFIG
+
+echo "==> Agentic SDLC layer: OK"
+
+echo ""
+echo "==> Dev environment checks..."
+if [ -d "$ROOT/node_modules" ]; then
+  echo "  OK: node_modules/"
+else
+  echo "  WARN: node_modules/ missing — install dependencies when this project requires them"
+fi
+
+if [ -n "${DATABASE_URL:-}" ]; then
+  echo "  OK: DATABASE_URL is set"
+elif [ -f "$ROOT/.env" ] && grep -q "DATABASE_URL" "$ROOT/.env" 2>/dev/null; then
+  echo "  OK: DATABASE_URL found in .env"
+else
+  echo "  WARN: DATABASE_URL not set — database-dependent checks may be blocked"
+fi
+
+echo "==> Dev environment checks done"

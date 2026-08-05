@@ -1,56 +1,34 @@
 {
+  "description": "Project-local Codex guardrails for Hard Stops, the active Work Block write gate, write-set scope, and subagent context.",
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "^(Bash|apply_patch|Edit|Write)$",
         "hooks": [
           {
             "type": "command",
-            "command": "bash '/home/azur/Projects/WSL/azursystech/.codex/hooks/hard-stop.sh'",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "matcher": "apply_patch|Edit|MultiEdit|Write",
-        "hooks": [
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/hard_stop_policy.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking Owner-approved Hard Stops"
+          },
           {
             "type": "command",
-            "command": "bash '/home/azur/Projects/WSL/azursystech/.codex/hooks/critic-gate.sh'",
-            "timeout": 5
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/pre_tool_use_policy.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking Work Block gate and write scope"
           }
         ]
       }
     ],
-    "PostToolUse": [
+    "SubagentStart": [
       {
-        "matcher": "apply_patch|Write|Edit",
+        "matcher": ".*",
         "hooks": [
           {
             "type": "command",
-            "command": "bash '/home/azur/Projects/WSL/azursystech/.codex/hooks/secret-scan.sh'",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "matcher": "apply_patch|Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash '/home/azur/Projects/WSL/azursystech/.codex/hooks/typecheck.sh'",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash '/home/azur/Projects/WSL/azursystech/.codex/hooks/verification-gate.sh'",
-            "timeout": 5
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/subagent_context.py\"",
+            "timeout": 5,
+            "statusMessage": "Loading Work Block authority for subagent"
           }
         ]
       }

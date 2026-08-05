@@ -1,15 +1,4 @@
 {
-  "permissions": {
-    "allow": [
-      "Agent(general-purpose *)",
-      "Agent(Explore *)",
-      "Agent(Plan *)",
-      "Agent(claude-code-guide *)"
-    ]
-  },
-  "autoMode": {
-    "allow": ["$defaults"]
-  },
   "hooks": {
     "PreToolUse": [
       {
@@ -17,8 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/hard-stop.sh",
-            "timeout": 5
+            "command": "python3 .agent/hooks/hard_stop_policy.py",
+            "timeout": 5000
           }
         ]
       },
@@ -27,30 +16,20 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/critic-gate.sh",
-            "timeout": 5
+            "command": "python3 .claude/hooks/work_block_gate.py",
+            "timeout": 5000
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "jq -r '.tool_input.file_path // .tool_response.filePath' | { read -r f; [ -z \"$f\" ] || [ ! -f \"$f\" ] && exit 0; if grep -qIE '(DATABASE_URL|token\\s*=\\s*['\\\"][^'\\\"]{12,}|secret\\s*=\\s*['\\\"][^'\\\"]{12,}|api[_-]key\\s*=\\s*['\\\"][^'\\\"]{12,}|PRIVATE\\s+KEY|BEGIN\\s+(RSA|OPENSSH|EC)\\s+PRIVATE|Bearer\\s+[A-Za-z0-9_\\-\\.]{20,})' \"$f\" 2>/dev/null; then printf '{\"systemMessage\":\"🔐 Secret detected in %s — review before commit\"}' \"$f\"; fi } 2>/dev/null || true",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "matcher": "Write|Edit",
+        "matcher": "Edit|MultiEdit|Write",
         "hooks": [
           {
             "type": "command",
             "command": "bash .claude/hooks/typecheck.sh",
-            "timeout": 30
+            "timeout": 30000
           }
         ]
       }
@@ -60,50 +39,33 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/verification-gate.sh",
-            "timeout": 5
+            "command": "python3 .claude/hooks/assurance_gate.py",
+            "timeout": 5000
           }
         ]
       }
     ]
   },
-  "enabledPlugins": {
-    "security-guidance@claude-plugins-official": true,
-    "skill-creator@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true
-  },
   "agents": {
     "solution-architect": {
-      "description": "Pre-implementation research (read-only)",
+      "description": "Architecture and technical discovery for the Architect function (read-only)",
       "color": "green"
     },
     "critic": {
-      "description": "Independent review of Control Tower decisions, Stage 0→1 (read-only)",
+      "description": "Challenges Define-stage scope, assumptions, risk, and assurance design (read-only)",
       "color": "yellow"
     },
-    "gpt-critic": {
-      "description": "External adversarial review of Control Tower decisions via Codex MCP (read-only)",
-      "color": "orange"
-    },
     "reviewer": {
-      "description": "Read-only multi-dimension review across code, docs, architecture, drift, and security triage",
+      "description": "Independent engineering review of the frozen diff (read-only)",
       "color": "yellow"
     },
     "scoped-coder": {
-      "description": "Approved-scope implementation only; one write-capable coder per write-set",
+      "description": "Implementation inside one approved Work Block write-set",
       "color": "blue"
     },
     "verifier": {
-      "description": "Post-implementation verification gate (read-only)",
+      "description": "Acceptance-criteria and runtime verification with evidence (read-only)",
       "color": "red"
-    },
-    "gpt-verifier": {
-      "description": "External adversarial verification via Codex MCP (read-only)",
-      "color": "purple"
-    },
-    "codex-reviewer": {
-      "description": "Optional extra-deep Codex MCP review beyond the default GPT verifier",
-      "color": "blue"
     }
   }
 }

@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "requested_profile": "multi-runtime",
+  "resolved_profile": "multi-runtime",
+  "description": "Multi-runtime installation profile for AzurSysTech",
+  "authority_note": "The installation profile records scaffold composition only. It does not grant Work Block authority, integration admission, credentials, or side-effect permission.",
+  "components": [
+    "runtime:codex",
+    "runtime:claude-code",
+    "runtime:opencode",
+    "integration:mcp-config"
+  ],
+  "runtimes": [
+    "generic",
+    "codex",
+    "claude-code",
+    "opencode"
+  ],
+  "integrations": [
+    "mcp-config"
+  ],
+  "skills": [
+    "agent-browser",
+    "cinematography-director",
+    "design-direction",
+    "discovery",
+    "git-orchestration-flow",
+    "git-safety",
+    "impeccable",
+    "media-art-director",
+    "media-production-orchestrator",
+    "media-rights-compliance",
+    "memory-ops",
+    "security-pass",
+    "short-video-scriptwriter",
+    "skill-library-maintenance",
+    "sprint-analysis",
+    "storyboard-director",
+    "subagent-mission-brief",
+    "systematic-debugging",
+    "video-creative-brief",
+    "video-generator",
+    "video-postproduction",
+    "video-prompt-engineer",
+    "video-provider-router",
+    "video-quality-control",
+    "web-prototype",
+    "web-video-integration",
+    "webapp-testing"
+  ],
+  "skill_mirrors": [
+    ".claude/skills"
+  ],
+  "required_paths": [
+    "AGENTS.md",
+    "PROJECT_MAP.md",
+    "FILE_REGISTRY.yml",
+    "docs/session-bootstrap.md",
+    ".agent/ROSTER.md",
+    ".agent/workflows/sdd-protocol.md",
+    "scripts/bootstrap.sh"
+  ],
+  "required_path_kinds": {
+    "AGENTS.md": "file",
+    "PROJECT_MAP.md": "file",
+    "FILE_REGISTRY.yml": "file",
+    "docs/session-bootstrap.md": "file",
+    ".agent/ROSTER.md": "file",
+    ".agent/workflows/sdd-protocol.md": "file",
+    "scripts/bootstrap.sh": "file"
+  },
+  "forbidden_paths": []
+}

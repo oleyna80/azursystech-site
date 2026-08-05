@@ -4,7 +4,10 @@
 
 - **Date:** [YYYY-MM-DD]
 - **Tier:** [lite | standard | full]
-- **Sensitive Domains:** [none | auth,payments,db-schema,middleware]
+- **Sensitive Domains:** [none | auth,payments,db-schema,middleware,hooks,runtime-config,deploy,credentials,live-data,external-provider]
+- **Required Verifier Isolation:** [same-session-degraded | independent-readonly-root | os-isolated]
+- **Actual Verifier Isolation:** [same-session-degraded | independent-readonly-root | os-isolated]
+- **Isolation Evidence and Residual Limits:** [launch mechanism, frozen diff reference, and boundaries not established]
 - **Authoritative Verdict:** [READY | BLOCKED | UNVERIFIED]
 - **GPT Verifier:** [NOT_REQUIRED | READY | DEGRADED]
 
