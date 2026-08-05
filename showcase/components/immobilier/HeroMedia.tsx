@@ -39,7 +39,6 @@ export function HeroMedia() {
         <video
           autoPlay
           muted
-          loop
           playsInline
           poster="/demo/immobilier/hero.jpg"
           preload="metadata"
