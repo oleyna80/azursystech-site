@@ -1,8 +1,10 @@
 # Codex Write Gate
 
 Status: READY
-Active Work Block: WB-2026-07-22-en-home-contact-surface
-Approved scope: Render the established feedback form on `/en` using English copy; add its existing `#contact` path to EN header/FAQ navigation; include the previously Owner-requested preferred-contact-language and web/application/AI-only option cleanup in that same shared form component; preserve the unrelated Local SEO and all other ambient dirty hunks; synchronize the scoped plan, tasklist, critic, verification evidence, and memory records; make one Owner-authorized local commit containing only literal Work Block paths and selected hunks.
-Out of scope: submission API, delivery/e-mail/webhook configuration, environment, provider calls, database, legacy-route deletion, chat, `web/src/i18n.js`, deployment, form submission, client-facing messages, and push.
-Critic report: docs/reports/critic-WB-2026-07-22-en-home-contact-surface.md
-Verification report: docs/reports/WB-2026-07-22-en-home-contact-surface-verification.md
+Work Block: WB-2026-07-25-immobilier-exact-veo-hero-materialization
+Approved Scope: Materialize the Owner-approved exact Veo candidate under a new public immobilier Hero filename, point only HeroMedia at it, and record a private local-only exact-hash release decision. Preserve all ambient Hero/app/media changes and exclude publication.
+Codex Critic: READY
+Critic Verdict: SUPPLEMENT
+Orchestrator Response: Adopted. The current hero-part2 asset is distinct and remains untouched; the new asset must equal the approved private hash. The scope does not authorize provider calls, regeneration, deployment, public release, commit, or push.
+Critic Report: docs/reports/critic-WB-2026-07-25-immobilier-exact-veo-hero-materialization.md
+Expires: 2026-08-01

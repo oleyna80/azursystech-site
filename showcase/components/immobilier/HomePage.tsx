@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Lang } from './types'
 import { listings, agents, ui } from './data'
 import { PropertyCard } from './PropertyCard'
+import { HeroMedia } from './HeroMedia'
 import tk from './tokens.module.css'
 import styles from './home.module.css'
 
@@ -18,6 +19,7 @@ export function HomePage({ lang }: HomePageProps) {
     <div>
       {/* ── Hero ── */}
       <section className={styles.hero} aria-labelledby="hero-heading">
+        <HeroMedia />
         <div className={`${tk.container} ${styles.heroInner}`}>
           <div className={styles.heroContent}>
             <p className={styles.heroPre}>Atelier Rivage</p>
@@ -35,18 +37,6 @@ export function HomePage({ lang }: HomePageProps) {
                 {t.hero.cta_rent}
               </Link>
             </div>
-          </div>
-          <div className={styles.heroImage} aria-hidden="true">
-            <Image
-              src="/demo/immobilier/hero.jpg"
-              alt={lang === 'fr'
-                ? "Vue sur la Côte d'Azur au coucher du soleil"
-                : "View of the Côte d'Azur at sunset"}
-              fill
-              sizes="(max-width: 768px) 100vw, 55vw"
-              className={styles.heroImg}
-              priority
-            />
           </div>
         </div>
       </section>

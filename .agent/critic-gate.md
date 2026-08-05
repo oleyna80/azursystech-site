@@ -1,37 +1,27 @@
 # Critic Gate — active Work Block. OWNED BY CONTROL TOWER — subagents must not edit this file.
 
 Status: READY
-Work Block: WB-2026-07-22-en-home-contact-surface
+Work Block: WB-2026-07-25-immobilier-exact-veo-hero-materialization
 Verification Tier: standard
 New Domain: false
-Subagent Topology Status: REVIEWED
+Subagent Topology Status: PLANNED
 Critic Verdict: SUPPLEMENT
-Critic Supplement: adopted — render the shared section without a duplicate route, add EN component copy, add EN header/FAQ anchor paths, add a focused copy contract, preserve ambient dirty hunks, and do not submit the form.
-Critic Report: docs/reports/critic-WB-2026-07-22-en-home-contact-surface.md
+Critic Supplement: adopted — materialize the Owner-approved exact candidate under a distinct filename; preserve the unrelated historical asset and ambient Hero work; bind the local-only integration to a private exact-hash release decision before changing the source.
+Critic Report: docs/reports/critic-WB-2026-07-25-immobilier-exact-veo-hero-materialization.md
 GPT Critic Status: NOT_REQUIRED
-GPT Critic Reason: the Work Block changes only existing homepage/header render paths and localized component copy; no provider/API/configuration/DB/security boundary is modified.
+GPT Critic Reason: the approved work is a local Hero asset/source integration with no provider/API, credential, runtime configuration, database, deployment, or public-release action.
 No-Skip: false
-Owner Authorization: 2026-07-23 — Owner explicitly authorized one scoped local commit for this verified Work Block; push remains excluded.
-Skills Routing: checked=current-work-block-gates,frontend-skill,design-direction,webapp-testing,subagent-mission-brief,memory-ops,git-safety,security-pass,impeccable; matched=frontend-skill,design-direction,webapp-testing,subagent-mission-brief,memory-ops,git-safety; used=frontend-skill,design-direction,webapp-testing,subagent-mission-brief,memory-ops,git-safety; skipped=security-pass(not relevant after inspection: no API/configuration/security change),impeccable(not relevant after inspection: adaptation of the established form, not a polish/redesign pass)
+Owner Authorization: 2026-07-25 — Owner reviewed the exact candidate's audio and visuals, confirmed it has no trade marks or identifiable places, and authorized its use in the Hero. Deployment/publication, commit, and push remain excluded.
+Skills Routing: checked=current-work-block-gates,frontend-skill,media-rights-compliance,video-quality-control,media-production-orchestrator,playwright,git-safety,security-pass; matched=frontend-skill,media-rights-compliance,video-quality-control,media-production-orchestrator,playwright; used=frontend-skill,media-rights-compliance,video-quality-control,media-production-orchestrator,playwright; skipped=git-safety(not relevant: no commit decision),security-pass(not relevant after inspection: no application security/configuration change)
 Session: any
-Expires: 2026-07-29
+Expires: 2026-08-01
 
 Approved Write-Set:
 - .agent/critic-gate.md
-- .agent/verification-gate.md
 - .codex/write-gate.md
-- docs/plans/WB-2026-07-22-en-home-contact-surface.md
-- docs/tasklist/WB-2026-07-22-en-home-contact-surface.tasklist.md
-- docs/reports/critic-WB-2026-07-22-en-home-contact-surface.md
-- docs/reports/WB-2026-07-22-en-home-contact-surface-verification.md
-- memory_bank/orchestrator-log.md
-- memory_bank/review-log.md
-- memory_bank/context.md
-- memory_bank/progress.md
-- memory_bank/decisions.md
-- web/src/app/[locale]/page.tsx
-- web/src/components/sections/home-contact.tsx
-- web/src/components/sections/home-contact.test.ts
-- web/src/components/shell/site-header.tsx
+- docs/reports/critic-WB-2026-07-25-immobilier-exact-veo-hero-materialization.md
+- docs/tasklist/WB-2026-07-25-immobilier-exact-veo-hero-materialization.tasklist.md
+- showcase/components/immobilier/HeroMedia.tsx
+- showcase/public/demo/immobilier/hero-veo-20260724.mp4
 
-Stage 0 preflight: Work Block type=frontend localization/contact-surface; side-effect class=production-code write plus local/test verification and Owner-authorized local commit; DB action mode=none; Hard Stops=none; Subagent topology=Subagent-Required because the Work Block touches production UI, more than four files including evidence, and requires independent verification. Native critic dispatch was blocked by thread-limit; narrow critic review was completed as review-degraded:inline-fallback and an Architecture Analyst completed a separate advisory review. Exactly one Scoped Coder changed the four approved source/test files, followed by a read-only Verifier. Write gate=READY. Scope adds the existing feedback section and its local discoverability to `/en` with English copy, and includes the already Owner-requested prerequisite cleanup in that same shared contact component: preferred contact language and web/application/AI-only options. The unrelated Local SEO deletion remains excluded. One literal scoped commit is authorized. No submission API, delivery configuration, environment, database, provider call, legacy-route work, deploy, client communication, or push is authorized.
+Stage 0 preflight: Work Block type=production frontend asset integration with private evidence record; side-effect class=production code/asset write plus local/test verification and a private local evidence write; DB action mode=none; Hard Stops=none. Pre-edit lifecycle check=the Owner previously confirmed no further restructuring and has now authorized Hero use. Subagent topology=Subagent-Required because the Work Block touches production code, public media, private evidence, and browser verification. A read-only Frontend Analyst and Critic completed Stage 0; exactly one Scoped Coder is planned, followed by a read-only browser-capable Verifier. Write gate=READY. The old `hero-part2.mp4`, the deleted `hero-loop.mp4`, `HomePage.tsx`, CSS, all historic tasklists, provider/API calls, regeneration, deployment/publication, commit, and push are excluded. The private release record is authorized outside this repository only at the exact path in the Critic Report.

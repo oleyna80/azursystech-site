@@ -6,12 +6,30 @@
   min-height: calc(100vh - var(--rv-header-h));
   overflow: hidden;
   position: relative;
+  isolation: isolate;
+  background-color: var(--rv-bg-dark);
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-color: rgba(10, 18, 24, 0.48);
+}
+
+.heroMedia {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 }
 
 .heroInner {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  align-items: center;
   min-height: calc(100vh - var(--rv-header-h));
+  position: relative;
+  z-index: 2;
 }
 
 .heroContent {
@@ -20,29 +38,29 @@
   justify-content: center;
   padding-top: var(--rv-space-20);
   padding-bottom: var(--rv-space-20);
-  padding-right: var(--rv-space-12);
+  max-width: 40rem;
 }
 
-.heroPre {
+.hero .heroPre {
   font-size: var(--rv-text-xs);
   font-weight: var(--rv-weight-semibold);
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--rv-color-terra);
+  color: var(--rv-color-terra-pale);
   margin-bottom: var(--rv-space-6);
 }
 
-.heroHeading {
+.hero .heroHeading {
   font-size: var(--rv-text-5xl);
   line-height: var(--rv-leading-tight);
   letter-spacing: -0.02em;
-  color: var(--rv-text-primary);
+  color: var(--rv-text-on-dark);
   margin-bottom: var(--rv-space-6);
 }
 
-.heroTagline {
+.hero .heroTagline {
   font-size: var(--rv-text-lg);
-  color: var(--rv-text-muted);
+  color: rgba(244, 242, 239, 0.84);
   line-height: var(--rv-leading-relaxed);
   max-width: 38ch;
   margin-bottom: var(--rv-space-10);
@@ -55,18 +73,29 @@
   flex-wrap: wrap;
 }
 
-.heroImage {
-  position: relative;
-  overflow: hidden;
-}
-
 .heroImg {
   object-fit: cover;
   object-position: center 30%;
 }
 
+.heroVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  opacity: 0;
+  transition: opacity var(--rv-dur-base) var(--rv-ease-out);
+}
+
+.heroVideoReady {
+  opacity: 1;
+}
+
 /* ── Buttons ─────────────────────────────────────────────── */
 
+.hero .ctaPrimary,
 .ctaPrimary {
   display: inline-flex;
   align-items: center;
@@ -88,22 +117,23 @@
   outline: 2px solid var(--rv-color-terra);
 }
 
+.hero .ctaSecondary,
 .ctaSecondary {
   display: inline-flex;
   align-items: center;
   padding: var(--rv-space-3) var(--rv-space-8);
   font-size: var(--rv-text-sm);
   font-weight: var(--rv-weight-medium);
-  color: var(--rv-text-primary);
-  border: 1px solid var(--rv-border-hairline);
+  color: var(--rv-text-on-dark);
+  border: 1px solid rgba(244, 242, 239, 0.62);
   border-radius: var(--rv-radius-sm);
   transition: border-color var(--rv-dur-fast), background-color var(--rv-dur-fast);
   outline-offset: 3px;
 }
 
 .ctaSecondary:hover {
-  background-color: var(--rv-color-ink-06);
-  border-color: var(--rv-color-ink-40);
+  background-color: rgba(244, 242, 239, 0.12);
+  border-color: var(--rv-color-canvas);
 }
 
 .ctaSecondary:focus-visible {

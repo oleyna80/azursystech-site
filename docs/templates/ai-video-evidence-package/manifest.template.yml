@@ -24,6 +24,7 @@ terms_and_model_evidence:
   retrieved_at: TIMESTAMP_REQUIRED
   content_sha256: SHA256_REQUIRED
   eligibility_decision: NEEDS_PROVIDER_CONFIRMATION
+  eligibility_decision_ref: RESPONSIBLE_HUMAN_DECISION_REF_REQUIRED
 
 preview_lifecycle:
   applies: true_or_false
@@ -59,6 +60,7 @@ release_control:
   exact_candidate_sha256: SHA256_REQUIRED
   human_approval_ref: HUMAN_APPROVAL_REF_REQUIRED
   approval_timestamp: TIMESTAMP_REQUIRED
+  release_decision_ref: RELEASE_DECISION_REF_REQUIRED
   release_state: pending
   revocation_control_ref: REVOCATION_CONTROL_REF_REQUIRED
 

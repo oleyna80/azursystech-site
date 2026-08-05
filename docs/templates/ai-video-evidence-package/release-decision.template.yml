@@ -1,0 +1,41 @@
+# Repository-safe template: use opaque references and hashes only in private storage.
+release_decision:
+  decision_ref: RELEASE_DECISION_REF_REQUIRED
+  package_ref: PACKAGE_REF_REQUIRED
+  asset_ref: ASSET_REF_REQUIRED
+  exact_final_sha256: SHA256_REQUIRED
+  decision_status: pending_human_decision
+  decision_may_be: NEEDS_PROVIDER_CONFIRMATION_or_CONDITIONALLY_PERMISSIBLE
+
+route_eligibility:
+  paid_route_ref: PAID_ROUTE_REF_REQUIRED
+  exact_model_and_endpoint_ref: MODEL_ENDPOINT_REF_REQUIRED
+  terms_evidence_ref: TERMS_EVIDENCE_REF_REQUIRED
+  terms_checked_at: TIMESTAMP_REQUIRED
+  eligibility_decision: NEEDS_PROVIDER_CONFIRMATION
+  responsible_human_ref: RESPONSIBLE_HUMAN_REF_REQUIRED
+
+low_risk_input_declaration:
+  prompt_ref: SAFE_TEXT_ONLY_PROMPT_REF_REQUIRED
+  text_only: true_or_false
+  no_third_party_assets: true_or_false
+  no_real_people_or_personal_inputs: true_or_false
+  no_brands_or_music: true_or_false
+
+focused_final_qc:
+  qc_ref: QC_REF_REQUIRED
+  logos_people_and_misleading_realism: pass_fail_required
+  pseudo_text_audio_and_material_defects: pass_fail_required
+  provider_operation_ref: OPERATION_REF_REQUIRED
+
+restricted_release_scope:
+  channels_ref: CHANNELS_REF_REQUIRED
+  territory_ref: TERRITORY_REF_REQUIRED
+  term_ref: TERM_REF_REQUIRED
+  disclosure_decision: DISCLOSURE_DECISION_REQUIRED
+  no_real_footage_representation: true_or_false
+
+decision_limits:
+  legal_clearance_status: NOT_ESTABLISHED_BY_THIS_RECORD
+  applies_only_to_exact_final_sha256: true
+  revocation_control_ref: REVOCATION_CONTROL_REF_REQUIRED

@@ -39,8 +39,9 @@ or its contents into Git.
 - Link authorization and request evidence; record the exact provider, route,
   service, model, billing context, and model status.
 - Capture current terms/model evidence by URL, retrieval date, and content
-  hash; decide `BLOCKED`, `NEEDS_PROVIDER_CONFIRMATION`, or
-  `CONDITIONALLY_PERMISSIBLE`.
+  hash. A new package defaults to `NEEDS_PROVIDER_CONFIRMATION`; a responsible
+  human may record `CONDITIONALLY_PERMISSIBLE` only for a current, exact paid
+  route with the required evidence.
 - For `Preview`, capture status/date evidence, monitoring owner, revalidation
   triggers, and migration or fallback decision. `Preview` neither grants nor
   removes commercial/public eligibility on its own.
@@ -51,6 +52,14 @@ or its contents into Git.
 - Record provenance/SynthID result where available, human approval of the
   exact candidate, release state, revocation control, evidence index, and
   retention/access rule.
+- For a low-risk text-only asset, create a private
+  `release-decision.yml` from the accompanying template. It must bind the
+  exact final SHA-256, paid route/model/terms date, input declaration, focused
+  QC, opaque operation reference, restricted release scope, responsible human,
+  and disclosure decision. It is a business-risk decision, not legal clearance.
+- An OS-isolated attestation is required only when the approved Work Block or
+  declared verifier-isolation tier calls for that technical integrity control;
+  it is not a universal release prerequisite.
 
 ## Repository exclusion
 

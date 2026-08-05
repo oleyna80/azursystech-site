@@ -1,7 +1,7 @@
 # AI Video Production Operating Instruction
 
 **Status:** active, evidence-gated operating rule
-**Research snapshot:** 2026-07-23
+**Research snapshot:** 2026-07-25
 **Applies to:** future AI-video planning, generation, editing, integration,
 and production release, including a possible Gemini API/Veo route.
 
@@ -33,14 +33,16 @@ legal clearance.
 
 | Status | Meaning | Generation | Public production release |
 |---|---|---:|---:|
-| `BLOCKED` | Required evidence, consent, clearance, exact provider terms, or final approval is missing/expired. | No | No |
-| `NEEDS_PROVIDER_CONFIRMATION` | A provider/model route has unresolved preview, contract, region, account-tier, watermark, or rights-protection status. | No paid call | No |
+| `BLOCKED` | Input rights, required consent, final QC, human release decision, or a hard prohibition is missing, failed, or unresolved. | No | No |
+| `NEEDS_PROVIDER_CONFIRMATION` | Exact provider-route or terms evidence is unknown, contradictory, expired, or unresolved for preview, contract, region, account tier, watermark, or rights-protection status. | No paid call | No |
 | `CONDITIONALLY_PERMISSIBLE` | The exact route has current evidence and every input/right/consent condition is satisfied. | Only in a separately approved execution Work Block | Only after the exact-candidate release gate |
 | `RELEASE_APPROVED` | A human approved one exact final candidate after all checks. This is not a universal legal guarantee. | N/A | Yes, for that candidate and stated release only |
 
-Unknown, contradictory, or expired evidence is `BLOCKED`. It blocks both a
-billable generation request and a release; it is never handled by switching to
-another provider silently.
+Unknown, contradictory, or expired **provider-route** evidence is
+`NEEDS_PROVIDER_CONFIRMATION`; it blocks a billable generation request and a
+release and is never handled by switching to another provider silently.
+Missing input rights, required consent, final QC, or human release decision is
+`BLOCKED`.
 
 ## Current Google research conclusion
 
@@ -49,7 +51,7 @@ contract that applies on the day of a future request or release.
 
 | Route | 2026-07-25 policy status | Why | Required next evidence |
 |---|---|---|---|
-| Gemini Developer API Veo with a Gemini API key (Paid Tier) | `CONDITIONALLY_PERMISSIBLE` | Google's official Gemini API Terms assign output rights to the user, and paid account tier data handling applies. `Preview` status indicates technical API SLA lifecycle, not a commercial prohibition. Individual written confirmation from Google is NOT required. | Paid billing invoice/receipt, exact model identifier, verified Google Gemini API Terms of Service, prompt lineage, input rights, SynthID retention, and human exact-candidate release approval. |
+| Gemini Developer API Veo with a Gemini API key (Paid Tier) | `CONDITIONALLY_PERMISSIBLE` after fresh exact-route evidence | Google's official Gemini API Terms state that Google does not claim ownership of original generated content. That is not an assignment, and it does not promise copyrightability, exclusivity, indemnity, or absence of third-party claims. `Preview` is a lifecycle signal, not a commercial prohibition. An individual Google letter is not required. | Paid billing invoice/receipt, exact model identifier and endpoint, current Google Gemini API Terms evidence, prompt lineage, input rights, focused final QC, SynthID/provenance record where available, and human exact-candidate release decision. |
 | Paid GA Veo route through Google Cloud (Vertex AI) | `CONDITIONALLY_PERMISSIBLE` | Google’s Cloud terms treat generated output as Customer Data and list an output-indemnity framework for eligible paid GA services/models, with material exclusions. | Exact service and GA model eligibility, project/billing contract, region, terms revision, indemnity-list entry, exclusions, data handling, and release evidence. |
 | Free/consumer/unknown-tier path or one with undocumented commercial terms | `BLOCKED` for client/confidential/rights-sensitive material | No evidence that the actual route satisfies the project’s evidence and data-use conditions. | A new approved provider-evidence decision; do not upload sensitive source material meanwhile. |
 
@@ -172,6 +174,10 @@ rights clearance, legal advice, or release authority.
 
 ### OS-isolated integrity attestation
 
+OS-isolated attestation is required only when the approved Work Block or its
+declared verifier-isolation tier requires it. It is a technical integrity
+control, not a universal legal prerequisite for every low-risk release.
+
 For a Work Block that requires `os-isolated` verification, the Owner may first
 approve `scripts/provision-os-isolated-verifier.sh --apply`. The default
 `--check` path is non-mutating. Provisioning creates only the dedicated
@@ -204,6 +210,28 @@ release channels, intended territory/term, and completed checks:
 If any evidence changes after approval, the status reverts to
 `NEEDS_PROVIDER_CONFIRMATION` or `BLOCKED` until re-approved. Rejected,
 quarantined, or source candidates must not be published accidentally.
+
+### Compact low-risk per-video release decision
+
+For an approximately 8-second, text-only asset with no real people,
+third-party assets, brands, music, or claim of documentary capture, a
+responsible human may make a compact per-video decision after the exact route
+has fresh evidence. The private record must bind:
+
+1. the paid provider route, exact model/endpoint, and terms-check date;
+2. a safe text-only prompt reference and declaration that no third-party or
+   personal inputs were supplied;
+3. focused final QC for visible logos, people, misleading realism, unwanted
+   pseudo-text, audio, and material defects;
+4. the opaque provider operation reference and SHA-256 of the exact final
+   file;
+5. the responsible human's decision, limited to the stated channel, territory,
+   and term; and
+6. a disclosure decision that does not present the asset as real footage.
+
+This is a proportionate business-risk decision and traceability record. It is
+not a legal guarantee, copyright determination, exclusivity promise,
+indemnity, or proof that no third party can bring a claim.
 
 ## Official-source baseline (recheck before use)
 

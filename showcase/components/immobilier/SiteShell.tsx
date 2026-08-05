@@ -170,7 +170,7 @@ export function SiteShell({ children, lang }: SiteShellProps) {
           <div className={styles.footerContact}>
             <p className={styles.footerLinksTitle}>{t.footer.contact_title}</p>
             <address className={styles.footerAddress}>
-              <p>06 — Côte d'Azur</p>
+              <p>06 — Côte d&apos;Azur</p>
               <p className={styles.footerContactText}>+33 4 93 00 00 01</p>
               <p className={styles.footerContactText}>contact@atelier-rivage.fr</p>
             </address>
