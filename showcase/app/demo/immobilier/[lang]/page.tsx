@@ -6,10 +6,6 @@ import { HomePage } from '@/components/immobilier/HomePage'
 
 const VALID_LANGS: Lang[] = ['fr', 'en']
 
-export function generateStaticParams() {
-  return VALID_LANGS.map((lang) => ({ lang }))
-}
-
 export async function generateMetadata({
   params,
 }: {

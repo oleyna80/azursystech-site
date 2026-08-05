@@ -7,9 +7,7 @@ import { PropertyPage } from '@/components/immobilier/PropertyPage'
 const VALID_LANGS: Lang[] = ['fr', 'en']
 
 export function generateStaticParams() {
-  return VALID_LANGS.flatMap((lang) =>
-    listings.map((l) => ({ lang, slug: l.slug }))
-  )
+  return listings.map((l) => ({ slug: l.slug }))
 }
 
 export async function generateMetadata({
