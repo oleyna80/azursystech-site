@@ -204,3 +204,4 @@
 | 2026-08-05 | WB-2026-08-05-framework-sync | Stage 0: Plan approved — adapt latest Agentic SDLC Framework (v20) developments into azursystech on branch sync/agentic-sdlc-framework. | Control Tower |
 | 2026-08-05 | WB-2026-08-05-framework-sync | implementation: DONE — updated OpenCode surface (.opencode/, opencode.json), .agent/skills/ (git-orchestration-flow, skill-library-maintenance), .codex/ and .claude/ control planes, scripts/, docs/, governance/, runtimes/, integrations/, FILE_REGISTRY.yml, PROJECT_MAP.md, bootstrap-profile.json. | Control Tower |
 | 2026-08-05 | WB-2026-08-05-framework-sync | verification: READY — scripts/bootstrap.sh passed with Installation profile: OK and Agentic SDLC layer: OK. | Control Tower |
+| 2026-08-05 | push-approval | push: APPROVED origin main - Owner requested merge of sync/agentic-sdlc-framework into main | Owner |
