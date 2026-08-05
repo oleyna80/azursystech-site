@@ -334,9 +334,8 @@ checklist:
   beyond documented public hostnames.
 
 Code-level header configuration is not enough to close runtime security
-findings. Browser/admin/security-header findings must be verified against both
-configured source files and actual served responses when a runtime is available.
-Runtime proof uses this matrix:
+findings. Browser/admin/security-header findings and live deployments are governed
+by `.agent/skills/deploy-operations/SKILL.md`. Runtime proof uses this matrix:
 
 | Surface | Minimum proof | Blocked state |
 |---|---|---|
@@ -390,12 +389,8 @@ that will be deleted in the same session. The check is required only when the
 file was recently added and the edit scope is non-trivial (more than a typo fix).
 
 **Crash Test Gate.** Before `git commit` on any Work Block that changes routes,
-navigation, or sitemap entries, run a local crash test:
-- All sitemap routes return expected HTTP status (200, 308);
-- Deleted routes return 404;
-- All anchor targets referenced in header/footer exist on the target page;
-- `npx vitest run` for affected test files;
-- Zero new errors in dev server logs.
+navigation, or sitemap entries, execute `.agent/skills/crash-test-gate/SKILL.md`
+to verify route integrity, 404 responses, anchor targets, vitest suite, and dev logs.
 Record the result as `Crash test: PASSED / FAILED` in the commit body or closeout.
 
 **Demo Port Verification Gate.** Before `git commit` on any Work Block that adds
