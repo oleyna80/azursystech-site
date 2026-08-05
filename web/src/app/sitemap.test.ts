@@ -24,7 +24,7 @@ describe("sitemap", () => {
         "https://azursystech.fr/portfolio/bistrot",
         "https://azursystech.fr/portfolio/bijoux-artisanaux",
         "https://azursystech.fr/portfolio/assurance",
-        "https://azursystech.fr/portfolio/comptabilite",
+        "https://azursystech.fr/portfolio/immobilier",
         "https://azursystech.fr/privacy",
         "https://azursystech.fr/terms",
       ]),

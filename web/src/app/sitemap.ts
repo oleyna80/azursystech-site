@@ -26,7 +26,7 @@ const ROUTES: SitemapEntry[] = [
   { path: "/portfolio/bistrot", changeFrequency: "monthly", priority: 0.7 },
   { path: "/portfolio/bijoux-artisanaux", changeFrequency: "monthly", priority: 0.7 },
   { path: "/portfolio/assurance", changeFrequency: "monthly", priority: 0.7 },
-  { path: "/portfolio/comptabilite", changeFrequency: "monthly", priority: 0.7 },
+  { path: "/portfolio/immobilier", changeFrequency: "monthly", priority: 0.7 },
   { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },
   { path: "/terms", changeFrequency: "yearly", priority: 0.3 },
 ];

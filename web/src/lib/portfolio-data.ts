@@ -29,7 +29,7 @@ export const PORTFOLIO_PROJECTS: readonly PortfolioProject[] = [
     title: "Plomberie Pro",
     shortDescription:
       "Landing de service local pour un plombier : services, devis et demande urgente 24/7 sans perdre un seul appel.",
-    youtubeId: YT_PLACEHOLDER,
+    youtubeId: "ne8_5TQDxFI",
     review: {
       intro:
         "Ce projet montre comment une entreprise de services locaux peut transformer son site vitrine en un vrai point d'entrée : chaque visite peut devenir une demande qualifiée, urgente ou planifiée.",
@@ -53,7 +53,7 @@ export const PORTFOLIO_PROJECTS: readonly PortfolioProject[] = [
     title: "Beauté & Spa",
     shortDescription:
       "Site élégant pour un institut de beauté : soins, massages et réservation en ligne qui remplit l'agenda sans appels.",
-    youtubeId: YT_PLACEHOLDER,
+    youtubeId: "rseBsq_cisg",
     review: {
       intro:
         "Un institut de beauté vit de son agenda. Ce site montre comment la réservation en ligne réduit les appels, les oublis et les créneaux vides.",
@@ -77,7 +77,7 @@ export const PORTFOLIO_PROJECTS: readonly PortfolioProject[] = [
     title: "Le Bistrot",
     shortDescription:
       "Site multi-pages pour un restaurant : menu interactif, galerie de plats et réservation de table en ligne.",
-    youtubeId: YT_PLACEHOLDER,
+    youtubeId: "NK6WkgRGY1A",
     review: {
       intro:
         "Pour un restaurant, le site remplace le téléphone qui sonne pendant le service : le menu est à jour et les réservations arrivent structurées.",
@@ -101,7 +101,7 @@ export const PORTFOLIO_PROJECTS: readonly PortfolioProject[] = [
     title: "Bijoux Artisanaux",
     shortDescription:
       "Catalogue e-commerce léger pour une créatrice de bijoux : collections, pièces uniques et demandes sur mesure.",
-    youtubeId: YT_PLACEHOLDER,
+    youtubeId: "yer8p88ehdA",
     review: {
       intro:
         "Un artisan n'a pas besoin d'une grosse boutique en ligne pour vendre : un catalogue soigné et un canal de demande sur mesure suffisent pour démarrer.",
@@ -125,7 +125,7 @@ export const PORTFOLIO_PROJECTS: readonly PortfolioProject[] = [
     title: "Agent d'Assurance",
     shortDescription:
       "Site de génération de leads pour un agent d'assurance : offres, qualification du besoin et prise de rendez-vous.",
-    youtubeId: YT_PLACEHOLDER,
+    youtubeId: "GBU6BaPl_vs",
     review: {
       intro:
         "En assurance, la qualité du premier contact décide de tout. Ce site qualifie le besoin avant même le premier rendez-vous.",
@@ -145,28 +145,28 @@ export const PORTFOLIO_PROJECTS: readonly PortfolioProject[] = [
     demoUrl: showcaseDemoUrl("assurance"),
   },
   {
-    slug: "comptabilite",
-    title: "Cabinet Comptable",
+    slug: "immobilier",
+    title: "Agence Immobilière",
     shortDescription:
-      "Site professionnel pour un cabinet comptable : expertises, équipe et intake client structuré dès le premier contact.",
-    youtubeId: YT_PLACEHOLDER,
+      "Site immobilier pour une agence : biens à la vente, filtres de recherche et demandes d'estimation en ligne.",
+    youtubeId: "6XO6MvRdkj0",
     review: {
       intro:
-        "Un cabinet comptable perd du temps sur des premiers échanges non structurés. Ce site collecte le contexte du client avant le premier rendez-vous.",
+        "Pour une agence immobilière, chaque mandat compte. Ce site présente les biens en valeur et permet aux vendeurs d'estimer leur bien en ligne.",
       capabilities: [
-        "Domaines d'expertise et présentation de l'équipe",
-        "Formulaire d'intake client détaillé",
-        "Demande de rendez-vous en ligne",
-        "Pages de confiance : méthodes, engagements",
+        "Catalogue de biens à la vente et à la location",
+        "Fiches détaillées avec galerie photos et caractéristiques",
+        "Formulaire d'estimation immobilière en ligne",
+        "Prise de contact directe pour visite",
       ],
       automationPoints: [
-        "Intake client structuré : activité, régime, besoin",
-        "Pré-qualification avant le premier rendez-vous",
-        "Transfert des dossiers vers les outils du cabinet",
+        "Demandes d'estimation qualifiées dès le formulaire",
+        "Prise de contact rapide transmise à l'agent",
+        "Galerie et caractéristiques des biens mises en valeur",
       ],
     },
-    tags: ["Expertise", "Intake"],
-    demoUrl: showcaseDemoUrl("comptabilite"),
+    tags: ["Immobilier", "Catalogue"],
+    demoUrl: showcaseDemoUrl("immobilier"),
   },
 ];
 
