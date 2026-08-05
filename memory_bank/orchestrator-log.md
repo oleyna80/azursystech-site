@@ -206,3 +206,4 @@
 | 2026-08-05 | WB-2026-08-05-framework-sync | verification: READY — scripts/bootstrap.sh passed with Installation profile: OK and Agentic SDLC layer: OK. | Control Tower |
 | 2026-08-05 | push-approval | push: APPROVED origin main - Owner requested merge of sync/agentic-sdlc-framework into main | Owner |
 | 2026-08-05 | push-approval | push: APPROVED origin main - Owner requested merge of feat/web-development into main | Owner |
+| 2026-08-05 | push-approval | push: APPROVED origin main - Owner requested merge of feat/showcase-links-and-immobilier-fix into main | Owner |
