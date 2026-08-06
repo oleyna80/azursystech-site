@@ -46,10 +46,10 @@ jobs:
               exit 1
             fi
 
-            export APP_IMAGE="ghcr.io/${GH_REPOSITORY}-app:${IMAGE_TAG}"
+            export APP_IMAGE="ghcr.io/${GH_REPOSITORY}-site-app:${IMAGE_TAG}"
             if [ "${INCLUDE_ADMIN_INPUT}" = "true" ]; then
               export DEPLOY_ADMIN=1
-              export ADMIN_IMAGE="ghcr.io/${GH_REPOSITORY}-admin:${IMAGE_TAG}"
+              export ADMIN_IMAGE="ghcr.io/${GH_REPOSITORY}-site-admin:${IMAGE_TAG}"
             else
               export DEPLOY_ADMIN=0
             fi
