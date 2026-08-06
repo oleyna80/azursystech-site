@@ -35,12 +35,10 @@ jobs:
             cd "${VPS_APP_DIR_INPUT}"
 
             IMAGE_TAG="${IMAGE_TAG_INPUT}"
-            case "${IMAGE_TAG}" in
-              latest|main|*:latest|*:main|"")
-                echo "Use an immutable image tag, not ${IMAGE_TAG}" >&2
-                exit 1
-                ;;
-            esac
+            if [ -z "${IMAGE_TAG}" ] || [ "${IMAGE_TAG}" = "latest" ] || [ "${IMAGE_TAG}" = "main" ]; then
+              echo "Use an immutable image tag, not ${IMAGE_TAG}" >&2
+              exit 1
+            fi
             if ! printf '%s' "${IMAGE_TAG}" | grep -Eq '^sha-[0-9a-f]{40}$'; then
               echo "Use an immutable image tag in the form sha-<full_commit_sha>: ${IMAGE_TAG}" >&2
               exit 1
