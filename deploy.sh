@@ -13,6 +13,7 @@ if [ -z "${APP_IMAGE}" ] && [ -n "${IMAGE_REPO:-}" ] && [ -n "${IMAGE_TAG:-}" ];
 fi
 ADMIN_IMAGE="${ADMIN_IMAGE:-}"
 DEPLOY_ADMIN="${DEPLOY_ADMIN:-0}"
+SKIP_PULL="${SKIP_PULL:-0}"
 
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.vps.yml}"
 ENV_FILE="${ENV_FILE:-.env}"
@@ -50,6 +51,19 @@ if [ "${DEPLOY_ADMIN}" = "1" ]; then
   esac
 fi
 
+if [ "${SKIP_PULL}" = "1" ]; then
+  if ! docker image inspect "${APP_IMAGE}" >/dev/null 2>&1; then
+    echo "ERROR: Image ${APP_IMAGE} not found in local Docker daemon for SKIP_PULL=1 deploy" >&2
+    exit 1
+  fi
+  if [ "${DEPLOY_ADMIN}" = "1" ]; then
+    if ! docker image inspect "${ADMIN_IMAGE}" >/dev/null 2>&1; then
+      echo "ERROR: Admin image ${ADMIN_IMAGE} not found in local Docker daemon for SKIP_PULL=1 deploy" >&2
+      exit 1
+    fi
+  fi
+fi
+
 if [ ! -f "${ENV_FILE}" ]; then
   echo "${ENV_FILE} is missing; create it from .env.vps.example on the VPS" >&2
   exit 1
@@ -78,7 +92,7 @@ wait_for_health() {
 
   for attempt in $(seq 1 12); do
     if docker exec azursystech-app wget -qO- http://127.0.0.1:3000/health >/dev/null 2>&1 \
-      && curl -fsSI "${HEALTH_URL}" >/dev/null 2>&1; then
+      && curl -fsS "${HEALTH_URL}" >/dev/null 2>&1; then
       if [ "${require_admin}" = "1" ]; then
         for admin_attempt in $(seq 1 12); do
           if docker exec azursystech-admin wget -qO- http://127.0.0.1:3000/health >/dev/null 2>&1; then
@@ -130,13 +144,19 @@ if [ "${DEPLOY_ADMIN}" = "1" ]; then
   export ADMIN_IMAGE
 fi
 echo "Deploying AzurSysTech app image: ${APP_IMAGE}"
-docker compose -f "${COMPOSE_FILE}" config >/tmp/azursystech-compose.rendered.yml
-docker compose -f "${COMPOSE_FILE}" pull app web
-docker compose -f "${COMPOSE_FILE}" up -d --no-build --remove-orphans app web
+docker compose -f "${COMPOSE_FILE}" config >/dev/null
+
+if [ "${SKIP_PULL}" != "1" ]; then
+  docker compose -f "${COMPOSE_FILE}" pull app web
+fi
+docker compose -f "${COMPOSE_FILE}" up -d --no-build app
+docker compose -f "${COMPOSE_FILE}" up -d --no-build --force-recreate web
 
 if [ "${DEPLOY_ADMIN}" = "1" ]; then
   echo "Deploying AzurSysTech admin image: ${ADMIN_IMAGE}"
-  docker compose -f "${COMPOSE_FILE}" --profile admin pull admin
+  if [ "${SKIP_PULL}" != "1" ]; then
+    docker compose -f "${COMPOSE_FILE}" --profile admin pull admin
+  fi
   docker compose -f "${COMPOSE_FILE}" --profile admin up -d --no-build admin
 fi
 
@@ -150,26 +170,42 @@ echo "Deploy healthcheck failed for ${APP_IMAGE}" >&2
 
 if [ "${ROLLBACK_ON_FAILURE}" = "1" ] && [ -n "${previous_image}" ]; then
   echo "Rolling back to previous image: ${previous_image}" >&2
-  set_env_value "APP_IMAGE" "${previous_image}" "${ENV_FILE}"
-  export APP_IMAGE="${previous_image}"
+  if ! docker image inspect "${previous_image}" >/dev/null 2>&1; then
+    echo "ERROR: Previous image ${previous_image} is missing from local Docker daemon for rollback" >&2
+    exit 2
+  fi
+
   rollback_admin="0"
   if [ "${DEPLOY_ADMIN}" = "1" ] && [ -n "${previous_admin_image}" ]; then
-    echo "Rolling back admin to previous image: ${previous_admin_image}" >&2
-    set_env_value "ADMIN_IMAGE" "${previous_admin_image}" "${ENV_FILE}"
-    export ADMIN_IMAGE="${previous_admin_image}"
+    if ! docker image inspect "${previous_admin_image}" >/dev/null 2>&1; then
+      echo "ERROR: Previous admin image ${previous_admin_image} is missing from local Docker daemon for rollback" >&2
+      exit 2
+    fi
     rollback_admin="1"
   fi
 
-  if ! docker compose -f "${COMPOSE_FILE}" pull app; then
-    echo "Rollback app image pull failed; attempting to use the local image cache." >&2
-  fi
+  set_env_value "APP_IMAGE" "${previous_image}" "${ENV_FILE}"
+  export APP_IMAGE="${previous_image}"
   if [ "${rollback_admin}" = "1" ]; then
-    if ! docker compose -f "${COMPOSE_FILE}" --profile admin pull admin; then
-      echo "Rollback admin image pull failed; attempting to use the local image cache." >&2
+    set_env_value "ADMIN_IMAGE" "${previous_admin_image}" "${ENV_FILE}"
+    export ADMIN_IMAGE="${previous_admin_image}"
+  fi
+
+  if [ "${SKIP_PULL}" != "1" ]; then
+    if ! docker compose -f "${COMPOSE_FILE}" pull app; then
+      echo "Rollback app image pull failed; attempting to use the local image cache." >&2
     fi
-    docker compose -f "${COMPOSE_FILE}" --profile admin up -d --no-build app web admin
-  else
-    docker compose -f "${COMPOSE_FILE}" up -d --no-build app web
+    if [ "${rollback_admin}" = "1" ]; then
+      if ! docker compose -f "${COMPOSE_FILE}" --profile admin pull admin; then
+        echo "Rollback admin image pull failed; attempting to use the local image cache." >&2
+      fi
+    fi
+  fi
+
+  docker compose -f "${COMPOSE_FILE}" up -d --no-build app
+  docker compose -f "${COMPOSE_FILE}" up -d --no-build --force-recreate web
+  if [ "${rollback_admin}" = "1" ]; then
+    docker compose -f "${COMPOSE_FILE}" --profile admin up -d --no-build admin
   fi
 
   if wait_for_health "Rollback" "${rollback_admin}"; then
@@ -181,3 +217,4 @@ if [ "${ROLLBACK_ON_FAILURE}" = "1" ] && [ -n "${previous_image}" ]; then
 fi
 
 exit 1
+

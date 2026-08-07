@@ -47,6 +47,11 @@ services:
       AZURSYSTECH_CONTACT_SUBMIT_TOKEN: ${AZURSYSTECH_CONTACT_SUBMIT_TOKEN}
       AZURSYSTECH_TELEGRAM_NOTIFICATIONS_ENABLED: ${AZURSYSTECH_TELEGRAM_NOTIFICATIONS_ENABLED:-false}
       AZURSYSTECH_TELEGRAM_BOT_TOKEN: ${AZURSYSTECH_TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_BOT_API_BASE_URL: ${TELEGRAM_BOT_API_BASE_URL:-https://api.telegram.org}
+      TELEGRAM_LIVE_SENDS_ENABLED: ${TELEGRAM_LIVE_SENDS_ENABLED:-false}
+      TELEGRAM_WEBHOOK_URL: ${TELEGRAM_WEBHOOK_URL:-}
+      TELEGRAM_WEBHOOK_REGISTRATION_ENABLED: ${TELEGRAM_WEBHOOK_REGISTRATION_ENABLED:-false}
       TELEGRAM_WEBHOOK_RECEIVE_ENABLED: ${TELEGRAM_WEBHOOK_RECEIVE_ENABLED:-false}
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
       AZURSYSTECH_TELEGRAM_CHAT_ID: ${AZURSYSTECH_TELEGRAM_CHAT_ID:-}
@@ -82,7 +87,7 @@ services:
       - default
 
   admin:
-    image: ${ADMIN_IMAGE:-ghcr.io/oleyna80/azursystech-admin:__unset__}
+    image: ${ADMIN_IMAGE:-ghcr.io/oleyna80/azursystech-site-admin:__unset__}
     container_name: azursystech-admin
     init: true
     profiles:
@@ -155,3 +160,5 @@ networks:
 
 volumes:
   postgres_data:
+    external: true
+    name: azursystech-site_postgres_data
