@@ -12,74 +12,521 @@ on:
         default: false
         type: boolean
 
+concurrency:
+  group: azursystech-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy over SSH
+      - name: Checkout repository runtime files
+        uses: actions/checkout@v4
+
+      - name: Transfer runtime files to VPS incoming directory
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          source: "docker-compose.vps.yml,deploy.sh,nginx.proxy.conf"
+          target: "/home/dmitrii/apps/azursystech/.incoming-${{ github.run_id }}"
+          strip_components: 0
+
+      - name: Execute preflight verification on VPS over SSH
         uses: appleboy/ssh-action@v1.2.0
         env:
           GH_REPOSITORY: ${{ github.repository }}
           IMAGE_TAG_INPUT: ${{ inputs.image_tag }}
           INCLUDE_ADMIN_INPUT: ${{ inputs.include_admin }}
           VPS_APP_DIR_INPUT: ${{ secrets.VPS_APP_DIR }}
+          GH_DEPLOY_TOKEN: ${{ github.token }}
+          GH_ACTOR: ${{ github.actor }}
+          RUN_ID: ${{ github.run_id }}
+          GIT_SHA: ${{ github.sha }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
           script_stop: true
-          envs: GH_REPOSITORY,IMAGE_TAG_INPUT,INCLUDE_ADMIN_INPUT,VPS_APP_DIR_INPUT
+          envs: GH_REPOSITORY,IMAGE_TAG_INPUT,INCLUDE_ADMIN_INPUT,VPS_APP_DIR_INPUT,GH_DEPLOY_TOKEN,GH_ACTOR,RUN_ID,GIT_SHA
           script: |
             set -euo pipefail
-            cd "${VPS_APP_DIR_INPUT}"
 
+            FIXED_TARGET_DIR="/home/dmitrii/apps/azursystech"
+            INCOMING_DIR="${FIXED_TARGET_DIR}/.incoming-${RUN_ID}"
+            TMP_DOCKER_DIR=""
+            BACKUP_FILES_DIR="${FIXED_TARGET_DIR}/.file_backups-${RUN_ID}"
+            FILES_INSTALLED=0
+            RUNTIME_INSTALL_SUCCESS=0
+            DEPLOY_STARTED=0
+            DEPLOY_RUNTIME_VERIFIED=0
+            DEPLOY_SUCCESS=0
+
+            cleanup() {
+              ORIGINAL_EXIT_CODE="$?"
+
+              trap - EXIT INT TERM
+              set +e
+
+              if [ -n "${TMP_DOCKER_DIR}" ]; then
+                rm -rf "${TMP_DOCKER_DIR}"
+              fi
+
+              rm -rf "${INCOMING_DIR}"
+
+              if [ "${FILES_INSTALLED}" = "1" ] && [ "${RUNTIME_INSTALL_SUCCESS}" = "0" ]; then
+                RESTORE_RC=0
+
+                cp "${BACKUP_FILES_DIR}/docker-compose.vps.yml" "${FIXED_TARGET_DIR}/docker-compose.vps.yml" || RESTORE_RC=1
+                cp "${BACKUP_FILES_DIR}/deploy.sh" "${FIXED_TARGET_DIR}/deploy.sh" || RESTORE_RC=1
+                cp "${BACKUP_FILES_DIR}/nginx.proxy.conf" "${FIXED_TARGET_DIR}/nginx.proxy.conf" || RESTORE_RC=1
+                chmod 755 "${FIXED_TARGET_DIR}/deploy.sh" || RESTORE_RC=1
+
+                if [ "${RESTORE_RC}" -ne 0 ]; then
+                  echo "CRITICAL: runtime file restoration failed" >&2
+                  echo "Backup preserved at: ${BACKUP_FILES_DIR}" >&2
+                  exit 2
+                fi
+
+                echo "Previous runtime files restored." >&2
+                echo "Backup preserved at: ${BACKUP_FILES_DIR}" >&2
+              elif [ "${RUNTIME_INSTALL_SUCCESS}" = "1" ] && [ "${DEPLOY_STARTED}" = "1" ] && [ "${DEPLOY_RUNTIME_VERIFIED}" = "0" ]; then
+                echo "DEPLOYMENT FAILED! Triggering full deployment rollback..." >&2
+
+                RESTORE_RC=0
+                cp "${BACKUP_FILES_DIR}/docker-compose.vps.yml" "${FIXED_TARGET_DIR}/docker-compose.vps.yml" || RESTORE_RC=1
+                cp "${BACKUP_FILES_DIR}/deploy.sh" "${FIXED_TARGET_DIR}/deploy.sh" || RESTORE_RC=1
+                cp "${BACKUP_FILES_DIR}/nginx.proxy.conf" "${FIXED_TARGET_DIR}/nginx.proxy.conf" || RESTORE_RC=1
+                cp "${BACKUP_FILES_DIR}/.env" "${FIXED_TARGET_DIR}/.env" || RESTORE_RC=1
+                chmod 755 "${FIXED_TARGET_DIR}/deploy.sh" || RESTORE_RC=1
+                chmod 600 "${FIXED_TARGET_DIR}/.env" || RESTORE_RC=1
+
+                if [ "${RESTORE_RC}" -ne 0 ]; then
+                  echo "CRITICAL: failed to restore previous runtime files" >&2
+                  echo "Backup preserved at: ${BACKUP_FILES_DIR}" >&2
+                  exit 2
+                fi
+
+                PREV_APP_IMAGE=""
+                if [ -s "${BACKUP_FILES_DIR}/previous-app-image.txt" ]; then
+                  PREV_APP_IMAGE="$(cat "${BACKUP_FILES_DIR}/previous-app-image.txt")"
+                fi
+
+                if [ -z "${PREV_APP_IMAGE}" ] || ! docker image inspect "${PREV_APP_IMAGE}" >/dev/null 2>&1; then
+                  echo "CRITICAL: previous app image is missing or invalid for rollback" >&2
+                  echo "Backup preserved at: ${BACKUP_FILES_DIR}" >&2
+                  exit 2
+                fi
+
+                PREVIOUS_ADMIN_RUNNING="false"
+                if [ -f "${BACKUP_FILES_DIR}/previous-admin-running.txt" ]; then
+                  PREVIOUS_ADMIN_RUNNING="$(cat "${BACKUP_FILES_DIR}/previous-admin-running.txt")"
+                fi
+
+                case "${PREVIOUS_ADMIN_RUNNING}" in
+                  true|false) ;;
+                  *)
+                    echo "CRITICAL: invalid previous-admin-running value: ${PREVIOUS_ADMIN_RUNNING}" >&2
+                    echo "Backup preserved at: ${BACKUP_FILES_DIR}" >&2
+                    exit 2
+                    ;;
+                esac
+
+                PREV_ADMIN_IMAGE=""
+                if [ "${PREVIOUS_ADMIN_RUNNING}" = "true" ]; then
+                  if [ -s "${BACKUP_FILES_DIR}/previous-admin-image.txt" ]; then
+                    PREV_ADMIN_IMAGE="$(cat "${BACKUP_FILES_DIR}/previous-admin-image.txt")"
+                  fi
+
+                  if [ -z "${PREV_ADMIN_IMAGE}" ] || ! docker image inspect "${PREV_ADMIN_IMAGE}" >/dev/null 2>&1; then
+                    echo "CRITICAL: previous admin image is missing or invalid for rollback" >&2
+                    echo "Backup preserved at: ${BACKUP_FILES_DIR}" >&2
+                    exit 2
+                  fi
+                fi
+
+                ROLLBACK_EXEC_RC=0
+                if [ "${PREVIOUS_ADMIN_RUNNING}" = "true" ]; then
+                  SKIP_PULL=1 ROLLBACK_ON_FAILURE=0 DEPLOY_ADMIN=1 ADMIN_IMAGE="${PREV_ADMIN_IMAGE}" \
+                    "${BACKUP_FILES_DIR}/rollback-runner.sh" "${PREV_APP_IMAGE}" || ROLLBACK_EXEC_RC=1
+                else
+                  SKIP_PULL=1 ROLLBACK_ON_FAILURE=0 DEPLOY_ADMIN=0 \
+                    "${BACKUP_FILES_DIR}/rollback-runner.sh" "${PREV_APP_IMAGE}" || ROLLBACK_EXEC_RC=1
+
+                  if [ "${INCLUDE_ADMIN_INPUT}" = "true" ]; then
+                    if ! docker compose -f "${FIXED_TARGET_DIR}/docker-compose.vps.yml" --profile admin stop admin; then
+                      echo "CRITICAL: failed to restore previous stopped admin state" >&2
+                      ROLLBACK_EXEC_RC=1
+                    fi
+
+                    ADMIN_RUNNING="$(docker inspect --format '{{.State.Running}}' azursystech-admin 2>/dev/null || echo "false")"
+                    if [ "${ADMIN_RUNNING}" != "false" ]; then
+                      echo "CRITICAL: admin is still running after rollback" >&2
+                      ROLLBACK_EXEC_RC=1
+                    fi
+                  fi
+                fi
+
+                ROLLBACK_HEALTH_RC=0
+                if [ "${ROLLBACK_EXEC_RC}" = "0" ]; then
+                  CHECK_CONTAINERS="azursystech-postgres azursystech-app azursystech-web"
+                  if [ "${PREVIOUS_ADMIN_RUNNING}" = "true" ]; then
+                    CHECK_CONTAINERS="${CHECK_CONTAINERS} azursystech-admin"
+                  fi
+
+                  for c in ${CHECK_CONTAINERS}; do
+                    st="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unhealthy{{end}}' "$c" 2>/dev/null || echo "unhealthy")"
+                    if [ "$st" != "healthy" ]; then
+                      ROLLBACK_HEALTH_RC=1
+                      break
+                    fi
+                  done
+
+                  if ! curl -fsS "https://azursystech.fr/health" >/dev/null 2>&1; then
+                    ROLLBACK_HEALTH_RC=1
+                  fi
+                fi
+
+                if [ "${ROLLBACK_EXEC_RC}" = "0" ] && [ "${ROLLBACK_HEALTH_RC}" = "0" ]; then
+                  echo "Rollback health checks PASSED. Previous stable runtime restored." >&2
+                  echo "Backup preserved for diagnostics at: ${BACKUP_FILES_DIR}" >&2
+                else
+                  echo "CRITICAL: Rollback execution or health checks FAILED!" >&2
+                  echo "Backup preserved at: ${BACKUP_FILES_DIR}" >&2
+                  exit 2
+                fi
+              elif [ "${DEPLOY_RUNTIME_VERIFIED}" = "1" ] && [ "${DEPLOY_SUCCESS}" = "0" ]; then
+                echo "DEPLOYMENT RUNTIME VERIFIED, BUT ROLLBACK STATE PERSISTENCE FAILED." >&2
+                echo "Verified running deployment will NOT be rolled back." >&2
+                echo "Backup preserved for diagnostics at: ${BACKUP_FILES_DIR}" >&2
+              fi
+
+              exit "${ORIGINAL_EXIT_CODE}"
+            }
+
+            trap cleanup EXIT
+            trap 'exit 130' INT
+            trap 'exit 143' TERM
+
+            # 1. Валидация формата image_tag
             IMAGE_TAG="${IMAGE_TAG_INPUT}"
-            if [ -z "${IMAGE_TAG}" ] || [ "${IMAGE_TAG}" = "latest" ] || [ "${IMAGE_TAG}" = "main" ]; then
-              echo "Use an immutable image tag, not ${IMAGE_TAG}" >&2
-              exit 1
-            fi
             if ! printf '%s' "${IMAGE_TAG}" | grep -Eq '^sha-[0-9a-f]{40}$'; then
-              echo "Use an immutable image tag in the form sha-<full_commit_sha>: ${IMAGE_TAG}" >&2
+              echo "ERROR: Use an immutable image tag in the form sha-<full_commit_sha>: ${IMAGE_TAG}" >&2
               exit 1
             fi
 
-            export APP_IMAGE="ghcr.io/${GH_REPOSITORY}-site-app:${IMAGE_TAG}"
+            # 2. Сверка image_tag с SHA текущего коммита
+            EXPECTED_TAG="sha-${GIT_SHA}"
+            if [ "${IMAGE_TAG}" != "${EXPECTED_TAG}" ]; then
+              echo "ERROR: Requested image_tag (${IMAGE_TAG}) does not match workflow commit SHA tag (${EXPECTED_TAG})!" >&2
+              exit 1
+            fi
+
+            # 3. Валидация секрета VPS_APP_DIR
+            TARGET_DIR="${VPS_APP_DIR_INPUT:-}"
+            if [ -z "${TARGET_DIR}" ]; then
+              echo "ERROR: VPS_APP_DIR secret is missing!" >&2
+              exit 1
+            fi
+            if [ "${TARGET_DIR}" != "${FIXED_TARGET_DIR}" ]; then
+              echo "ERROR: VPS_APP_DIR must be ${FIXED_TARGET_DIR}, got: ${TARGET_DIR}" >&2
+              exit 1
+            fi
+
+            # 4. Fail-fast lock через flock
+            exec 200>/tmp/azursystech-deploy.lock
+            if ! flock -n 200; then
+              echo "ERROR: Another deployment or migration is running" >&2
+              exit 1
+            fi
+
+            # 5. Инициализация временного DOCKER_CONFIG
+            TMP_DOCKER_DIR="$(mktemp -d /tmp/docker-cfg.XXXXXX)"
+            export DOCKER_CONFIG="${TMP_DOCKER_DIR}"
+
+            # 6. Валидация входящих файлов
+            test -d "${INCOMING_DIR}"
+            test -s "${INCOMING_DIR}/docker-compose.vps.yml"
+            test -s "${INCOMING_DIR}/deploy.sh"
+            test -s "${INCOMING_DIR}/nginx.proxy.conf"
+
+            bash -n "${INCOMING_DIR}/deploy.sh"
+
+            # 7. Формирование имён образов
+            export APP_IMAGE="ghcr.io/${GH_REPOSITORY}-app:${IMAGE_TAG}"
+            if [ "${INCLUDE_ADMIN_INPUT}" = "true" ]; then
+              export ADMIN_IMAGE="ghcr.io/${GH_REPOSITORY}-admin:${IMAGE_TAG}"
+            fi
+
+            # 8. Валидация Compose и внешнего тома
+            docker compose --env-file "${TARGET_DIR}/.env" -f "${INCOMING_DIR}/docker-compose.vps.yml" config >/dev/null
+            docker volume inspect azursystech-site_postgres_data >/dev/null
+
+            # 9. Эфемерная логинизация в GHCR и pre-pull
+            printf '%s' "${GH_DEPLOY_TOKEN}" | docker login ghcr.io -u "${GH_ACTOR}" --password-stdin
+
+            docker pull "${APP_IMAGE}"
+            if [ "${INCLUDE_ADMIN_INPUT}" = "true" ]; then
+              docker pull "${ADMIN_IMAGE}"
+            fi
+
+            # 10. Итоговые отчёты по успешным предпроверкам
+            echo "Preflight image tag confirmed: ${IMAGE_TAG}"
+            echo "APP_IMAGE: ${APP_IMAGE}"
+            if [ "${INCLUDE_ADMIN_INPUT}" = "true" ]; then
+              echo "ADMIN_IMAGE: ${ADMIN_IMAGE}"
+            fi
+            echo "Compose validation passed"
+            echo "external volume validation passed"
+            echo "image pull validation passed"
+
+            # 11. Проверка существующего runtime перед бэкапом
+            test -s "${FIXED_TARGET_DIR}/docker-compose.vps.yml"
+            test -s "${FIXED_TARGET_DIR}/deploy.sh"
+            test -s "${FIXED_TARGET_DIR}/nginx.proxy.conf"
+            test -s "${FIXED_TARGET_DIR}/.env"
+
+            bash -n "${FIXED_TARGET_DIR}/deploy.sh"
+
+            # 12. Создание защищённого бэкапа файлов
+            mkdir -p "${BACKUP_FILES_DIR}"
+            chmod 700 "${BACKUP_FILES_DIR}"
+
+            cp -p "${FIXED_TARGET_DIR}/docker-compose.vps.yml" "${BACKUP_FILES_DIR}/docker-compose.vps.yml"
+            cp -p "${FIXED_TARGET_DIR}/deploy.sh" "${BACKUP_FILES_DIR}/deploy.sh"
+            cp -p "${FIXED_TARGET_DIR}/nginx.proxy.conf" "${BACKUP_FILES_DIR}/nginx.proxy.conf"
+            cp -p "${FIXED_TARGET_DIR}/.env" "${BACKUP_FILES_DIR}/.env"
+
+            chmod 600 "${BACKUP_FILES_DIR}/.env"
+
+            # 13. Сохранение текущего app image
+            docker inspect --format '{{.Config.Image}}' azursystech-app > "${BACKUP_FILES_DIR}/previous-app-image.txt"
+            test -s "${BACKUP_FILES_DIR}/previous-app-image.txt"
+
+            # 14. Сохранение состояния admin условно
+            if docker inspect azursystech-admin >/dev/null 2>&1; then
+              docker inspect --format '{{.Config.Image}}' azursystech-admin > "${BACKUP_FILES_DIR}/previous-admin-image.txt"
+              docker inspect --format '{{.State.Running}}' azursystech-admin > "${BACKUP_FILES_DIR}/previous-admin-running.txt"
+
+              test -s "${BACKUP_FILES_DIR}/previous-admin-image.txt"
+              test -s "${BACKUP_FILES_DIR}/previous-admin-running.txt"
+            fi
+
+            # 15. Сохранение нового rollback runner
+            cp -p "${INCOMING_DIR}/deploy.sh" "${BACKUP_FILES_DIR}/rollback-runner.sh"
+            chmod 755 "${BACKUP_FILES_DIR}/rollback-runner.sh"
+
+            bash -n "${BACKUP_FILES_DIR}/rollback-runner.sh"
+
+            # 16. Проверка rollback capability ДО модификации runtime-файлов
+            test -s "${BACKUP_FILES_DIR}/previous-app-image.txt"
+            PREV_APP_IMAGE="$(cat "${BACKUP_FILES_DIR}/previous-app-image.txt")"
+            test -n "${PREV_APP_IMAGE}"
+            docker image inspect "${PREV_APP_IMAGE}" >/dev/null
+
+            PREV_ADMIN_RUNNING_VAL="false"
+            if [ -f "${BACKUP_FILES_DIR}/previous-admin-running.txt" ]; then
+              PREV_ADMIN_RUNNING_VAL="$(cat "${BACKUP_FILES_DIR}/previous-admin-running.txt")"
+            fi
+
+            case "${PREV_ADMIN_RUNNING_VAL}" in
+              true|false) ;;
+              *)
+                echo "ERROR: invalid previous admin running state" >&2
+                exit 1
+                ;;
+            esac
+
+            if [ "${PREV_ADMIN_RUNNING_VAL}" = "true" ]; then
+              test -s "${BACKUP_FILES_DIR}/previous-admin-image.txt"
+              PREV_ADMIN_IMAGE_VAL="$(cat "${BACKUP_FILES_DIR}/previous-admin-image.txt")"
+              test -n "${PREV_ADMIN_IMAGE_VAL}"
+              docker image inspect "${PREV_ADMIN_IMAGE_VAL}" >/dev/null
+            fi
+
+            # 17. Подготовка временных файлов в том же целевом каталоге
+            install -m 644 "${INCOMING_DIR}/docker-compose.vps.yml" "${FIXED_TARGET_DIR}/docker-compose.vps.yml.tmp-${RUN_ID}"
+            install -m 755 "${INCOMING_DIR}/deploy.sh" "${FIXED_TARGET_DIR}/deploy.sh.tmp-${RUN_ID}"
+            install -m 644 "${INCOMING_DIR}/nginx.proxy.conf" "${FIXED_TARGET_DIR}/nginx.proxy.conf.tmp-${RUN_ID}"
+
+            test -s "${FIXED_TARGET_DIR}/docker-compose.vps.yml.tmp-${RUN_ID}"
+            test -s "${FIXED_TARGET_DIR}/deploy.sh.tmp-${RUN_ID}"
+            test -s "${FIXED_TARGET_DIR}/nginx.proxy.conf.tmp-${RUN_ID}"
+
+            bash -n "${FIXED_TARGET_DIR}/deploy.sh.tmp-${RUN_ID}"
+
+            # 18. Установка runtime-файлов (Флаг мутации FILES_INSTALLED ставится ДО первого mv)
+            FILES_INSTALLED=1
+
+            mv "${FIXED_TARGET_DIR}/docker-compose.vps.yml.tmp-${RUN_ID}" "${FIXED_TARGET_DIR}/docker-compose.vps.yml"
+            mv "${FIXED_TARGET_DIR}/deploy.sh.tmp-${RUN_ID}" "${FIXED_TARGET_DIR}/deploy.sh"
+            mv "${FIXED_TARGET_DIR}/nginx.proxy.conf.tmp-${RUN_ID}" "${FIXED_TARGET_DIR}/nginx.proxy.conf"
+
+            # 19. Сверка и финальные проверки установленных файлов
+            test -s "${FIXED_TARGET_DIR}/docker-compose.vps.yml"
+            test -s "${FIXED_TARGET_DIR}/deploy.sh"
+            test -s "${FIXED_TARGET_DIR}/nginx.proxy.conf"
+
+            bash -n "${FIXED_TARGET_DIR}/deploy.sh"
+
+            cmp -s "${INCOMING_DIR}/docker-compose.vps.yml" "${FIXED_TARGET_DIR}/docker-compose.vps.yml"
+            cmp -s "${INCOMING_DIR}/deploy.sh" "${FIXED_TARGET_DIR}/deploy.sh"
+            cmp -s "${INCOMING_DIR}/nginx.proxy.conf" "${FIXED_TARGET_DIR}/nginx.proxy.conf"
+
+            docker compose --env-file "${FIXED_TARGET_DIR}/.env" -f "${FIXED_TARGET_DIR}/docker-compose.vps.yml" config >/dev/null
+
+            RUNTIME_INSTALL_SUCCESS=1
+
+            echo "Runtime backup created: ${BACKUP_FILES_DIR}"
+            echo "Runtime files installed and verified."
+            echo "No containers were changed."
+
+            # 20. Начало деплоя
+            DEPLOY_STARTED=1
+            cd "${FIXED_TARGET_DIR}"
+
             if [ "${INCLUDE_ADMIN_INPUT}" = "true" ]; then
               export DEPLOY_ADMIN=1
-              export ADMIN_IMAGE="ghcr.io/${GH_REPOSITORY}-site-admin:${IMAGE_TAG}"
             else
               export DEPLOY_ADMIN=0
             fi
 
-            ./deploy.sh "${APP_IMAGE}"
+            # 21. Вызов deploy.sh
+            ROLLBACK_ON_FAILURE=0 ./deploy.sh "${APP_IMAGE}"
 
-            for container in azursystech-postgres azursystech-app azursystech-web; do
+            # 22. Пост-деплой проверки контейнеров
+            CHECK_CONTAINERS="azursystech-postgres azursystech-app azursystech-web"
+            if [ "${INCLUDE_ADMIN_INPUT}" = "true" ]; then
+              CHECK_CONTAINERS="${CHECK_CONTAINERS} azursystech-admin"
+            fi
+
+            for container in ${CHECK_CONTAINERS}; do
               for attempt in $(seq 1 24); do
-                status="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$container")"
-                if [ "$status" = "healthy" ] || [ "$status" = "none" ]; then
+                status="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unhealthy{{end}}' "$container" 2>/dev/null || echo "unhealthy")"
+                if [ "$status" = "healthy" ]; then
                   break
                 fi
                 if [ "$attempt" = "24" ]; then
-                  echo "$container is not healthy: $status" >&2
+                  echo "ERROR: Container $container is not healthy (status: $status)" >&2
                   exit 1
                 fi
                 sleep 5
               done
             done
 
-            if [ "${INCLUDE_ADMIN_INPUT}" = "true" ]; then
-              for attempt in $(seq 1 24); do
-                status="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' azursystech-admin)"
-                if [ "$status" = "healthy" ] || [ "$status" = "none" ]; then
-                  break
-                fi
-                if [ "$attempt" = "24" ]; then
-                  echo "azursystech-admin is not healthy: $status" >&2
-                  exit 1
-                fi
-                sleep 5
-              done
+            # 23. Проверка фактически запущенных образов
+            RUNNING_APP_IMAGE="$(docker inspect --format '{{.Config.Image}}' azursystech-app)"
+            if [ "${RUNNING_APP_IMAGE}" != "${APP_IMAGE}" ]; then
+              echo "ERROR: Running app image mismatch! Expected '${APP_IMAGE}', got '${RUNNING_APP_IMAGE}'" >&2
+              exit 1
             fi
 
+            if [ "${INCLUDE_ADMIN_INPUT}" = "true" ]; then
+              RUNNING_ADMIN_IMAGE="$(docker inspect --format '{{.Config.Image}}' azursystech-admin)"
+              if [ "${RUNNING_ADMIN_IMAGE}" != "${ADMIN_IMAGE}" ]; then
+                echo "ERROR: Running admin image mismatch! Expected '${ADMIN_IMAGE}', got '${RUNNING_ADMIN_IMAGE}'" >&2
+                exit 1
+              fi
+            fi
+
+            # 24. Проверка внешнего HTTP эндпоинта
+            curl -fsS "https://azursystech.fr/health" >/dev/null
+
+            # 25. Проверка меток Compose
+            APP_PROJ="$(docker inspect azursystech-app --format '{{index .Config.Labels "com.docker.compose.project"}}')"
+            APP_WORKDIR="$(docker inspect azursystech-app --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}')"
+            APP_CONFFILE="$(docker inspect azursystech-app --format '{{index .Config.Labels "com.docker.compose.project.config_files"}}')"
+
+            WEB_PROJ="$(docker inspect azursystech-web --format '{{index .Config.Labels "com.docker.compose.project"}}')"
+            WEB_WORKDIR="$(docker inspect azursystech-web --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}')"
+            WEB_CONFFILE="$(docker inspect azursystech-web --format '{{index .Config.Labels "com.docker.compose.project.config_files"}}')"
+
+            if [ "${APP_PROJ}" != "azursystech-site" ] || [ "${WEB_PROJ}" != "azursystech-site" ]; then
+              echo "ERROR: Compose project label mismatch!" >&2
+              exit 1
+            fi
+            if [ "${APP_WORKDIR}" != "${FIXED_TARGET_DIR}" ] || [ "${WEB_WORKDIR}" != "${FIXED_TARGET_DIR}" ]; then
+              echo "ERROR: Compose working_dir label mismatch!" >&2
+              exit 1
+            fi
+            if [ "${APP_CONFFILE}" != "${FIXED_TARGET_DIR}/docker-compose.vps.yml" ] || [ "${WEB_CONFFILE}" != "${FIXED_TARGET_DIR}/docker-compose.vps.yml" ]; then
+              echo "ERROR: Compose config_files label mismatch!" >&2
+              exit 1
+            fi
+
+            # Runtime is now fully verified. Any later failure is rollback-state persistence only.
+            DEPLOY_RUNTIME_VERIFIED=1
+
+            # 26. Создание официального .deploy/previous-runtime
+            DEPLOY_STATE_DIR="${FIXED_TARGET_DIR}/.deploy"
+            PREVIOUS_RUNTIME_DIR="${DEPLOY_STATE_DIR}/previous-runtime"
+            PREVIOUS_RUNTIME_TMP="${DEPLOY_STATE_DIR}/previous-runtime.tmp-${RUN_ID}"
+            PREVIOUS_RUNTIME_OLD="${DEPLOY_STATE_DIR}/previous-runtime.old-${RUN_ID}"
+
+            mkdir -p "${DEPLOY_STATE_DIR}"
+            chmod 700 "${DEPLOY_STATE_DIR}"
+
+            rm -rf "${PREVIOUS_RUNTIME_TMP}"
+            mkdir -p "${PREVIOUS_RUNTIME_TMP}"
+            chmod 700 "${PREVIOUS_RUNTIME_TMP}"
+
+            cp "${BACKUP_FILES_DIR}/docker-compose.vps.yml" "${PREVIOUS_RUNTIME_TMP}/docker-compose.vps.yml"
+            cp "${BACKUP_FILES_DIR}/deploy.sh" "${PREVIOUS_RUNTIME_TMP}/deploy.sh"
+            cp "${BACKUP_FILES_DIR}/nginx.proxy.conf" "${PREVIOUS_RUNTIME_TMP}/nginx.proxy.conf"
+            cp "${BACKUP_FILES_DIR}/.env" "${PREVIOUS_RUNTIME_TMP}/.env"
+            cp "${BACKUP_FILES_DIR}/previous-app-image.txt" "${PREVIOUS_RUNTIME_TMP}/previous-app-image.txt"
+            cp "${BACKUP_FILES_DIR}/rollback-runner.sh" "${PREVIOUS_RUNTIME_TMP}/rollback-runner.sh"
+
+            chmod 600 "${PREVIOUS_RUNTIME_TMP}/.env"
+            chmod 755 "${PREVIOUS_RUNTIME_TMP}/rollback-runner.sh"
+
+            if [ -f "${BACKUP_FILES_DIR}/previous-admin-image.txt" ]; then
+              cp "${BACKUP_FILES_DIR}/previous-admin-image.txt" "${PREVIOUS_RUNTIME_TMP}/previous-admin-image.txt"
+            fi
+            if [ -f "${BACKUP_FILES_DIR}/previous-admin-running.txt" ]; then
+              cp "${BACKUP_FILES_DIR}/previous-admin-running.txt" "${PREVIOUS_RUNTIME_TMP}/previous-admin-running.txt"
+            fi
+
+            # 27. Безопасная установка previous-runtime с откатом при сбое mv
+            rm -rf "${PREVIOUS_RUNTIME_OLD}"
+            if [ -d "${PREVIOUS_RUNTIME_DIR}" ]; then
+              mv "${PREVIOUS_RUNTIME_DIR}" "${PREVIOUS_RUNTIME_OLD}"
+            fi
+
+            if ! mv "${PREVIOUS_RUNTIME_TMP}" "${PREVIOUS_RUNTIME_DIR}"; then
+              echo "ERROR: Failed to move previous-runtime.tmp to previous-runtime" >&2
+              if [ -d "${PREVIOUS_RUNTIME_OLD}" ]; then
+                mv "${PREVIOUS_RUNTIME_OLD}" "${PREVIOUS_RUNTIME_DIR}"
+              fi
+              exit 1
+            fi
+            rm -rf "${PREVIOUS_RUNTIME_OLD}"
+
+            # 28. Сохранение rollback runner и меток в .deploy
+            cp "${BACKUP_FILES_DIR}/rollback-runner.sh" "${DEPLOY_STATE_DIR}/rollback-runner.sh"
+            chmod 755 "${DEPLOY_STATE_DIR}/rollback-runner.sh"
+
+            cp "${BACKUP_FILES_DIR}/previous-app-image.txt" "${DEPLOY_STATE_DIR}/previous-app-image"
+
+            if [ -f "${BACKUP_FILES_DIR}/previous-admin-image.txt" ]; then
+              cp "${BACKUP_FILES_DIR}/previous-admin-image.txt" "${DEPLOY_STATE_DIR}/previous-admin-image"
+            else
+              rm -f "${DEPLOY_STATE_DIR}/previous-admin-image"
+            fi
+
+            # 29. Финальная проверка состояния и очистка временного backup
             docker compose -f docker-compose.vps.yml ps
+            rm -rf "${BACKUP_FILES_DIR}"
+            DEPLOY_SUCCESS=1
+
+            echo "Deployment completed successfully."
+            echo "APP_IMAGE=${APP_IMAGE}"
+            echo "Rollback state saved at:"
+            echo "  ${PREVIOUS_RUNTIME_DIR}"
