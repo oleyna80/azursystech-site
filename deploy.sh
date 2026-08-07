@@ -217,4 +217,3 @@ if [ "${ROLLBACK_ON_FAILURE}" = "1" ] && [ -n "${previous_image}" ]; then
 fi
 
 exit 1
-
