@@ -171,56 +171,43 @@ CURRENT_DB_SIZE_BYTES="$(docker exec azursystech-postgres sh -c 'psql -U "$POSTG
 echo "=== 8. Validating Table Count Against 4A Baseline ==="
 BASELINE_FILE="${BACKUP_DIR}/db-baseline.txt"
 BACKUP_TABLE_COUNT="$(sed -n 's/^[[:space:]]*User Table Count:[[:space:]]*\([0-9]\{1,\}\).*/\1/p' "${BASELINE_FILE}" | tail -n 1)"
-
 if [[ ! "${BACKUP_TABLE_COUNT}" =~ ^[0-9]+$ ]]; then
   echo "ERROR: Invalid or unparseable User Table Count in ${BASELINE_FILE}" >&2
   exit 1
 fi
-
 if [ "${CURRENT_TABLE_COUNT}" != "${BACKUP_TABLE_COUNT}" ]; then
   echo "ERROR: Database table count changed since backup! Current: ${CURRENT_TABLE_COUNT}, Backup: ${BACKUP_TABLE_COUNT}" >&2
   exit 1
 fi
-
 echo "=== 9. Validating Candidate Compose Syntax and Contract ==="
 if ! command -v python3 >/dev/null 2>&1; then
   echo "ERROR: python3 is required for structured Compose config validation" >&2
   exit 1
 fi
-
 if ! docker compose --env-file "${TARGET_DIR}/.env" -f "${CANDIDATE_COMPOSE}" config -q; then
   echo "ERROR: Candidate Compose file syntax validation failed" >&2
   exit 1
 fi
-
 CURRENT_PG_IMAGE="$(docker inspect --format '{{.Config.Image}}' azursystech-postgres)"
-
 CANDIDATE_PG_IMAGE="$(
-  docker compose --env-file "${TARGET_DIR}/.env" -f "${CANDIDATE_COMPOSE}" config --format json | python3 -c '
-import sys, json
-
+  docker compose --env-file "${TARGET_DIR}/.env" -f "${CANDIDATE_COMPOSE}" config --format json | python3 -c 'import sys, json
 try:
     data = json.load(sys.stdin)
 except Exception as e:
     sys.exit(1)
-
 services = data.get("services", {})
 if "postgres" not in services:
     sys.exit(1)
-
 pg_service = services["postgres"]
 pg_image = pg_service.get("image")
 if not pg_image or not isinstance(pg_image, str):
     sys.exit(1)
-
 volumes = data.get("volumes", {})
 if "postgres_data" not in volumes:
     sys.exit(1)
-
 vol_cfg = volumes["postgres_data"]
 if vol_cfg.get("external") is not True or vol_cfg.get("name") != "azursystech-site_postgres_data":
     sys.exit(1)
-
 pg_volumes = pg_service.get("volumes", [])
 mount_valid = False
 for v in pg_volumes:
@@ -235,13 +222,10 @@ for v in pg_volumes:
             mount_valid = True
         elif ":/var/lib/postgresql/data" in v:
             sys.exit(1)
-
 if not mount_valid:
     sys.exit(1)
-
 print(pg_image)
-'
-)"
+'))"
 
 if [ -z "${CANDIDATE_PG_IMAGE}" ]; then
   echo "ERROR: Failed to extract or validate PostgreSQL image/volume contract from Candidate Compose" >&2
@@ -304,10 +288,15 @@ if [ "${EXECUTE_CUTOVER}" -eq 1 ]; then
     exit 1
   fi
 
+  if [ ! -s "${SOURCE_PROJECTS_DIR}/.env" ]; then
+    echo "ERROR: Source runtime environment file ${SOURCE_PROJECTS_DIR}/.env is missing or empty" >&2
+    exit 1
+  fi
+
   EXPECTED_SHA256="$(awk '{print $1}' "${BACKUP_DIR}/candidate-compose.sha256")"
   ACTUAL_SHA256="$(sha256sum "${CANDIDATE_COMPOSE}" | awk '{print $1}')"
 
-  if [ -z "${EXPECTED_SHA256}" ] || [ "${ACTUAL_SHA256}" != "${EXPECTED_SHA256}" ]; then
+  if [[ ! "${EXPECTED_SHA256}" =~ ^[0-9a-f]{64}$ ]] || [ "${ACTUAL_SHA256}" != "${EXPECTED_SHA256}" ]; then
     echo "ERROR: Candidate Compose SHA256 mismatch! Expected: '${EXPECTED_SHA256}', Actual: '${ACTUAL_SHA256}'" >&2
     exit 1
   fi
@@ -329,8 +318,26 @@ if [ "${EXECUTE_CUTOVER}" -eq 1 ]; then
   cp -p "${CANONICAL_COMPOSE}" "${BEFORE_COMPOSE_BACKUP}"
   chmod 600 "${BEFORE_COMPOSE_BACKUP}"
 
-  CUTOVER_STARTED=1
+  CUTOVER_STARTED=0
   CUTOVER_SUCCESS=0
+  POSTGRES_RECREATE_ATTEMPTED=0
+  FINAL_BASELINE_READY=0
+  CANONICAL_COMPOSE_CHANGED=0
+
+  wait_container_healthy() {
+    local container="$1"
+    local status
+
+    for attempt in $(seq 1 24); do
+      status="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unhealthy{{end}}' "${container}" 2>/dev/null || echo "unhealthy")"
+      if [ "${status}" = "healthy" ]; then
+        return 0
+      fi
+      sleep 5
+    done
+
+    return 1
+  }
 
   cutover_rollback_trap() {
     ORIGINAL_ERR_CODE="$?"
@@ -340,59 +347,101 @@ if [ "${EXECUTE_CUTOVER}" -eq 1 ]; then
     if [ "${CUTOVER_STARTED:-0}" -eq 1 ] && [ "${CUTOVER_SUCCESS:-0}" -eq 0 ]; then
       echo "CRITICAL: Cutover failed after starting! Executing rollback..." >&2
 
-      cp "${BEFORE_COMPOSE_BACKUP}" "${CANONICAL_COMPOSE}" || true
-      chmod 644 "${CANONICAL_COMPOSE}" || true
-
+      ROLLBACK_CONFIG_ERR=0
       ROLLBACK_CONTAINER_ERR=0
-      docker compose --env-file "${TARGET_DIR}/.env" -f "${SOURCE_PROJECTS_DIR}/docker-compose.vps.yml" up -d --no-deps --force-recreate --pull never postgres || ROLLBACK_CONTAINER_ERR=1
 
-      PG_HEALTH_OK=0
-      for attempt in $(seq 1 24); do
-        st="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unhealthy{{end}}' azursystech-postgres 2>/dev/null || echo "unhealthy")"
-        if [ "${st}" = "healthy" ]; then
-          PG_HEALTH_OK=1
-          break
+      if [ "${CANONICAL_COMPOSE_CHANGED:-0}" -eq 1 ]; then
+        cp "${BEFORE_COMPOSE_BACKUP}" "${CANONICAL_COMPOSE}" || ROLLBACK_CONFIG_ERR=1
+        chmod 644 "${CANONICAL_COMPOSE}" || ROLLBACK_CONFIG_ERR=1
+      fi
+
+      if [ "${POSTGRES_RECREATE_ATTEMPTED:-0}" -eq 1 ]; then
+        docker compose \
+          --env-file "${SOURCE_PROJECTS_DIR}/.env" \
+          -f "${SOURCE_PROJECTS_DIR}/docker-compose.vps.yml" \
+          up -d \
+          --no-deps \
+          --force-recreate \
+          --pull never \
+          postgres || ROLLBACK_CONTAINER_ERR=1
+
+        if ! wait_container_healthy azursystech-postgres; then
+          echo "CRITICAL: PostgreSQL rollback container did not become healthy" >&2
+          ROLLBACK_CONTAINER_ERR=1
         fi
-        sleep 5
-      done
 
-      if [ "${PG_HEALTH_OK}" -eq 1 ] && docker exec azursystech-postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"' >/dev/null 2>&1; then
-        echo "PostgreSQL rollback container is healthy and ready." >&2
+        if ! docker exec azursystech-postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"' >/dev/null 2>&1; then
+          echo "CRITICAL: PostgreSQL rollback pg_isready failed" >&2
+          ROLLBACK_CONTAINER_ERR=1
+        fi
+
+        ROLLBACK_PG_MOUNT_TYPE="$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/var/lib/postgresql/data"}}{{.Type}}{{end}}{{end}}' azursystech-postgres 2>/dev/null)"
+        ROLLBACK_PG_MOUNT_NAME="$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/var/lib/postgresql/data"}}{{.Name}}{{end}}{{end}}' azursystech-postgres 2>/dev/null)"
+        ROLLBACK_PG_MOUNT_DEST="$(docker inspect --format '{{range .Mounts}}{{if eq .Name "azursystech-site_postgres_data"}}{{.Destination}}{{end}}{{end}}' azursystech-postgres 2>/dev/null)"
+
+        if [ "${ROLLBACK_PG_MOUNT_TYPE}" != "volume" ] || [ "${ROLLBACK_PG_MOUNT_NAME}" != "${EXPECTED_VOLUME}" ] || [ "${ROLLBACK_PG_MOUNT_DEST}" != "/var/lib/postgresql/data" ]; then
+          echo "CRITICAL: PostgreSQL rollback volume contract mismatch" >&2
+          ROLLBACK_CONTAINER_ERR=1
+        fi
+
+        if [ "${FINAL_BASELINE_READY:-0}" -eq 1 ]; then
+          ROLLBACK_TABLE_COUNT="$(docker exec azursystech-postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -A -c "SELECT count(*) FROM pg_tables WHERE schemaname NOT IN ('\''pg_catalog'\'', '\''information_schema'\'');"' 2>/dev/null)"
+          if [[ ! "${ROLLBACK_TABLE_COUNT}" =~ ^[0-9]+$ ]] || [ "${ROLLBACK_TABLE_COUNT}" != "${FINAL_TABLE_COUNT}" ]; then
+            echo "CRITICAL: PostgreSQL rollback table count mismatch" >&2
+            ROLLBACK_CONTAINER_ERR=1
+          fi
+        fi
+
+        ROLLBACK_PG_PROJ="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' azursystech-postgres 2>/dev/null)"
+        ROLLBACK_PG_WORKDIR="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}' azursystech-postgres 2>/dev/null)"
+        ROLLBACK_PG_CONFFILE="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.config_files"}}' azursystech-postgres 2>/dev/null)"
+
+        if [ "${ROLLBACK_PG_PROJ}" != "${EXPECTED_PROJECT}" ] || [ "${ROLLBACK_PG_WORKDIR}" != "${SOURCE_PROJECTS_DIR}" ] || [ "${ROLLBACK_PG_CONFFILE}" != "${SOURCE_PROJECTS_DIR}/docker-compose.vps.yml" ]; then
+          echo "CRITICAL: PostgreSQL rollback Compose labels mismatch" >&2
+          ROLLBACK_CONTAINER_ERR=1
+        fi
       else
-        echo "CRITICAL: PostgreSQL rollback container health/ready check failed!" >&2
-        ROLLBACK_CONTAINER_ERR=1
-      fi
-
-      if [ "${APP_WAS_RUNNING}" = "true" ]; then
-        docker start azursystech-app || ROLLBACK_CONTAINER_ERR=1
-      fi
-      if [ "${WEB_WAS_RUNNING}" = "true" ]; then
-        docker start azursystech-web || ROLLBACK_CONTAINER_ERR=1
-      fi
-      if [ "${ADMIN_WAS_RUNNING}" = "true" ]; then
-        docker start azursystech-admin || ROLLBACK_CONTAINER_ERR=1
-      fi
-
-      if [ "${APP_WAS_RUNNING}" = "true" ]; then
-        st="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unhealthy{{end}}' azursystech-app 2>/dev/null || echo "unhealthy")"
-        if [ "${st}" != "healthy" ]; then
+        if ! wait_container_healthy azursystech-postgres; then
+          echo "CRITICAL: Existing PostgreSQL container is not healthy during rollback" >&2
+          ROLLBACK_CONTAINER_ERR=1
+        fi
+        if ! docker exec azursystech-postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"' >/dev/null 2>&1; then
+          echo "CRITICAL: Existing PostgreSQL pg_isready failed during rollback" >&2
           ROLLBACK_CONTAINER_ERR=1
         fi
       fi
+
+      if [ "${APP_WAS_RUNNING}" = "true" ]; then
+        docker start azursystech-app >/dev/null || ROLLBACK_CONTAINER_ERR=1
+        if ! wait_container_healthy azursystech-app; then
+          echo "CRITICAL: azursystech-app failed to become healthy during rollback" >&2
+          ROLLBACK_CONTAINER_ERR=1
+        fi
+      fi
+
       if [ "${WEB_WAS_RUNNING}" = "true" ]; then
-        st="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unhealthy{{end}}' azursystech-web 2>/dev/null || echo "unhealthy")"
-        if [ "${st}" != "healthy" ]; then
+        docker start azursystech-web >/dev/null || ROLLBACK_CONTAINER_ERR=1
+        if ! wait_container_healthy azursystech-web; then
+          echo "CRITICAL: azursystech-web failed to become healthy during rollback" >&2
+          ROLLBACK_CONTAINER_ERR=1
+        fi
+      fi
+
+      if [ "${ADMIN_WAS_RUNNING}" = "true" ]; then
+        docker start azursystech-admin >/dev/null || ROLLBACK_CONTAINER_ERR=1
+        if ! wait_container_healthy azursystech-admin; then
+          echo "CRITICAL: azursystech-admin failed to become healthy during rollback" >&2
           ROLLBACK_CONTAINER_ERR=1
         fi
       fi
 
       if ! curl -fsS "https://azursystech.fr/health" >/dev/null 2>&1; then
-        echo "CRITICAL: Rollback external endpoint health check failed!" >&2
+        echo "CRITICAL: Rollback external endpoint health check failed" >&2
         ROLLBACK_CONTAINER_ERR=1
       fi
 
-      if [ "${ROLLBACK_CONTAINER_ERR}" -ne 0 ]; then
-        echo "CRITICAL: Rollback execution or health check FAILED!" >&2
+      if [ "${ROLLBACK_CONFIG_ERR}" -ne 0 ] || [ "${ROLLBACK_CONTAINER_ERR}" -ne 0 ]; then
+        echo "CRITICAL: Rollback execution or verification FAILED" >&2
         exit 2
       fi
 
@@ -402,7 +451,11 @@ if [ "${EXECUTE_CUTOVER}" -eq 1 ]; then
     exit "${ORIGINAL_ERR_CODE}"
   }
 
-  trap cutover_rollback_trap EXIT INT TERM
+  trap cutover_rollback_trap EXIT
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
+
+  CUTOVER_STARTED=1
 
   echo "=== 13. Stopping Writers ==="
   docker stop azursystech-app
@@ -423,8 +476,7 @@ if [ "${EXECUTE_CUTOVER}" -eq 1 ]; then
     fi
   done
 
-  st="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unhealthy{{end}}' azursystech-postgres 2>/dev/null || echo "unhealthy")"
-  if [ "${st}" != "healthy" ]; then
+  if ! wait_container_healthy azursystech-postgres; then
     echo "ERROR: PostgreSQL container lost health after stopping writers!" >&2
     exit 1
   fi
@@ -466,7 +518,9 @@ if [ "${EXECUTE_CUTOVER}" -eq 1 ]; then
     exit 1
   fi
 
-  TIMESTAMP_UTC="$(date -u +%Y%m%dT%H%M%SZ)"
+  FINAL_BASELINE_READY=1
+
+  TIMESTAMP_UTC="$(date -u +%Y%m%dT%H%M%SÂ)"
   {
     echo "Timestamp UTC: ${TIMESTAMP_UTC}"
     echo "Final User Table Count: ${FINAL_TABLE_COUNT}"
@@ -490,22 +544,14 @@ if [ "${EXECUTE_CUTOVER}" -eq 1 ]; then
   fi
 
   mv "${TEMP_COMPOSE_TARGET}" "${CANONICAL_COMPOSE}"
+  CANONICAL_COMPOSE_CHANGED=1
 
   echo "=== 16. Recreating PostgreSQL Service under Canonical Runtime ==="
   cd "${TARGET_DIR}"
+  POSTGRES_RECREATE_ATTEMPTED=1
   docker compose --env-file "${TARGET_DIR}/.env" -f "${CANONICAL_COMPOSE}" up -d --no-deps --force-recreate --pull never postgres
 
-  PG_RECREATED_HEALTHY=0
-  for attempt in $(seq 1 24); do
-    st="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unhealthy{{end}}' azursystech-postgres 2>/dev/null || echo "unhealthy")"
-    if [ "${st}" = "healthy" ]; then
-      PG_RECREATED_HEALTHY=1
-      break
-    fi
-    sleep 5
-  done
-
-  if [ "${PG_RECREATED_HEALTHY}" -ne 1 ]; then
+  if ! wait_container_healthy azursystech-postgres; then
     echo "ERROR: Recreated PostgreSQL container failed healthcheck!" >&2
     exit 1
   fi
@@ -517,14 +563,20 @@ if [ "${EXECUTE_CUTOVER}" -eq 1 ]; then
 
   PG_MOUNT_TYPE="$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/var/lib/postgresql/data"}}{{.Type}}{{end}}{{end}}' azursystech-postgres)"
   PG_MOUNT_NAME="$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/var/lib/postgresql/data"}}{{.Name}}{{end}}{{end}}' azursystech-postgres)"
+  PG_MOUNT_DEST="$(docker inspect --format '{{range .Mounts}}{{if eq .Name "azursystech-site_postgres_data"}}{{.Destination}}{{end}}{{end}}' azursystech-postgres)"
 
-  if [ "${PG_MOUNT_TYPE}" != "volume" ] || [ "${PG_MOUNT_NAME}" != "${EXPECTED_VOLUME}" ]; then
-    echo "ERROR: Recreated PostgreSQL volume contract mismatch! Type: '${PG_MOUNT_TYPE}', Name: '${PG_MOUNT_NAME}'" >&2
+  if [ "${PG_MOUNT_TYPE}" != "volume" ] || [ "${PG_MOUNT_NAME}" != "${EXPECTED_VOLUME}" ] || [ "${PG_MOUNT_DEST}" != "/var/lib/postgresql/data" ]; then
+    echo "ERROR: Recreated PostgreSQL volume contract mismatch! Type: '${PG_MOUNT_TYPE}', Name: '${PG_MOUNT_NAME}', Destination: '${PG_MOUNT_DEST}'" >&2
     exit 1
   fi
 
   POST_TABLE_COUNT="$(docker exec azursystech-postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -A -c "SELECT count(*) FROM pg_tables WHERE schemaname NOT IN ('\''pg_catalog'\'', '\''information_schema'\'');"')"
   POST_DB_SIZE_BYTES="$(docker exec azursystech-postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -A -c "SELECT pg_database_size(current_database());"')"
+
+  if [[ ! "${POST_TABLE_COUNT}" =~ ^[0-9]+$ ]] || [[ ! "${POST_DB_SIZE_BYTES}" =~ ^[0-9]+$ ]]; then
+    echo "ERROR: Invalid numeric database state after PostgreSQL recreate" >&2
+    exit 1
+  fi
 
   if [ "${POST_TABLE_COUNT}" != "${FINAL_TABLE_COUNT}" ]; then
     echo "ERROR: Table count mismatch after PostgreSQL recreate! Final: ${FINAL_TABLE_COUNT}, Post: ${POST_TABLE_COUNT}" >&2
@@ -542,34 +594,24 @@ if [ "${EXECUTE_CUTOVER}" -eq 1 ]; then
 
   echo "=== 17. Restoring Previous Container States ==="
   if [ "${APP_WAS_RUNNING}" = "true" ]; then
-    docker start azursystech-app
-  fi
-  if [ "${WEB_WAS_RUNNING}" = "true" ]; then
-    docker start azursystech-web
-  fi
-  if [ "${ADMIN_WAS_RUNNING}" = "true" ]; then
-    docker start azursystech-admin
-  fi
-
-  if [ "${APP_WAS_RUNNING}" = "true" ]; then
-    st="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unhealthy{{end}}' azursystech-app 2>/dev/null || echo "unhealthy")"
-    if [ "${st}" != "healthy" ]; then
+    docker start azursystech-app >/dev/null
+    if ! wait_container_healthy azursystech-app; then
       echo "ERROR: azursystech-app is not healthy after start!" >&2
       exit 1
     fi
   fi
 
   if [ "${WEB_WAS_RUNNING}" = "true" ]; then
-    st="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unhealthy{{end}}' azursystech-web 2>/dev/null || echo "unhealthy")"
-    if [ "${st}" != "healthy" ]; then
+    docker start azursystech-web >/dev/null
+    if ! wait_container_healthy azursystech-web; then
       echo "ERROR: azursystech-web is not healthy after start!" >&2
       exit 1
     fi
   fi
 
   if [ "${ADMIN_WAS_RUNNING}" = "true" ]; then
-    st="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unhealthy{{end}}' azursystech-admin 2>/dev/null || echo "unhealthy")"
-    if [ "${st}" != "healthy" ]; then
+    docker start azursystech-admin >/dev/null
+    if ! wait_container_healthy azursystech-admin; then
       echo "ERROR: azursystech-admin is not healthy after start!" >&2
       exit 1
     fi
