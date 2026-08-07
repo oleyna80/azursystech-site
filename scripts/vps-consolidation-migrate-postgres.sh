@@ -225,7 +225,7 @@ for v in pg_volumes:
 if not mount_valid:
     sys.exit(1)
 print(pg_image)
-'))"
+')"
 
 if [ -z "${CANDIDATE_PG_IMAGE}" ]; then
   echo "ERROR: Failed to extract or validate PostgreSQL image/volume contract from Candidate Compose" >&2
