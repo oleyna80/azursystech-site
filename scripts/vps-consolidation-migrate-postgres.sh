@@ -8,6 +8,7 @@ EXPECTED_VOLUME="azursystech-site_postgres_data"
 EXPECTED_PROJECT="azursystech-site"
 
 PREPARE_CUTOVER=0
+EXECUTE_CUTOVER=0
 
 if [ "$#" -eq 2 ]; then
   RAW_BACKUP_DIR="$1"
@@ -15,13 +16,16 @@ if [ "$#" -eq 2 ]; then
 elif [ "$#" -eq 3 ]; then
   RAW_BACKUP_DIR="$1"
   RAW_CANDIDATE_COMPOSE="$2"
-  if [ "$3" != "--prepare-cutover" ]; then
-    echo "ERROR: Invalid third argument: '$3'. Only '--prepare-cutover' is permitted." >&2
+  if [ "$3" = "--prepare-cutover" ]; then
+    PREPARE_CUTOVER=1
+  elif [ "$3" = "--execute-cutover" ]; then
+    EXECUTE_CUTOVER=1
+  else
+    echo "ERROR: Invalid third argument: '$3'. Permitted options: '--prepare-cutover', '--execute-cutover'." >&2
     exit 2
   fi
-  PREPARE_CUTOVER=1
 else
-  echo "ERROR: Invalid number of arguments. Expected 2 (<BACKUP_DIR> <CANDIDATE_COMPOSE>) or 3 (<BACKUP_DIR> <CANDIDATE_COMPOSE> --prepare-cutover)." >&2
+  echo "ERROR: Invalid number of arguments. Expected 2 (<BACKUP_DIR> <CANDIDATE_COMPOSE>) or 3 (<BACKUP_DIR> <CANDIDATE_COMPOSE> --prepare-cutover|--execute-cutover)." >&2
   exit 2
 fi
 
@@ -288,7 +292,327 @@ if [ "${PG_CONFFILE}" != "${SOURCE_PROJECTS_DIR}/docker-compose.vps.yml" ]; then
   exit 1
 fi
 
-if [ "${PREPARE_CUTOVER}" -eq 1 ]; then
+if [ "${EXECUTE_CUTOVER}" -eq 1 ]; then
+  echo "=== 12. Validating Cutover Preparation Artifacts ==="
+  if [ ! -s "${BACKUP_DIR}/candidate-compose.sha256" ] || [ ! -s "${BACKUP_DIR}/cutover-baseline.txt" ] || [ ! -s "${BACKUP_DIR}/azursystech_pg_dump_cutover.sql.gz" ]; then
+    echo "ERROR: Missing required preparation artifacts in ${BACKUP_DIR} for --execute-cutover" >&2
+    exit 1
+  fi
+
+  if ! command -v sha256sum >/dev/null 2>&1; then
+    echo "ERROR: sha256sum is required for cutover execution" >&2
+    exit 1
+  fi
+
+  EXPECTED_SHA256="$(awk '{print $1}' "${BACKUP_DIR}/candidate-compose.sha256")"
+  ACTUAL_SHA256="$(sha256sum "${CANDIDATE_COMPOSE}" | awk '{print $1}')"
+
+  if [ -z "${EXPECTED_SHA256}" ] || [ "${ACTUAL_SHA256}" != "${EXPECTED_SHA256}" ]; then
+    echo "ERROR: Candidate Compose SHA256 mismatch! Expected: '${EXPECTED_SHA256}', Actual: '${ACTUAL_SHA256}'" >&2
+    exit 1
+  fi
+
+  APP_WAS_RUNNING="$(docker inspect --format '{{.State.Running}}' azursystech-app 2>/dev/null || echo "false")"
+  WEB_WAS_RUNNING="$(docker inspect --format '{{.State.Running}}' azursystech-web 2>/dev/null || echo "false")"
+  ADMIN_WAS_RUNNING="false"
+  if docker inspect azursystech-admin >/dev/null 2>&1; then
+    ADMIN_WAS_RUNNING="$(docker inspect --format '{{.State.Running}}' azursystech-admin 2>/dev/null || echo "false")"
+  fi
+
+  CANONICAL_COMPOSE="${TARGET_DIR}/docker-compose.vps.yml"
+  BEFORE_COMPOSE_BACKUP="${BACKUP_DIR}/cutover-runtime-compose-before.yml"
+  if [ -e "${BEFORE_COMPOSE_BACKUP}" ]; then
+    echo "ERROR: Pre-cutover compose backup ${BEFORE_COMPOSE_BACKUP} already exists" >&2
+    exit 1
+  fi
+
+  cp -p "${CANONICAL_COMPOSE}" "${BEFORE_COMPOSE_BACKUP}"
+  chmod 600 "${BEFORE_COMPOSE_BACKUP}"
+
+  CUTOVER_STARTED=1
+  CUTOVER_SUCCESS=0
+
+  cutover_rollback_trap() {
+    ORIGINAL_ERR_CODE="$?"
+    trap - EXIT INT TERM
+    set +e
+
+    if [ "${CUTOVER_STARTED:-0}" -eq 1 ] && [ "${CUTOVER_SUCCESS:-0}" -eq 0 ]; then
+      echo "CRITICAL: Cutover failed after starting! Executing rollback..." >&2
+
+      cp "${BEFORE_COMPOSE_BACKUP}" "${CANONICAL_COMPOSE}" || true
+      chmod 644 "${CANONICAL_COMPOSE}" || true
+
+      ROLLBACK_CONTAINER_ERR=0
+      docker compose --env-file "${TARGET_DIR}/.env" -f "${SOURCE_PROJECTS_DIR}/docker-compose.vps.yml" up -d --no-deps --force-recreate --pull never postgres || ROLLBACK_CONTAINER_ERR=1
+
+      PG_HEALTH_OK=0
+      for attempt in $(seq 1 24); do
+        st="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unhealthy{{end}}' azursystech-postgres 2>/dev/null || echo "unhealthy")"
+        if [ "${st}" = "healthy" ]; then
+          PG_HEALTH_OK=1
+          break
+        fi
+        sleep 5
+      done
+
+      if [ "${PG_HEALTH_OK}" -eq 1 ] && docker exec azursystech-postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"' >/dev/null 2>&1; then
+        echo "PostgreSQL rollback container is healthy and ready." >&2
+      else
+        echo "CRITICAL: PostgreSQL rollback container health/ready check failed!" >&2
+        ROLLBACK_CONTAINER_ERR=1
+      fi
+
+      if [ "${APP_WAS_RUNNING}" = "true" ]; then
+        docker start azursystech-app || ROLLBACK_CONTAINER_ERR=1
+      fi
+      if [ "${WEB_WAS_RUNNING}" = "true" ]; then
+        docker start azursystech-web || ROLLBACK_CONTAINER_ERR=1
+      fi
+      if [ "${ADMIN_WAS_RUNNING}" = "true" ]; then
+        docker start azursystech-admin || ROLLBACK_CONTAINER_ERR=1
+      fi
+
+      if [ "${APP_WAS_RUNNING}" = "true" ]; then
+        st="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unhealthy{{end}}' azursystech-app 2>/dev/null || echo "unhealthy")"
+        if [ "${st}" != "healthy" ]; then
+          ROLLBACK_CONTAINER_ERR=1
+        fi
+      fi
+      if [ "${WEB_WAS_RUNNING}" = "true" ]; then
+        st="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unhealthy{{end}}' azursystech-web 2>/dev/null || echo "unhealthy")"
+        if [ "${st}" != "healthy" ]; then
+          ROLLBACK_CONTAINER_ERR=1
+        fi
+      fi
+
+      if ! curl -fsS "https://azursystech.fr/health" >/dev/null 2>&1; then
+        echo "CRITICAL: Rollback external endpoint health check failed!" >&2
+        ROLLBACK_CONTAINER_ERR=1
+      fi
+
+      if [ "${ROLLBACK_CONTAINER_ERR}" -ne 0 ]; then
+        echo "CRITICAL: Rollback execution or health check FAILED!" >&2
+        exit 2
+      fi
+
+      echo "Rollback completed successfully. Original runtime environment restored." >&2
+    fi
+
+    exit "${ORIGINAL_ERR_CODE}"
+  }
+
+  trap cutover_rollback_trap EXIT INT TERM
+
+  echo "=== 13. Stopping Writers ==="
+  docker stop azursystech-app
+  if [ "${ADMIN_WAS_RUNNING}" = "true" ]; then
+    docker stop azursystech-admin
+  fi
+  if [ "${WEB_WAS_RUNNING}" = "true" ]; then
+    docker stop azursystech-web
+  fi
+
+  for c in azursystech-app azursystech-web azursystech-admin; do
+    if docker inspect "$c" >/dev/null 2>&1; then
+      run_st="$(docker inspect --format '{{.State.Running}}' "$c" 2>/dev/null || echo "false")"
+      if [ "${run_st}" != "false" ]; then
+        echo "ERROR: Container $c is still running after stop!" >&2
+        exit 1
+      fi
+    fi
+  done
+
+  st="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unhealthy{{end}}' azursystech-postgres 2>/dev/null || echo "unhealthy")"
+  if [ "${st}" != "healthy" ]; then
+    echo "ERROR: PostgreSQL container lost health after stopping writers!" >&2
+    exit 1
+  fi
+
+  if ! docker exec azursystech-postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"' >/dev/null; then
+    echo "ERROR: pg_isready failed after stopping writers!" >&2
+    exit 1
+  fi
+
+  echo "=== 14. Creating Final PostgreSQL Safety Dump ==="
+  FINAL_DUMP_FILE="${BACKUP_DIR}/azursystech_pg_dump_final.sql.gz"
+  if [ -e "${FINAL_DUMP_FILE}" ]; then
+    echo "ERROR: Final dump file ${FINAL_DUMP_FILE} already exists" >&2
+    exit 1
+  fi
+
+  docker exec azursystech-postgres sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' | gzip > "${FINAL_DUMP_FILE}"
+
+  test -s "${FINAL_DUMP_FILE}"
+  gzip -t "${FINAL_DUMP_FILE}"
+
+  if ! gzip -cd "${FINAL_DUMP_FILE}" | awk '
+    NR <= 30 && tolower($0) ~ /postgresql database dump/ {
+      found=1
+    }
+    END {
+      exit(found ? 0 : 1)
+    }
+  '; then
+    echo "ERROR: Final PostgreSQL dump header validation failed" >&2
+    exit 1
+  fi
+
+  FINAL_TABLE_COUNT="$(docker exec azursystech-postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -A -c "SELECT count(*) FROM pg_tables WHERE schemaname NOT IN ('\''pg_catalog'\'', '\''information_schema'\'');"')"
+  FINAL_DB_SIZE_BYTES="$(docker exec azursystech-postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -A -c "SELECT pg_database_size(current_database());"')"
+
+  if [[ ! "${FINAL_TABLE_COUNT}" =~ ^[0-9]+$ ]] || [[ ! "${FINAL_DB_SIZE_BYTES}" =~ ^[0-9]+$ ]]; then
+    echo "ERROR: Invalid numeric baseline returned from PostgreSQL after final dump" >&2
+    exit 1
+  fi
+
+  TIMESTAMP_UTC="$(date -u +%Y%m%dT%H%M%SZ)"
+  {
+    echo "Timestamp UTC: ${TIMESTAMP_UTC}"
+    echo "Final User Table Count: ${FINAL_TABLE_COUNT}"
+    echo "Final Database Size Bytes: ${FINAL_DB_SIZE_BYTES}"
+    echo "PostgreSQL Image: ${CURRENT_PG_IMAGE}"
+    echo "PostgreSQL Volume: ${EXPECTED_VOLUME}"
+    echo "Candidate Compose SHA256: ${ACTUAL_SHA256}"
+  } > "${BACKUP_DIR}/final-cutover-baseline.txt"
+  chmod 600 "${BACKUP_DIR}/final-cutover-baseline.txt"
+
+  echo "=== 15. Installing Candidate Compose as Canonical ==="
+  TEMP_COMPOSE_TARGET="${TARGET_DIR}/docker-compose.vps.yml.tmp-cutover"
+  cp -p "${CANDIDATE_COMPOSE}" "${TEMP_COMPOSE_TARGET}"
+  chmod 644 "${TEMP_COMPOSE_TARGET}"
+
+  TEMP_SHA256="$(sha256sum "${TEMP_COMPOSE_TARGET}" | awk '{print $1}')"
+  if [ "${TEMP_SHA256}" != "${ACTUAL_SHA256}" ]; then
+    echo "ERROR: Temporary canonical compose SHA256 mismatch!" >&2
+    rm -f "${TEMP_COMPOSE_TARGET}"
+    exit 1
+  fi
+
+  mv "${TEMP_COMPOSE_TARGET}" "${CANONICAL_COMPOSE}"
+
+  echo "=== 16. Recreating PostgreSQL Service under Canonical Runtime ==="
+  cd "${TARGET_DIR}"
+  docker compose --env-file "${TARGET_DIR}/.env" -f "${CANONICAL_COMPOSE}" up -d --no-deps --force-recreate --pull never postgres
+
+  PG_RECREATED_HEALTHY=0
+  for attempt in $(seq 1 24); do
+    st="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unhealthy{{end}}' azursystech-postgres 2>/dev/null || echo "unhealthy")"
+    if [ "${st}" = "healthy" ]; then
+      PG_RECREATED_HEALTHY=1
+      break
+    fi
+    sleep 5
+  done
+
+  if [ "${PG_RECREATED_HEALTHY}" -ne 1 ]; then
+    echo "ERROR: Recreated PostgreSQL container failed healthcheck!" >&2
+    exit 1
+  fi
+
+  if ! docker exec azursystech-postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"' >/dev/null; then
+    echo "ERROR: pg_isready failed on recreated PostgreSQL container!" >&2
+    exit 1
+  fi
+
+  PG_MOUNT_TYPE="$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/var/lib/postgresql/data"}}{{.Type}}{{end}}{{end}}' azursystech-postgres)"
+  PG_MOUNT_NAME="$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/var/lib/postgresql/data"}}{{.Name}}{{end}}{{end}}' azursystech-postgres)"
+
+  if [ "${PG_MOUNT_TYPE}" != "volume" ] || [ "${PG_MOUNT_NAME}" != "${EXPECTED_VOLUME}" ]; then
+    echo "ERROR: Recreated PostgreSQL volume contract mismatch! Type: '${PG_MOUNT_TYPE}', Name: '${PG_MOUNT_NAME}'" >&2
+    exit 1
+  fi
+
+  POST_TABLE_COUNT="$(docker exec azursystech-postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -A -c "SELECT count(*) FROM pg_tables WHERE schemaname NOT IN ('\''pg_catalog'\'', '\''information_schema'\'');"')"
+  POST_DB_SIZE_BYTES="$(docker exec azursystech-postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -A -c "SELECT pg_database_size(current_database());"')"
+
+  if [ "${POST_TABLE_COUNT}" != "${FINAL_TABLE_COUNT}" ]; then
+    echo "ERROR: Table count mismatch after PostgreSQL recreate! Final: ${FINAL_TABLE_COUNT}, Post: ${POST_TABLE_COUNT}" >&2
+    exit 1
+  fi
+
+  NEW_PG_PROJ="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' azursystech-postgres)"
+  NEW_PG_WORKDIR="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}' azursystech-postgres)"
+  NEW_PG_CONFFILE="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.config_files"}}' azursystech-postgres)"
+
+  if [ "${NEW_PG_PROJ}" != "${EXPECTED_PROJECT}" ] || [ "${NEW_PG_WORKDIR}" != "${TARGET_DIR}" ] || [ "${NEW_PG_CONFFILE}" != "${CANONICAL_COMPOSE}" ]; then
+    echo "ERROR: Canonical Compose labels mismatch on recreated PostgreSQL!" >&2
+    exit 1
+  fi
+
+  echo "=== 17. Restoring Previous Container States ==="
+  if [ "${APP_WAS_RUNNING}" = "true" ]; then
+    docker start azursystech-app
+  fi
+  if [ "${WEB_WAS_RUNNING}" = "true" ]; then
+    docker start azursystech-web
+  fi
+  if [ "${ADMIN_WAS_RUNNING}" = "true" ]; then
+    docker start azursystech-admin
+  fi
+
+  if [ "${APP_WAS_RUNNING}" = "true" ]; then
+    st="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unhealthy{{end}}' azursystech-app 2>/dev/null || echo "unhealthy")"
+    if [ "${st}" != "healthy" ]; then
+      echo "ERROR: azursystech-app is not healthy after start!" >&2
+      exit 1
+    fi
+  fi
+
+  if [ "${WEB_WAS_RUNNING}" = "true" ]; then
+    st="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unhealthy{{end}}' azursystech-web 2>/dev/null || echo "unhealthy")"
+    if [ "${st}" != "healthy" ]; then
+      echo "ERROR: azursystech-web is not healthy after start!" >&2
+      exit 1
+    fi
+  fi
+
+  if [ "${ADMIN_WAS_RUNNING}" = "true" ]; then
+    st="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unhealthy{{end}}' azursystech-admin 2>/dev/null || echo "unhealthy")"
+    if [ "${st}" != "healthy" ]; then
+      echo "ERROR: azursystech-admin is not healthy after start!" >&2
+      exit 1
+    fi
+  fi
+
+  curl -fsS "https://azursystech.fr/health" >/dev/null
+
+  FINAL_APP_WORKDIR="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}' azursystech-app)"
+  FINAL_APP_CONFFILE="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.config_files"}}' azursystech-app)"
+  FINAL_WEB_WORKDIR="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}' azursystech-web)"
+  FINAL_WEB_CONFFILE="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.config_files"}}' azursystech-web)"
+
+  if [ "${FINAL_APP_WORKDIR}" != "${TARGET_DIR}" ] || [ "${FINAL_APP_CONFFILE}" != "${CANONICAL_COMPOSE}" ] || [ "${FINAL_WEB_WORKDIR}" != "${TARGET_DIR}" ] || [ "${FINAL_WEB_CONFFILE}" != "${CANONICAL_COMPOSE}" ]; then
+    echo "ERROR: App or Web compose labels degraded after cutover!" >&2
+    exit 1
+  fi
+
+  TIMESTAMP_UTC="$(date -u +%Y%m%dT%H%M%SZ)"
+  {
+    echo "Timestamp UTC: ${TIMESTAMP_UTC}"
+    echo "Candidate SHA256: ${ACTUAL_SHA256}"
+    echo "PostgreSQL Image: ${CURRENT_PG_IMAGE}"
+    echo "PostgreSQL Volume: ${EXPECTED_VOLUME}"
+    echo "Final Table Count: ${FINAL_TABLE_COUNT}"
+    echo "Post-Cutover Table Count: ${POST_TABLE_COUNT}"
+    echo "PostgreSQL WorkingDir: ${NEW_PG_WORKDIR}"
+    echo "PostgreSQL ConfigFiles: ${NEW_PG_CONFFILE}"
+  } > "${BACKUP_DIR}/cutover-success.txt"
+  chmod 600 "${BACKUP_DIR}/cutover-success.txt"
+
+  CUTOVER_SUCCESS=1
+  trap - EXIT INT TERM
+
+  echo "Cutover execution PASSED"
+  echo "PostgreSQL service successfully consolidated under ${TARGET_DIR}"
+  echo "Canonical compose updated: ${CANONICAL_COMPOSE}"
+  echo "PostgreSQL volume: ${EXPECTED_VOLUME}"
+  echo "PostgreSQL image: ${CURRENT_PG_IMAGE}"
+  echo "Table count verified: ${POST_TABLE_COUNT}"
+  echo "PostgreSQL working_dir: ${NEW_PG_WORKDIR}"
+  echo "PostgreSQL config_files: ${NEW_PG_CONFFILE}"
+  echo "External endpoint healthcheck: PASSED"
+elif [ "${PREPARE_CUTOVER}" -eq 1 ]; then
   echo "=== 12. Preparing Cutover Checkpoint ==="
   if ! command -v sha256sum >/dev/null 2>&1; then
     echo "ERROR: sha256sum is required for cutover preparation" >&2
