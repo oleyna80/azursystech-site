@@ -66,6 +66,7 @@ jobs:
             FILES_INSTALLED=0
             RUNTIME_INSTALL_SUCCESS=0
             DEPLOY_STARTED=0
+            DEPLOY_RUNTIME_VERIFIED=0
             DEPLOY_SUCCESS=0
 
             cleanup() {
@@ -96,7 +97,7 @@ jobs:
 
                 echo "Previous runtime files restored." >&2
                 echo "Backup preserved at: ${BACKUP_FILES_DIR}" >&2
-              elif [ "${RUNTIME_INSTALL_SUCCESS}" = "1" ] && [ "${DEPLOY_STARTED}" = "1" ] && [ "${DEPLOY_SUCCESS}" = "0" ]; then
+              elif [ "${RUNTIME_INSTALL_SUCCESS}" = "1" ] && [ "${DEPLOY_STARTED}" = "1" ] && [ "${DEPLOY_RUNTIME_VERIFIED}" = "0" ]; then
                 echo "DEPLOYMENT FAILED! Triggering full deployment rollback..." >&2
 
                 RESTORE_RC=0
@@ -201,6 +202,10 @@ jobs:
                   echo "Backup preserved at: ${BACKUP_FILES_DIR}" >&2
                   exit 2
                 fi
+              elif [ "${DEPLOY_RUNTIME_VERIFIED}" = "1" ] && [ "${DEPLOY_SUCCESS}" = "0" ]; then
+                echo "DEPLOYMENT RUNTIME VERIFIED, BUT ROLLBACK STATE PERSISTENCE FAILED." >&2
+                echo "Verified running deployment will NOT be rolled back." >&2
+                echo "Backup preserved for diagnostics at: ${BACKUP_FILES_DIR}" >&2
               fi
 
               exit "${ORIGINAL_EXIT_CODE}"
@@ -456,6 +461,9 @@ jobs:
               exit 1
             fi
 
+            # Runtime is now fully verified. Any later failure is rollback-state persistence only.
+            DEPLOY_RUNTIME_VERIFIED=1
+
             # 26. Создание официального .deploy/previous-runtime
             DEPLOY_STATE_DIR="${FIXED_TARGET_DIR}/.deploy"
             PREVIOUS_RUNTIME_DIR="${DEPLOY_STATE_DIR}/previous-runtime"
@@ -513,13 +521,12 @@ jobs:
               rm -f "${DEPLOY_STATE_DIR}/previous-admin-image"
             fi
 
-            # 29. Забор успеха и очистка бэкапа
-            DEPLOY_SUCCESS=1
+            # 29. Финальная проверка состояния и очистка временного backup
+            docker compose -f docker-compose.vps.yml ps
             rm -rf "${BACKUP_FILES_DIR}"
+            DEPLOY_SUCCESS=1
 
             echo "Deployment completed successfully."
             echo "APP_IMAGE=${APP_IMAGE}"
             echo "Rollback state saved at:"
             echo "  ${PREVIOUS_RUNTIME_DIR}"
-            echo ""
-            docker compose -f docker-compose.vps.yml ps
