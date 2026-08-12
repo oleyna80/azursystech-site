@@ -9,15 +9,15 @@ The write gate is a **cooperative scope guard**, not a security boundary.
 
 It enforces Work Block/write-set discipline inside the normal agent channel.
 Consequential authority belongs outside the mutable project: GitHub repository
-rules, least-privilege credentials, workflow permissions, OS isolation, and
+controls, least-privilege credentials, workflow permissions, OS isolation, and
 separately held production/VPS/DB/secrets.
 
 Per-Work-Block SSH signatures and detached authorization records are retired
-from the default path.
+from the normal AzurSysTech development path.
 
 ## Default state
 
-Generated projects start with schema v3:
+AzurSysTech uses schema v3:
 
 ```json
 {
@@ -65,9 +65,11 @@ reopens the Work Block scope explicitly.
 - explicit Bash mutation targets;
 - staged commit paths.
 
-Normal feature-branch `git commit` and `git push` are permitted when scope is
-valid. The separate shared Hard Stop guard rejects direct default-branch push,
-force push, obvious destructive actions, live infrastructure/data operations,
+Normal feature-branch `git commit` is permitted when scope is valid. A normal
+feature-branch push is not cryptographically authorized by this file; it is
+possible only when the external GitHub credential/channel permits it. The shared
+Hard Stop guard rejects direct default-branch push, force/broad/destructive push,
+obvious destructive actions, live infrastructure/data operations,
 credential/secret operations, client-facing communications, and external image
 publish in the normal agent channel.
 
@@ -88,19 +90,31 @@ docs/reports/**
 memory_bank/**
 ```
 
-These paths do not grant production, credential, data, deployment, or protected
+These paths do not grant production, credential, data, deployment, or default-
 branch authority.
 
-## GitHub-native boundary
+## AzurSysTech GitHub boundary
 
-For the public framework repository, `main` is protected externally by the
-active GitHub ruleset: pull requests and required checks are mandatory, while
-branch deletion and non-fast-forward updates are prohibited.
+`oleyna80/azursystech-site` is a private repository. On the current hosting mode,
+protected-main/ruleset enforcement is not available. Therefore the accepted
+**Free fallback** is capability separation rather than a claim of branch
+protection:
 
-Consumer projects should use a dedicated least-privilege agent credential. If
-an agent must not deploy production, do not give that credential GitHub Actions
-write/dispatch authority and do not expose VPS/DB/production secrets to the
-agent process.
+- do not provision a standalone agent credential with repository `Contents:
+  write`;
+- local edit/test/stage/commit may be autonomous inside an approved Work Block;
+- feature-branch publication is performed through an Owner-controlled GitHub
+  channel;
+- deployment stays manual `workflow_dispatch` and Owner-controlled;
+- production/VPS/DB/secrets are not exposed to the normal agent process.
+
+If the repository later gains protected-main enforcement, the preferred agent
+credential is least privilege for feature development with GitHub Actions
+**read-only** and no administration, environment, secret, deployment, or
+production credential authority.
+
+A project-local hook must never be represented as equivalent to GitHub branch
+protection.
 
 ## Legacy signed records
 
