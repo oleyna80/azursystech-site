@@ -11,6 +11,7 @@ on:
       - "opencode.json"
       - "scripts/validate-evaluation.py"
       - "scripts/validate-installation-profile.py"
+      - "scripts/test-github-capability-control-plane.py"
       - ".github/workflows/control-plane-contracts.yml"
   workflow_dispatch:
 
@@ -41,7 +42,8 @@ jobs:
             .codex/scripts/doctor.py \
             .codex/scripts/lifecycle.py \
             scripts/validate-evaluation.py \
-            scripts/validate-installation-profile.py
+            scripts/validate-installation-profile.py \
+            scripts/test-github-capability-control-plane.py
 
       - name: Validate schema v3 blocked-default contract only
         run: |
@@ -54,35 +56,8 @@ jobs:
           print("blocked-default schema v3 contract: OK")
           PY
 
-      - name: Assert GitHub capability authority defaults
-        run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
+      - name: Run GitHub capability authority integration fixtures
+        run: python scripts/test-github-capability-control-plane.py
 
-          for relative in (
-              ".agent/active-work-block.default.json",
-              ".agent/active-work-block.json",
-          ):
-              state = json.loads(Path(relative).read_text(encoding="utf-8"))
-              assert state["schema_version"] == 3, relative
-              assert state["authority_mode"] == "github_capability", relative
-              assert "authorization" not in state, relative
-              assert "hard_stop_approvals" not in state, relative
-              assert state["write_gate"] == {"status": "BLOCKED", "opened_at": None}, relative
-          PY
-
-      - name: Run Codex apply-patch fixtures
+      - name: Run native Codex apply-patch payload fixture
         run: bash .codex/hooks/tests/apply-patch-fixtures.sh
-
-      - name: Run Codex Work Block fixtures
-        run: bash .codex/hooks/tests/gate-fixtures.sh
-
-      - name: Run Codex Hard Stop fixtures
-        run: bash .codex/hooks/tests/hard-stop-fixtures.sh
-
-      - name: Run Claude Work Block fixtures
-        run: bash .claude/hooks/tests/gate-fixtures.sh
-
-      - name: Run Claude Hard Stop fixtures
-        run: bash .claude/hooks/tests/hard-stop-fixtures.sh
