@@ -9,8 +9,8 @@ The write gate is a **cooperative scope guard**, not a security boundary.
 
 It enforces Work Block/write-set discipline inside the normal agent channel.
 Consequential authority belongs outside the mutable project: GitHub repository
-controls, least-privilege credentials, workflow permissions, OS isolation, and
-separately held production/VPS/DB/secrets.
+controls, Owner-controlled publication/merge, workflow permissions, OS
+isolation, and separately held production/VPS/DB/secrets.
 
 Per-Work-Block SSH signatures and detached authorization records are retired
 from the normal AzurSysTech development path.
@@ -65,13 +65,19 @@ reopens the Work Block scope explicitly.
 - explicit Bash mutation targets;
 - staged commit paths.
 
-Normal feature-branch `git commit` is permitted when scope is valid. A normal
-feature-branch push is not cryptographically authorized by this file; it is
-possible only when the external GitHub credential/channel permits it. The shared
-Hard Stop guard rejects direct default-branch push, force/broad/destructive push,
-obvious destructive actions, live infrastructure/data operations,
-credential/secret operations, client-facing communications, and external image
-publish in the normal agent channel.
+Normal feature-branch `git commit` is permitted when scope is valid. In the
+current AzurSysTech private GitHub Free mode, **every `git push` is outside the
+normal agent path**. The shared Hard Stop guard denies remote source publication
+and directs the agent to freeze the exact feature-branch HEAD and use
+`.agent/workflows/owner-controlled-github-flow.md` for the Owner publication
+handoff.
+
+The same shared Hard Stop guard rejects direct default-branch push,
+force/broad/destructive push, obvious destructive actions, live
+infrastructure/data operations, credential/secret operations, client-facing
+communications, and external image publication in the normal agent channel.
+
+Technical access to an Owner credential does not grant publication authority.
 
 ## Coordination while BLOCKED
 
@@ -90,31 +96,30 @@ docs/reports/**
 memory_bank/**
 ```
 
-These paths do not grant production, credential, data, deployment, or default-
-branch authority.
+These paths do not grant repository publication, merge, production, credential,
+data, deployment, or default-branch authority.
 
 ## AzurSysTech GitHub boundary
 
-`oleyna80/azursystech-site` is a private repository. On the current hosting mode,
-protected-main/ruleset enforcement is not available. Therefore the accepted
-**Free fallback** is capability separation rather than a claim of branch
-protection:
+`oleyna80/azursystech-site` remains private on GitHub Free. The accepted current
+mode is **Owner-controlled publication and merge**, not a claim of technical
+branch protection:
 
-- do not provision a standalone agent credential with repository `Contents:
-  write`;
 - local edit/test/stage/commit may be autonomous inside an approved Work Block;
-- feature-branch publication is performed through an Owner-controlled GitHub
-  channel;
+- the normal agent flow stops before all `git push` operations;
+- the agent produces the canonical exact-SHA Owner publication handoff;
+- feature-branch publication and merge are Owner-controlled;
 - deployment stays manual `workflow_dispatch` and Owner-controlled;
-- production/VPS/DB/secrets are not exposed to the normal agent process.
+- production/VPS/DB/secrets are outside the normal agent path.
 
-If the repository later gains protected-main enforcement, the preferred agent
-credential is least privilege for feature development with GitHub Actions
-**read-only** and no administration, environment, secret, deployment, or
-production credential authority.
+The Owner explicitly accepts that private `main` is technically unprotected on
+the current GitHub Free plan. A project-local hook must never be represented as
+equivalent to GitHub branch protection.
 
-A project-local hook must never be represented as equivalent to GitHub branch
-protection.
+If a later project decision enables protected-main enforcement, the authority
+model may be revised to permit least-privilege agent feature publication with
+GitHub Actions read-only and no administration, environment, secret, deployment,
+or production credential authority. That mode is not active now.
 
 ## Legacy signed records
 
