@@ -10,7 +10,7 @@ on:
       publish_admin:
         description: "Build and push the admin image"
         required: false
-        default: true
+        default: false
         type: boolean
 
 permissions:
@@ -118,22 +118,14 @@ jobs:
           ADMIN_PUBLISHED: ${{ inputs.publish_admin }}
           IMMUTABLE_TAG: ${{ steps.meta.outputs.immutable_tag }}
           REF_NAME: ${{ steps.meta.outputs.ref }}
-          REPOSITORY_NAME: ${{ github.repository }}
-          SHA: ${{ steps.meta.outputs.sha }}
+          TARGET_SHA: ${{ steps.meta.outputs.sha }}
           WEB_DIGEST: ${{ steps.build_web.outputs.digest }}
         run: |
-          {
-            echo "### Docker Publish"
-            echo ""
-            echo "- Ref: \`${REF_NAME}\`"
-            echo "- Commit SHA: \`${SHA}\`"
-            echo "- Immutable tag: \`${IMMUTABLE_TAG}\`"
-            echo "- Web image: \`ghcr.io/${REPOSITORY_NAME}-app:${IMMUTABLE_TAG}\`"
-            echo "- Web digest: \`${WEB_DIGEST}\`"
-            if [ "${ADMIN_PUBLISHED}" = "true" ]; then
-              echo "- Admin image: \`ghcr.io/${REPOSITORY_NAME}-admin:${IMMUTABLE_TAG}\`"
-              echo "- Admin digest: \`${ADMIN_DIGEST}\`"
-            else
-              echo "- Admin image: skipped"
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
+          echo "Ref: ${REF_NAME}"
+          echo "Resolved SHA: ${TARGET_SHA}"
+          echo "Immutable tag: ${IMMUTABLE_TAG}"
+          echo "Web digest: ${WEB_DIGEST}"
+          echo "Admin published: ${ADMIN_PUBLISHED}"
+          if [ "${ADMIN_PUBLISHED}" = "true" ]; then
+            echo "Admin digest: ${ADMIN_DIGEST}"
+          fi
