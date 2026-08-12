@@ -23,18 +23,22 @@ API contracts, security, governance, DB, deploy, or other consequential domains.
 ## Autonomy Policy
 
 After an Owner-approved Work Block is in place, Control Tower executes the
-planned agent stack without pausing between ordinary reversible development
-steps.
+planned agent stack without pausing between ordinary reversible local
+development steps.
 
 Normal scoped development does **not** require a separate Owner confirmation for
-each edit, test, stage, local commit, or normal feature-branch push when the
-external credential permits that push.
+each edit, test, stage, or local commit. In the current AzurSysTech private
+GitHub Free mode, remote source publication is different: the normal agent flow
+must stop before **any `git push`**, freeze the exact feature-branch HEAD, and use
+the Owner-controlled publication handoff.
 
 Pause only when:
 
 - the objective/write-set materially expands;
 - a required Critic/Reviewer/Verifier gate is unresolved;
 - an external Hard Stop is reached;
+- remote source publication or merge is reached in the current Owner-controlled
+  GitHub Free flow;
 - required tooling/isolation is unavailable and the fallback would weaken the
   approved assurance contract.
 
@@ -67,7 +71,7 @@ the agent and are therefore cooperative controls, not the primary security
 boundary.
 
 Consequential security authority is instead constrained by external capability
-separation.
+separation and explicit Owner-controlled operational boundaries.
 
 ### Security Boundary
 
@@ -79,6 +83,7 @@ The real consequential boundary is provided by the combination of:
 
 - GitHub protected branches/rulesets where the hosting plan supports them;
 - least-privilege GitHub credentials;
+- Owner-controlled publication and merge where hosting controls are unavailable;
 - GitHub Actions permissions and manual deployment entry points;
 - OS/filesystem/user isolation;
 - separately held production, VPS, DB, and secret credentials.
@@ -89,26 +94,34 @@ authorize a consequential side effect.
 
 ### Current private-repository hosting mode
 
-`oleyna80/azursystech-site` is private. Until GitHub protected-main enforcement
-is available for this repository, use the **Free fallback**:
+`oleyna80/azursystech-site` remains private on GitHub Free. The selected current
+mode is **Owner-controlled publication and merge**:
 
-- do not provision a standalone agent credential with repository `Contents:
-  write`;
-- local edit/test/stage/commit may be autonomous inside the Work Block;
-- feature-branch publication is performed through an Owner-controlled GitHub
-  channel;
+- local edit/test/stage/commit may be autonomous inside the approved Work Block;
+- the normal agent flow stops before every `git push`, even if a usable Owner
+  credential is technically present in the runtime;
+- the agent freezes the exact feature-branch HEAD and produces the canonical
+  Owner publication handoff;
+- the Owner performs or explicitly triggers publication of that exact feature
+  branch revision through an Owner-controlled GitHub channel;
+- the Owner controls merge to `main`;
 - production deployment remains Owner-only and manual.
 
-Preferred mode after GitHub Pro protection is enabled:
+Canonical project process:
 
-- protect `main`;
-- require pull requests and selected CI checks;
-- deny force push and branch deletion;
-- give the agent only the least privilege needed for feature work, with GitHub
-  Actions **read-only** and no administration/secrets/environment authority.
+- `.agent/workflows/owner-controlled-github-flow.md`;
+- `docs/engineering-memory/github-free-owner-controlled-flow.md`;
+- `.agent/skills/git-orchestration-flow/SKILL.md` and runtime-local mirrors.
 
-A local hook must never be represented as equivalent to protected-branch
-enforcement.
+This private GitHub Free mode does **not** provide technical protected-branch
+enforcement for `main`. The Owner accepts that residual repository risk for the
+current low-volume operating mode. Project-local hooks and workflow text must
+never be represented as equivalent to GitHub branch protection.
+
+Optional future hardening after GitHub Pro/private protected-main enforcement is
+enabled may allow a least-privilege agent credential for feature publication,
+with Actions read-only and no administration/secrets/environment authority. That
+future mode requires a separate accepted project decision; it is not active now.
 
 ## Structural Authority Model
 
@@ -117,7 +130,7 @@ An action is allowed only when all applicable boundaries permit it:
 1. base role: Control Tower/Orchestrator, Coder, Reviewer, or Verifier;
 2. approved Work Block scope/write-set;
 3. side-effect class;
-4. external capability boundary for consequential operations.
+4. external capability/Owner-controlled boundary for consequential operations.
 
 Temporary specialization narrows focus; it never expands authority.
 
@@ -191,6 +204,7 @@ Owner-controlled external capability or separately approved operational path:
 
 | Condition | Boundary rationale |
 |---|---|
+| Any remote source publication (`git push`) in the current private/Free mode | Owner-controlled repository publication boundary |
 | Production deploy or live service restart | Live infrastructure mutation |
 | Docker/image/package publication with external irreversible effect | External publication |
 | Live DB/schema/data mutation | Data integrity risk |
@@ -201,10 +215,11 @@ Owner-controlled external capability or separately approved operational path:
 | Real client/user communications or consequential business mutations | External impact |
 | Material scope expansion beyond the approved Work Block | Planning/authority boundary |
 
-A normal feature-branch local commit is **not** an external Hard Stop. A normal
-feature-branch push is also not a cryptographic Hard Stop; it is allowed only
-when the external credential/channel permits it. Direct `main` mutation remains
-outside the normal agent channel.
+A normal feature-branch local commit is **not** an external Hard Stop. Remote
+feature-branch publication **is** an Owner-controlled handoff in the currently
+selected GitHub Free mode. Technical credential availability does not permit the
+agent to perform the push. Direct `main` mutation remains outside the normal
+agent channel in every mode.
 
 The former `memory_bank/orchestrator-log.md` push-approval entry is historical
 process evidence only and is **not** a security capability or substitute for
@@ -220,7 +235,8 @@ Classify non-trivial work before execution.
 | Coordination write | Work Block, tasklist, reports, gate state | Control Tower inside coordination scope |
 | Production source write | `web/**`, `admin/**`, `showcase/**`, `scripts/**`, `05_ai/**` | Scoped Coder inside approved write-set |
 | Local/test side effect | disposable DB, local server, test artifacts | Approved Work Block; no live data |
-| Reversible Git work | stage, local commit, normal feature branch | Approved Work Block; external credential still controls publication |
+| Reversible local Git work | stage, local commit, local feature-branch preparation | Approved Work Block |
+| Remote source publication | feature-branch `git push` | Owner-controlled publication handoff in current Free mode |
 | Protected/default-branch or broad Git mutation | main update, force, delete, mirror/prune | External Hard Stop |
 | Live infra side effect | VPS, service restart, production deploy | External Hard Stop |
 | Live data side effect | migration apply, row write, manual DB fix | External Hard Stop |
@@ -283,8 +299,9 @@ boundary:
 - staged commits are checked against source + coordination scope;
 - Codex `apply_patch` validates both source and `Move to:` destination paths;
 - unknown/complex mutating Bash fails closed when target paths cannot be scoped;
-- shared Hard Stop logic denies obvious consequential Git/infra/data/credential/
-  client/publish operations;
+- shared Hard Stop logic denies all `git push` in the current AzurSysTech Free
+  mode plus obvious consequential Git/infra/data/credential/client/publish
+  operations;
 - success closeout fails closed while required assurance is unresolved.
 
 These hooks are regression-tested by `Control Plane Contracts` CI and remain
@@ -438,6 +455,9 @@ architecture/runtime/integration/delivery/process decisions belong in
 
 ## Key Constraints
 
+- no autonomous `git push` in the current private GitHub Free mode; use the
+  Owner-controlled publication handoff;
+- no autonomous merge to `main`;
 - no production deploy/live infra mutation in the normal agent channel;
 - no live DB mutation without the explicit external operational capability;
 - no credential/secret changes or exposure in the normal agent channel;
@@ -481,5 +501,7 @@ classified, SSOT is synchronized, and consequential actions have not been
 smuggled through local project authority.
 
 The authority migration itself succeeds only when the project can demonstrate
-normal scoped source work without SSH signing while production/default-branch/
-credential/live-data capabilities remain externally constrained.
+normal scoped local source work without SSH signing while remote publication,
+merge, production, default-branch, credential, and live-data capabilities remain
+Owner-controlled or externally constrained according to the selected project
+mode.
