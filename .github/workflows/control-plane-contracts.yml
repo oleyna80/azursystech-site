@@ -1,0 +1,83 @@
+name: Control Plane Contracts
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".agent/**"
+      - ".claude/**"
+      - ".codex/**"
+      - ".opencode/**"
+      - "AGENTS.md"
+      - "opencode.json"
+      - "scripts/validate-evaluation.py"
+      - "scripts/validate-installation-profile.py"
+      - "scripts/test-github-capability-control-plane.py"
+      - "scripts/test-github-capability-github-cli-hard-stops.py"
+      - ".github/workflows/control-plane-contracts.yml"
+  pull_request:
+    paths:
+      - ".agent/**"
+      - ".claude/**"
+      - ".codex/**"
+      - ".opencode/**"
+      - "AGENTS.md"
+      - "opencode.json"
+      - "scripts/validate-evaluation.py"
+      - "scripts/validate-installation-profile.py"
+      - "scripts/test-github-capability-control-plane.py"
+      - "scripts/test-github-capability-github-cli-hard-stops.py"
+      - ".github/workflows/control-plane-contracts.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  control-plane:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile migrated Python control plane
+        run: |
+          python -m py_compile \
+            .agent/hooks/hard_stop_policy.py \
+            .claude/hooks/assurance_gate.py \
+            .claude/hooks/work_block_gate.py \
+            .codex/hooks/pre_tool_use_policy.py \
+            .codex/hooks/subagent_context.py \
+            .codex/scripts/doctor.py \
+            .codex/scripts/lifecycle.py \
+            scripts/validate-evaluation.py \
+            scripts/validate-installation-profile.py \
+            scripts/test-github-capability-control-plane.py \
+            scripts/test-github-capability-github-cli-hard-stops.py
+
+      - name: Validate schema v3 blocked-default contract only
+        run: |
+          python - <<'PY'
+          import runpy
+          from pathlib import Path
+
+          namespace = runpy.run_path("scripts/validate-installation-profile.py")
+          namespace["validate_blocked_default"](Path("."))
+          print("blocked-default schema v3 contract: OK")
+          PY
+
+      - name: Run GitHub capability authority integration fixtures
+        run: python scripts/test-github-capability-control-plane.py
+
+      - name: Run GitHub CLI/API Hard Stop fixtures
+        run: python scripts/test-github-capability-github-cli-hard-stops.py
+
+      - name: Run native Codex apply-patch payload fixture
+        run: bash .codex/hooks/tests/apply-patch-fixtures.sh

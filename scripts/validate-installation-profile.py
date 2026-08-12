@@ -10,21 +10,22 @@ from typing import Any
 PROFILE_PATH = Path(".agent/bootstrap-profile.json")
 DEFAULT_WORK_BLOCK_PATH = Path(".agent/active-work-block.default.json")
 SCHEMA_VERSION = 1
-DEFAULT_WORK_BLOCK_SCHEMA_VERSION = 2
-EXPECTED_HARD_STOP_APPROVALS = {
-    "git_commit": False,
-    "git_push": False,
-    "default_branch_push": False,
-    "destructive": False,
-    "live_infra": False,
-    "live_data": False,
-    "credentials": False,
-    "client_communications": False,
-}
+DEFAULT_WORK_BLOCK_SCHEMA_VERSION = 3
+EXPECTED_AUTHORITY_MODE = "github_capability"
+EXPECTED_EXTERNAL_HARD_STOPS = [
+    "protected_default_branch_mutation",
+    "destructive",
+    "live_infra",
+    "live_data",
+    "credentials",
+    "client_communications",
+    "irreversible_publish",
+]
 EXPECTED_COORDINATION_WRITE_SET = [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
     ".agent/verification-gate.md",
+    ".codex/write-gate.md",
     "docs/plans/**",
     "docs/specs/**",
     "docs/tasklist/**",
@@ -169,13 +170,12 @@ def validate_coordination_write_set(state: dict[str, Any]) -> None:
             )
 
     if value != EXPECTED_COORDINATION_WRITE_SET:
-        if (
-            len(value) == len(EXPECTED_COORDINATION_WRITE_SET)
+        detail = (
+            "must preserve canonical path order"
+            if len(value) == len(EXPECTED_COORDINATION_WRITE_SET)
             and set(value) == set(EXPECTED_COORDINATION_WRITE_SET)
-        ):
-            detail = "must preserve canonical path order"
-        else:
-            detail = "must exactly match the canonical blocked-default paths"
+            else "must exactly match the canonical blocked-default paths"
+        )
         raise ValidationError(
             f"{DEFAULT_WORK_BLOCK_PATH} coordination_write_set {detail}"
         )
@@ -205,16 +205,20 @@ def validate_blocked_default(root: Path) -> None:
         raise ValidationError(
             f"{DEFAULT_WORK_BLOCK_PATH} requires schema_version={DEFAULT_WORK_BLOCK_SCHEMA_VERSION}"
         )
+    if state.get("authority_mode") != EXPECTED_AUTHORITY_MODE:
+        raise ValidationError(
+            f"{DEFAULT_WORK_BLOCK_PATH} authority_mode must be {EXPECTED_AUTHORITY_MODE}"
+        )
+    if "authorization" in state or "hard_stop_approvals" in state:
+        raise ValidationError(
+            f"{DEFAULT_WORK_BLOCK_PATH} must not require legacy signed authorization state"
+        )
     write_gate = state.get("write_gate")
     if not isinstance(write_gate, dict):
         raise ValidationError(f"{DEFAULT_WORK_BLOCK_PATH} missing write_gate object")
-    if write_gate.get("status") != "BLOCKED":
+    if write_gate != {"status": "BLOCKED", "opened_at": None}:
         raise ValidationError(
-            f"{DEFAULT_WORK_BLOCK_PATH} write_gate.status must be BLOCKED"
-        )
-    if write_gate.get("opened_at") is not None or write_gate.get("expires_at") is not None:
-        raise ValidationError(
-            f"{DEFAULT_WORK_BLOCK_PATH} write_gate approval window must be empty"
+            f"{DEFAULT_WORK_BLOCK_PATH} write_gate must be the canonical BLOCKED schema v3 state"
         )
     integrations = state.get("integrations")
     if integrations != {"approved": [], "admission_records": []}:
@@ -223,13 +227,12 @@ def validate_blocked_default(root: Path) -> None:
         )
     if state.get("write_set") != []:
         raise ValidationError(f"{DEFAULT_WORK_BLOCK_PATH} write_set must be empty")
+    if state.get("external_hard_stops") != EXPECTED_EXTERNAL_HARD_STOPS:
+        raise ValidationError(
+            f"{DEFAULT_WORK_BLOCK_PATH} external_hard_stops must match the canonical capability boundary"
+        )
     validate_coordination_write_set(state)
     validate_default_assurance(state)
-    approvals = state.get("hard_stop_approvals")
-    if approvals != EXPECTED_HARD_STOP_APPROVALS:
-        raise ValidationError(
-            f"{DEFAULT_WORK_BLOCK_PATH} hard_stop_approvals must all be false"
-        )
 
 
 def validate(root: Path) -> dict[str, Any]:

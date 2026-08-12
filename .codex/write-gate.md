@@ -1,52 +1,87 @@
-# Codex Write Gate — Compatibility View
+# Codex Write Gate — Cooperative Scope Guard
 
-> Human-readable compatibility note. The executable source of truth is
+> Human-readable compatibility note. The executable project-local state is
 > `.agent/active-work-block.json`.
 
-## Default State
+## Security boundary
 
-- **Status:** BLOCKED
-- **Active Work Block:** unset
-- **Specification:** unset
-- **Base commit:** unset
-- **Expiry:** unset
-- **Critic:** PENDING
-- **Approved write-set:** empty
+The write gate is a **cooperative scope guard**, not a security boundary.
 
-The generated project starts fail-closed.
+It enforces Work Block/write-set discipline inside the normal agent channel.
+Consequential authority belongs outside the mutable project: GitHub repository
+controls, Owner-controlled publication/merge, workflow permissions, OS
+isolation, and separately held production/VPS/DB/secrets.
 
-`scripts/lifecycle.py` is an optional local coordination helper. `status` is
-read-only; `prepare`, `freeze`, and `close` leave the source gate BLOCKED.
-`open --authorization .agent/authorizations/<work-block>.json` derives every
-authority-bearing value from that committed record at `HEAD`: Work Block/spec
-digest, exact write-set, expiry ceiling, Owner evidence, and Critic evidence.
-It refuses a missing, dirty, malformed, expired, or uncommitted record and
-stores its Git blob ID in the gate. `renew` can refresh only the time within the
-committed expiry ceiling; it cannot broaden authority. The helper never creates
-or edits an authorization record.
+Per-Work-Block SSH signatures and detached authorization records are retired
+from the normal AzurSysTech development path.
 
-## Executable Gate
+## Default state
 
-Codex `PreToolUse` reads `.agent/active-work-block.json` and checks:
+AzurSysTech uses schema v3:
 
-- schema version;
-- Work Block ID;
-- specification path and revision;
-- `write_gate.status`;
-- timezone-aware expiry;
-- current `HEAD` against `base_commit`;
-- the committed authorization record, its working-tree equality, and blob ID;
-- required Critic status and verdict;
-- source targets against the approved write-set;
-- Hard Stop approval flags for supported Bash operations.
+```json
+{
+  "schema_version": 3,
+  "authority_mode": "github_capability",
+  "write_gate": {"status": "BLOCKED", "opened_at": null},
+  "write_set": []
+}
+```
 
-Do not set this Markdown file to READY. Updating it alone does not authorize a
-write.
+While BLOCKED, only the configured coordination write-set is available for
+planning/evidence work.
 
-## Coordination Before READY
+## Opening source work
 
-While the source gate remains BLOCKED, the hook permits only the configured
-coordination write-set, normally:
+After the Work Block, specification, write-set, and Critic state are resolved,
+open the local scope gate without cryptographic signing:
+
+```bash
+python3 .codex/scripts/lifecycle.py open \
+  --work-block-id WB-EXAMPLE \
+  --specification-path docs/plans/wb-example.md \
+  --specification-revision <git-revision-or-contract-revision> \
+  --write src/example.py \
+  --write tests/test_example.py \
+  --critic-status READY \
+  --critic-verdict APPROVE
+```
+
+This records the current Git HEAD as the planning baseline and sets the local
+write scope to READY. Subsequent normal commits do not create a cryptographic
+STALE/renew cycle; a material scope or requirement change returns to Define and
+reopens the Work Block scope explicitly.
+
+## Codex guardrails
+
+`PreToolUse` checks:
+
+- schema v3 and `authority_mode=github_capability`;
+- active Work Block and READY state;
+- specification path/revision;
+- resolved Critic state;
+- explicit source write-set;
+- apply-patch source **and Move destination** paths;
+- explicit Bash mutation targets;
+- staged commit paths.
+
+Normal feature-branch `git commit` is permitted when scope is valid. In the
+current AzurSysTech private GitHub Free mode, **every `git push` is outside the
+normal agent path**. The shared Hard Stop guard denies remote source publication
+and directs the agent to freeze the exact feature-branch HEAD and use
+`.agent/workflows/owner-controlled-github-flow.md` for the Owner publication
+handoff.
+
+The same shared Hard Stop guard rejects direct default-branch push,
+force/broad/destructive push, obvious destructive actions, live
+infrastructure/data operations, credential/secret operations, client-facing
+communications, and external image publication in the normal agent channel.
+
+Technical access to an Owner credential does not grant publication authority.
+
+## Coordination while BLOCKED
+
+Typical coordination paths:
 
 ```text
 .agent/active-work-block.json
@@ -61,52 +96,32 @@ docs/reports/**
 memory_bank/**
 ```
 
-These paths allow Define-stage and evidence work. They do not authorize source,
-configuration, runtime, infrastructure, credential, or data mutations.
+These paths do not grant repository publication, merge, production, credential,
+data, deployment, or default-branch authority.
 
-## Opening the Source Gate
+## AzurSysTech GitHub boundary
 
-Commit a role-separated authorization record only after:
+`oleyna80/azursystech-site` remains private on GitHub Free. The accepted current
+mode is **Owner-controlled publication and merge**, not a claim of technical
+branch protection:
 
-1. the human Work Block is approved;
-2. the active specification and revision are recorded;
-3. the architecture baseline and implementation plan are resolved;
-4. the source write-set is explicit;
-5. the required Critic function completed or an allowed degraded/skip state is
-   documented;
-6. `base_commit` matches the current Git `HEAD`;
-7. `expires_at` is short-lived and timezone-aware;
-8. relevant Hard Stop approvals are recorded.
+- local edit/test/stage/commit may be autonomous inside an approved Work Block;
+- the normal agent flow stops before all `git push` operations;
+- the agent produces the canonical exact-SHA Owner publication handoff;
+- feature-branch publication and merge are Owner-controlled;
+- deployment stays manual `workflow_dispatch` and Owner-controlled;
+- production/VPS/DB/secrets are outside the normal agent path.
 
-Sign the committed authorization JSON out of band with the Owner key and commit
-its detached sibling `<record-path>.sig`. Then explicitly provide an external
-OpenSSH `allowed_signers` trust anchor:
+The Owner explicitly accepts that private `main` is technically unprotected on
+the current GitHub Free plan. A project-local hook must never be represented as
+equivalent to GitHub branch protection.
 
-```bash
-export AGENTIC_SDLC_OWNER_SIGNERS=/absolute/path/to/owner-signers
-python3 .codex/scripts/lifecycle.py open --authorization <record-path>
-```
+If a later project decision enables protected-main enforcement, the authority
+model may be revised to permit least-privilege agent feature publication with
+GitHub Actions read-only and no administration, environment, secret, deployment,
+or production credential authority. That mode is not active now.
 
-Do not hand-edit a READY gate. `open` verifies the signature as
-`owner@agentic-sdlc` in namespace `agentic-sdlc-authorization`, and derives all
-READY fields from the committed record and signature. A missing environment
-variable, external anchor, committed signature, or valid Owner signature blocks
-the gate.
+## Legacy signed records
 
-```json
-"write_gate": {
-  "status": "READY",
-  "opened_at": "2026-07-25T12:00:00+02:00",
-  "expires_at": "2026-07-25T18:00:00+02:00"
-}
-```
-
-After a commit changes `HEAD`, renew the gate before further source writes.
-
-## Limitations
-
-Hooks remain cooperative project guardrails, not OS-level isolation. Project
-hooks can be bypassed and same-user writers can alter local project files, but
-they cannot forge an Owner-approved signature without the separately held
-private key. Stronger assurance may require a separate read-only root,
-worktree, runtime, container, or OS boundary.
+Historical `.agent/authorizations/*.json` and `.sig` files may remain as audit
+evidence. Schema v3 does not require or trust them for normal development.

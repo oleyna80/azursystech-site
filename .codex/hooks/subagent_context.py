@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Provide bounded Work Block authority context to project-scoped Codex agents."""
+"""Provide bounded Work Block coordination context to project-scoped Codex agents."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from typing import Any
 ROLE_AUTHORITY = {
     "architect": "Read-only for source/runtime; may write only an approved draft or report artifact.",
     "critic": "Read-only; may write only the approved Critic report artifact.",
-    "coder": "May write only when the source gate is READY and only inside the approved write-set.",
+    "coder": "May write only when the local source gate is READY and only inside the approved write-set.",
     "reviewer": "Read-only for source/runtime; may write only the approved Review report artifact.",
     "verifier": "Read-only for source/runtime; may write only approved verification evidence/report artifacts.",
 }
@@ -45,8 +45,12 @@ def load_gate(root: Path) -> tuple[dict[str, Any] | None, str | None]:
         return None, "machine-readable Work Block gate is missing"
     except (OSError, json.JSONDecodeError) as exc:
         return None, f"machine-readable Work Block gate is invalid: {exc}"
-    if not isinstance(data, dict) or data.get("schema_version") != 2:
-        return None, "machine-readable Work Block gate schema is unsupported"
+    if (
+        not isinstance(data, dict)
+        or data.get("schema_version") != 3
+        or data.get("authority_mode") != "github_capability"
+    ):
+        return None, "machine-readable Work Block gate schema/authority mode is unsupported"
     return data, None
 
 
@@ -85,7 +89,7 @@ def main() -> int:
     if gate is None:
         context = (
             f"Agent type: {agent_type}. Permission mode: {permission_mode}. "
-            f"Authority: {authority} The {error}; source writes are not authorized. "
+            f"Authority: {authority} The {error}; source writes are not authorized by local Work Block scope. "
             "Read AGENTS.md and request a valid active Work Block before state-changing work."
         )
     else:
@@ -97,15 +101,17 @@ def main() -> int:
                 f"Logical agent type: {agent_type}",
                 f"Permission mode: {permission_mode}",
                 f"Authority: {authority}",
+                f"Authority mode: {gate.get('authority_mode')}",
                 f"Active Work Block: {gate.get('work_block_id') or 'UNSET'}",
                 f"Governance profile: {gate.get('governance_profile') or 'UNSET'}",
                 f"Specification: {spec.get('path') or 'UNSET'} @ {spec.get('revision') or 'UNSET'}",
-                f"Source write gate: {str(write_gate.get('status') or 'BLOCKED').upper()}",
-                f"Gate expiry: {write_gate.get('expires_at') or 'UNSET'}",
+                f"Planning baseline: {gate.get('base_commit') or 'UNSET'}",
+                f"Local source write gate: {str(write_gate.get('status') or 'BLOCKED').upper()}",
                 f"Critic: {str(critic.get('status') or 'PENDING').upper()} / {str(critic.get('verdict') or 'PENDING').upper()}",
                 f"Approved write-set: {compact_list(gate.get('write_set'))}",
                 f"Coordination paths: {compact_list(gate.get('coordination_write_set'))}",
-                "Read the human Work Block and applicable governance/adapter files. Do not infer approval from this context alone.",
+                f"External Hard Stops: {compact_list(gate.get('external_hard_stops'))}",
+                "This local context is a cooperative scope guard, not production/security authority. External GitHub/OS/credential boundaries remain authoritative.",
             ]
         )
 

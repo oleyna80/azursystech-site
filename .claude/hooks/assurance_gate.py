@@ -36,8 +36,10 @@ def load_gate(root: Path) -> dict:
         raise GateError(f"Invalid {GATE_PATH.as_posix()}: {exc}") from exc
     if not isinstance(gate, dict):
         raise GateError("Active Work Block gate must be a JSON object.")
-    if gate.get("schema_version") != 1:
-        raise GateError("Unsupported active Work Block schema_version.")
+    if gate.get("schema_version") != 3:
+        raise GateError("Closeout requires active-work-block schema_version=3.")
+    if gate.get("authority_mode") != "github_capability":
+        raise GateError("Closeout requires authority_mode=github_capability.")
     if not str(gate.get("work_block_id") or "").strip():
         raise GateError("Closeout requires a non-empty work_block_id.")
     return gate
@@ -124,7 +126,6 @@ def validate_evaluation_contract(root: Path) -> None:
 
 def main() -> None:
     try:
-        # Stop payload may include cwd, but project cwd is sufficient when absent.
         try:
             payload = json.load(sys.stdin)
         except (json.JSONDecodeError, OSError):
@@ -168,9 +169,6 @@ def main() -> None:
                 raise GateError("success-closeout requires Evaluation status/verdict READY.")
             if required_drift and (drift_status != "READY" or drift_verdict != "ALIGNED"):
                 raise GateError("success-closeout requires Drift status READY and verdict ALIGNED.")
-
-        # reporting-only is allowed after all required functions are resolved and
-        # evidence-backed, but it does not make the Work Block completed/merge-ready.
     except GateError as exc:
         block(str(exc))
 

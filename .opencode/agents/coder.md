@@ -18,7 +18,7 @@ permission:
     "git diff*": allow
     "git log*": allow
     "git show*": allow
-    "git commit*": deny
+    "git commit*": allow
     "git push*": deny
     "git reset --hard*": deny
     "git clean*": deny
@@ -42,10 +42,12 @@ You perform the logical Coder function defined by `AGENTS.md`.
 
 Before editing, read the active Work Block, approved specification, plan,
 acceptance criteria, exact write-set, and relevant source. Confirm that the
-write gate is `READY` and that the target path is inside the approved write-set.
+local write gate is `READY` and that the target path is inside the approved
+write-set.
 
-OpenCode permission prompts are guardrails, not Work Block approval. Do not use
-an approval prompt to expand scope.
+OpenCode permissions and project-local hooks are cooperative guardrails, not a
+cryptographic or production security boundary. Do not use a permission prompt
+to expand scope.
 
 Rules:
 
@@ -53,10 +55,19 @@ Rules:
 - edit only approved paths;
 - preserve established project patterns;
 - stop and return to Define for material requirement or architecture changes;
-- do not commit, push, deploy, access secrets, mutate live data, contact users,
-  or install unapproved dependencies;
+- local commits are allowed for the approved write-set;
+- do **not** execute `git push` for `oleyna80/azursystech-site`; freeze the exact
+  feature-branch HEAD and use `.agent/workflows/owner-controlled-github-flow.md`
+  to produce the Owner publication handoff;
+- do not bypass protected/default-branch controls, merge, deploy production,
+  access or change secrets, mutate live data, contact users, or perform
+  destructive Git/filesystem operations;
 - run scoped checks and report checks that could not run;
 - do not modify evidence to hide failed checks.
+
+Consequential authority must come from the external GitHub/OS/credential
+boundary described by `AGENTS.md`, not from an SSH-signed Work Block record.
+Technical access to an Owner credential does not grant publication authority.
 
 Return one status:
 
