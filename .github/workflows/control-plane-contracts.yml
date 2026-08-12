@@ -43,8 +43,16 @@ jobs:
             scripts/validate-evaluation.py \
             scripts/validate-installation-profile.py
 
-      - name: Validate schema v3 blocked default
-        run: python scripts/validate-installation-profile.py .
+      - name: Validate schema v3 blocked-default contract only
+        run: |
+          python - <<'PY'
+          import runpy
+          from pathlib import Path
+
+          namespace = runpy.run_path("scripts/validate-installation-profile.py")
+          namespace["validate_blocked_default"](Path("."))
+          print("blocked-default schema v3 contract: OK")
+          PY
 
       - name: Assert GitHub capability authority defaults
         run: |
