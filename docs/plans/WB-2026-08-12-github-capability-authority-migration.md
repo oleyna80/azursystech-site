@@ -50,8 +50,8 @@ Inside an approved Work Block and write-set, normal reversible work may include:
 - tests, builds, linting, local disposable tooling;
 - stage approved paths;
 - local commit;
-- normal feature-branch push when the external credential permits it;
-- PR creation/update and CI/review inspection.
+- prepare a normal feature branch for publication;
+- inspect PR/CI/review state after the Owner publishes the branch.
 
 These operations do not require an Owner private signing key or SSH authorization record.
 
@@ -73,55 +73,89 @@ These hooks are defense in depth only.
 
 The normal agent channel must not possess authority for:
 
-- direct default/protected branch mutation;
-- force/non-fast-forward/broad/prune/mirror/remote-delete pushes;
 - production deploy or live service restart;
 - VPS/SSH mutation;
 - live DB/schema/data mutation;
-- credential/token/key/secret access or changes beyond explicitly safe reads;
+- credential/token/key/secret creation, rotation, revocation, or exposure;
 - destructive filesystem/Git/database operations;
 - irreversible external publication;
 - real client/user communications or consequential business mutations.
 
 Production secrets remain in GitHub/VPS and are never copied into project files or agent prompts.
 
-## Repository hosting mode
+Repository source publication uses a separate project policy described below: Owner-controlled push. This is intentionally an operational control on GitHub Free, not a claim of protected-branch enforcement.
 
-`azursystech-site` is private. On the current GitHub Free plan, protected-branch/ruleset enforcement is unavailable for this repository.
+## Repository hosting mode — selected: GitHub Free + Owner-controlled push
 
-### Preferred mode — GitHub protected `main`
+`azursystech-site` remains **private** on GitHub Free.
 
-When GitHub protected-main enforcement is available:
+The Owner explicitly selected this mode on 2026-08-12 instead of GitHub Pro and rejected a temporary `private -> public -> private` visibility cycle.
 
-- protect `main`;
-- require PR and relevant CI checks;
-- deny force push/deletion;
-- agent fine-grained credential: Contents RW, Pull Requests RW, Actions READ only, no administration/secrets/environment permission;
-- verify negative tests: direct main update denied and workflow dispatch/rerun/cancel denied.
+Reasoning:
 
-### Free-plan fallback — valid only with credential isolation
+- current project activity does not justify a paid upgrade solely for private-repository branch protection;
+- temporary public visibility would disclose the repository and would not provide a durable control after returning to private;
+- the Owner prefers to retain direct control over publication while development volume is modest.
 
-The Free fallback is valid **only if the agent runtime cannot use any Owner GitHub write credential**.
+### Operating rule
 
-It is not sufficient to say that no separate agent PAT was created. If the agent process runs as the same OS user and can use the Owner's SSH key, credential helper, `gh` authentication, PAT, or other repository-write credential, then an unprotected private `main` is still technically writable and the fallback security boundary is not satisfied.
+The normal agent workflow stops before remote source publication.
 
-A valid Free fallback therefore requires all of the following:
+The agent may autonomously:
 
-- no standalone agent credential with repository Contents write;
-- no access from the agent runtime to Owner SSH/PAT/credential-helper/`gh` write credentials;
-- local edit/test/commit may be autonomous;
-- feature-branch publication is performed through an Owner-controlled channel outside the agent capability boundary;
-- deploy remains Owner-only.
+- edit inside the Work Block write-set;
+- test/build/lint;
+- stage approved paths;
+- create local commits;
+- prepare a feature branch;
+- prepare PR/CI/review evidence and an Owner handoff.
 
-If same-user credential isolation is not implemented, GitHub Pro protected-main enforcement is the preferred simple boundary for this project.
+The agent must **not autonomously execute `git push`** for this repository. Before publication it must hand control to the Owner with:
 
-A local hook must never be represented as equivalent to protected-branch enforcement.
+- branch name;
+- exact local HEAD SHA;
+- concise changed-file/scope summary;
+- deterministic check status;
+- exact intended remote ref;
+- explicit statement that no production/deploy/DB/VPS action is included.
+
+The Owner then performs or explicitly triggers the bounded feature-branch publication through an Owner-controlled GitHub channel.
+
+Direct `main` push remains forbidden by project policy. Merge is Owner-controlled. Production deployment remains Owner-only and manual.
+
+### Security semantics
+
+On GitHub Free/private, this Owner-controlled-push rule is an **operational governance boundary**, not technical protected-branch enforcement. The repository must not claim otherwise.
+
+If Owner credentials happen to be technically reachable from an agent runtime, their availability does not grant authority to use them for push, merge, workflow dispatch, secrets, deploy, or other consequential mutations. The residual risk of an unprotected private `main` is accepted by the Owner for the current low-volume operating mode.
+
+A future migration to GitHub Pro may replace this operational publication boundary with protected `main` plus least-privilege agent credentials. That is optional future hardening, not a blocker for the current Work Block.
+
+## Canonical AzurSysTech operating process
+
+The project-specific process must be durable and discoverable by every supported agent runtime.
+
+Canonical durable decision/process record:
+
+- `docs/engineering-memory/github-free-owner-controlled-flow.md`
+
+Canonical execution workflow:
+
+- `.agent/workflows/owner-controlled-github-flow.md`
+
+Git skill integration:
+
+- `.agent/skills/git-orchestration-flow/SKILL.md`
+- `.claude/skills/git-orchestration-flow/SKILL.md`
+- `.opencode/skills/git-orchestration-flow/SKILL.md`
+
+`AGENTS.md` remains the top-level operating contract and must point agents to the Owner-controlled publication semantics. The skill/workflow narrows execution behavior; neither grants authority.
 
 ## Implementation scope
 
-Port only project-relevant semantics from framework WB-CORE-003F:
+Port only project-relevant semantics from framework WB-CORE-003F and complete the AzurSysTech-specific operating process:
 
-- `.agent/active-work-block.default.json` and active state → schema v3;
+- `.agent/active-work-block.default.json` and active state -> schema v3;
 - legacy authorization README;
 - provider-neutral consequential-operation guard;
 - Codex Work Block/write-set hooks, lifecycle, doctor, write-gate docs;
@@ -129,7 +163,12 @@ Port only project-relevant semantics from framework WB-CORE-003F:
 - OpenCode Coder permission posture while preserving AzurSysTech-specific instruction and skill paths;
 - installation/evaluation validators required by the migrated lifecycle;
 - targeted AzurSysTech operating-contract reconciliation so old normal-commit/feature-push signing rules do not contradict schema v3;
-- project Work Block/tasklist/review/verification evidence.
+- project Work Block/tasklist/review/verification evidence;
+- `docs/engineering-memory/github-free-owner-controlled-flow.md`;
+- `.agent/workflows/owner-controlled-github-flow.md`;
+- `.agent/skills/git-orchestration-flow/SKILL.md`;
+- `.claude/skills/git-orchestration-flow/SKILL.md`;
+- `.opencode/skills/git-orchestration-flow/SKILL.md`.
 
 Do not copy framework-only roadmap, release-state, or publication artifacts into AzurSysTech.
 
@@ -147,18 +186,21 @@ This Work Block does not execute deployment, SSH, VPS, DB, Docker publication, c
 4. `apply_patch Move to:` outside the write-set is rejected.
 5. Unknown/complex mutating Bash fails closed when its targets cannot be scoped.
 6. Normal read/test/build paths remain usable.
-7. Direct default-branch mutation is externally unavailable: either protected by GitHub hosting controls, or the agent runtime has no usable repository-write credential at all.
-8. The normal agent channel cannot dispatch/rerun/cancel deploy workflows.
-9. Production VPS/DB/secrets remain unavailable to the normal agent channel.
+7. AzurSysTech Free mode is documented and enforced as an Owner-controlled publication workflow: the normal agent path stops before `git push`, direct `main` push is forbidden by project policy, and the Owner receives an exact branch/SHA/check handoff.
+8. The normal agent path does not autonomously dispatch/rerun/cancel deploy workflows.
+9. Production VPS/DB/secrets remain outside normal development authority.
 10. Critic/Reviewer/Verifier remain required as configured for closeout.
 11. Existing production runtime is untouched.
 12. Canonical local dirty/staged user state remains untouched.
+13. The Owner-controlled publication decision is durable in engineering memory, represented in an executable workflow, and integrated into the Git orchestration skill for Codex/Claude/OpenCode project surfaces.
 
 ## Assurance
 
-Required sequence: Critic → Reviewer → Verifier → closeout.
+Required sequence: Critic -> Reviewer -> Verifier -> closeout.
 
-No READY verdict may claim GitHub protected-branch enforcement until it exists. A Free-fallback READY verdict also requires evidence that the agent runtime cannot use the Owner's GitHub write credential; same-user access to the Owner SSH/PAT/credential helper keeps this Work Block BLOCKED at the external-boundary gate.
+The final assurance must distinguish technical enforcement from process governance. It may verify the selected GitHub Free Owner-controlled-push operating model, but it must not claim protected-branch enforcement or credential isolation that does not exist.
+
+Residual risk to record explicitly: private `main` remains technically unprotected on the current GitHub Free plan. The Owner accepts that residual risk and retains publication/merge control manually.
 
 ## Explicit exclusions
 
@@ -169,7 +211,9 @@ No READY verdict may claim GitHub protected-branch enforcement until it exists. 
 - no secret/key/token rotation;
 - no destructive cleanup of historical authorization artifacts;
 - no direct push to `main`;
-- no reset/clean of the canonical local checkout.
+- no reset/clean of the canonical local checkout;
+- no repository visibility change to public;
+- no GitHub Pro upgrade/configuration in this Work Block.
 
 ## Success condition
 
