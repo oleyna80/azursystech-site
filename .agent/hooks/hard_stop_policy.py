@@ -57,8 +57,9 @@ CONSEQUENTIAL = [
     ),
     (
         re.compile(
-            r"\bcurl\b[^\n]*api\.github\.com[^\n]*"
-            r"(?:-X\s*(?:POST|PUT|PATCH|DELETE)|--request\s*(?:POST|PUT|PATCH|DELETE)|--data)",
+            r"\bcurl\b(?=[^\n]*api\.github\.com)"
+            r"(?=[^\n]*(?:-X\s*(?:POST|PUT|PATCH|DELETE)|"
+            r"--request\s*(?:POST|PUT|PATCH|DELETE)|--data))[^\n]*",
             re.I,
         ),
         "consequential GitHub API mutation",
