@@ -1,11 +1,11 @@
 ---
 name: git-orchestration-flow
-description: Safe procedures for Git branch management, worktree isolation, two-pass Work Block closure projections, GitHub ruleset handling, PR thread resolution via GraphQL, and SSOT file conflict resolution. Use when managing complex Git flows, worktrees, PR merge blockers, or SSOT reconciliations.
+description: Safe procedures for Git branch management, worktree isolation, two-pass Work Block closure projections, GitHub ruleset handling, PR thread resolution, SSOT conflict resolution, and the AzurSysTech Owner-controlled GitHub Free publication handoff. Use when managing complex Git flows, worktrees, PR merge blockers, source publication, or SSOT reconciliations.
 ---
 
 # Git Orchestration Flow
 
-Procedural guide for managing Git branches, worktrees, PR lifecycles, and SSOT file reconciliations within an agentic SDLC framework.
+Procedural guide for managing Git branches, worktrees, PR lifecycles, source publication, and SSOT file reconciliations within the AzurSysTech agentic SDLC.
 
 ## 1. Worktree Isolation & Cleanup
 
@@ -33,12 +33,12 @@ git worktree prune
 ## 2. Two-Pass Closure Projection Pipeline
 
 ### Rule
-Finalizing a Work Block changes normative surfaces (`status: completed`, `active_work_block: null`), which alters SHA-256 aggregates. To preserve independent assurance integrity, use a two-pass sequence.
+Finalizing a Work Block changes normative surfaces (`status: completed`, `active_work_block: null`), which alters SHA-256 aggregates. To preserve assurance integrity, use a two-pass sequence when the Work Block requires that projection discipline.
 
 ### Procedures
 
 1. **Preliminary Candidate Assurance:**
-   Compute the aggregate on the active candidate state and run independent preliminary assurance (Reviewer, Verifier, Drift Analyst).
+   Compute the aggregate on the active candidate state and run the required preliminary assurance (Reviewer, Verifier, Drift Analyst as configured).
 
 2. **Ephemeral Projection:**
    Create an ephemeral non-repository projection to verify terminal state:
@@ -58,7 +58,9 @@ Finalizing a Work Block changes normative surfaces (`status: completed`, `active
 ## 3. GitHub PR Thread Resolution & Ruleset Handling
 
 ### Rule
-GitHub repository rulesets (`required_review_thread_resolution: true`) block PR merges even when all CI checks pass if unresolved review comments exist (including outdated comments).
+Where a GitHub repository ruleset requires review-thread resolution, unresolved review comments can block merge even when CI is green.
+
+AzurSysTech itself is currently private on GitHub Free and does not claim protected-main ruleset enforcement. Do not transplant public-framework ruleset assumptions into this project.
 
 ### Procedures
 
@@ -88,7 +90,7 @@ gh api graphql -f query='
 ```
 
 #### Resolving Outdated Threads
-Resolve threads that have been addressed or invalidated by newer commits:
+Resolve threads that have been addressed or invalidated by newer commits only when the active authority model permits that GitHub mutation:
 ```bash
 gh api graphql -f query='
 mutation {
@@ -122,3 +124,61 @@ After editing conflict markers:
 git add FILE_REGISTRY.yml PROJECT_MAP.md
 GIT_EDITOR=true git rebase --continue
 ```
+
+---
+
+## 5. AzurSysTech GitHub Free Owner-Controlled Publication
+
+### Rule
+For `oleyna80/azursystech-site`, the repository remains private on GitHub Free and remote source publication is Owner-controlled.
+
+The normal agent path may edit, test, stage, and create local commits inside an approved Work Block/write-set, but it **stops before `git push`**. Technical access to an Owner credential does not create authority to use it.
+
+Canonical project workflow:
+
+- `.agent/workflows/owner-controlled-github-flow.md`
+
+Durable decision record:
+
+- `docs/engineering-memory/github-free-owner-controlled-flow.md`
+
+### Required feature-branch publication handoff
+
+Before any source publication, freeze the exact local branch head and report:
+
+```text
+OWNER PUBLICATION HANDOFF
+Repository: oleyna80/azursystech-site
+Branch: <feature-branch>
+Exact HEAD: <40-char SHA>
+Intended remote ref: origin/<feature-branch>
+Scope: <concise changed-file/domain summary>
+Checks: <PASS/BLOCKED + exact relevant checks>
+Assurance: <current Critic/Reviewer/Verifier states>
+Production impact: NONE
+Requested Owner action: publish this exact feature branch only
+```
+
+Then stop. Do not autonomously execute the push.
+
+### After Owner publication
+
+1. Verify the remote feature branch resolves to the exact handed-off SHA.
+2. Inspect/create/update the PR only within current GitHub authority.
+3. Inspect CI and review state.
+4. Remediate locally inside the Work Block if needed.
+5. If the local HEAD changes, issue a new publication handoff for the new SHA.
+
+One Owner publication decision covers only the exact SHA/ref handed off. It does not authorize later commits, `main`, force push, remote deletion, tags/releases, workflow dispatch, production, VPS, DB, or secrets.
+
+### Merge handoff
+
+When PR state is ready, report the exact PR/head/checks and request Owner merge. A green PR does not grant merge authority.
+
+### Production separation
+
+Merge does not grant deploy authority. Production remains a separate Owner-controlled operation governed by the deploy-operations skill and manual deployment workflow.
+
+### Security statement
+
+This is an operational governance boundary for the current private GitHub Free mode. It is not technical protected-branch enforcement and must never be represented as equivalent to a ruleset.
