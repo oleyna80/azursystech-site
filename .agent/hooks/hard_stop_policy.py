@@ -299,8 +299,13 @@ def check_command(command: str, gate: dict, root: Path) -> None:
         deny("Broad or destructive remote push is outside the normal agent capability boundary.")
     if tag_publish(command):
         deny("External tag publication is outside the normal agent capability boundary.")
-    if re.search(r"\bgit\s+push\b", command, re.I) and pushes_default_branch(command, root):
-        deny("Direct protected/default-branch push is outside the normal agent capability boundary; use a pull request.")
+    if re.search(r"\bgit\s+push\b", command, re.I):
+        if pushes_default_branch(command, root):
+            deny("Direct default-branch push is outside the normal agent capability boundary.")
+        deny(
+            "Remote source publication is Owner-controlled for AzurSysTech on GitHub Free; "
+            "stop before git push and use the canonical Owner publication handoff."
+        )
 
     for pattern, label in CONSEQUENTIAL:
         if pattern.search(command):
