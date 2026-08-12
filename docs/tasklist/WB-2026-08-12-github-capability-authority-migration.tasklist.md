@@ -1,6 +1,6 @@
 # Tasklist — WB-2026-08-12 GitHub Capability Authority Migration
 
-Status: EXTERNAL_BOUNDARY_BLOCKED
+Status: IMPLEMENTING
 Baseline H0: `441b134d71f781d2d0fcc48d3a8da86875835a9c`
 Implementation branch: `agent/github-capability-authority-migration`
 
@@ -26,12 +26,12 @@ Implementation branch: `agent/github-capability-authority-migration`
 - [x] Reconcile AzurSysTech `AGENTS.md` so legacy commit/push Hard Stop text does not contradict schema v3.
 - [x] Remove project-adaptation drift inherited from framework-oriented wording.
 
-## Phase 2 — External capability boundary
+## Phase 2 — Consequential capability boundary
 
 - [x] Keep direct default-branch, force, remote-delete, broad/mirror/prune, destructive, live infra/data, credential, irreversible publish, and client mutations outside normal local agent authority.
-- [x] Record that project-local hooks are defense in depth, not the primary security boundary.
+- [x] Record that project-local hooks are defense in depth, not the primary production security boundary.
 - [x] Verify project changes do not introduce production/VPS/DB/secrets into normal agent context.
-- [!] External boundary remains incomplete while private `main` is unprotected and the agent runtime may be able to use the Owner's same-user GitHub credential.
+- [x] Record that GitHub Free/private does not provide technical protected-main enforcement for this repository.
 
 ## Phase 3 — Deployment workflow
 
@@ -41,24 +41,27 @@ Implementation branch: `agent/github-capability-authority-migration`
 - [x] Verify no source push/merge path implicitly deploys production.
 - [x] Harden Docker Publish admin default to `publish_admin=false`.
 
-## Phase 4 — GitHub credential / repository mode
+## Phase 4 — Selected repository publication mode
 
-- [x] Confirm private repository cannot enable rulesets on current Free plan.
-- [x] Define preferred protected-main mode.
-- [x] Define Free fallback correctly: no agent-accessible repository-write credential, including Owner SSH/PAT/credential-helper access.
-- [ ] Satisfy one external security boundary:
-  - [ ] **Preferred:** enable protected `main` on GitHub and then use a least-privilege agent credential with Actions READ only; or
-  - [ ] **Fallback:** run the agent in a technically isolated context that cannot access the Owner's repository-write credentials.
-- [ ] Negative-test direct protected-main update / unavailable repository write from the normal agent channel.
-- [ ] Negative-test deployment workflow dispatch/rerun/cancel from the normal agent channel.
+- [x] Owner selected **GitHub Free + private repository + Owner-controlled push**.
+- [x] Owner rejected GitHub Pro as unnecessary for current work volume.
+- [x] Owner rejected temporary `private -> public -> private` visibility switching.
+- [x] Record residual limitation honestly: private `main` remains technically unprotected on GitHub Free.
+- [x] Define operational rule: normal agent development stops before `git push`; Owner controls feature-branch publication and merge.
+- [ ] Add canonical durable decision/process record under `docs/engineering-memory/`.
+- [ ] Add canonical project workflow for Owner-controlled GitHub publication.
+- [ ] Integrate that workflow into the project Git orchestration skill for `.agent`, `.claude`, and `.opencode` surfaces.
+- [ ] Verify the documented handoff contains branch, exact HEAD SHA, scope summary, deterministic checks, intended remote ref, and explicit no-production statement.
+- [ ] Verify the process never claims protected-branch enforcement or credential isolation that is not present.
 
 ## Assurance
 
-- [x] Core deterministic Control Plane Contracts fixtures pass on implementation head before final evidence edits.
-- [x] Main application CI (web/admin/showcase quality) passes on implementation head before final evidence edits.
-- [ ] Critic final verdict: blocked pending external capability boundary.
+- [x] Core deterministic Control Plane Contracts fixtures pass on implementation head before the Owner-mode documentation update.
+- [x] Main application CI (web/admin/showcase quality) passes on implementation head before the Owner-mode documentation update.
+- [ ] Re-run deterministic checks after workflow/skill/process additions.
+- [ ] Critic final verdict.
 - [ ] Reviewer final verdict.
-- [ ] Verifier final verdict with honest hosting/credential classification.
+- [ ] Verifier final verdict with honest GitHub Free/process-boundary classification.
 - [ ] Closeout report records canonical local checkout unchanged and production untouched.
 
 ## Final gate
@@ -66,11 +69,8 @@ Implementation branch: `agent/github-capability-authority-migration`
 - [ ] `AZURSYSTECH GITHUB CAPABILITY AUTHORITY MIGRATION VERIFIED`.
 - [ ] Resume `WB-2026-08-12-showcase-production-multizone` under schema v3.
 
-## Current blocker
+## Accepted residual risk
 
-The code/control-plane migration is substantially complete and CI-green, but the
-security goal is not yet closed. Because `azursystech-site` is private and `main`
-is currently unprotected, a same-user agent that can reuse the Owner's GitHub SSH
-key, PAT, `gh` login, or credential helper would still have repository write
-capability. Project-local hooks cannot be used as the primary boundary for this
-case.
+The Owner accepts that a private repository on GitHub Free does not provide the same technical `main` protection as the public framework ruleset or a paid private-repository protection mode. For the current low-volume project, publication and merge are intentionally retained as manual Owner-controlled steps.
+
+This residual risk must remain explicit in assurance evidence. Project-local hooks and the Owner-controlled-push workflow are operational guardrails; they must not be described as equivalent to GitHub protected-branch enforcement.
