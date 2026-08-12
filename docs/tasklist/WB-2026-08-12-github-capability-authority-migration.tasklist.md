@@ -48,11 +48,11 @@ Implementation branch: `agent/github-capability-authority-migration`
 - [x] Owner rejected temporary `private -> public -> private` visibility switching.
 - [x] Record residual limitation honestly: private `main` remains technically unprotected on GitHub Free.
 - [x] Define operational rule: normal agent development stops before `git push`; Owner controls feature-branch publication and merge.
-- [ ] Add canonical durable decision/process record under `docs/engineering-memory/`.
-- [ ] Add canonical project workflow for Owner-controlled GitHub publication.
-- [ ] Integrate that workflow into the project Git orchestration skill for `.agent`, `.claude`, and `.opencode` surfaces.
-- [ ] Verify the documented handoff contains branch, exact HEAD SHA, scope summary, deterministic checks, intended remote ref, and explicit no-production statement.
-- [ ] Verify the process never claims protected-branch enforcement or credential isolation that is not present.
+- [x] Add canonical durable decision/process record under `docs/engineering-memory/github-free-owner-controlled-flow.md`.
+- [x] Add canonical project workflow `.agent/workflows/owner-controlled-github-flow.md`.
+- [x] Integrate that workflow into the project Git orchestration skill for `.agent`, `.claude`, and `.opencode` surfaces.
+- [x] Verify the documented handoff contains branch, exact HEAD SHA, scope summary, deterministic checks, intended remote ref, and explicit no-production statement.
+- [x] Verify the process explicitly says it is not protected-branch enforcement and does not claim credential isolation that is not present.
 
 ## Assurance
 
