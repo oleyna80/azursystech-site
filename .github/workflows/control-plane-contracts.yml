@@ -1,0 +1,80 @@
+name: Control Plane Contracts
+
+on:
+  pull_request:
+    paths:
+      - ".agent/**"
+      - ".claude/**"
+      - ".codex/**"
+      - ".opencode/**"
+      - "AGENTS.md"
+      - "opencode.json"
+      - "scripts/validate-evaluation.py"
+      - "scripts/validate-installation-profile.py"
+      - ".github/workflows/control-plane-contracts.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  control-plane:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile migrated Python control plane
+        run: |
+          python -m py_compile \
+            .agent/hooks/hard_stop_policy.py \
+            .claude/hooks/assurance_gate.py \
+            .claude/hooks/work_block_gate.py \
+            .codex/hooks/pre_tool_use_policy.py \
+            .codex/hooks/subagent_context.py \
+            .codex/scripts/doctor.py \
+            .codex/scripts/lifecycle.py \
+            scripts/validate-evaluation.py \
+            scripts/validate-installation-profile.py
+
+      - name: Validate schema v3 blocked default
+        run: python scripts/validate-installation-profile.py .
+
+      - name: Assert GitHub capability authority defaults
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          for relative in (
+              ".agent/active-work-block.default.json",
+              ".agent/active-work-block.json",
+          ):
+              state = json.loads(Path(relative).read_text(encoding="utf-8"))
+              assert state["schema_version"] == 3, relative
+              assert state["authority_mode"] == "github_capability", relative
+              assert "authorization" not in state, relative
+              assert "hard_stop_approvals" not in state, relative
+              assert state["write_gate"] == {"status": "BLOCKED", "opened_at": None}, relative
+          PY
+
+      - name: Run Codex apply-patch fixtures
+        run: bash .codex/hooks/tests/apply-patch-fixtures.sh
+
+      - name: Run Codex Work Block fixtures
+        run: bash .codex/hooks/tests/gate-fixtures.sh
+
+      - name: Run Codex Hard Stop fixtures
+        run: bash .codex/hooks/tests/hard-stop-fixtures.sh
+
+      - name: Run Claude Work Block fixtures
+        run: bash .claude/hooks/tests/gate-fixtures.sh
+
+      - name: Run Claude Hard Stop fixtures
+        run: bash .claude/hooks/tests/hard-stop-fixtures.sh
