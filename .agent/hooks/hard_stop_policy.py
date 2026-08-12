@@ -47,6 +47,24 @@ CONSEQUENTIAL = [
     ),
     (
         re.compile(
+            r"\bgh\s+(?:workflow\s+run|run\s+(?:rerun|cancel|delete)|"
+            r"pr\s+merge|release\s+(?:create|delete|upload)|"
+            r"secret\s+(?:set|delete)|variable\s+(?:set|delete)|repo\s+edit)\b|"
+            r"\bgh\s+api\b[^\n]*(?:--method|-X)\s*(?:POST|PUT|PATCH|DELETE)\b",
+            re.I,
+        ),
+        "consequential GitHub mutation",
+    ),
+    (
+        re.compile(
+            r"\bcurl\b[^\n]*api\.github\.com[^\n]*"
+            r"(?:-X\s*(?:POST|PUT|PATCH|DELETE)|--request\s*(?:POST|PUT|PATCH|DELETE)|--data)",
+            re.I,
+        ),
+        "consequential GitHub API mutation",
+    ),
+    (
+        re.compile(
             r"\b(psql|mysql|mongosh|redis-cli)\b[^\n]*\b"
             r"(DELETE|UPDATE|INSERT|ALTER|DROP|TRUNCATE|CREATE)\b",
             re.I,
