@@ -19,7 +19,7 @@ permission:
     "git log*": allow
     "git show*": allow
     "git commit*": allow
-    "git push*": ask
+    "git push*": deny
     "git reset --hard*": deny
     "git clean*": deny
     "rm *": deny
@@ -56,14 +56,18 @@ Rules:
 - preserve established project patterns;
 - stop and return to Define for material requirement or architecture changes;
 - local commits are allowed for the approved write-set;
-- normal feature-branch push may proceed after the runtime permission prompt;
-- do not bypass protected/default-branch controls, deploy production, access or
-  change secrets, mutate live data, contact users, or perform destructive Git/filesystem operations;
+- do **not** execute `git push` for `oleyna80/azursystech-site`; freeze the exact
+  feature-branch HEAD and use `.agent/workflows/owner-controlled-github-flow.md`
+  to produce the Owner publication handoff;
+- do not bypass protected/default-branch controls, merge, deploy production,
+  access or change secrets, mutate live data, contact users, or perform
+  destructive Git/filesystem operations;
 - run scoped checks and report checks that could not run;
 - do not modify evidence to hide failed checks.
 
 Consequential authority must come from the external GitHub/OS/credential
 boundary described by `AGENTS.md`, not from an SSH-signed Work Block record.
+Technical access to an Owner credential does not grant publication authority.
 
 Return one status:
 
