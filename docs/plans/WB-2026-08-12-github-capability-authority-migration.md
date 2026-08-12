@@ -89,20 +89,31 @@ Production secrets remain in GitHub/VPS and are never copied into project files 
 
 `azursystech-site` is private. On the current GitHub Free plan, protected-branch/ruleset enforcement is unavailable for this repository.
 
-Until GitHub Pro protection is enabled, the project uses the **Free fallback**:
+### Preferred mode — GitHub protected `main`
 
-- no standalone agent credential with repository Contents write;
-- local edit/test/commit may be autonomous;
-- feature-branch publication is performed through an Owner-controlled GitHub channel;
-- deploy remains Owner-only.
-
-Preferred final mode after GitHub Pro is enabled:
+When GitHub protected-main enforcement is available:
 
 - protect `main`;
 - require PR and relevant CI checks;
 - deny force push/deletion;
 - agent fine-grained credential: Contents RW, Pull Requests RW, Actions READ only, no administration/secrets/environment permission;
 - verify negative tests: direct main update denied and workflow dispatch/rerun/cancel denied.
+
+### Free-plan fallback — valid only with credential isolation
+
+The Free fallback is valid **only if the agent runtime cannot use any Owner GitHub write credential**.
+
+It is not sufficient to say that no separate agent PAT was created. If the agent process runs as the same OS user and can use the Owner's SSH key, credential helper, `gh` authentication, PAT, or other repository-write credential, then an unprotected private `main` is still technically writable and the fallback security boundary is not satisfied.
+
+A valid Free fallback therefore requires all of the following:
+
+- no standalone agent credential with repository Contents write;
+- no access from the agent runtime to Owner SSH/PAT/credential-helper/`gh` write credentials;
+- local edit/test/commit may be autonomous;
+- feature-branch publication is performed through an Owner-controlled channel outside the agent capability boundary;
+- deploy remains Owner-only.
+
+If same-user credential isolation is not implemented, GitHub Pro protected-main enforcement is the preferred simple boundary for this project.
 
 A local hook must never be represented as equivalent to protected-branch enforcement.
 
@@ -136,8 +147,8 @@ This Work Block does not execute deployment, SSH, VPS, DB, Docker publication, c
 4. `apply_patch Move to:` outside the write-set is rejected.
 5. Unknown/complex mutating Bash fails closed when its targets cannot be scoped.
 6. Normal read/test/build paths remain usable.
-7. Direct default-branch mutation is externally unavailable: protected by GitHub Pro when enabled, otherwise no agent Contents-write credential exists.
-8. Agent credential cannot dispatch/rerun/cancel deploy workflows in preferred mode; Free fallback grants no such credential capability.
+7. Direct default-branch mutation is externally unavailable: either protected by GitHub hosting controls, or the agent runtime has no usable repository-write credential at all.
+8. The normal agent channel cannot dispatch/rerun/cancel deploy workflows.
 9. Production VPS/DB/secrets remain unavailable to the normal agent channel.
 10. Critic/Reviewer/Verifier remain required as configured for closeout.
 11. Existing production runtime is untouched.
@@ -147,7 +158,7 @@ This Work Block does not execute deployment, SSH, VPS, DB, Docker publication, c
 
 Required sequence: Critic → Reviewer → Verifier → closeout.
 
-No READY verdict may claim GitHub protected-branch enforcement until it exists. If GitHub Pro has not been enabled, verification must explicitly record Free fallback and the absence of an agent Contents-write credential.
+No READY verdict may claim GitHub protected-branch enforcement until it exists. A Free-fallback READY verdict also requires evidence that the agent runtime cannot use the Owner's GitHub write credential; same-user access to the Owner SSH/PAT/credential helper keeps this Work Block BLOCKED at the external-boundary gate.
 
 ## Explicit exclusions
 
