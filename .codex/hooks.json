@@ -1,5 +1,5 @@
 {
-  "description": "Project-local Codex guardrails for Hard Stops, the active Work Block write gate, write-set scope, and subagent context.",
+  "description": "Project-local Codex guardrails for external Hard Stops, the active Work Block scope, write-set discipline, and subagent context.",
   "hooks": {
     "PreToolUse": [
       {
@@ -9,13 +9,13 @@
             "type": "command",
             "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/hard_stop_policy.py\"",
             "timeout": 10,
-            "statusMessage": "Checking Owner-approved Hard Stops"
+            "statusMessage": "Checking external Hard Stop guardrail"
           },
           {
             "type": "command",
             "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/pre_tool_use_policy.py\"",
             "timeout": 10,
-            "statusMessage": "Checking Work Block gate and write scope"
+            "statusMessage": "Checking Work Block scope and write-set"
           }
         ]
       }
@@ -28,7 +28,7 @@
             "type": "command",
             "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/subagent_context.py\"",
             "timeout": 5,
-            "statusMessage": "Loading Work Block authority for subagent"
+            "statusMessage": "Loading Work Block scope for subagent"
           }
         ]
       }

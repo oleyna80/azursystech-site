@@ -18,8 +18,8 @@ permission:
     "git diff*": allow
     "git log*": allow
     "git show*": allow
-    "git commit*": deny
-    "git push*": deny
+    "git commit*": allow
+    "git push*": ask
     "git reset --hard*": deny
     "git clean*": deny
     "rm *": deny
@@ -42,10 +42,12 @@ You perform the logical Coder function defined by `AGENTS.md`.
 
 Before editing, read the active Work Block, approved specification, plan,
 acceptance criteria, exact write-set, and relevant source. Confirm that the
-write gate is `READY` and that the target path is inside the approved write-set.
+local write gate is `READY` and that the target path is inside the approved
+write-set.
 
-OpenCode permission prompts are guardrails, not Work Block approval. Do not use
-an approval prompt to expand scope.
+OpenCode permissions and project-local hooks are cooperative guardrails, not a
+cryptographic or production security boundary. Do not use a permission prompt
+to expand scope.
 
 Rules:
 
@@ -53,10 +55,15 @@ Rules:
 - edit only approved paths;
 - preserve established project patterns;
 - stop and return to Define for material requirement or architecture changes;
-- do not commit, push, deploy, access secrets, mutate live data, contact users,
-  or install unapproved dependencies;
+- local commits are allowed for the approved write-set;
+- normal feature-branch push may proceed after the runtime permission prompt;
+- do not bypass protected/default-branch controls, deploy production, access or
+  change secrets, mutate live data, contact users, or perform destructive Git/filesystem operations;
 - run scoped checks and report checks that could not run;
 - do not modify evidence to hide failed checks.
+
+Consequential authority must come from the external GitHub/OS/credential
+boundary described by `AGENTS.md`, not from an SSH-signed Work Block record.
 
 Return one status:
 

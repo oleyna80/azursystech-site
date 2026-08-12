@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Provider-neutral PreToolUse guard for consequential Bash operations.
+"""Provider-neutral guardrail for consequential Bash operations.
 
-The policy reads `.agent/active-work-block.json`. It is a project guardrail, not
-an operating-system security boundary.
+This hook is deliberately cooperative. It denies obvious dangerous commands in
+the normal agent channel, while the real security boundary is external GitHub,
+OS, workflow, and credential capability separation.
 """
 from __future__ import annotations
 
-import datetime as dt
 import json
 import os
 from pathlib import Path
@@ -17,27 +17,33 @@ import sys
 
 GATE_PATH = Path(".agent/active-work-block.json")
 
-SIMPLE_PATTERNS = [
-    (re.compile(r"\bgit\s+commit\b", re.I), "git_commit", "git commit"),
-    (re.compile(r"\bgit\s+push\b", re.I), "git_push", "git push"),
+RUNTIME_COMMANDS = {
+    "codex": "codex-cli",
+    "opencode": "opencode-cli",
+    "claude": "claude-code-cli",
+}
+
+CONSEQUENTIAL = [
     (
         re.compile(
             r"\b(git\s+reset\s+--hard|git\s+clean|terraform\s+destroy|"
             r"kubectl\s+delete|DROP\s+(DATABASE|TABLE))\b",
             re.I,
         ),
-        "destructive",
         "destructive operation",
     ),
     (
         re.compile(
-            r"\b(docker\s+push|kubectl\s+(apply|patch|replace|scale|rollout|set)|"
+            r"\b(kubectl\s+(apply|patch|replace|scale|rollout|set)|"
             r"terraform\s+apply|systemctl\s+(restart|stop|start)|"
-            r"service\s+\S+\s+(restart|stop|start)|scp|rsync[^\n]*:)\b",
+            r"service\s+\S+\s+(restart|stop|start)|scp|ssh|rsync[^\n]*:)\b",
             re.I,
         ),
-        "live_infra",
         "live infrastructure operation",
+    ),
+    (
+        re.compile(r"\bdocker\s+push\b", re.I),
+        "external image publish",
     ),
     (
         re.compile(
@@ -45,17 +51,17 @@ SIMPLE_PATTERNS = [
             r"(DELETE|UPDATE|INSERT|ALTER|DROP|TRUNCATE|CREATE)\b",
             re.I,
         ),
-        "live_data",
-        "direct data mutation",
+        "direct live-data mutation",
     ),
     (
         re.compile(
-            r"(^|[\s/])(\.env([.][\w.-]+)?|credentials|secrets)([\s/]|$)|"
+            r"(^|[\s/])"
+            r"(\.env(?:\.(?!example(?:[\s/]|$))[\w.-]+)?|credentials|secrets)"
+            r"([\s/]|$)|"
             r"\b(rotate|revoke)\b[^\n]*(token|secret|key|credential)",
             re.I,
         ),
-        "credentials",
-        "credential or secret access/mutation",
+        "credential or secret operation",
     ),
     (
         re.compile(
@@ -64,16 +70,9 @@ SIMPLE_PATTERNS = [
             r"(-X\s*(POST|PUT|PATCH)|--data)",
             re.I,
         ),
-        "client_communications",
         "client-facing communication",
     ),
 ]
-
-RUNTIME_COMMANDS = {
-    "codex": "codex-cli",
-    "opencode": "opencode-cli",
-    "claude": "claude-code-cli",
-}
 
 
 def deny(reason: str) -> None:
@@ -123,69 +122,12 @@ def load_gate(root: Path) -> dict:
 def git(root: Path, *args: str) -> str:
     try:
         result = subprocess.run(
-            ["git", *args],
-            cwd=root,
-            check=True,
-            capture_output=True,
-            text=True,
-            timeout=3,
+            ["git", *args], cwd=root, check=True, capture_output=True,
+            text=True, timeout=3
         )
     except (OSError, subprocess.SubprocessError) as exc:
         deny(f"Cannot inspect git state for Hard Stop policy: {exc}")
     return result.stdout.strip()
-
-
-def approval_window_ready(gate: dict) -> None:
-    if gate.get("schema_version") != 2:
-        deny("Hard Stop approval requires active-work-block schema_version=2.")
-    if not str(gate.get("work_block_id") or "").strip():
-        deny("Hard Stop approval requires a non-empty work_block_id.")
-
-    write_gate = gate.get("write_gate")
-    if not isinstance(write_gate, dict) or write_gate.get("status") != "READY":
-        deny("Hard Stop approval requires write_gate.status=READY.")
-
-    raw_expiry = write_gate.get("expires_at")
-    if not isinstance(raw_expiry, str) or not raw_expiry.strip():
-        deny("Hard Stop approval requires a timezone-aware write_gate.expires_at.")
-    try:
-        expiry = dt.datetime.fromisoformat(raw_expiry.strip().replace("Z", "+00:00"))
-    except ValueError as exc:
-        deny(f"Invalid write_gate.expires_at for Hard Stop approval: {exc}")
-    if expiry.tzinfo is None:
-        deny("Hard Stop approval expiry must include a timezone.")
-    if dt.datetime.now(dt.timezone.utc) >= expiry.astimezone(dt.timezone.utc):
-        deny(f"Hard Stop approval window expired at {expiry.isoformat()}.")
-
-
-def require_fresh_base(gate: dict, root: Path) -> None:
-    base = str(gate.get("base_commit") or "").strip()
-    if not re.fullmatch(r"[0-9a-fA-F]{7,40}", base):
-        deny("Approval requires a valid base_commit SHA.")
-    head = git(root, "rev-parse", "HEAD")
-    if not head.startswith(base) and not base.startswith(head):
-        deny(
-            f"Stale approval: HEAD {head[:12]} != base_commit {base[:12]}. "
-            "Renew the Work Block gate before the operation."
-        )
-
-
-def approved(gate: dict, key: str) -> bool:
-    approvals = gate.get("hard_stop_approvals")
-    return isinstance(approvals, dict) and approvals.get(key) is True
-
-
-def integration_state(gate: dict, integration_id: str) -> tuple[bool, bool]:
-    integrations = gate.get("integrations")
-    if not isinstance(integrations, dict):
-        return False, False
-    allowed = integrations.get("approved")
-    records = integrations.get("admission_records")
-    approved_id = isinstance(allowed, list) and integration_id in allowed
-    has_record = isinstance(records, list) and any(
-        isinstance(value, str) and value.strip() for value in records
-    )
-    return approved_id, has_record
 
 
 def current_branch(root: Path) -> str:
@@ -193,12 +135,9 @@ def current_branch(root: Path) -> str:
 
 
 def recursive_rm(command: str) -> bool:
-    """Detect recursive rm flags, including common sudo/command/env prefixes."""
     prefix = r"(?:(?:sudo|command|env)\s+)?"
     for match in re.finditer(
-        rf"(?:^|[;&|\n]\s*){prefix}rm\s+([^;&|\n]+)",
-        command,
-        re.I,
+        rf"(?:^|[;&|\n]\s*){prefix}rm\s+([^;&|\n]+)", command, re.I
     ):
         try:
             tokens = shlex.split(match.group(1), posix=True)
@@ -214,31 +153,94 @@ def recursive_rm(command: str) -> bool:
     return False
 
 
-def require_approval(gate: dict, key: str, label: str, root: Path) -> None:
-    approval_window_ready(gate)
-    if key in {"git_commit", "git_push"}:
-        require_fresh_base(gate, root)
-    if not approved(gate, key):
-        deny(
-            f"{label} requires hard_stop_approvals.{key}=true and "
-            "recorded Owner approval."
-        )
+def force_push(command: str) -> bool:
+    return bool(
+        re.search(r"\bgit\s+push\b[^\n]*(?:\s-f(?:\s|$)|--force(?:-with-lease)?\b|\s\+[^\s]+)", command, re.I)
+    )
 
 
-def require_integration(gate: dict, integration_id: str, root: Path) -> None:
-    approval_window_ready(gate)
-    require_fresh_base(gate, root)
-    approved_id, has_record = integration_state(gate, integration_id)
-    if not approved_id:
-        deny(
-            "External runtime invocation requires integrations.approved to "
-            f"contain {integration_id!r}."
+def push_segments(command: str) -> list[str]:
+    return [
+        match.group(1).strip()
+        for match in re.finditer(
+            r"(?:^|[;&|\n]\s*)git\s+push\b([^;&|\n]*)", command, re.I
         )
-    if not has_record:
-        deny(
-            "External runtime invocation requires at least one concrete "
-            "integrations.admission_records evidence path."
-        )
+    ]
+
+
+def parse_push_segment(segment: str) -> tuple[list[str], list[str]]:
+    try:
+        tokens = shlex.split(segment, posix=True)
+    except ValueError:
+        return [], []
+    positional = [token for token in tokens if not token.startswith("-")]
+    return tokens, positional
+
+
+def destructive_or_broad_push(command: str) -> bool:
+    broad_flags = {"--delete", "--mirror", "--all", "--prune"}
+    for segment in push_segments(command):
+        tokens, positional = parse_push_segment(segment)
+        if not tokens and segment:
+            return True
+        if any(
+            token in broad_flags
+            or any(token.startswith(f"{flag}=") for flag in broad_flags)
+            for token in tokens
+        ):
+            return True
+        if len(positional) > 1 and any(refspec.startswith(":") for refspec in positional[1:]):
+            return True
+    return False
+
+
+def tag_publish(command: str) -> bool:
+    for segment in push_segments(command):
+        tokens, positional = parse_push_segment(segment)
+        if not tokens and segment:
+            return True
+        if any(token in {"--tags", "--follow-tags"} for token in tokens):
+            return True
+        if len(positional) > 1:
+            refspecs = positional[1:]
+            if refspecs and refspecs[0] == "tag":
+                return True
+            if any("refs/tags/" in refspec.lstrip("+") for refspec in refspecs):
+                return True
+    return False
+
+
+def canonical_branch_ref(value: str) -> str:
+    ref = value.strip()
+    if ref.startswith("refs/heads/"):
+        ref = ref[len("refs/heads/") :]
+    return ref
+
+
+def refspec_targets_default(refspec: str, current: str) -> bool:
+    value = refspec.lstrip("+")
+    if ":" in value:
+        _source, destination = value.split(":", 1)
+        return canonical_branch_ref(destination) in {"main", "master"}
+    if value.upper() == "HEAD":
+        return current in {"main", "master"}
+    return canonical_branch_ref(value) in {"main", "master"}
+
+
+def pushes_default_branch(command: str, root: Path) -> bool:
+    branch = current_branch(root)
+    for segment in push_segments(command):
+        tokens, positional = parse_push_segment(segment)
+        if not tokens and segment:
+            return branch in {"main", "master"}
+        if len(positional) <= 1:
+            if branch in {"main", "master"}:
+                return True
+            continue
+        refspecs = positional[1:]
+        if any(refspec_targets_default(refspec, branch) for refspec in refspecs):
+            return True
+    return False
 
 
 def runtime_invocations(command: str) -> set[str]:
@@ -254,60 +256,36 @@ def runtime_invocations(command: str) -> set[str]:
     return found
 
 
-def push_segments(command: str) -> list[str]:
-    return [
-        match.group(1).strip()
-        for match in re.finditer(
-            r"(?:^|[;&|\n]\s*)git\s+push\b([^;&|\n]*)",
-            command,
-            re.I,
-        )
-    ]
-
-
-def pushes_default_branch(command: str, root: Path) -> bool:
-    branch = current_branch(root)
-    for segment in push_segments(command):
-        if re.search(
-            r"(?:^|\s)[+:]?(?:HEAD:)?(?:refs/heads/)?(?:main|master)(?:\s|$)",
-            segment,
-            re.I,
-        ):
-            return True
-        if branch in {"main", "master"} and re.search(r"(?:^|\s)HEAD(?:\s|$)", segment):
-            return True
-
-        try:
-            tokens = shlex.split(segment, posix=True)
-        except ValueError:
-            return branch in {"main", "master"}
-
-        positional = [token for token in tokens if not token.startswith("-")]
-        if branch in {"main", "master"} and len(positional) <= 1:
-            return True
-    return False
+def require_integration(gate: dict, integration_id: str) -> None:
+    integrations = gate.get("integrations")
+    if not isinstance(integrations, dict):
+        deny(f"External runtime {integration_id!r} is not admitted.")
+    allowed = integrations.get("approved")
+    records = integrations.get("admission_records")
+    if not isinstance(allowed, list) or integration_id not in allowed:
+        deny(f"External runtime invocation requires integrations.approved to contain {integration_id!r}.")
+    if not isinstance(records, list) or not any(isinstance(v, str) and v.strip() for v in records):
+        deny("External runtime invocation requires a concrete admission evidence path.")
 
 
 def check_command(command: str, gate: dict, root: Path) -> None:
     for integration_id in runtime_invocations(command):
-        require_integration(gate, integration_id, root)
+        require_integration(gate, integration_id)
 
     if recursive_rm(command):
-        require_approval(gate, "destructive", "destructive recursive rm", root)
+        deny("Destructive recursive rm is outside the normal agent capability boundary.")
+    if force_push(command):
+        deny("Force push is outside the normal agent capability boundary.")
+    if destructive_or_broad_push(command):
+        deny("Broad or destructive remote push is outside the normal agent capability boundary.")
+    if tag_publish(command):
+        deny("External tag publication is outside the normal agent capability boundary.")
+    if re.search(r"\bgit\s+push\b", command, re.I) and pushes_default_branch(command, root):
+        deny("Direct protected/default-branch push is outside the normal agent capability boundary; use a pull request.")
 
-    found: set[str] = set()
-    for pattern, key, label in SIMPLE_PATTERNS:
+    for pattern, label in CONSEQUENTIAL:
         if pattern.search(command):
-            found.add(key)
-            require_approval(gate, key, label, root)
-
-    if "git_push" in found and pushes_default_branch(command, root):
-        require_approval(
-            gate,
-            "default_branch_push",
-            "default-branch push",
-            root,
-        )
+            deny(f"{label} is outside the normal agent capability boundary; use an externally Owner-controlled channel.")
 
 
 def main() -> None:

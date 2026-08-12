@@ -31,8 +31,8 @@
       "git log*": "allow",
       "git show*": "allow",
       "git branch --show-current": "allow",
-      "git commit*": "deny",
-      "git push*": "deny",
+      "git commit*": "allow",
+      "git push*": "ask",
       "git reset --hard*": "deny",
       "git clean*": "deny",
       "rm *": "deny"

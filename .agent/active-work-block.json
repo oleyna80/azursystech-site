@@ -1,5 +1,6 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
+  "authority_mode": "github_capability",
   "work_block_id": "",
   "governance_profile": "Controlled",
   "specification": {
@@ -7,14 +8,9 @@
     "revision": ""
   },
   "base_commit": "",
-  "authorization": {
-    "path": "",
-    "blob_id": ""
-  },
   "write_gate": {
     "status": "BLOCKED",
-    "opened_at": null,
-    "expires_at": null
+    "opened_at": null
   },
   "critic": {
     "required": true,
@@ -71,6 +67,7 @@
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
     ".agent/verification-gate.md",
+    ".codex/write-gate.md",
     "docs/plans/**",
     "docs/specs/**",
     "docs/tasklist/**",
@@ -78,14 +75,13 @@
     "docs/architecture/drafts/**",
     "memory_bank/**"
   ],
-  "hard_stop_approvals": {
-    "git_commit": false,
-    "git_push": false,
-    "default_branch_push": false,
-    "destructive": false,
-    "live_infra": false,
-    "live_data": false,
-    "credentials": false,
-    "client_communications": false
-  }
+  "external_hard_stops": [
+    "protected_default_branch_mutation",
+    "destructive",
+    "live_infra",
+    "live_data",
+    "credentials",
+    "client_communications",
+    "irreversible_publish"
+  ]
 }
