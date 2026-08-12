@@ -9,6 +9,8 @@ import sys
 from typing import Any
 
 SCHEMA_VERSION = 1
+ACTIVE_WORK_BLOCK_SCHEMA_VERSION = 3
+ACTIVE_AUTHORITY_MODE = "github_capability"
 RESULT_STATES = {"pass", "fail", "blocked", "not_run", "not_applicable"}
 EVALUATION_VERDICTS = {"READY", "BLOCKED", "UNVERIFIED"}
 ASSURANCE_STATUSES = {"PENDING", "READY", "SKIPPED", "DEGRADED", "BLOCKED"}
@@ -563,8 +565,14 @@ def repo_relative_file(
 def validate_closeout(root: Path) -> dict[str, Any]:
     gate_path = root / ".agent/active-work-block.json"
     gate = load_json_object(gate_path, str(gate_path))
-    if gate.get("schema_version") != SCHEMA_VERSION:
-        raise EvaluationError("unsupported active Work Block schema_version")
+    if gate.get("schema_version") != ACTIVE_WORK_BLOCK_SCHEMA_VERSION:
+        raise EvaluationError(
+            f"active Work Block requires schema_version={ACTIVE_WORK_BLOCK_SCHEMA_VERSION}"
+        )
+    if gate.get("authority_mode") != ACTIVE_AUTHORITY_MODE:
+        raise EvaluationError(
+            f"active Work Block requires authority_mode={ACTIVE_AUTHORITY_MODE}"
+        )
     work_block_id = nonempty_string(gate.get("work_block_id"), "work_block_id")
     assurance = gate.get("assurance")
     if not isinstance(assurance, dict):
