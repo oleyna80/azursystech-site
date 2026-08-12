@@ -179,7 +179,7 @@ def test_hard_stops() -> None:
     try:
         write_gate(cwd, ready_gate(base, cwd))
         assert_allow(hook(HARD_STOP, cwd, "Bash", {"command": "git commit -m fixture"}), "normal local commit")
-        assert_allow(hook(HARD_STOP, cwd, "Bash", {"command": "git push origin feature/capability-test"}), "normal feature push")
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push origin feature/capability-test"}), "Owner-controlled feature publication")
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push origin HEAD:main"}), "default branch push")
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push --force origin feature/capability-test"}), "force push")
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push origin --delete old-branch"}), "remote branch deletion")
@@ -320,7 +320,7 @@ def test_opencode_posture() -> None:
     config = json.loads((ROOT / "opencode.json").read_text(encoding="utf-8"))
     bash = config["permission"]["bash"]
     assert bash["git commit*"] == "allow"
-    assert bash["git push*"] == "ask"
+    assert bash["git push*"] == "deny"
     assert bash["git reset --hard*"] == "deny"
     assert bash["git clean*"] == "deny"
 
