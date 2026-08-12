@@ -54,12 +54,24 @@ Implementation branch: `agent/github-capability-authority-migration`
 - [x] Verify the documented handoff contains branch, exact HEAD SHA, scope summary, deterministic checks, intended remote ref, and explicit no-production statement.
 - [x] Verify the process explicitly says it is not protected-branch enforcement and does not claim credential isolation that is not present.
 
+## Phase 5 — Critic correction pass
+
+- [x] Run Critic on head `0275227a5d56760d73c191dcf187771c3177de5d`.
+- [x] Record Critic verdict `RECONSIDER` and blocking findings C1-C3 in PR #12.
+- [x] Reconcile `AGENTS.md` so current private/Free mode always stops before remote source publication.
+- [x] Reconcile `.agent/hooks/hard_stop_policy.py` so every `git push` is denied in the normal agent channel.
+- [x] Reconcile `.opencode/agents/coder.md` and `opencode.json` so OpenCode cannot approve/prompt its way through `git push`.
+- [x] Reconcile `scripts/test-github-capability-control-plane.py` so executable contracts require feature-push denial and OpenCode `git push* == deny`.
+- [ ] Confirm final deterministic CI/Control Plane Contracts pass on the exact corrected head.
+- [ ] Re-run Critic on that exact green head.
+
 ## Assurance
 
-- [x] Core deterministic Control Plane Contracts fixtures pass on implementation head before the Owner-mode documentation update.
-- [x] Main application CI (web/admin/showcase quality) passes on implementation head before the Owner-mode documentation update.
-- [ ] Re-run deterministic checks after workflow/skill/process additions.
-- [ ] Critic final verdict.
+- [x] Core deterministic Control Plane Contracts fixtures passed before the Critic correction pass.
+- [x] Main application CI passed before the Critic correction pass.
+- [ ] Final deterministic Control Plane Contracts pass after correction.
+- [ ] Final main application CI pass after correction.
+- [ ] Critic final verdict `APPROVE`/`SUPPLEMENT` with no unresolved blocker.
 - [ ] Reviewer final verdict.
 - [ ] Verifier final verdict with honest GitHub Free/process-boundary classification.
 - [ ] Closeout report records canonical local checkout unchanged and production untouched.
