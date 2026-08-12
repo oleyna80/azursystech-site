@@ -32,7 +32,7 @@
       "git show*": "allow",
       "git branch --show-current": "allow",
       "git commit*": "allow",
-      "git push*": "ask",
+      "git push*": "deny",
       "git reset --hard*": "deny",
       "git clean*": "deny",
       "rm *": "deny"
