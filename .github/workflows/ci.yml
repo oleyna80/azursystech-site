@@ -81,15 +81,20 @@ jobs:
       - name: Build Showcase image
         run: docker build --file Dockerfile.showcase --tag azursystech-showcase-ci:${{ github.sha }} .
 
-      - name: Start Showcase container
-        run: docker run --detach --name azursystech-showcase-ci --publish 127.0.0.1:3000:3000 azursystech-showcase-ci:${{ github.sha }}
+      - name: Create isolated Showcase network
+        id: create_showcase_network
+        run: docker network create azursystech-showcase-ci-network
 
-      - name: Verify Showcase health endpoint
+      - name: Start Showcase container
+        id: start_showcase
+        run: docker run --detach --name azursystech-showcase-ci --network azursystech-showcase-ci-network azursystech-showcase-ci:${{ github.sha }}
+
+      - name: Wait for Showcase Docker health
         run: |
-          if timeout 30s bash -c '
-            for attempt in $(seq 1 30); do
-              response=$(curl --silent --connect-timeout 1 --max-time 1 http://127.0.0.1:3000/demo/health 2>/dev/null || true)
-              if printf "%s" "$response" | grep -F '"status":"ok"' >/dev/null; then
+          if timeout 45s bash -c '
+            for attempt in $(seq 1 45); do
+              health_status=$(docker inspect --format "{{if .State.Health}}{{.State.Health.Status}}{{else}}missing{{end}}" azursystech-showcase-ci 2>/dev/null || true)
+              if [ "$health_status" = "healthy" ]; then
                 exit 0
               fi
               sleep 1
@@ -98,12 +103,26 @@ jobs:
           '; then
             exit 0
           fi
+          exit 1
 
+      - name: Probe Showcase health from isolated network
+        run: |
+          if timeout 20s docker run --rm --network azursystech-showcase-ci-network curlimages/curl:8.10.1 --silent --show-error --fail --connect-timeout 3 --max-time 5 http://azursystech-showcase-ci:3000/demo/health | grep -F '"status":"ok"' >/dev/null; then
+            exit 0
+          fi
+          exit 1
+
+      - name: Print Showcase runtime diagnostics
+        if: ${{ failure() }}
+        run: |
           docker ps -a || true
           docker inspect azursystech-showcase-ci || true
           docker logs azursystech-showcase-ci || true
-          exit 1
 
       - name: Remove Showcase container
-        if: ${{ always() }}
+        if: ${{ always() && steps.start_showcase.outcome == 'success' }}
         run: docker rm --force azursystech-showcase-ci || true
+
+      - name: Remove isolated Showcase network
+        if: ${{ always() && steps.create_showcase_network.outcome == 'success' }}
+        run: docker network rm azursystech-showcase-ci-network || true

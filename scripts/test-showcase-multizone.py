@@ -4,6 +4,7 @@
 from pathlib import Path
 import re
 import sys
+from textwrap import dedent
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,6 +18,15 @@ def read(path: str) -> str:
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise AssertionError(message)
+
+
+def require_ordered_subsequence(text: str, expected: tuple[str, ...], message: str) -> None:
+    cursor = 0
+    for segment in expected:
+        position = text.find(segment, cursor)
+        if position == -1:
+            raise AssertionError(f"{message}: missing or out-of-order {segment!r}")
+        cursor = position + len(segment)
 
 
 def nginx_upstream(host: str, uri: str) -> str:
@@ -64,10 +74,87 @@ def main() -> int:
         "showcase-docker-runtime:",
         "github.event_name == 'pull_request'",
         "docker build --file Dockerfile.showcase",
-        "docker run --detach --name azursystech-showcase-ci",
-        "http://127.0.0.1:3000/demo/health",
+        "id: create_showcase_network",
+        "docker network create azursystech-showcase-ci-network",
+        "id: start_showcase",
+        "docker run --detach --name azursystech-showcase-ci --network azursystech-showcase-ci-network",
+        "docker inspect --format \"{{if .State.Health}}{{.State.Health.Status}}{{else}}missing{{end}}\" azursystech-showcase-ci",
+        "docker run --rm --network azursystech-showcase-ci-network curlimages/curl:8.10.1",
+        "http://azursystech-showcase-ci:3000/demo/health",
+        "grep -F '\"status\":\"ok\"'",
+        "- name: Print Showcase runtime diagnostics",
+        "if: ${{ failure() }}",
+        "docker network rm azursystech-showcase-ci-network || true",
     ):
         require(expected in ci, f"PR CI Showcase Docker runtime check missing {expected}")
+    require("--publish" not in ci, "PR CI Showcase Docker runtime must not publish a host port")
+    retired_host_probe = "http://" + "127.0.0.1:3000/demo/health"
+    require(retired_host_probe not in ci, "PR CI Showcase Docker runtime retains the retired host health probe")
+    network_create_step = ci.index("      - name: Create isolated Showcase network")
+    showcase_start_step = ci.index("      - name: Start Showcase container", network_create_step)
+    health_wait_step = ci.index("      - name: Wait for Showcase Docker health", showcase_start_step)
+    network_create_block = ci[network_create_step:showcase_start_step]
+    showcase_start_block = ci[showcase_start_step:health_wait_step]
+    require("id: create_showcase_network" in network_create_block,
+            "PR CI Showcase network creation must expose its cleanup ownership outcome")
+    require("id: start_showcase" in showcase_start_block,
+            "PR CI Showcase startup must expose its cleanup ownership outcome")
+    host_publish_flag = re.compile(r"(?<!\S)(?:--publish(?:\s|=|$)|-p(?:\s|\S|$)|-P(?:\s|\S|$))")
+    require(not host_publish_flag.search(showcase_start_block),
+            "PR CI Showcase startup must not publish a host port")
+    network_create = ci.index("docker network create azursystech-showcase-ci-network")
+    showcase_start = ci.index("docker run --detach --name azursystech-showcase-ci --network azursystech-showcase-ci-network")
+    probe_step = ci.index("      - name: Probe Showcase health from isolated network", health_wait_step)
+    diagnostics_step = ci.index("- name: Print Showcase runtime diagnostics", probe_step)
+    health_wait_block = ci[health_wait_step:probe_step]
+    probe_block = ci[probe_step:diagnostics_step]
+    health_inspection = "docker inspect --format \"{{if .State.Health}}{{.State.Health.Status}}{{else}}missing{{end}}\" azursystech-showcase-ci"
+    normalized_health_script = dedent(health_wait_block.split("run: |\n", 1)[1]).strip()
+    expected_health_script = f'''if timeout 45s bash -c '
+  for attempt in $(seq 1 45); do
+    health_status=$({health_inspection} 2>/dev/null || true)
+    if [ "$health_status" = "healthy" ]; then
+      exit 0
+    fi
+    sleep 1
+  done
+  exit 1
+'; then
+  exit 0
+fi
+exit 1'''
+    require(
+        normalized_health_script == expected_health_script,
+        "PR CI Showcase health wait must retain the exact bounded retry and outer success/failure flow",
+    )
+    health_wait = ci.index(health_inspection)
+    probe_command = "docker run --rm --network azursystech-showcase-ci-network curlimages/curl:8.10.1 --silent --show-error --fail --connect-timeout 3 --max-time 5 http://azursystech-showcase-ci:3000/demo/health | grep -F '\"status\":\"ok\"'"
+    probe_invocation = f"if timeout 20s {probe_command} >/dev/null; then"
+    probe_script = probe_block.split("run: |\n", 1)[1].lstrip()
+    require(probe_script.startswith(probe_invocation),
+            "PR CI Showcase probe must start with the bounded named-network request")
+    require_ordered_subsequence(
+        probe_script,
+        (probe_invocation, "exit 0\n          fi\n          exit 1"),
+        "PR CI Showcase probe must retain its complete success-then-failure sequence",
+    )
+    network_probe = ci.index(probe_command)
+    diagnostics_block = ci[diagnostics_step:ci.index("      - name: Remove Showcase container", diagnostics_step)]
+    require("if: ${{ failure() }}" in diagnostics_block, "PR CI Showcase diagnostics must run after every job failure")
+    for command in ("docker ps -a || true", "docker inspect azursystech-showcase-ci || true", "docker logs azursystech-showcase-ci || true"):
+        require(command in diagnostics_block, f"PR CI Showcase failure diagnostics missing {command}")
+    container_cleanup_step = ci.index("      - name: Remove Showcase container", diagnostics_step)
+    network_cleanup_step = ci.index("      - name: Remove isolated Showcase network", container_cleanup_step)
+    container_cleanup_block = ci[container_cleanup_step:network_cleanup_step]
+    network_cleanup_block = ci[network_cleanup_step:]
+    require("if: ${{ always() && steps.start_showcase.outcome == 'success' }}" in container_cleanup_block,
+            "PR CI Showcase container cleanup must be always-run but limited to a successful start")
+    require("if: ${{ always() && steps.create_showcase_network.outcome == 'success' }}" in network_cleanup_block,
+            "PR CI Showcase network cleanup must be always-run but limited to a successful creation")
+    container_cleanup = ci.index("docker rm --force azursystech-showcase-ci || true")
+    network_cleanup = ci.index("docker network rm azursystech-showcase-ci-network || true")
+    require(network_create < showcase_start < health_wait < network_probe < diagnostics_step < container_cleanup < network_cleanup,
+            "PR CI Showcase network lifecycle or health probe ordering is unsafe")
 
     compose = read("docker-compose.vps.yml")
     showcase_start = compose.index("  showcase:")
