@@ -85,7 +85,24 @@ jobs:
         run: docker run --detach --name azursystech-showcase-ci --publish 127.0.0.1:3000:3000 azursystech-showcase-ci:${{ github.sha }}
 
       - name: Verify Showcase health endpoint
-        run: curl --fail --show-error --silent --retry 15 --retry-connrefused --retry-delay 1 http://127.0.0.1:3000/demo/health | grep -F '"status":"ok"'
+        run: |
+          if timeout 30s bash -c '
+            for attempt in $(seq 1 30); do
+              response=$(curl --silent --connect-timeout 1 --max-time 1 http://127.0.0.1:3000/demo/health 2>/dev/null || true)
+              if printf "%s" "$response" | grep -F '"status":"ok"' >/dev/null; then
+                exit 0
+              fi
+              sleep 1
+            done
+            exit 1
+          '; then
+            exit 0
+          fi
+
+          docker ps -a || true
+          docker inspect azursystech-showcase-ci || true
+          docker logs azursystech-showcase-ci || true
+          exit 1
 
       - name: Remove Showcase container
         if: ${{ always() }}
