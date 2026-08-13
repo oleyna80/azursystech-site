@@ -23,6 +23,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
+      - name: Checkout requested source ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+          fetch-depth: 0
+
       - name: Resolve build ref and immutable image tag
         id: meta
         shell: bash
@@ -31,26 +37,21 @@ jobs:
         run: |
           TARGET_REF="${TARGET_REF_INPUT}"
 
-          if printf '%s' "$TARGET_REF" | grep -Eq '^[0-9a-f]{40}$'; then
-            # Direct SHA input — no ls-remote needed. Validate after checkout.
-            echo "Treating input as a full commit SHA."
-            TARGET_SHA="${TARGET_REF}"
-          else
-            # Branch or tag — validate format, then resolve via ls-remote.
-            if ! printf '%s' "$TARGET_REF" | grep -Eq '^[A-Za-z0-9._/@+-]{1,200}$'; then
-              echo "Invalid ref format: $TARGET_REF" >&2
-              exit 1
-            fi
+          if ! printf '%s' "$TARGET_REF" | grep -Eq '^[0-9a-f]{40}$|^[A-Za-z0-9._/@+-]{1,200}$'; then
+            echo "Invalid ref format: $TARGET_REF" >&2
+            exit 1
+          fi
 
-            TARGET_SHA="$(git ls-remote "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" "$TARGET_REF" | awk 'NR==1 {print $1}')"
-            if [ -z "$TARGET_SHA" ]; then
-              echo "Unable to resolve ref: $TARGET_REF" >&2
-              exit 1
-            fi
-            if ! printf '%s' "$TARGET_SHA" | grep -Eq '^[0-9a-f]{40}$'; then
-              echo "Resolved ref is not a full commit SHA: $TARGET_SHA" >&2
-              exit 1
-            fi
+          # ^{commit} peels annotated tags to their commit, unlike ls-remote's
+          # tag-object result. The checked-out commit is the exact build source.
+          TARGET_SHA="$(git rev-parse "${TARGET_REF}^{commit}")"
+          if ! printf '%s' "$TARGET_SHA" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "Resolved ref is not a full commit SHA: $TARGET_SHA" >&2
+            exit 1
+          fi
+          if [ "$(git rev-parse HEAD)" != "$TARGET_SHA" ]; then
+            echo "Checked-out source does not match resolved commit" >&2
+            exit 1
           fi
 
           echo "ref=$TARGET_REF" >> "$GITHUB_OUTPUT"
@@ -68,11 +69,6 @@ jobs:
             exit 1
           fi
 
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.meta.outputs.sha }}
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -83,7 +79,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push web image
+      - name: Build and push app image
         id: build_web
         uses: docker/build-push-action@v6
         with:
@@ -96,6 +92,20 @@ jobs:
           cache-to: type=gha,mode=max,scope=web
           tags: |
             ghcr.io/${{ github.repository }}-app:${{ steps.meta.outputs.immutable_tag }}
+
+      - name: Build and push showcase image
+        id: build_showcase
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.showcase
+          push: true
+          provenance: true
+          sbom: true
+          cache-from: type=gha,scope=showcase
+          cache-to: type=gha,mode=max,scope=showcase
+          tags: |
+            ghcr.io/${{ github.repository }}-showcase:${{ steps.meta.outputs.immutable_tag }}
 
       - name: Build and push admin image
         id: build_admin
@@ -120,11 +130,13 @@ jobs:
           REF_NAME: ${{ steps.meta.outputs.ref }}
           TARGET_SHA: ${{ steps.meta.outputs.sha }}
           WEB_DIGEST: ${{ steps.build_web.outputs.digest }}
+          SHOWCASE_DIGEST: ${{ steps.build_showcase.outputs.digest }}
         run: |
           echo "Ref: ${REF_NAME}"
           echo "Resolved SHA: ${TARGET_SHA}"
           echo "Immutable tag: ${IMMUTABLE_TAG}"
           echo "Web digest: ${WEB_DIGEST}"
+          echo "Showcase digest: ${SHOWCASE_DIGEST}"
           echo "Admin published: ${ADMIN_PUBLISHED}"
           if [ "${ADMIN_PUBLISHED}" = "true" ]; then
             echo "Admin digest: ${ADMIN_DIGEST}"

@@ -1,0 +1,44 @@
+# Stage 1: install production build dependencies.
+FROM node:22-alpine AS deps
+
+WORKDIR /app/showcase
+
+COPY showcase/package*.json ./
+RUN npm ci
+
+# Stage 2: build the standalone Showcase service.
+FROM node:22-alpine AS build
+
+WORKDIR /app/showcase
+
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1
+
+COPY --from=deps /app/showcase/node_modules ./node_modules
+COPY showcase/ ./
+# Webpack is required for the standalone production bundle. Do not inherit a
+# development-only Turbopack default here.
+RUN npx next build --webpack
+
+# Stage 3: serve the standalone bundle without root privileges.
+FROM node:22-alpine AS runtime
+
+WORKDIR /app
+
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    HOSTNAME=0.0.0.0 \
+    HOST=0.0.0.0 \
+    PORT=3000
+
+COPY --from=build --chown=node:node /app/showcase/.next/standalone ./
+COPY --from=build --chown=node:node /app/showcase/.next/static ./.next/static
+COPY --from=build --chown=node:node /app/showcase/public ./public
+
+USER node
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/demo/health || exit 1
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]

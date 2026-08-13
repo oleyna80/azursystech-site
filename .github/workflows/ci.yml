@@ -55,7 +55,38 @@ jobs:
         run: npm audit --omit=dev --audit-level=high
 
       - name: Build
+        if: ${{ matrix.project != 'showcase' }}
         working-directory: ${{ matrix.project }}
-        env:
-          SHOWCASE_STATIC_EXPORT: ${{ matrix.project == 'showcase' && '1' || '0' }}
         run: npm run build
+
+      - name: Build Showcase with Webpack
+        if: ${{ matrix.project == 'showcase' }}
+        working-directory: showcase
+        run: npx next build --webpack
+
+      - name: Validate Showcase multizone contract
+        if: ${{ matrix.project == 'showcase' }}
+        run: python3 scripts/test-showcase-multizone.py
+
+  showcase-docker-runtime:
+    name: Showcase Docker runtime (PR authoritative)
+    if: ${{ github.event_name == 'pull_request' }}
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Showcase image
+        run: docker build --file Dockerfile.showcase --tag azursystech-showcase-ci:${{ github.sha }} .
+
+      - name: Start Showcase container
+        run: docker run --detach --name azursystech-showcase-ci --publish 127.0.0.1:3000:3000 azursystech-showcase-ci:${{ github.sha }}
+
+      - name: Verify Showcase health endpoint
+        run: curl --fail --show-error --silent --retry 15 --retry-connrefused --retry-delay 1 http://127.0.0.1:3000/demo/health | grep -F '"status":"ok"'
+
+      - name: Remove Showcase container
+        if: ${{ always() }}
+        run: docker rm --force azursystech-showcase-ci || true
