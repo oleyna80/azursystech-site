@@ -55,7 +55,73 @@ jobs:
         run: npm audit --omit=dev --audit-level=high
 
       - name: Build
+        if: ${{ matrix.project != 'showcase' }}
         working-directory: ${{ matrix.project }}
-        env:
-          SHOWCASE_STATIC_EXPORT: ${{ matrix.project == 'showcase' && '1' || '0' }}
         run: npm run build
+
+      - name: Build Showcase with Webpack
+        if: ${{ matrix.project == 'showcase' }}
+        working-directory: showcase
+        run: npx next build --webpack
+
+      - name: Validate Showcase multizone contract
+        if: ${{ matrix.project == 'showcase' }}
+        run: python3 scripts/test-showcase-multizone.py
+
+  showcase-docker-runtime:
+    name: Showcase Docker runtime
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Showcase image
+        run: docker build --file Dockerfile.showcase --tag azursystech-showcase-ci:${{ github.sha }} .
+
+      - name: Create isolated Showcase network
+        id: create_showcase_network
+        run: docker network create azursystech-showcase-ci-network
+
+      - name: Start Showcase container
+        id: start_showcase
+        run: docker run --detach --name azursystech-showcase-ci --network azursystech-showcase-ci-network azursystech-showcase-ci:${{ github.sha }}
+
+      - name: Wait for Showcase Docker health
+        run: |
+          if timeout 45s bash -c '
+            for attempt in $(seq 1 45); do
+              health_status=$(docker inspect --format "{{if .State.Health}}{{.State.Health.Status}}{{else}}missing{{end}}" azursystech-showcase-ci 2>/dev/null || true)
+              if [ "$health_status" = "healthy" ]; then
+                exit 0
+              fi
+              sleep 1
+            done
+            exit 1
+          '; then
+            exit 0
+          fi
+          exit 1
+
+      - name: Probe Showcase health from isolated network
+        run: |
+          if timeout 20s docker run --rm --network azursystech-showcase-ci-network curlimages/curl:8.10.1 --silent --show-error --fail --connect-timeout 3 --max-time 5 http://azursystech-showcase-ci:3000/demo/health | grep -F '"status":"ok"' >/dev/null; then
+            exit 0
+          fi
+          exit 1
+
+      - name: Print Showcase runtime diagnostics
+        if: ${{ failure() }}
+        run: |
+          docker ps -a || true
+          docker inspect azursystech-showcase-ci || true
+          docker logs azursystech-showcase-ci || true
+
+      - name: Remove Showcase container
+        if: ${{ always() && steps.start_showcase.outcome == 'success' }}
+        run: docker rm --force azursystech-showcase-ci || true
+
+      - name: Remove isolated Showcase network
+        if: ${{ always() && steps.create_showcase_network.outcome == 'success' }}
+        run: docker network rm azursystech-showcase-ci-network || true

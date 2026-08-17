@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # VPS deployment script for AzurSysTech registry-pull runtime.
 # Usage:
-#   ./deploy.sh ghcr.io/oleyna80/azursystech-app:sha-<commit>-<timestamp>
+#   ./deploy.sh ghcr.io/oleyna80/azursystech-site-app:sha-<40-commit>
 #   APP_IMAGE=ghcr.io/oleyna80/azursystech-app:sha-... ./deploy.sh
 #   DEPLOY_ADMIN=1 ADMIN_IMAGE=ghcr.io/oleyna80/azursystech-admin:sha-... ./deploy.sh "$APP_IMAGE"
 
@@ -12,6 +12,7 @@ if [ -z "${APP_IMAGE}" ] && [ -n "${IMAGE_REPO:-}" ] && [ -n "${IMAGE_TAG:-}" ];
   APP_IMAGE="${IMAGE_REPO}:${IMAGE_TAG}"
 fi
 ADMIN_IMAGE="${ADMIN_IMAGE:-}"
+SHOWCASE_IMAGE="${SHOWCASE_IMAGE:-}"
 DEPLOY_ADMIN="${DEPLOY_ADMIN:-0}"
 SKIP_PULL="${SKIP_PULL:-0}"
 
@@ -24,18 +25,42 @@ DEPLOY_STATE_DIR="${DEPLOY_STATE_DIR:-.deploy}"
 if [ -z "${APP_IMAGE}" ] && [ -f "${ENV_FILE}" ]; then
   APP_IMAGE="$(grep -E '^APP_IMAGE=' "${ENV_FILE}" | head -1 | cut -d= -f2-)"
 fi
+if [ -z "${SHOWCASE_IMAGE}" ] && [ -f "${ENV_FILE}" ]; then
+  SHOWCASE_IMAGE="$(grep -E '^SHOWCASE_IMAGE=' "${ENV_FILE}" | head -1 | cut -d= -f2-)"
+fi
 
 if [ -z "${APP_IMAGE}" ]; then
   echo "APP_IMAGE is required (use an immutable registry image tag)" >&2
   exit 1
 fi
+has_showcase_service=0
+if [ -f "${COMPOSE_FILE}" ] && grep -Eq '^  showcase:' "${COMPOSE_FILE}"; then
+  has_showcase_service=1
+fi
+if [ "${has_showcase_service}" = "1" ] && [ -z "${SHOWCASE_IMAGE}" ]; then
+  echo "SHOWCASE_IMAGE is required (use the matching immutable registry image tag)" >&2
+  exit 1
+fi
 
-case "${APP_IMAGE}" in
-  *:latest|latest)
-    echo "latest is forbidden for deploy source; use an immutable tag" >&2
+require_exact_sha_image() {
+  image="$1"
+  label="$2"
+  if ! printf '%s' "${image}" | grep -Eq '^ghcr\.io/oleyna80/azursystech-site-(app|showcase|admin):sha-[0-9a-f]{40}$'; then
+    echo "${label} must be an immutable ghcr.io image with a sha-<40-hex> tag" >&2
     exit 1
-    ;;
-esac
+  fi
+}
+
+require_exact_sha_image "${APP_IMAGE}" "APP_IMAGE"
+if [ "${has_showcase_service}" = "1" ]; then
+  require_exact_sha_image "${SHOWCASE_IMAGE}" "SHOWCASE_IMAGE"
+  app_sha="${APP_IMAGE##*:sha-}"
+  showcase_sha="${SHOWCASE_IMAGE##*:sha-}"
+  if [ "${app_sha}" != "${showcase_sha}" ]; then
+    echo "APP_IMAGE and SHOWCASE_IMAGE must be built from the same exact source SHA" >&2
+    exit 1
+  fi
+fi
 
 if [ "${DEPLOY_ADMIN}" = "1" ]; then
   if [ -z "${ADMIN_IMAGE}" ]; then
@@ -43,17 +68,16 @@ if [ "${DEPLOY_ADMIN}" = "1" ]; then
     exit 1
   fi
 
-  case "${ADMIN_IMAGE}" in
-    *:latest|latest)
-      echo "latest is forbidden for admin deploy source; use an immutable tag" >&2
-      exit 1
-      ;;
-  esac
+  require_exact_sha_image "${ADMIN_IMAGE}" "ADMIN_IMAGE"
 fi
 
 if [ "${SKIP_PULL}" = "1" ]; then
   if ! docker image inspect "${APP_IMAGE}" >/dev/null 2>&1; then
     echo "ERROR: Image ${APP_IMAGE} not found in local Docker daemon for SKIP_PULL=1 deploy" >&2
+    exit 1
+  fi
+  if [ "${has_showcase_service}" = "1" ] && ! docker image inspect "${SHOWCASE_IMAGE}" >/dev/null 2>&1; then
+    echo "ERROR: Showcase image ${SHOWCASE_IMAGE} not found in local Docker daemon for SKIP_PULL=1 deploy" >&2
     exit 1
   fi
   if [ "${DEPLOY_ADMIN}" = "1" ]; then
@@ -89,9 +113,16 @@ mkdir -p "${DEPLOY_STATE_DIR}"
 wait_for_health() {
   label="$1"
   require_admin="${2:-0}"
+  require_showcase="${3:-1}"
 
   for attempt in $(seq 1 12); do
-    if docker exec azursystech-app wget -qO- http://127.0.0.1:3000/health >/dev/null 2>&1 \
+    app_healthy=0
+    docker exec azursystech-app wget -qO- http://127.0.0.1:3000/health >/dev/null 2>&1 && app_healthy=1
+    showcase_healthy=1
+    if [ "${require_showcase}" = "1" ]; then
+      docker exec azursystech-showcase wget -qO- http://127.0.0.1:3000/demo/health >/dev/null 2>&1 || showcase_healthy=0
+    fi
+    if [ "${app_healthy}" = "1" ] && [ "${showcase_healthy}" = "1" ] \
       && curl -fsS "${HEALTH_URL}" >/dev/null 2>&1; then
       if [ "${require_admin}" = "1" ]; then
         for admin_attempt in $(seq 1 12); do
@@ -125,21 +156,42 @@ previous_image="$(docker inspect -f '{{.Config.Image}}' azursystech-app 2>/dev/n
 if [ -n "${previous_image}" ]; then
   printf '%s\n' "${previous_image}" > "${DEPLOY_STATE_DIR}/previous-app-image"
 fi
+previous_admin_exists="false"
+previous_admin_running="false"
 previous_admin_image=""
-if [ "${DEPLOY_ADMIN}" = "1" ]; then
+if docker inspect azursystech-admin >/dev/null 2>&1; then
+  previous_admin_exists="true"
   previous_admin_image="$(docker inspect -f '{{.Config.Image}}' azursystech-admin 2>/dev/null || true)"
+  previous_admin_running="$(docker inspect -f '{{.State.Running}}' azursystech-admin)"
   if [ -n "${previous_admin_image}" ]; then
     printf '%s\n' "${previous_admin_image}" > "${DEPLOY_STATE_DIR}/previous-admin-image"
   fi
+  printf '%s\n' "${previous_admin_exists}" > "${DEPLOY_STATE_DIR}/previous-admin-exists"
+  printf '%s\n' "${previous_admin_running}" > "${DEPLOY_STATE_DIR}/previous-admin-running"
+fi
+previous_showcase_running="false"
+previous_showcase_exists="false"
+previous_showcase_image=""
+if docker inspect azursystech-showcase >/dev/null 2>&1; then
+  previous_showcase_exists="true"
+  previous_showcase_running="$(docker inspect -f '{{.State.Running}}' azursystech-showcase)"
+  previous_showcase_image="$(docker inspect -f '{{.Config.Image}}' azursystech-showcase)"
+  printf '%s\n' "${previous_showcase_running}" > "${DEPLOY_STATE_DIR}/previous-showcase-running"
+  printf '%s\n' "${previous_showcase_exists}" > "${DEPLOY_STATE_DIR}/previous-showcase-exists"
+  printf '%s\n' "${previous_showcase_image}" > "${DEPLOY_STATE_DIR}/previous-showcase-image"
 fi
 
 cp "${ENV_FILE}" "${ENV_FILE}.deploy-${timestamp}.bak"
 set_env_value "APP_IMAGE" "${APP_IMAGE}" "${ENV_FILE}"
+if [ "${has_showcase_service}" = "1" ]; then
+  set_env_value "SHOWCASE_IMAGE" "${SHOWCASE_IMAGE}" "${ENV_FILE}"
+fi
 if [ "${DEPLOY_ADMIN}" = "1" ]; then
   set_env_value "ADMIN_IMAGE" "${ADMIN_IMAGE}" "${ENV_FILE}"
 fi
 
 export APP_IMAGE
+if [ "${has_showcase_service}" = "1" ]; then export SHOWCASE_IMAGE; fi
 if [ "${DEPLOY_ADMIN}" = "1" ]; then
   export ADMIN_IMAGE
 fi
@@ -148,9 +200,13 @@ docker compose -f "${COMPOSE_FILE}" config >/dev/null
 
 if [ "${SKIP_PULL}" != "1" ]; then
   docker compose -f "${COMPOSE_FILE}" pull app web
+  if [ "${has_showcase_service}" = "1" ]; then docker compose -f "${COMPOSE_FILE}" pull showcase; fi
 fi
 docker compose -f "${COMPOSE_FILE}" up -d --no-build app
-docker compose -f "${COMPOSE_FILE}" up -d --no-build --force-recreate web
+if [ "${has_showcase_service}" = "1" ]; then docker compose -f "${COMPOSE_FILE}" up -d --no-build showcase; fi
+# app and Showcase are managed explicitly above. Do not traverse web's
+# depends_on here: rollback may intentionally leave Showcase absent or stopped.
+docker compose -f "${COMPOSE_FILE}" up -d --no-build --no-deps --force-recreate web
 
 if [ "${DEPLOY_ADMIN}" = "1" ]; then
   echo "Deploying AzurSysTech admin image: ${ADMIN_IMAGE}"
@@ -176,7 +232,19 @@ if [ "${ROLLBACK_ON_FAILURE}" = "1" ] && [ -n "${previous_image}" ]; then
   fi
 
   rollback_admin="0"
-  if [ "${DEPLOY_ADMIN}" = "1" ] && [ -n "${previous_admin_image}" ]; then
+  rollback_showcase="0"
+  if [ "${previous_showcase_exists}" = "true" ]; then
+    if [ -z "${previous_showcase_image}" ] || ! docker image inspect "${previous_showcase_image}" >/dev/null 2>&1; then
+      echo "ERROR: Previous showcase image is missing from local Docker daemon for rollback" >&2
+      exit 2
+    fi
+    rollback_showcase="1"
+  fi
+  if [ "${previous_admin_exists}" = "true" ]; then
+    if [ -z "${previous_admin_image}" ]; then
+      echo "ERROR: Previous admin image is missing for rollback" >&2
+      exit 2
+    fi
     if ! docker image inspect "${previous_admin_image}" >/dev/null 2>&1; then
       echo "ERROR: Previous admin image ${previous_admin_image} is missing from local Docker daemon for rollback" >&2
       exit 2
@@ -184,16 +252,23 @@ if [ "${ROLLBACK_ON_FAILURE}" = "1" ] && [ -n "${previous_image}" ]; then
     rollback_admin="1"
   fi
 
-  set_env_value "APP_IMAGE" "${previous_image}" "${ENV_FILE}"
+  # Restore the complete pre-deployment environment before recreating services.
+  cp "${ENV_FILE}.deploy-${timestamp}.bak" "${ENV_FILE}"
   export APP_IMAGE="${previous_image}"
+  if [ "${rollback_showcase}" = "1" ]; then
+    set_env_value "SHOWCASE_IMAGE" "${previous_showcase_image}" "${ENV_FILE}"
+    export SHOWCASE_IMAGE="${previous_showcase_image}"
+  fi
   if [ "${rollback_admin}" = "1" ]; then
-    set_env_value "ADMIN_IMAGE" "${previous_admin_image}" "${ENV_FILE}"
     export ADMIN_IMAGE="${previous_admin_image}"
   fi
 
   if [ "${SKIP_PULL}" != "1" ]; then
     if ! docker compose -f "${COMPOSE_FILE}" pull app; then
       echo "Rollback app image pull failed; attempting to use the local image cache." >&2
+    fi
+    if [ "${rollback_showcase}" = "1" ] && ! docker compose -f "${COMPOSE_FILE}" pull showcase; then
+      echo "Rollback showcase image pull failed; attempting to use the local image cache." >&2
     fi
     if [ "${rollback_admin}" = "1" ]; then
       if ! docker compose -f "${COMPOSE_FILE}" --profile admin pull admin; then
@@ -203,12 +278,35 @@ if [ "${ROLLBACK_ON_FAILURE}" = "1" ] && [ -n "${previous_image}" ]; then
   fi
 
   docker compose -f "${COMPOSE_FILE}" up -d --no-build app
-  docker compose -f "${COMPOSE_FILE}" up -d --no-build --force-recreate web
+  if [ "${rollback_showcase}" = "1" ]; then
+    docker compose -f "${COMPOSE_FILE}" up -d --no-build showcase
+  else
+    # First Showcase rollout: the restored runtime predates this service.
+    docker rm -f azursystech-showcase >/dev/null 2>&1 || true
+  fi
+  if [ "${previous_showcase_exists}" = "true" ] && [ "${previous_showcase_running}" = "false" ]; then
+    docker compose -f "${COMPOSE_FILE}" stop showcase
+  fi
+  # Keep an absent/stopped prior Showcase absent/stopped during web rollback.
+  docker compose -f "${COMPOSE_FILE}" up -d --no-build --no-deps --force-recreate web
   if [ "${rollback_admin}" = "1" ]; then
     docker compose -f "${COMPOSE_FILE}" --profile admin up -d --no-build admin
   fi
+  if [ "${previous_admin_exists}" = "false" ]; then
+    docker rm -f azursystech-admin >/dev/null 2>&1 || true
+  elif [ "${previous_admin_running}" = "false" ] && docker inspect azursystech-admin >/dev/null 2>&1; then
+    docker compose -f "${COMPOSE_FILE}" --profile admin stop admin
+  fi
 
-  if wait_for_health "Rollback" "${rollback_admin}"; then
+  require_admin_health="0"
+  if [ "${previous_admin_running}" = "true" ]; then
+    require_admin_health="1"
+  fi
+  require_showcase_health="0"
+  if [ "${previous_showcase_running}" = "true" ]; then
+    require_showcase_health="1"
+  fi
+  if wait_for_health "Rollback" "${require_admin_health}" "${require_showcase_health}"; then
     echo "Rollback healthcheck passed; original deploy still failed." >&2
   else
     echo "Rollback healthcheck failed." >&2

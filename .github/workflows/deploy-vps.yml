@@ -125,10 +125,22 @@ jobs:
                 fi
 
                 PREVIOUS_ADMIN_RUNNING="false"
+                PREVIOUS_ADMIN_EXISTS="false"
+                if [ -f "${BACKUP_FILES_DIR}/previous-admin-exists.txt" ]; then
+                  PREVIOUS_ADMIN_EXISTS="$(cat "${BACKUP_FILES_DIR}/previous-admin-exists.txt")"
+                fi
                 if [ -f "${BACKUP_FILES_DIR}/previous-admin-running.txt" ]; then
                   PREVIOUS_ADMIN_RUNNING="$(cat "${BACKUP_FILES_DIR}/previous-admin-running.txt")"
                 fi
 
+                case "${PREVIOUS_ADMIN_EXISTS}" in
+                  true|false) ;;
+                  *)
+                    echo "CRITICAL: invalid previous-admin-exists value: ${PREVIOUS_ADMIN_EXISTS}" >&2
+                    echo "Backup preserved at: ${BACKUP_FILES_DIR}" >&2
+                    exit 2
+                    ;;
+                esac
                 case "${PREVIOUS_ADMIN_RUNNING}" in
                   true|false) ;;
                   *)
@@ -139,7 +151,7 @@ jobs:
                 esac
 
                 PREV_ADMIN_IMAGE=""
-                if [ "${PREVIOUS_ADMIN_RUNNING}" = "true" ]; then
+                if [ "${PREVIOUS_ADMIN_EXISTS}" = "true" ]; then
                   if [ -s "${BACKUP_FILES_DIR}/previous-admin-image.txt" ]; then
                     PREV_ADMIN_IMAGE="$(cat "${BACKUP_FILES_DIR}/previous-admin-image.txt")"
                   fi
@@ -151,31 +163,85 @@ jobs:
                   fi
                 fi
 
+                PREVIOUS_SHOWCASE_RUNNING="false"
+                PREVIOUS_SHOWCASE_EXISTS="false"
+                if [ -f "${BACKUP_FILES_DIR}/previous-showcase-exists.txt" ]; then
+                  PREVIOUS_SHOWCASE_EXISTS="$(cat "${BACKUP_FILES_DIR}/previous-showcase-exists.txt")"
+                fi
+                if [ -f "${BACKUP_FILES_DIR}/previous-showcase-running.txt" ]; then
+                  PREVIOUS_SHOWCASE_RUNNING="$(cat "${BACKUP_FILES_DIR}/previous-showcase-running.txt")"
+                fi
+                case "${PREVIOUS_SHOWCASE_EXISTS}" in
+                  true|false) ;;
+                  *)
+                    echo "CRITICAL: invalid previous-showcase-exists value: ${PREVIOUS_SHOWCASE_EXISTS}" >&2
+                    exit 2
+                    ;;
+                esac
+                case "${PREVIOUS_SHOWCASE_RUNNING}" in
+                  true|false) ;;
+                  *)
+                    echo "CRITICAL: invalid previous-showcase-running value: ${PREVIOUS_SHOWCASE_RUNNING}" >&2
+                    exit 2
+                    ;;
+                esac
+                PREV_SHOWCASE_IMAGE=""
+                if [ "${PREVIOUS_SHOWCASE_EXISTS}" = "true" ]; then
+                  PREV_SHOWCASE_IMAGE="$(cat "${BACKUP_FILES_DIR}/previous-showcase-image.txt")"
+                  if [ -z "${PREV_SHOWCASE_IMAGE}" ] || ! docker image inspect "${PREV_SHOWCASE_IMAGE}" >/dev/null 2>&1; then
+                    echo "CRITICAL: previous showcase image is missing or invalid for rollback" >&2
+                    exit 2
+                  fi
+                fi
+
                 ROLLBACK_EXEC_RC=0
-                if [ "${PREVIOUS_ADMIN_RUNNING}" = "true" ]; then
+                if [ "${PREVIOUS_SHOWCASE_EXISTS}" = "true" ] && [ "${PREVIOUS_ADMIN_EXISTS}" = "true" ]; then
+                  SKIP_PULL=1 ROLLBACK_ON_FAILURE=0 DEPLOY_ADMIN=1 ADMIN_IMAGE="${PREV_ADMIN_IMAGE}" SHOWCASE_IMAGE="${PREV_SHOWCASE_IMAGE}" \
+                    "${BACKUP_FILES_DIR}/rollback-runner.sh" "${PREV_APP_IMAGE}" || ROLLBACK_EXEC_RC=1
+                elif [ "${PREVIOUS_SHOWCASE_EXISTS}" = "true" ]; then
+                  SKIP_PULL=1 ROLLBACK_ON_FAILURE=0 DEPLOY_ADMIN=0 SHOWCASE_IMAGE="${PREV_SHOWCASE_IMAGE}" \
+                    "${BACKUP_FILES_DIR}/rollback-runner.sh" "${PREV_APP_IMAGE}" || ROLLBACK_EXEC_RC=1
+                elif [ "${PREVIOUS_ADMIN_EXISTS}" = "true" ]; then
+                  # First Showcase rollout, but restore the independent admin state.
                   SKIP_PULL=1 ROLLBACK_ON_FAILURE=0 DEPLOY_ADMIN=1 ADMIN_IMAGE="${PREV_ADMIN_IMAGE}" \
                     "${BACKUP_FILES_DIR}/rollback-runner.sh" "${PREV_APP_IMAGE}" || ROLLBACK_EXEC_RC=1
                 else
+                  # First Showcase rollout: old compose files have no showcase service.
                   SKIP_PULL=1 ROLLBACK_ON_FAILURE=0 DEPLOY_ADMIN=0 \
                     "${BACKUP_FILES_DIR}/rollback-runner.sh" "${PREV_APP_IMAGE}" || ROLLBACK_EXEC_RC=1
+                  docker rm -f azursystech-showcase >/dev/null 2>&1 || true
 
-                  if [ "${INCLUDE_ADMIN_INPUT}" = "true" ]; then
-                    if ! docker compose -f "${FIXED_TARGET_DIR}/docker-compose.vps.yml" --profile admin stop admin; then
-                      echo "CRITICAL: failed to restore previous stopped admin state" >&2
-                      ROLLBACK_EXEC_RC=1
-                    fi
+                fi
 
-                    ADMIN_RUNNING="$(docker inspect --format '{{.State.Running}}' azursystech-admin 2>/dev/null || echo "false")"
-                    if [ "${ADMIN_RUNNING}" != "false" ]; then
-                      echo "CRITICAL: admin is still running after rollback" >&2
-                      ROLLBACK_EXEC_RC=1
-                    fi
+                if [ "${PREVIOUS_SHOWCASE_EXISTS}" = "true" ] && [ "${PREVIOUS_SHOWCASE_RUNNING}" = "false" ] \
+                  && docker inspect azursystech-showcase >/dev/null 2>&1; then
+                  if ! docker compose -f "${FIXED_TARGET_DIR}/docker-compose.vps.yml" stop showcase; then
+                    echo "CRITICAL: failed to restore previous stopped Showcase state" >&2
+                    ROLLBACK_EXEC_RC=1
+                  fi
+                fi
+
+                # Admin rollback state is independent of whether Showcase existed.
+                if [ "${PREVIOUS_ADMIN_EXISTS}" = "false" ]; then
+                  docker rm -f azursystech-admin >/dev/null 2>&1 || true
+                elif [ "${PREVIOUS_ADMIN_RUNNING}" = "false" ] && docker inspect azursystech-admin >/dev/null 2>&1; then
+                  if ! docker compose -f "${FIXED_TARGET_DIR}/docker-compose.vps.yml" --profile admin stop admin; then
+                    echo "CRITICAL: failed to restore previous stopped admin state" >&2
+                    ROLLBACK_EXEC_RC=1
+                  fi
+                  ADMIN_RUNNING="$(docker inspect --format '{{.State.Running}}' azursystech-admin 2>/dev/null || echo "false")"
+                  if [ "${ADMIN_RUNNING}" != "false" ]; then
+                    echo "CRITICAL: admin is still running after rollback" >&2
+                    ROLLBACK_EXEC_RC=1
                   fi
                 fi
 
                 ROLLBACK_HEALTH_RC=0
                 if [ "${ROLLBACK_EXEC_RC}" = "0" ]; then
                   CHECK_CONTAINERS="azursystech-postgres azursystech-app azursystech-web"
+                  if [ "${PREVIOUS_SHOWCASE_RUNNING}" = "true" ]; then
+                    CHECK_CONTAINERS="${CHECK_CONTAINERS} azursystech-showcase"
+                  fi
                   if [ "${PREVIOUS_ADMIN_RUNNING}" = "true" ]; then
                     CHECK_CONTAINERS="${CHECK_CONTAINERS} azursystech-admin"
                   fi
@@ -260,6 +326,7 @@ jobs:
 
             # 7. Формирование имён образов
             export APP_IMAGE="ghcr.io/${GH_REPOSITORY}-app:${IMAGE_TAG}"
+            export SHOWCASE_IMAGE="ghcr.io/${GH_REPOSITORY}-showcase:${IMAGE_TAG}"
             if [ "${INCLUDE_ADMIN_INPUT}" = "true" ]; then
               export ADMIN_IMAGE="ghcr.io/${GH_REPOSITORY}-admin:${IMAGE_TAG}"
             fi
@@ -272,6 +339,7 @@ jobs:
             printf '%s' "${GH_DEPLOY_TOKEN}" | docker login ghcr.io -u "${GH_ACTOR}" --password-stdin
 
             docker pull "${APP_IMAGE}"
+            docker pull "${SHOWCASE_IMAGE}"
             if [ "${INCLUDE_ADMIN_INPUT}" = "true" ]; then
               docker pull "${ADMIN_IMAGE}"
             fi
@@ -279,6 +347,7 @@ jobs:
             # 10. Итоговые отчёты по успешным предпроверкам
             echo "Preflight image tag confirmed: ${IMAGE_TAG}"
             echo "APP_IMAGE: ${APP_IMAGE}"
+            echo "SHOWCASE_IMAGE: ${SHOWCASE_IMAGE}"
             if [ "${INCLUDE_ADMIN_INPUT}" = "true" ]; then
               echo "ADMIN_IMAGE: ${ADMIN_IMAGE}"
             fi
@@ -311,11 +380,26 @@ jobs:
 
             # 14. Сохранение состояния admin условно
             if docker inspect azursystech-admin >/dev/null 2>&1; then
+              printf 'true\n' > "${BACKUP_FILES_DIR}/previous-admin-exists.txt"
               docker inspect --format '{{.Config.Image}}' azursystech-admin > "${BACKUP_FILES_DIR}/previous-admin-image.txt"
               docker inspect --format '{{.State.Running}}' azursystech-admin > "${BACKUP_FILES_DIR}/previous-admin-running.txt"
 
               test -s "${BACKUP_FILES_DIR}/previous-admin-image.txt"
               test -s "${BACKUP_FILES_DIR}/previous-admin-running.txt"
+            else
+              printf 'false\n' > "${BACKUP_FILES_DIR}/previous-admin-exists.txt"
+              printf 'false\n' > "${BACKUP_FILES_DIR}/previous-admin-running.txt"
+            fi
+
+            # 14b. Record the two explicit Showcase rollback states.
+            if docker inspect azursystech-showcase >/dev/null 2>&1; then
+              printf 'true\n' > "${BACKUP_FILES_DIR}/previous-showcase-exists.txt"
+              docker inspect --format '{{.Config.Image}}' azursystech-showcase > "${BACKUP_FILES_DIR}/previous-showcase-image.txt"
+              docker inspect --format '{{.State.Running}}' azursystech-showcase > "${BACKUP_FILES_DIR}/previous-showcase-running.txt"
+              test -s "${BACKUP_FILES_DIR}/previous-showcase-image.txt"
+            else
+              printf 'false\n' > "${BACKUP_FILES_DIR}/previous-showcase-exists.txt"
+              printf 'false\n' > "${BACKUP_FILES_DIR}/previous-showcase-running.txt"
             fi
 
             # 15. Сохранение нового rollback runner
@@ -330,10 +414,9 @@ jobs:
             test -n "${PREV_APP_IMAGE}"
             docker image inspect "${PREV_APP_IMAGE}" >/dev/null
 
-            PREV_ADMIN_RUNNING_VAL="false"
-            if [ -f "${BACKUP_FILES_DIR}/previous-admin-running.txt" ]; then
-              PREV_ADMIN_RUNNING_VAL="$(cat "${BACKUP_FILES_DIR}/previous-admin-running.txt")"
-            fi
+            PREV_ADMIN_EXISTS_VAL="$(cat "${BACKUP_FILES_DIR}/previous-admin-exists.txt")"
+            case "${PREV_ADMIN_EXISTS_VAL}" in true|false) ;; *) exit 1 ;; esac
+            PREV_ADMIN_RUNNING_VAL="$(cat "${BACKUP_FILES_DIR}/previous-admin-running.txt")"
 
             case "${PREV_ADMIN_RUNNING_VAL}" in
               true|false) ;;
@@ -343,11 +426,20 @@ jobs:
                 ;;
             esac
 
-            if [ "${PREV_ADMIN_RUNNING_VAL}" = "true" ]; then
+            if [ "${PREV_ADMIN_EXISTS_VAL}" = "true" ]; then
               test -s "${BACKUP_FILES_DIR}/previous-admin-image.txt"
               PREV_ADMIN_IMAGE_VAL="$(cat "${BACKUP_FILES_DIR}/previous-admin-image.txt")"
               test -n "${PREV_ADMIN_IMAGE_VAL}"
               docker image inspect "${PREV_ADMIN_IMAGE_VAL}" >/dev/null
+            fi
+
+            PREV_SHOWCASE_EXISTS_VAL="$(cat "${BACKUP_FILES_DIR}/previous-showcase-exists.txt")"
+            case "${PREV_SHOWCASE_EXISTS_VAL}" in true|false) ;; *) exit 1 ;; esac
+            PREV_SHOWCASE_RUNNING_VAL="$(cat "${BACKUP_FILES_DIR}/previous-showcase-running.txt")"
+            case "${PREV_SHOWCASE_RUNNING_VAL}" in true|false) ;; *) exit 1 ;; esac
+            if [ "${PREV_SHOWCASE_EXISTS_VAL}" = "true" ]; then
+              PREV_SHOWCASE_IMAGE_VAL="$(cat "${BACKUP_FILES_DIR}/previous-showcase-image.txt")"
+              docker image inspect "${PREV_SHOWCASE_IMAGE_VAL}" >/dev/null
             fi
 
             # 17. Подготовка временных файлов в том же целевом каталоге
@@ -401,7 +493,7 @@ jobs:
             ROLLBACK_ON_FAILURE=0 ./deploy.sh "${APP_IMAGE}"
 
             # 22. Пост-деплой проверки контейнеров
-            CHECK_CONTAINERS="azursystech-postgres azursystech-app azursystech-web"
+            CHECK_CONTAINERS="azursystech-postgres azursystech-app azursystech-showcase azursystech-web"
             if [ "${INCLUDE_ADMIN_INPUT}" = "true" ]; then
               CHECK_CONTAINERS="${CHECK_CONTAINERS} azursystech-admin"
             fi
@@ -424,6 +516,11 @@ jobs:
             RUNNING_APP_IMAGE="$(docker inspect --format '{{.Config.Image}}' azursystech-app)"
             if [ "${RUNNING_APP_IMAGE}" != "${APP_IMAGE}" ]; then
               echo "ERROR: Running app image mismatch! Expected '${APP_IMAGE}', got '${RUNNING_APP_IMAGE}'" >&2
+              exit 1
+            fi
+            RUNNING_SHOWCASE_IMAGE="$(docker inspect --format '{{.Config.Image}}' azursystech-showcase)"
+            if [ "${RUNNING_SHOWCASE_IMAGE}" != "${SHOWCASE_IMAGE}" ]; then
+              echo "ERROR: Running showcase image mismatch! Expected '${SHOWCASE_IMAGE}', got '${RUNNING_SHOWCASE_IMAGE}'" >&2
               exit 1
             fi
 
@@ -481,6 +578,12 @@ jobs:
             cp "${BACKUP_FILES_DIR}/nginx.proxy.conf" "${PREVIOUS_RUNTIME_TMP}/nginx.proxy.conf"
             cp "${BACKUP_FILES_DIR}/.env" "${PREVIOUS_RUNTIME_TMP}/.env"
             cp "${BACKUP_FILES_DIR}/previous-app-image.txt" "${PREVIOUS_RUNTIME_TMP}/previous-app-image.txt"
+            cp "${BACKUP_FILES_DIR}/previous-admin-exists.txt" "${PREVIOUS_RUNTIME_TMP}/previous-admin-exists.txt"
+            cp "${BACKUP_FILES_DIR}/previous-showcase-exists.txt" "${PREVIOUS_RUNTIME_TMP}/previous-showcase-exists.txt"
+            cp "${BACKUP_FILES_DIR}/previous-showcase-running.txt" "${PREVIOUS_RUNTIME_TMP}/previous-showcase-running.txt"
+            if [ -f "${BACKUP_FILES_DIR}/previous-showcase-image.txt" ]; then
+              cp "${BACKUP_FILES_DIR}/previous-showcase-image.txt" "${PREVIOUS_RUNTIME_TMP}/previous-showcase-image.txt"
+            fi
             cp "${BACKUP_FILES_DIR}/rollback-runner.sh" "${PREVIOUS_RUNTIME_TMP}/rollback-runner.sh"
 
             chmod 600 "${PREVIOUS_RUNTIME_TMP}/.env"
@@ -513,12 +616,20 @@ jobs:
             chmod 755 "${DEPLOY_STATE_DIR}/rollback-runner.sh"
 
             cp "${BACKUP_FILES_DIR}/previous-app-image.txt" "${DEPLOY_STATE_DIR}/previous-app-image"
+            cp "${BACKUP_FILES_DIR}/previous-showcase-exists.txt" "${DEPLOY_STATE_DIR}/previous-showcase-exists"
+            cp "${BACKUP_FILES_DIR}/previous-showcase-running.txt" "${DEPLOY_STATE_DIR}/previous-showcase-running"
+            if [ -f "${BACKUP_FILES_DIR}/previous-showcase-image.txt" ]; then
+              cp "${BACKUP_FILES_DIR}/previous-showcase-image.txt" "${DEPLOY_STATE_DIR}/previous-showcase-image"
+            else
+              rm -f "${DEPLOY_STATE_DIR}/previous-showcase-image"
+            fi
 
             if [ -f "${BACKUP_FILES_DIR}/previous-admin-image.txt" ]; then
               cp "${BACKUP_FILES_DIR}/previous-admin-image.txt" "${DEPLOY_STATE_DIR}/previous-admin-image"
             else
               rm -f "${DEPLOY_STATE_DIR}/previous-admin-image"
             fi
+            cp "${BACKUP_FILES_DIR}/previous-admin-exists.txt" "${DEPLOY_STATE_DIR}/previous-admin-exists"
 
             # 29. Финальная проверка состояния и очистка временного backup
             docker compose -f docker-compose.vps.yml ps

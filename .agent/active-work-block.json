@@ -1,40 +1,40 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "",
-  "governance_profile": "Controlled",
+  "work_block_id": "WB-2026-08-12-showcase-production-multizone",
+  "governance_profile": "Managed",
   "specification": {
-    "path": "",
-    "revision": ""
+    "path": "docs/plans/WB-2026-08-12-showcase-production-multizone.md",
+    "revision": "sha256:31ed54212eb290f31d1f51828b13f5aa8f756e2c8795135e7ba90d05832a0510"
   },
-  "base_commit": "",
+  "base_commit": "257d529d4a81147b6f7dea29bd17f52228ea17d6",
   "write_gate": {
-    "status": "BLOCKED",
-    "opened_at": null
+    "status": "READY",
+    "opened_at": "2026-08-13T17:08:59.570503+00:00"
   },
   "critic": {
     "required": true,
-    "status": "PENDING",
-    "verdict": "PENDING",
-    "report": "",
-    "isolation": "unknown",
+    "status": "READY",
+    "verdict": "APPROVE",
+    "report": "docs/reports/critic-WB-2026-08-12-showcase-production-multizone.md",
+    "isolation": "separate_subagent",
     "skip_reason": ""
   },
   "assurance": {
     "review": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
-      "isolation": "unknown",
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/review-WB-2026-08-12-showcase-production-multizone.md",
+      "isolation": "separate_subagent",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
-      "isolation": "unknown",
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/verification-WB-2026-08-12-showcase-production-multizone.md",
+      "isolation": "same-session-degraded",
       "skip_reason": ""
     },
     "evaluation": {
@@ -57,14 +57,29 @@
       "skip_reason": ""
     }
   },
-  "closeout_mode": "pending",
+  "closeout_mode": "success-closeout",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
-  "write_set": [],
+  "write_set": [
+    "showcase/next.config.ts",
+    "showcase/app/demo/health/route.ts",
+    "Dockerfile.showcase",
+    "docker-compose.vps.yml",
+    "nginx.proxy.conf",
+    "deploy.sh",
+    ".github/workflows/docker-publish.yml",
+    ".github/workflows/deploy-vps.yml",
+    ".github/workflows/ci.yml",
+    "[.]github/workflows/docker-publish.yml",
+    "[.]github/workflows/deploy-vps.yml",
+    "[.]github/workflows/ci.yml",
+    "scripts/test-showcase-multizone.py"
+  ],
   "coordination_write_set": [
     ".agent/active-work-block.json",
+    "[.]agent/active-work-block.json",
     ".agent/critic-gate.md",
     ".agent/verification-gate.md",
     ".codex/write-gate.md",
@@ -83,5 +98,6 @@
     "credentials",
     "client_communications",
     "irreversible_publish"
-  ]
+  ],
+  "lifecycle_note": "assured source/config candidate 257d529d4a81147b6f7dea29bd17f52228ea17d6..b15f2ace5794f35627d21b797124935d6a0a38a5 passed fresh Reviewer and Verifier gates; the PR-only Showcase-runtime P2 is resolved/stale, and exact-head CI #132 plus Control Plane Contracts and the isolated Docker-network /demo/health proof are successful. The subsequent local synchronization commit is coordination-only and contains no production source, runtime config, CI, deploy, test, Docker, application, or routing change."
 }
