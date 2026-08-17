@@ -1,54 +1,52 @@
 # Reviewer Report — WB-2026-08-12 Showcase Production Multizone
 
-**Review state:** CHANGES_REQUIRED
+## Verdict
 
-**Review basis:** frozen working-tree diff against
-`257d529d4a81147b6f7dea29bd17f52228ea17d6`; active Work Block write-set;
-approved plan revision
-`sha256:814839dc537671161e6b2a13f1b7725989772c70273354c08d3148d5fbcf4ebd`.
+**READY** — no blocking defects or unrelated scope drift found.
 
-**Scope reviewed:** `showcase/next.config.ts`, `showcase/app/demo/health/route.ts`,
-`Dockerfile.showcase`, `docker-compose.vps.yml`, `nginx.proxy.conf`, `deploy.sh`,
-the three changed GitHub workflows, and `scripts/test-showcase-multizone.py`.
-The plan, tasklist, active Work Block state, and Critic report were read only as
-contract context. All changed paths are contained by the active source or
-coordination write-set.
+- **Frozen range:** `257d529d4a81147b6f7dea29bd17f52228ea17d6` → `b15f2ace5794f35627d21b797124935d6a0a38a5`
+- **Review function:** fresh native read-only Reviewer subagent
+- **Actual isolation:** `separate_subagent` with a shared worktree. This is not OS-isolated and does not include live-runtime access.
+- **Supersession:** Earlier Reviewer/Verifier records, including the records bound before `b15f2ace...`, are stale evidence and do not supply this verdict.
 
-## By severity
+## Scope and integrity
 
-- 🔴 HIGH: 2 — admin-host routing is changed; rollback fails to restore the
-  previous optional-admin state in required branches.
-- 🟡 MEDIUM: 3 — `/demo` is not proxied to Showcase; the required executable
-  route/image/rollback proof is absent; annotated tag refs are not resolved to
-  a commit SHA.
-- ⚪ LOW: 0
+The complete 24-path frozen diff was inspected. Production paths are within the approved Work Block write-set; Work Block, report, and tasklist artifacts are within its approved coordination write-set. `git diff --check` passed. No secrets, credentials, or unrelated source/configuration changes were identified.
 
-## Details
+## Required review matrix
 
-| Severity | File:Line | Finding | Evidence | Recommendation |
-|---|---|---|---|---|
-| 🔴 HIGH | `nginx.proxy.conf:79-97` | The new demo locations apply to every allowed host, including `admin.azursystech.fr`, so they override the pre-existing admin upstream selection. | `map $host $upstream_service` retains `admin.azursystech.fr admin:3000` at lines 33-36, but Nginx chooses the more-specific `^~ /demo-assets/` and `^~ /demo/` locations before `location /` (lines 79-106). Thus `Host: admin.azursystech.fr`, `/demo/...` is now sent to `showcase:3000`, not `admin:3000`. | Route Showcase prefixes only on the public/main hosts, preserving the existing admin-host catch-all model; add an admin-host routing regression test. |
-| 🔴 HIGH | `.github/workflows/deploy-vps.yml:175-198` | Failure rollback does not restore the recorded admin state independently of Showcase state. | Previous state is captured at lines 343-350. When Showcase was absent, the `else` branch always invokes the rollback runner with `DEPLOY_ADMIN=0` (lines 181-184) and then stops admin whenever `include_admin=true` (lines 187-198), including when `PREVIOUS_ADMIN_RUNNING=true`. When Showcase existed but `PREVIOUS_ADMIN_RUNNING=false`, lines 178-180 also use `DEPLOY_ADMIN=0` and never stop the newly started admin. Both outcomes violate the required previous-admin-state restoration. | Make admin restoration depend exclusively on `PREVIOUS_ADMIN_RUNNING` (and prior image where applicable), in both Showcase branches. Deterministically simulate previous-admin-running true and false alongside each rollback state. |
-| 🟡 MEDIUM | `nginx.proxy.conf:79-99` | The declared URI-preservation handling does not cover the exact `/demo` path. | Only `location ^~ /demo/` exists. Nginx does not match it for `/demo`; that request falls through to `location /` and the main upstream. The approved plan explicitly requires deterministic proof for `/demo`, `/demo/...`, and `/demo-assets/...`. | Add an exact `location = /demo` that proxies unchanged to Showcase (or an explicitly URI-preserving redirect if the plan is amended), then test it. |
-| 🟡 MEDIUM | `scripts/test-showcase-multizone.py:21-69`, `.github/workflows/ci.yml:61-65` | The new CI check is structural substring validation only; it does not provide the required deterministic behavioural proof. | The Python program performs file-text assertions only. It makes no HTTP requests, runs no container/Nginx fixture, inspects no built asset manifest, and simulates neither rollback branch. Consequently it cannot detect the two routing/rollback defects above and does not test `next/image`, deep/direct routes, 404 handling, asset collision, or public assets. | Retain structural checks, but add deterministic executable fixtures/tests covering public and admin-host routing, standalone container health, a real deep route and 404, generated asset URLs and `next/image`, and first/subsequent rollback states. Do not claim unavailable Docker/browser checks as passed. |
-| 🟡 MEDIUM | `.github/workflows/docker-publish.yml:34-58` | A tag input is not reliably resolved to an exact *commit* SHA before the CI gate and image tag are computed. | For a non-SHA ref, `git ls-remote ... "$TARGET_REF" | awk 'NR==1 {print $1}'` uses the first ref object. For an annotated tag that is the tag object's SHA, not its peeled commit SHA. It passes the 40-hex validation but is not the required exact source commit. | Resolve a checked-out ref to `git rev-parse HEAD` (or explicitly use a peeled tag ref), validate it as a commit, and use that resolved commit SHA consistently for CI lookup, checkout, and both image tags. |
+| Requirement | Result | Evidence |
+|---|---|---|
+| Original P2 is closed | PASS | `ci.yml` triggers for both `pull_request` and `push` to `main`; `showcase-docker-runtime` no longer has a PR-only condition. The deterministic contract test rejects a PR-only runtime job. |
+| Docker runtime contract | PASS | The job depends on `quality`, builds `Dockerfile.showcase`, starts on an isolated Docker network without host publication, waits for health, and probes `/demo/health`. |
+| Exact-SHA publication gate | PASS | `docker-publish.yml` resolves and validates `TARGET_SHA`, requires a successful `ci.yml` run for `head_sha=${TARGET_SHA}`, then tags both mandatory images as `sha-${TARGET_SHA}`. |
+| Immutable app/Showcase pairing | PASS | App and Showcase use the same computed immutable `sha-<40-hex>` tag. |
+| Deployment SHA equality | PASS | `deploy-vps.yml` accepts only `sha-<40>` and rejects an `image_tag` that differs from `sha-${GIT_SHA}` before constructing both image names. |
+| Public routing preserved | PASS | `/demo`, `/demo/*`, and `/demo-assets/*` retain their URI and route to `showcase:3000`; other public routes, including `/health`, fall through to `app:3000`. |
+| PostgreSQL and admin contracts | PASS | Showcase has neither `postgres` dependency nor database environment. Admin remains profile-gated; `publish_admin` and `include_admin` both default to `false`. |
+| Scope drift | PASS | No change extends beyond the approved production/coordination write-sets. |
 
-## Security and architecture triage
+## Checks run
 
-- Security headers and forwarded proxy headers remain present in the added
-  Showcase locations (`nginx.proxy.conf:67-96`); no new secret value or database
-  environment variable was found in the Showcase service (`docker-compose.vps.yml:89-114`).
-- `showcase` has no PostgreSQL `depends_on`; the external PostgreSQL volume
-  declaration is unchanged (`docker-compose.vps.yml:190-193`).
-- The standalone configuration, asset namespace, health route, and Docker
-  packaging are structurally aligned with the plan (`showcase/next.config.ts:5-24`,
-  `Dockerfile.showcase:1-41`, `showcase/app/demo/health/route.ts:1-5`).
-- Runtime/container/browser/VPS proof is **UNVERIFIED** in this review. No
-  production action was performed.
+- `git diff --check 257d529d4a81147b6f7dea29bd17f52228ea17d6 b15f2ace5794f35627d21b797124935d6a0a38a5`
+- `PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-showcase-multizone.py`
+- `bash -n deploy.sh`
+- YAML parse of `docker-compose.vps.yml`, `ci.yml`, `docker-publish.yml`, and `deploy-vps.yml`
 
-## Read-only checks executed
+All passed.
 
-- `git diff --check 257d529d4a81147b6f7dea29bd17f52228ea17d6` — passed.
-- `bash -n deploy.sh` — passed.
-- `python3 scripts/test-showcase-multizone.py` — passed, but only establishes
-  its stated static assertions.
+## Exact-head CI evidence
+
+GitHub Actions evidence was inspected for `b15f2ace5794f35627d21b797124935d6a0a38a5`:
+
+- CI #132 / run `32058801176`: **SUCCESS**.
+- `Showcase Docker runtime`: **SUCCESS**; image build, isolated-network creation, container start, health wait, and `/demo/health` probe all succeeded.
+- Control Plane Contracts / run `32058801212`: **SUCCESS**.
+
+The observed execution is a pull-request event. The frozen workflow establishes that the same job is eligible on a push to `main`; no post-merge execution has been observed or claimed.
+
+## Residual limits and coordination follow-up
+
+No live deployment, VPS/SSH, Docker publication, workflow dispatch, credential operation, or GitHub mutation was performed. Production-runtime proof remains intentionally unperformed.
+
+The old Codex P2 discussion is stale and ready for resolution by an authorized repository actor. PR #13's description is also stale: it names `db738f4...`, says the runtime job is PR-only, and contains superseded assurance wording. It must be updated through the Owner-controlled repository flow before merge handoff.

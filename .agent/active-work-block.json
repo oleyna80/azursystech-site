@@ -23,17 +23,17 @@
   "assurance": {
     "review": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/review-WB-2026-08-12-showcase-production-multizone.md",
       "isolation": "separate_subagent",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/verification-WB-2026-08-12-showcase-production-multizone.md",
       "isolation": "same-session-degraded",
       "skip_reason": ""
     },
@@ -57,7 +57,7 @@
       "skip_reason": ""
     }
   },
-  "closeout_mode": "pending",
+  "closeout_mode": "success-closeout",
   "integrations": {
     "approved": [],
     "admission_records": []
@@ -99,5 +99,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "source correction applied after PR P2 finding; prior review/verification records are stale and require rerun against the corrected head"
+  "lifecycle_note": "assured source/config candidate 257d529d4a81147b6f7dea29bd17f52228ea17d6..b15f2ace5794f35627d21b797124935d6a0a38a5 passed fresh Reviewer and Verifier gates; the PR-only Showcase-runtime P2 is resolved/stale, and exact-head CI #132 plus Control Plane Contracts and the isolated Docker-network /demo/health proof are successful. The subsequent local synchronization commit is coordination-only and contains no production source, runtime config, CI, deploy, test, Docker, application, or routing change."
 }

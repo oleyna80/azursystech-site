@@ -13,7 +13,7 @@
 | ID | Task | AC | Priority | Blocked By |
 |---|---|---|---|---|
 | S1-01 | Reopen the preserved exact source write-set after S0-03 Critic `APPROVE`. | Active state schema v3 / GitHub capability / READY / non-empty preserved source write-set / fresh Critic approve. | P0 | completed — READY |
-| S1-02 | Correct the retained candidate: standalone Webpack build and authoritative PR-CI Docker verification. | Local and PR-CI acceptance criteria in the reconciled plan. | P1 | completed — Reviewer READY; Verifier READY; PR-CI runtime execution pending |
+| S1-02 | Correct the retained candidate: standalone Webpack build and authoritative PR-CI Docker verification. | Local and PR-CI acceptance criteria in the reconciled plan. | P1 | completed — fresh Reviewer/Verifier READY; exact-head CI #132 and Showcase Docker runtime SUCCESS |
 
 ## Completed
 
@@ -21,7 +21,7 @@
 |---|---|---|---|
 | S1-01 (prior) | Earlier source gate opening for the retained candidate. | Superseded by verification-contract reconciliation | 2026-08-13 |
 | S1-02 (prior) | Earlier source implementation/review evidence. | Revalidation required after reconciliation | 2026-08-13 |
-| S1-02 | Webpack build and PR-CI Docker health correction. | Local source/config proof passed; PR runtime execution remains pending PR CI | 2026-08-13 |
+| S1-02 | Webpack build and PR-CI Docker health correction. | Fresh source/config assurance passed; exact-head CI #132, Control Plane Contracts, and Showcase Docker runtime passed | 2026-08-17 |
 
 ## Blocked
 

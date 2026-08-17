@@ -1,43 +1,36 @@
-## Verifier Report
+# Verifier Report — WB-2026-08-12 Showcase Production Multizone
 
-**Tier:** full
-**Work Block:** `WB-2026-08-12-showcase-production-multizone` — standalone Showcase service, public multizone routing, immutable image binding, and rollback.
-**Verdict:** **READY**
-**Isolation:** separate read-only verifier subagent in the shared local worktree (`same-session-degraded`). This verdict covers the frozen local source/configuration gate; it is not production, Docker-runtime, or PR-CI execution proof.
+## Formal verdict
 
-### Changed Files
+**READY**
 
-- `showcase/next.config.ts` — standalone output and `/demo-assets` generated-asset namespace without `basePath`.
-- `showcase/app/demo/health/route.ts` — internal Showcase health handler.
-- `Dockerfile.showcase` — Node 22 standalone Showcase image.
-- `docker-compose.vps.yml` — PostgreSQL-free Showcase service and web dependency.
-- `nginx.proxy.conf` — `/demo` and `/demo-assets` routing to Showcase with main-app fallback.
-- `deploy.sh` — exact-SHA app/Showcase coherence and both rollback branches.
-- `.github/workflows/docker-publish.yml` — same-SHA Showcase publication.
-- `.github/workflows/deploy-vps.yml` — Showcase preflight, deploy, and rollback state restoration.
-- `.github/workflows/ci.yml` — required local source checks and authoritative PR Docker runtime job.
-- `scripts/test-showcase-multizone.py` — deterministic contract and rollback-model check.
+- **Tier:** Full
+- **Frozen range:** `257d529d4a81147b6f7dea29bd17f52228ea17d6` → `b15f2ace5794f35627d21b797124935d6a0a38a5`
+- **Verifier function:** fresh native read-only Verifier subagent
+- **Required / actual isolation:** `same-session-degraded` / `same-session-degraded` (separate subagent sharing the workspace/runtime). This is not `independent-readonly-root` or `os-isolated`.
 
-All source paths are inside the approved write-set. Untracked plan, tasklist, critic/reviewer reports, and this report are in approved coordination paths.
+## Acceptance evidence
 
-### Checks
+| Acceptance area | Result | Evidence |
+|---|---|---|
+| Frozen candidate and scope | PASS | HEAD is `b15f2ace...`; the complete diff is within approved source or coordination paths and `git diff --check` is clean. |
+| Source/configuration contract | PASS | `PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-showcase-multizone.py` passed. |
+| Syntax and configuration | PASS | `bash -n deploy.sh` and PyYAML parsing for Compose and changed workflows passed. |
+| Showcase quality | PASS | Lint completed with 10 pre-existing warnings and zero errors; `npm run check:types` passed. |
+| Standalone packaging | PASS | `npx next build --webpack` passed and emitted `.next/standalone` and `.next/static`. |
+| P2 and CI event topology | PASS | CI declares both pull-request and main-push triggers; the Docker runtime job has no PR-only condition and verifies the health endpoint through the isolated Docker network. |
+| Image/release binding | PASS | Publication requires successful CI for the exact resolved SHA and binds app plus Showcase to one `sha-<40>` tag. Deploy requires an input tag equal to its workflow SHA. |
+| Routing, PostgreSQL, and admin behavior | PASS | `/demo`, `/demo/*`, and `/demo-assets/*` route to Showcase; app/admin routing stays distinct; Showcase has no DB dependency/environment; admin defaults are unchanged. |
+| Newly introduced secrets | PASS | Frozen-diff review found none. |
 
-- [PASS] Diff scope and integrity — `git status --porcelain`, tracked diff, and untracked-file inventory contain only approved source or coordination paths; `git diff --check 257d529d4a81147b6f7dea29bd17f52228ea17d6` passed.
-- [PASS] Showcase lint — `npm run lint` in `showcase/` exited 0 (10 warnings, 0 errors; warnings are in unchanged demo sources).
-- [PASS] Showcase typecheck — `npm run check:types` in `showcase/` exited 0 (`next typegen && tsc --noEmit`).
-- [PASS] Standalone Webpack build and assets — `npx next build --webpack` in `showcase/` exited 0; it generated the expected `/demo/**` route tree including dynamic `/demo/health`. `.next/standalone/server.js`, `.next/static`, `public`, and `public/demo` exist. Emitted HTML contains generated `/demo-assets/_next/...` URLs while public demo references remain `/demo/bijoux-artisanaux/hero.jpg`.
-- [PASS] Deterministic multizone contract — `python3 scripts/test-showcase-multizone.py` passed. It asserts standalone/no-`basePath`, internal health, PostgreSQL isolation, Nginx precedence and header forwarding, public/admin host routing, immutable tag binding, and first/subsequent Showcase plus independent-admin rollback models ([`scripts/test-showcase-multizone.py`](../../scripts/test-showcase-multizone.py:45)).
-- [PASS] Configuration syntax — PyYAML safely parsed `docker-compose.vps.yml`, `.github/workflows/ci.yml`, `.github/workflows/docker-publish.yml`, and `.github/workflows/deploy-vps.yml`; `bash -n deploy.sh` passed.
-- [PASS] Routing and service contract review — Showcase is isolated from PostgreSQL and has the required health endpoint ([`docker-compose.vps.yml`](../../docker-compose.vps.yml:89), [`showcase/app/demo/health/route.ts`](../../showcase/app/demo/health/route.ts:3)); exact `/demo`, `/demo-assets/`, and nested `/demo/` locations preserve URI and forwarding headers, with `/` retaining main-app upstream fallback ([`nginx.proxy.conf`](../../nginx.proxy.conf:90)).
-- [PASS] Immutable release/admin contract — source review and deterministic contract confirm a single resolved `sha-<40-hex>` bind for app/Showcase plus `publish_admin` and `include_admin` defaulting to false.
-- [PASS] Required PR-CI runtime gate is declared — CI labels `showcase-docker-runtime` as `Showcase Docker runtime (PR authoritative)`, limits it to pull requests, builds `Dockerfile.showcase`, starts the container, and checks `GET /demo/health` for `"status":"ok"` ([`ci.yml`](../../.github/workflows/ci.yml:71)).
-- [UNVERIFIED] PR-CI Docker runtime execution — intentionally not run locally. The Work Block makes PR CI authoritative; no Docker/socket, network, workflow-dispatch, publication, VPS, or production operation was attempted. The next PR must provide the job’s successful execution evidence before deployment/publication decisions.
+## Exact-head CI/runtime proof
 
-### Warnings (non-blocking)
+GitHub Actions run `32058801176` (CI #132), associated with exact head `b15f2ace5794f35627d21b797124935d6a0a38a5`, completed successfully. Its `Showcase Docker runtime` job successfully built the image, created the isolated network, started the container, waited for health, and probed `/demo/health`. Control Plane Contracts run `32058801212` also completed successfully for that head.
 
-- The current verdict is local source/configuration readiness only. A local Docker absence is not a local commit blocker under the approved assurance plan; the mandatory authoritative runtime proof remains pending PR CI.
-- No `npm audit` was run in this verification pass because the assigned acceptance scope was the enumerated local source/config checks; CI retains its runtime dependency-audit step.
+## Limitations
 
-### Follow-ups (optional)
+No local Docker execution, VPS/SSH access, deployment, publication, workflow dispatch, secret operation, or GitHub mutation was performed. The verdict covers the frozen source/configuration candidate and exact-head CI evidence. It is not production-runtime evidence; live Nginx/CSP and deployed-service proof remains intentionally unperformed.
 
-- Preserve the successful `Showcase Docker runtime (PR authoritative)` job result with the PR evidence before considering deployment or publication.
+## Unresolved findings
+
+None blocking. The 10 lint warnings predate this range and are non-failing.
