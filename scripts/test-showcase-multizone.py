@@ -72,7 +72,6 @@ def main() -> int:
         "Build Showcase with Webpack",
         "run: npx next build --webpack",
         "showcase-docker-runtime:",
-        "github.event_name == 'pull_request'",
         "docker build --file Dockerfile.showcase",
         "id: create_showcase_network",
         "docker network create azursystech-showcase-ci-network",
@@ -86,7 +85,16 @@ def main() -> int:
         "if: ${{ failure() }}",
         "docker network rm azursystech-showcase-ci-network || true",
     ):
-        require(expected in ci, f"PR CI Showcase Docker runtime check missing {expected}")
+        require(expected in ci, f"Showcase Docker runtime check missing {expected}")
+    showcase_runtime_start = ci.index("  showcase-docker-runtime:")
+    showcase_runtime_end = ci.find("\n  ", showcase_runtime_start + 2)
+    if showcase_runtime_end == -1:
+        showcase_runtime_end = len(ci)
+    showcase_runtime_job = ci[showcase_runtime_start:showcase_runtime_end]
+    require("if: ${{ github.event_name == 'pull_request' }}" not in showcase_runtime_job,
+            "Showcase Docker runtime must not be restricted to pull requests")
+    require("push:\n    branches:\n      - main" in ci and "pull_request:" in ci,
+            "CI must trigger on pull requests and pushes to main for exact-SHA runtime proof")
     require("--publish" not in ci, "PR CI Showcase Docker runtime must not publish a host port")
     retired_host_probe = "http://" + "127.0.0.1:3000/demo/health"
     require(retired_host_probe not in ci, "PR CI Showcase Docker runtime retains the retired host health probe")

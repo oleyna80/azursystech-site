@@ -23,17 +23,17 @@
   "assurance": {
     "review": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/review-WB-2026-08-12-showcase-production-multizone-r5.md",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
       "isolation": "separate_subagent",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/verification-WB-2026-08-12-showcase-production-multizone.md",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
       "isolation": "same-session-degraded",
       "skip_reason": ""
     },
@@ -99,5 +99,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "frozen local source/configuration assurance READY; mandatory PR-CI Docker runtime execution pending"
+  "lifecycle_note": "source correction applied after PR P2 finding; prior review/verification records are stale and require rerun against the corrected head"
 }
