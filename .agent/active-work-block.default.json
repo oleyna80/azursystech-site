@@ -8,6 +8,13 @@
     "revision": ""
   },
   "base_commit": "",
+  "define_quality": {
+    "required": false,
+    "status": "PENDING",
+    "requirements_review": "",
+    "traceability": "",
+    "consistency_analysis": ""
+  },
   "write_gate": {
     "status": "BLOCKED",
     "opened_at": null

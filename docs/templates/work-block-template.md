@@ -27,6 +27,20 @@
 - **Closeout Mode:** [pending | success-closeout | reporting-only]
 - **Owner Approval Evidence:** [message/reference | not required]
 
+### Define Quality Prerequisite
+
+- **Required:** [yes | no; profile/risk reason]
+- **Status:** [PENDING | READY | BLOCKED]
+- **Requirements Review Evidence:** [path/reference | not required]
+- **Traceability Evidence:** [path/reference | not required]
+- **Consistency Analysis Evidence:** [path/reference | not required]
+
+This is one aggregate evidence prerequisite, not three authority gates. Managed,
+Assured, and Distributed work cannot disable an applicable prerequisite with a
+mutable `Required: no`. Applicable `READY` requires all three non-blank evidence
+bindings. The prerequisite does not replace Critic and never opens the Write Gate
+by itself.
+
 ## Objective
 
 [What user or technical outcome must this Work Block produce?]

@@ -6,6 +6,18 @@ The lifecycle defines control functions and evidence transitions. It does not
 require one permanent agent per function and does not prescribe a specific
 runtime topology.
 
+The lifecycle is a process-control system, not the primary security boundary.
+Work Blocks, write sets, Critic/Reviewer/Verifier gates, and project-local hooks
+constrain normal agent behavior. Consequential authority is enforced externally
+wherever practical through GitHub repository rules, least-privilege credentials,
+workflow permissions, OS isolation, and separately held production credentials.
+
+Per-Work-Block SSH signatures and authorization-bootstrap commits are not part of
+the normal lifecycle. They were retired because the cryptographic local state
+machine introduced circular bootstrap, replay, H0/H1/H2, expiry, digest, and
+runtime-parity complexity while remaining dependent on project-local hooks that
+are not an OS security boundary.
+
 ## Macro Stages
 
 ### Stage 0 — Define
@@ -18,18 +30,25 @@ Functions:
 4. Specification and acceptance criteria.
 5. Implementation planning and write-set definition.
 6. Critic review of scope, risks, topology, verification, and evaluation design.
+7. Classification of consequential external capabilities and Hard Stops.
 
 Required outcome:
 
 - approved objective;
 - authoritative specification or explicit quick-fix contract;
 - implementation plan and write set;
-- risk, side-effect, and hard-stop classification;
+- risk, side-effect, and external Hard-Stop classification;
 - verification plan;
 - evaluation plan when output or trajectory evaluation is required;
-- resolved Critic gate or documented permitted fallback.
+- resolved Critic gate or documented permitted fallback;
+- explicit external capability path for any consequential action.
 
 No implementation write may begin while Stage 0 is blocked.
+
+Generated schema-v3 projects may open the local source scope after these Define
+conditions are satisfied. Opening the local scope does not create production,
+credential, live-data, destructive, protected-branch, or external-publish
+authority.
 
 ### Stage 1 — Execute
 
@@ -49,7 +68,18 @@ Required outcome:
 - the diff is frozen or its exact revision is recorded;
 - implementation concerns and unresolved assumptions are reported.
 
-A material scope change returns the Work Block to Stage 0.
+Within approved scope, ordinary reversible development operations may include
+staging, local commits, normal feature-branch pushes, and pull-request updates.
+They do not require an Owner SSH signature merely because Git state changes.
+
+Direct protected/default-branch mutation, force/history-rewriting operations,
+production/live infrastructure, live data, credentials/secrets, irreversible
+external publication, and real client-facing communication remain outside the
+normal agent channel and require the separately controlled capability defined in
+Stage 0.
+
+A material scope, requirement, architecture, authority, or external-capability
+change returns the Work Block to Stage 0.
 
 ### Stage 2 — Assure
 
@@ -82,6 +112,11 @@ Required outcome:
 - residual risks and inspection gaps;
 - corrective action for blocking findings.
 
+Passing local assurance does not grant an external Hard Stop capability. For
+example, a `READY` verification may prove a deployable artifact while the actual
+production deploy remains unavailable until the external Owner-controlled
+workflow or credential boundary permits it.
+
 ### Stage 3 — Close
 
 Functions:
@@ -99,6 +134,10 @@ Only a verification verdict of `READY` and every required evaluation verdict of
 planning, and reporting-only closeout. It does not permit merge-ready, deploy-ready,
 release-ready, or completed claims.
 
+Successful process closeout also does not bypass an external repository or
+production control. A protected merge, release, or deploy must still satisfy the
+applicable GitHub/OS/credential boundary.
+
 ## Lifecycle State
 
 Track execution state separately from assurance verdict:
@@ -109,10 +148,34 @@ execution_state: blocked | ready | in_progress | completed
 verification_verdict: pending | READY | BLOCKED | UNVERIFIED
 evaluation_verdict: pending | READY | BLOCKED | UNVERIFIED | not_required
 closeout_mode: pending | success | reporting_only
+external_capability_state: not_required | unavailable | pending_owner | available | consumed
 ```
 
 A stage may be `completed` because its required activity finished while the
 result remains `BLOCKED` or `UNVERIFIED`.
+
+`external_capability_state` is evidence about a capability controlled outside the
+mutable project. Editing project-local lifecycle state cannot create or expand
+that capability.
+
+## Local Work-Block Scope State
+
+Generated schema-v3 projects use `authority_mode: github_capability`.
+
+The local source gate has two relevant states:
+
+- `BLOCKED`: source implementation is blocked; canonical coordination paths remain
+  available for plans/specifications/evidence and coordination-only commits;
+- `READY`: source mutations are allowed only inside the active write set after
+  required Define/Critic conditions are resolved.
+
+The recorded `base_commit` is the planning/evidence baseline. A normal feature
+commit does not create a cryptographic `STALE`/renew cycle. If requirements,
+scope, architecture, or authority materially change, return to Define and update
+the Work Block explicitly.
+
+Historical signed authorization records may remain for audit/reference. They do
+not create current schema-v3 authority.
 
 ## Governance Profiles
 
@@ -190,10 +253,11 @@ A quick-fix path may be used only when all of the following are true:
   deployment, provider, or governance impact;
 - verification is cheap and deterministic;
 - output/trajectory evaluation is not required by risk or non-determinism;
-- no hard stop is in scope.
+- no external Hard Stop is in scope.
 
 The quick-fix contract still requires scope, an explicit result, checks, and a
-truthful closeout. It does not exempt side-effect or secret rules.
+truthful closeout. It does not exempt side-effect, secret, or external-capability
+rules.
 
 ## Failure Rules
 
@@ -204,5 +268,7 @@ When a lifecycle function fails:
 - reporting-only closeout may continue;
 - a failed or unavailable review, verification, or evaluation step must not be represented as a pass;
 - a required evaluation with missing observable events remains `BLOCKED` or `UNVERIFIED`;
-- implementation may resume only after the controlling gate is reopened through
-  the documented corrective loop.
+- implementation may resume only after the controlling local scope/process gate is reopened through
+  the documented corrective loop;
+- missing external capability remains unavailable regardless of project-local
+  text, local gate state, test results, or evaluation scores.
