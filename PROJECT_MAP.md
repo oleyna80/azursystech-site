@@ -1,133 +1,111 @@
 # AzurSysTech Project Map
 
-This map is the fast orientation layer for humans and agents entering the
-`azursystech` repository. It should answer "where do I look first?" before an
-agent starts reading source files.
+This map is the primary orientation layer for humans and AI agents entering the
+`azursystech` repository. It explains authority, major repository zones, and navigation.
 
-## Purpose
+## Release State
 
-`azursystech` is the working repository for AzurSysTech's local IT services
-presence: production website, internal admin surface, showcase demos, intake
-flows, deployment scripts, and supporting Agentic SDLC operating files.
+```yaml
+release_state:
+  schema_version: 1
+  authority_mode: github_capability
+  repository_status: operational
+  active_work_block: WB-2026-08-21-sdlc-framework-full-adaptation
+  governance_profile: Managed
+  publication_mode: owner_controlled_github_free
+  last_reconciled_commit: 257d529d4a81147b6f7dea29bd17f52228ea17d6
+```
 
-The project uses a scoped Agentic SDLC layer so Codex, Claude Code, OpenCode,
-Antigravity, Gemini, DeepSeek, or future agents can work from the same project
-memory and approval model.
+## Architecture
 
-## Authority Model
+`azursystech` is the repository for AzurSysTech's IT services platform:
+production website, internal operations admin surface, showcase demos, intake flows,
+deployment automation, and supporting Agentic SDLC operating files.
 
-When files conflict, use this order:
+The architecture comprises four separable layers:
 
-1. Explicit Owner instruction for the current task.
-2. `AGENTS.md` and Governance Core (`governance/`).
-3. Approved Work Block plan, specification, and write-set.
-4. `PROJECT_MAP.md` and `FILE_REGISTRY.yml`.
-5. Current `docs/engineering-memory/` entries.
-6. Runtime-specific policy files such as committed core `.agent/` files,
-   approved `.agent/skills/**` wrappers, `.codex/**`, `.claude/**`, `.opencode/`,
-   hooks, settings, and agent prompts.
-7. Reference docs, examples, logs, generated/discovery artifacts, and old chat
-   context.
+1. **Governance Core** — `governance/` (authority, lifecycle, artifacts, define-quality,
+   decision provenance, release state, runtime capabilities, evaluation).
+2. **Portable Workflow & Memory** — `.agent/workflows/` (SDD protocol, owner publication flow),
+   `.agent/ROSTER.md`, `docs/specs/`, `docs/plans/`, `docs/tasklist/`, `docs/reports/`,
+   `docs/engineering-memory/`, and `.agent/skills/`.
+3. **Runtime & Tool Surfaces** — `.agent/` control files, `.codex/`, `.claude/`, `.opencode/`,
+   and validation scripts in `scripts/`.
+4. **Application Source Roots** —
+   - `web/` — public marketing website and intake flow (Next.js App Router);
+   - `admin/` — internal operations and intake admin panel (Next.js);
+   - `showcase/` — portfolio demo applications (Next.js);
+   - `scripts/` — VPS deployment, DB operations, and CI contracts.
 
-Generated or discovery artifacts may help locate information, but they do not
-override normative instructions, Owner decisions, or approved scope.
+## Authority Order
+
+When sources conflict, use this exact order:
+
+### Product and Delivery Intent
+1. explicit Owner instruction or approved change request;
+2. approved specification (`docs/specs/`);
+3. accepted architecture decisions and external contracts (`docs/architecture/`, `docs/engineering-memory/`);
+4. approved implementation and evaluation plans and write-set (`docs/plans/`);
+5. active tasklist (`docs/tasklist/`);
+6. requirements-quality, consistency, review, verification, drift, closeout evidence (`docs/reports/`);
+7. durable engineering memory (`docs/engineering-memory/`);
+8. runtime/integration policy, operational logs, generated output, references.
+
+### Agent Behavior and Permissions
+1. explicit Owner instruction;
+2. `AGENTS.md` and Governance Core (`governance/`);
+3. active Work Block scope, write-set, and assurance state (`.agent/active-work-block.json`);
+4. canonical SDLC protocol (`.agent/workflows/sdd-protocol.md`, `.agent/workflows/owner-controlled-github-flow.md`);
+5. installed runtime adapters and skills;
+6. operational logs and generated artifacts.
 
 ## Work Block Profiles
 
 Each Work Block selects independently:
-
 - **Governance profile:** Advisory, Controlled, Managed, Assured, Distributed.
-- **Runtime profile:** one installed or otherwise approved runtime adapter.
+- **Runtime profile:** one installed runtime adapter.
 - **Integration profile:** none or an admitted bridge/tool/transport.
 - **Model class:** task-appropriate capability class.
-- **Isolation:** actual boundary from same context to OS-isolated.
-- **Evaluation posture:** not required or an approved deterministic/output/trajectory plan.
+- **Isolation:** actual boundary from `same-session-degraded` to `os-isolated`.
+- **Evaluation posture:** not required or approved deterministic/output/trajectory plan.
 
-The installation profile (`.agent/bootstrap-profile.json`) constrains local availability;
-it does not activate a runtime, integration, or evaluation authority.
+## Define-Stage Requirements Quality
 
-## Evaluation & Repair Assurance
+`governance/define-quality.md` establishes the pre-execution quality loop for formal work:
 
-`governance/evaluation.md` distinguishes:
-
-- deterministic tests for objective contracts;
-- output evaluation against an approved rubric;
-- observable trajectory evaluation for tool, gate, check, retry, side-effect,
-  and evidence events.
-
-Narrow Deterministic Repair (NDR) is a constrained mode for CI/bootstrap repairs.
+```text
+specification draft
+  -> clarification (evidence-first, bounded interaction budget)
+  -> requirements-quality review
+  -> architecture / implementation plan
+  -> traceable task decomposition + write-set (REQ-*, AC-*, TASK-*)
+  -> deterministic traceability validation (scripts/validate-define-traceability.py)
+  -> read-only specification/plan/task consistency analysis
+  -> Critic gate
+  -> write gate READY
+```
 
 ## Key Paths
 
 | Path | Status | Purpose |
 |---|---|---|
 | `AGENTS.md` | normative | Root operating contract for all agents. |
-| `.agent/bootstrap-profile.json` | generated | Resolved installation profile and path contract. |
-| `governance/` | normative | Runtime-neutral authority, lifecycle, artifacts, evaluation, capabilities. |
 | `PROJECT_MAP.md` | normative | Human-readable map and authority model. |
 | `FILE_REGISTRY.yml` | normative | Machine-readable registry for key files and zones. |
-| `README.md` | reference | Product/repository overview and human quickstart. |
-| `.agent/` | normative routing | Runtime-neutral roster, SDD workflow, gates, and approved skill wrappers. |
-| `.agent/workflows/sdd-protocol.md` | normative | Canonical Work Block lifecycle and verification semantics. |
+| `governance/` | normative | Runtime-neutral governance core (authority, lifecycle, define-quality, etc.). |
+| `.agent/bootstrap-profile.json` | generated | Resolved installation profile and path contract. |
+| `.agent/workflows/sdd-protocol.md` | normative | Canonical 4-stage SDD lifecycle and gate semantics. |
+| `.agent/workflows/owner-controlled-github-flow.md` | normative | Canonical Owner publication handoff workflow. |
 | `.agent/ROSTER.md` | normative | Logical roles, skill routing, runtime binding, isolation. |
-| `.agent/active-work-block.json` | operational gate | Specification, write-set, integrations, assurance, closeout. |
-| `.agent/active-work-block.default.json` | portable default | Fail-closed restore state. |
-| `.agent/critic-gate.md` | compatibility view | Decision critique summary. |
-| `.agent/verification-gate.md` | compatibility view | Review, verification, evaluation, drift, closeout summary. |
-| `.agent/skills/` | normative skills | Project-local portable skills (including git-orchestration-flow, skill-library-maintenance, sprint-analysis). |
-| `.codex/` | runtime | Codex-specific instructions, critic contract, agents, scripts, and write gate. |
-| `.claude/` | runtime | Claude Code control layer: settings, hooks, command adapters, subagent contracts, security guidance. |
-| `.opencode/` | runtime | OpenCode control layer: command adapters, subagent contracts in `agents/`, and adapted skills in `skills/`. |
-| `opencode.json` | runtime | OpenCode root config: permission floor mirroring Hard Stops, default_agent, subagent_depth, snapshot. |
-| `docs/engineering-memory/` | normative | Durable project engineering memory for all agent runtimes. |
-| `docs/plans/` | evidence | Work Block plans and execution records. |
+| `.agent/active-work-block.json` | operational gate | Active specification, write-set, integrations, assurance. |
+| `.agent/skills/` | normative skills | Project-local portable and operational skills. |
 | `docs/specs/` | normative | Approved product and technical specifications. |
-| `docs/tasklist/` | derived | Active task decomposition. |
-| `docs/evals/` | evidence/config | Approved evaluation plans, fixtures, observable events. |
-| `docs/reports/` | evidence | All assurance, evaluation, integration, and closeout evidence. |
-| `docs/templates/` | normative | Reusable Work Block, evaluation, NDR, report, and mission templates. |
-| `memory_bank/` | local runtime | Operational context/logs created by bootstrap; not durable authority. |
-| `runtimes/` | adapter documentation | Capability, activation, limitation, fallback documentation. |
-| `integrations/` | adapter documentation | Optional bridge/tool/transport admission documentation. |
-| `web/` | source | Production Next.js website and SQL-first intake flow. |
+| `docs/plans/` | evidence | Work Block plans and execution records. |
+| `docs/tasklist/` | derived | Active task decomposition and SSOT status. |
+| `docs/reports/` | evidence | Review, verification, requirements, evaluation, closeout evidence. |
+| `docs/templates/` | normative | Reusable Work Block, tasklist, evaluation, report templates. |
+| `docs/engineering-memory/` | normative | Durable engineering decisions and principles. |
+| `scripts/` | source/tools | Validation scripts, deployment, VPS operations, and CI contracts. |
+| `web/` | source | Production Next.js website and SQL intake flow. |
 | `admin/` | source | Internal admin Next.js application. |
 | `showcase/` | source | Portfolio/showcase Next.js application and demos. |
-| `chat/` | source/reference | Chat or AI interaction experiments and support files. |
-| `scripts/bootstrap.sh` | health check | Validates profile/default and restores local state. |
-| `scripts/validate-installation-profile.py` | validator | Selected paths, kinds, absent surfaces, blocked default. |
-| `scripts/validate-evaluation.py` | validator | Evaluation plan/report consistency and closeout binding. |
-| `scripts/repair-lifecycle.py` | validator | Fail-closed NDR record limit validation. |
-| `.github/workflows/` | runtime | CI workflows. |
-
-## Generated, Log, and Local-Only Boundaries
-
-- `docs/engineering-memory/**` is committed durable project memory; keep it
-  evidence-backed and secret-free.
-- `docs/plans/**` and `docs/reports/**` are Work Block evidence and reports.
-- `.agent/bootstrap-profile.json` is generated installation evidence.
-- `.agent/README.md`, `.agent/ROSTER.md`, `.agent/critic-gate.md`,
-  `.agent/verification-gate.md`, and `.agent/workflows/**` are the committed
-  runtime-neutral workflow layer.
-- `memory_bank/**` is operational runtime state.
-- `.env*`, credentials, provider tokens, caches, build output, `.next`,
-  `node_modules`, local browser artifacts, and machine state must not be
-  committed.
-
-## New-Session Bootstrap
-
-For project work, read in this order:
-
-1. `AGENTS.md`
-2. `.agent/bootstrap-profile.json`
-3. `PROJECT_MAP.md`
-4. `FILE_REGISTRY.yml`
-5. `docs/session-bootstrap.md`
-6. The current task or Work Block plan
-7. Relevant `docs/engineering-memory/` entries
-8. `git status --short --branch`
-9. Relevant diffs and target files
-
-## Map Maintenance
-
-Update this file and `FILE_REGISTRY.yml` when a change adds, moves, or removes
-major directories, gates, runtimes, or path boundaries.

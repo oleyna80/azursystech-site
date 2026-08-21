@@ -12,6 +12,14 @@ DEFAULT_WORK_BLOCK_PATH = Path(".agent/active-work-block.default.json")
 SCHEMA_VERSION = 1
 DEFAULT_WORK_BLOCK_SCHEMA_VERSION = 3
 EXPECTED_AUTHORITY_MODE = "github_capability"
+EXPECTED_DEFAULT_GOVERNANCE_PROFILE = "Controlled"
+EXPECTED_DEFAULT_DEFINE_QUALITY = {
+    "required": False,
+    "status": "PENDING",
+    "requirements_review": "",
+    "traceability": "",
+    "consistency_analysis": "",
+}
 EXPECTED_EXTERNAL_HARD_STOPS = [
     "protected_default_branch_mutation",
     "destructive",
@@ -208,6 +216,14 @@ def validate_blocked_default(root: Path) -> None:
     if state.get("authority_mode") != EXPECTED_AUTHORITY_MODE:
         raise ValidationError(
             f"{DEFAULT_WORK_BLOCK_PATH} authority_mode must be {EXPECTED_AUTHORITY_MODE}"
+        )
+    if state.get("governance_profile") != EXPECTED_DEFAULT_GOVERNANCE_PROFILE:
+        raise ValidationError(
+            f"{DEFAULT_WORK_BLOCK_PATH} governance_profile must be the canonical Controlled default"
+        )
+    if state.get("define_quality") != EXPECTED_DEFAULT_DEFINE_QUALITY:
+        raise ValidationError(
+            f"{DEFAULT_WORK_BLOCK_PATH} define_quality must be the canonical Controlled PENDING default"
         )
     if "authorization" in state or "hard_stop_approvals" in state:
         raise ValidationError(
