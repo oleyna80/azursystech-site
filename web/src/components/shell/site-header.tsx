@@ -29,7 +29,7 @@ function getLocaleFromPath(pathname: string): HeaderLocale | null {
   return LOCALE_SLUGS.has(seg) ? (seg as HeaderLocale) : null;
 }
 
-function buildLocalizedPath(pathname: string, next: HeaderLocale): string {
+export function buildLocalizedPath(pathname: string, next: HeaderLocale): string {
   const segs = pathname.split("/");
   if (LOCALE_SLUGS.has(segs[1])) {
     segs[1] = next;

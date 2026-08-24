@@ -7,7 +7,7 @@
 - **Side-effect class:** application source write (`web/**`)
 - **DB action mode:** none
 - **Owner approval:** 2026-08-24 conversation confirmation
-- **Specification:** `docs/specs/WB-2026-08-24-english-translation-completion.md` (`v2`)
+- **Specification:** `docs/specs/WB-2026-08-24-english-translation-completion.md` (`v3`)
 - **Baseline:** `68b15d51a0dd5c3d5bc3929e9ee9aa36b3999f73`
 - **Evaluation:** not required; deterministic UI copy, route, and unit test contracts only
 
@@ -17,12 +17,16 @@
 web/src/i18n.js
 web/src/proxy.ts
 web/src/app/layout.tsx
+web/src/app/fonts/Geist-Variable.woff2
+web/src/app/fonts/GeistMono-Variable.woff2
+web/src/app/fonts/OFL.txt
 web/src/app/[locale]/_home-data.ts
 web/src/app/[locale]/page.tsx
 web/src/app/[locale]/ai-automation/_ai-automation-data.ts
 web/src/app/[locale]/ai-automation/page.tsx
 web/src/app/ai-automation/page.tsx
 web/src/components/shell/site-header.tsx
+web/src/components/shell/site-header.test.ts
 web/src/components/shell/site-footer.tsx
 web/src/lib/brief-submit.ts
 web/src/lib/brief-assistant.ts
@@ -75,7 +79,7 @@ docs/reports/verification-WB-2026-08-24-english-translation-completion.md
 | TASK-008 | requirement | Scoped Coder | web/src/lib/brief-submit.ts, brief/** | AC-004 | done |
 | TASK-009 | requirement | Scoped Coder | web/src/app/legal, privacy, terms, etc. | AC-005 | done |
 | TASK-010 | requirement | Scoped Coder | web/src/lib/portfolio-data.ts, portfolio/** | AC-006 | done |
-| TASK-011 | requirement | Scoped Coder | web/src/app/[locale]/*.test.ts | AC-007 | done |
+| TASK-011 | requirement | Scoped Coder | web/src/app/[locale]/*.test.ts, web/src/lib/portfolio-data.test.ts, web/src/components/shell/site-header.test.ts | AC-003, AC-007 | done |
 | TASK-012 | assurance | Reviewer | review report | AC-008 | done |
 | TASK-013 | requirement | Verifier | verification report, active gate | AC-008 | done |
 | TASK-014 | requirement | Scoped Coder | web/src/proxy.ts, page.tsx, brief/page.tsx | AC-003, AC-004 | done |
@@ -83,3 +87,4 @@ docs/reports/verification-WB-2026-08-24-english-translation-completion.md
 | TASK-016 | requirement | Scoped Coder | web/src/app/layout.tsx | AC-003, AC-005 | done |
 | TASK-017 | requirement | Scoped Coder | site-header.tsx | AC-003, AC-005 | done |
 | TASK-018 | requirement | Scoped Coder | brief-submit.test.ts, route.test.ts, api-security.test.ts | AC-007 | done |
+| TASK-019 | requirement | Scoped Coder | `web/src/app/fonts/**`, `web/src/app/layout.tsx` | AC-008 | done; build verification pending isolated workspace |

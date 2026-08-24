@@ -241,6 +241,21 @@ def test_codex_scope() -> None:
         holder.cleanup()
 
 
+def test_codex_coordination_commit_scope() -> None:
+    holder, cwd, base = make_repo()
+    try:
+        gate = ready_gate(base, cwd)
+        write_gate(cwd, gate)
+        (cwd / ".agent/critic-gate.md").write_text("critic\n", encoding="utf-8")
+        git(cwd, "add", ".agent/critic-gate.md")
+        assert_allow(
+            hook(CODEX_GATE, cwd, "Bash", {"command": "git commit -m coordination"}),
+            "staged hidden coordination commit",
+        )
+    finally:
+        holder.cleanup()
+
+
 def test_claude_scope_and_closeout() -> None:
     holder, cwd, base = make_repo()
     try:
@@ -330,6 +345,7 @@ TESTS = [
     test_lifecycle,
     test_hard_stops,
     test_codex_scope,
+    test_codex_coordination_commit_scope,
     test_claude_scope_and_closeout,
     test_opencode_posture,
 ]
