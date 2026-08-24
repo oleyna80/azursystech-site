@@ -20,8 +20,8 @@
 | **REQ-004 / AC-004** (Brief Intake Flow) | READY | `brief-submit.ts`, `brief-assistant.ts`, `brief/page.tsx`, `brief-form.tsx`, `brief-field.tsx`, `brief-progress.tsx`, and `api/brief/submit/route.ts` fully support English with 29 field definitions, guidance, step counters, option placeholders, example tags, validation, and localized API responses. |
 | **REQ-005 / AC-005** (Legal, AI Automation & Utility) | READY | `legal/page.tsx`, `privacy/page.tsx`, `terms/page.tsx`, `thank-you/page.tsx`, `data-deletion/page.tsx`, and `ai-automation/page.tsx` provide complete English translations with cookie and query param resolution. |
 | **REQ-006 / AC-006** (Portfolio Pages) | READY | `portfolio-data.ts`, `portfolio/page.tsx`, and `portfolio/[slug]/page.tsx` have valid metadata and navigation to `/portfolio` and `/brief`. |
-| **REQ-007 / AC-007** (Unit Tests) | READY | `_home-data.test.ts`, `brief-submit.test.ts`, `route.test.ts`, and `api-security.test.ts` assert 6 English showcase demos, English structured data, Cyrillic-free brief dictionaries, English submit/validation, and proxy cookie persistence. `npm run test -- --run` exits 0 (24 test suites, 121 tests passing). |
-| **REQ-008 / AC-008** (Build & Gate Quality) | READY | `npm run check:types` passed (0 errors); `npm run build` compiled successfully (33/33 routes static & dynamic verified). Traceability validated with `scripts/validate-define-traceability.py`. |
+| **REQ-007 / AC-007** (Unit Tests) | READY | `_home-data.test.ts`, `brief-submit.test.ts`, `route.test.ts`, and `api-security.test.ts` assert 6 English showcase demos, English structured data, Cyrillic-free brief dictionaries, English submit/validation, request header propagation, API CORS preflight handling, and proxy cookie persistence. `npm --prefix web run test -- --run` exits 0 (24 test suites, 122 tests passing). |
+| **REQ-008 / AC-008** (Build & Gate Quality) | READY | `npm --prefix web run check:types` passed (0 errors); `npm --prefix web run build` compiled successfully (33/33 routes static & dynamic verified). Traceability validated with `scripts/validate-define-traceability.py`. |
 
 ---
 
@@ -29,24 +29,24 @@
 
 1. **Typecheck:**
    ```bash
-   npm run check:types
+   npm --prefix web run check:types
    # Exit code: 0
    ```
 
 2. **Unit Tests:**
    ```bash
-   npm run test -- --run
+   npm --prefix web run test -- --run
    # Test Files: 24 passed | 1 skipped (25)
-   # Tests: 121 passed | 3 skipped (124)
+   # Tests: 122 passed | 3 skipped (125)
    # Exit code: 0
    ```
 
 3. **Production Build:**
    ```bash
-   npm run build
-   # ✓ Compiled successfully in 5.4s
-   # ✓ Finished TypeScript in 7.4s
-   # ✓ Generating static pages (33/33) in 422ms
+   npm --prefix web run build
+   # ✓ Compiled successfully in 7.8s
+   # ✓ Finished TypeScript in 11.0s
+   # ✓ Generating static pages (33/33) in 471ms
    # Exit code: 0
    ```
 

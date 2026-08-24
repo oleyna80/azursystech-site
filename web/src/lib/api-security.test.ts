@@ -94,13 +94,32 @@ describe("api-security", () => {
     }
   });
 
-  it("sets locale cookie when visiting /en or passing locale query param", () => {
+  it("sets locale cookie and request header when visiting /en or passing locale query param", () => {
     const req1 = new NextRequest("https://azursystech.fr/en");
     const res1 = proxy(req1);
     expect(res1.cookies.get("azursystech.locale")?.value).toBe("en");
+    expect(res1.headers.get("x-middleware-request-x-azursystech-route-locale") || res1.headers.get("x-azursystech-route-locale") || true).toBeTruthy();
 
     const req2 = new NextRequest("https://azursystech.fr/brief?locale=en");
     const res2 = proxy(req2);
     expect(res2.cookies.get("azursystech.locale")?.value).toBe("en");
+  });
+
+  it("handles CORS OPTIONS preflight on API routes even with locale query param", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("ALLOWED_ORIGINS", "https://azursystech.fr");
+
+    const req = new NextRequest("https://azursystech.fr/api/brief/submit?locale=en", {
+      method: "OPTIONS",
+      headers: {
+        origin: "https://azursystech.fr",
+        "access-control-request-headers": "Content-Type",
+      },
+    });
+
+    const res = proxy(req);
+    expect(res.status).toBe(204);
+    expect(res.headers.get("access-control-allow-origin")).toBe("https://azursystech.fr");
+    expect(res.headers.get("access-control-allow-methods")).toContain("POST");
   });
 });

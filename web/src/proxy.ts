@@ -47,13 +47,36 @@ function withCorsHeaders(response: NextResponse, origin: string, request: NextRe
 }
 
 export function proxy(request: NextRequest): NextResponse {
-  const locale = request.nextUrl.pathname.split("/")[1];
-  if (ROUTE_LOCALES.has(locale)) {
+  const { pathname } = request.nextUrl;
+
+  // 1. API routes must always process CORS and handle OPTIONS preflight
+  if (pathname.startsWith("/api/")) {
+    const origin = request.headers.get("origin");
+    const allowedOrigins = getAllowedOrigins();
+
+    if (!origin) {
+      return NextResponse.next();
+    }
+
+    if (!allowedOrigins.has(origin)) {
+      return NextResponse.json({ error: "Origin not allowed" }, { status: 403 });
+    }
+
+    if (request.method === "OPTIONS") {
+      return withCorsHeaders(new NextResponse(null, { status: 204 }), origin, request);
+    }
+
+    return withCorsHeaders(NextResponse.next(), origin, request);
+  }
+
+  // 2. Locale prefix routes: /fr, /ru, /en
+  const firstSeg = pathname.split("/")[1];
+  if (ROUTE_LOCALES.has(firstSeg)) {
     const requestHeaders = new Headers(request.headers);
-    requestHeaders.set(LOCALE_HEADER, locale);
+    requestHeaders.set(LOCALE_HEADER, firstSeg);
     const response = NextResponse.next({ request: { headers: requestHeaders } });
-    if (request.cookies.get(LOCALE_STORAGE_KEY)?.value !== locale) {
-      response.cookies.set(LOCALE_STORAGE_KEY, locale, {
+    if (request.cookies.get(LOCALE_STORAGE_KEY)?.value !== firstSeg) {
+      response.cookies.set(LOCALE_STORAGE_KEY, firstSeg, {
         path: "/",
         sameSite: "lax",
         maxAge: 31536000,
@@ -62,9 +85,12 @@ export function proxy(request: NextRequest): NextResponse {
     return response;
   }
 
+  // 3. Query-based locale parameter on pages: /brief?locale=en, /legal?locale=en, etc.
   const queryLocale = request.nextUrl.searchParams.get("locale");
   if (queryLocale && ROUTE_LOCALES.has(queryLocale)) {
-    const response = NextResponse.next();
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set(LOCALE_HEADER, queryLocale);
+    const response = NextResponse.next({ request: { headers: requestHeaders } });
     if (request.cookies.get(LOCALE_STORAGE_KEY)?.value !== queryLocale) {
       response.cookies.set(LOCALE_STORAGE_KEY, queryLocale, {
         path: "/",
@@ -75,22 +101,7 @@ export function proxy(request: NextRequest): NextResponse {
     return response;
   }
 
-  const origin = request.headers.get("origin");
-  const allowedOrigins = getAllowedOrigins();
-
-  if (!origin) {
-    return NextResponse.next();
-  }
-
-  if (!allowedOrigins.has(origin)) {
-    return NextResponse.json({ error: "Origin not allowed" }, { status: 403 });
-  }
-
-  if (request.method === "OPTIONS") {
-    return withCorsHeaders(new NextResponse(null, { status: 204 }), origin, request);
-  }
-
-  return withCorsHeaders(NextResponse.next(), origin, request);
+  return NextResponse.next();
 }
 
 export const config = {

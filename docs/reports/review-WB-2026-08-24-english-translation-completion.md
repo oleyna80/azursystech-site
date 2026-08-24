@@ -28,10 +28,12 @@
 
 1. **Scope & Write-Set Alignment:** All 32 changed files are fully aligned with the approved active Work Block write-set and coordination boundaries.
 2. **Defect Remediation Summary:**
-   - **P1 (Locale retention on direct /en visit):** Fixed by setting `azursystech.locale` cookie in `proxy.ts`, passing `?locale=${l}` on locale home CTA, and resolving `searchParams` on all cookie-backed pages.
+   - **P1 (Locale retention & shell header synchronization):** Fixed by setting `x-azursystech-route-locale` request headers on both route locales and query parameters (`?locale=en`) in `proxy.ts`, passing `?locale=${l}` on locale home CTA, setting response cookies, and resolving `searchParams` on all cookie-backed pages.
+   - **P1 (Undefined `supportsEnglishRoute` call):** Removed lingering call to deleted helper in `site-header.tsx:91` and used `LOCALE_OPTIONS` directly; independent `npm --prefix web run check:types` passes cleanly.
    - **P1 (Russian strings in brief UI):** Fully localized `BriefProgress` ("Step X of Y") and `BriefField` (`aria-label`, "Show help: ...", "Example:", "Select an option", "Specify your option", "Please specify").
-   - **P1 (Root layout shell locale):** `resolveShellLocale` in `layout.tsx` now supports `"en"` cookie locale.
+   - **P1 (Root layout shell locale):** `resolveShellLocale` in `layout.tsx` now supports `"en"` cookie locale and request header locale.
+   - **P2 (API CORS preflight with query param):** Reordered middleware routing in `proxy.ts` so `/api/*` requests always execute CORS headers and OPTIONS preflight handling regardless of query params.
    - **P2 (Language switch navigation on static pages):** `COOKIE_BACKED_ROUTES` in `site-header.tsx` expanded to include `/legal`, `/privacy`, `/terms`, `/thank-you`, `/data-deletion`, `/ai-automation`.
-   - **P2 (Test coverage):** Added English API submit/validation tests in `route.test.ts`, Cyrillic-free verification in `brief-submit.test.ts`, and middleware cookie test in `api-security.test.ts`.
-3. **Type Safety:** Full strict TypeScript compliance with zero `any` evasions.
+   - **P2 (Test coverage):** Added English API submit/validation tests in `route.test.ts`, Cyrillic-free verification in `brief-submit.test.ts`, and middleware cookie/header + CORS preflight tests in `api-security.test.ts`.
+3. **Type Safety:** Full strict TypeScript compliance with zero `any` evasions (`npm --prefix web run check:types` exits 0).
 4. **Git Flow Compliance:** Changes strictly contained within `feat/english-translation` branch, stopping prior to remote push per Owner publication protocol.

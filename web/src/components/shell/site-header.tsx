@@ -88,7 +88,7 @@ export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
   const [locale, setLocale] = useState<HeaderLocale>(routeLocale ?? initialLocale);
   const copy = HEADER_COPY[locale];
   const navLinks = useMemo(() => buildNavLinks(locale), [locale]);
-  const localeOptions = supportsEnglishRoute(pathname) ? LOCALE_OPTIONS : LOCALE_OPTIONS.filter((option) => option !== "en");
+  const localeOptions = LOCALE_OPTIONS;
 
   useEffect(() => {
     setLocale(routeLocale ?? initialLocale);
