@@ -5,7 +5,7 @@ import Link from "next/link";
 import { LOCALE_COOKIE_KEY, resolveLocale } from "@/i18n";
 import { LEGAL_CONTACT } from "@/lib/legal-content";
 
-type PrivacyLocale = "fr" | "ru";
+type PrivacyLocale = "fr" | "ru" | "en";
 
 type PrivacySection = {
   title: string;
@@ -282,6 +282,139 @@ const PRIVACY_PAGE = {
     legalLink: "правовой информации",
     legalSuffix: ".",
   },
+  en: {
+    meta: {
+      title: "Privacy policy | AzurSysTech",
+      description:
+        "Privacy policy of AzurSysTech: collected data, purposes, legal basis, cookies, and intake forms.",
+    },
+    eyebrow: "AzurSysTech",
+    title: "Privacy Policy",
+    intro:
+      "AzurSysTech respects the privacy of website visitors and processes personal data in accordance with applicable legislation, including GDPR (Regulation EU 2016/679) and French data protection laws.",
+    sections: [
+      {
+        title: "1. Data Controller",
+        paragraphs: [
+          "The data controller is AzurSysTech. Full contact information and legal details are available on our legal information page.",
+        ],
+      },
+      {
+        title: "2. Data We May Collect",
+        intro: "Depending on how you contact us, AzurSysTech may collect the following information:",
+        items: [
+          "name",
+          "phone number",
+          "email address",
+          "city / region",
+          "client type (individual / business)",
+          "project or workflow description",
+          "team size or business scope",
+          "any additional details voluntarily submitted via forms, email, telephone, or WhatsApp",
+        ],
+      },
+      {
+        title: "3. Purpose of Processing",
+        intro: "Personal data is processed for the following purposes:",
+        items: [
+          "processing incoming enquiries and project briefs",
+          "contacting the user for follow-up",
+          "clarifying project scope and technical requirements",
+          "scheduling discovery calls or project onboarding",
+          "preparing proposals and providing client support",
+          "maintaining communication history",
+          "improving intake service quality",
+        ],
+      },
+      {
+        title: "4. Legal Basis for Processing",
+        intro: "Processing is based on:",
+        items: [
+          "pre-contractual steps taken at the user's request",
+          "contract performance when the user becomes a client",
+          "legitimate interest of AzurSysTech in managing client communications",
+          "and compliance with applicable legal obligations",
+        ],
+      },
+      {
+        title: "5. Data Recipients & External Services",
+        intro:
+          "Data is only accessible to personnel and service providers required for website operation and service delivery, including:",
+        items: [
+          "website hosting infrastructure",
+          "communication channels (email, telephone, WhatsApp)",
+          "internal workflow and ticketing systems",
+          "CRM tools where actively deployed",
+          "technical analytics where activated",
+        ],
+        paragraphs: [
+          "AzurSysTech does not share personal data with unauthorized third parties, except as required by law or necessary for contracted services.",
+        ],
+      },
+      {
+        title: "6. Data Retention Period",
+        intro:
+          "Personal data is retained only as long as necessary for the specified purposes, taking into account:",
+        items: [
+          "enquiry and brief processing duration",
+          "subsequent client communications",
+          "contractual and accounting requirements",
+          "statutory retention periods",
+        ],
+      },
+      {
+        title: "7. User Rights",
+        intro: "Under applicable data protection laws, users have the right to:",
+        items: [
+          "request access to their personal data",
+          "request rectification of inaccurate data",
+          "request erasure of data where legally applicable",
+          "request restriction of processing",
+          "object to data processing where applicable",
+          "specify instructions regarding data disposition after death as provided by French law",
+        ],
+        paragraphs: [
+          "Users may also lodge a complaint with the CNIL (French Data Protection Authority) if they believe their rights are not being respected.",
+        ],
+      },
+      {
+        title: "8. Data Protection Contact",
+        items: [
+          `Email: ${LEGAL_CONTACT.email}`,
+          `Phone / WhatsApp: ${LEGAL_CONTACT.whatsappDisplay}`,
+        ],
+      },
+      {
+        title: "9. Audience Measurement & Analytics",
+        paragraphs: [
+          "The website may use technical analytics and audience measurement tools to understand traffic and optimize performance. Where deployed, these tools are configured in compliance with regulatory standards.",
+        ],
+      },
+      {
+        title: "Cookies & Consent",
+        paragraphs: [
+          "Analytics cookies and measurement tools are activated only upon explicit user consent. Before consent is granted, no non-essential cookies are loaded, and the site remains fully operational.",
+        ],
+      },
+      {
+        title: "10. Forms and Assistants",
+        paragraphs: [
+          "Data submitted via website forms or interactive assistants is used solely to process your enquiry and register your request in AzurSysTech's intake system.",
+          "Interactive assistants provide preliminary intake guidance only and do not create binding commercial, legal, or timeline commitments.",
+        ],
+      },
+      {
+        title: "11. Associated Legal Information",
+        paragraphs: [
+          "Additional details regarding site ownership, hosting, and contact information are available on our legal information page.",
+        ],
+      },
+    ] as PrivacySection[],
+    legalPrefix:
+      "Additional details regarding site ownership, hosting, and contact information are available on our ",
+    legalLink: "legal information page",
+    legalSuffix: ".",
+  },
 } as const satisfies Record<
   PrivacyLocale,
   {
@@ -297,7 +430,8 @@ const PRIVACY_PAGE = {
 >;
 
 function resolvePrivacyLocale(value?: string | null): PrivacyLocale {
-  return resolveLocale(value) === "ru" ? "ru" : "fr";
+  const resolved = resolveLocale(value);
+  return resolved === "ru" ? "ru" : resolved === "en" ? "en" : "fr";
 }
 
 export async function generateMetadata(): Promise<Metadata> {

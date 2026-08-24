@@ -1,8 +1,8 @@
 # Verification Gate Record
 
-- **Work Block:** `WB-2026-08-21-sdlc-framework-full-adaptation`
+- **Work Block:** `WB-2026-08-24-english-translation-completion`
 - **Status:** `READY`
 - **Verdict:** `READY`
-- **Report:** [`docs/reports/verification-WB-2026-08-21-sdlc-framework-full-adaptation.md`](file:///home/azur/Projects/WSL/azursystech/docs/reports/verification-WB-2026-08-21-sdlc-framework-full-adaptation.md)
+- **Report:** [`docs/reports/verification-WB-2026-08-24-english-translation-completion.md`](file:///home/azur/Projects/WSL/azursystech/docs/reports/verification-WB-2026-08-24-english-translation-completion.md)
 - **Isolation:** `same-session-degraded` (advisory)
-- **Resolved at:** 2026-08-21T18:42:00Z
+- **Resolved at:** 2026-08-24T12:15:00+02:00

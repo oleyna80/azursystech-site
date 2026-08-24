@@ -11,7 +11,7 @@ const SHOWCASE_ROUTE_SLUG_BY_CARD_SLUG = {
 } as const
 
 describe("HOME_CONTENT showcase section", () => {
-  const locales = ["fr", "ru"] as const
+  const locales = ["fr", "ru", "en"] as const
 
   for (const l of locales) {
     describe(l, () => {
@@ -66,12 +66,13 @@ describe("HOME_CONTENT English launch content", () => {
   const copy = HOME_CONTENT.en
 
   it("contains complete native English copy for the visible sections", () => {
-    expect(copy.heroTitle).toMatch(/AI automation/i)
+    expect(copy.heroTitle).toMatch(/automated/i)
+    expect(copy.heroIntro).toMatch(/AI agents/i)
     expect(copy.businessTitle).toBeTruthy()
     expect(copy.automationTitle).toBeTruthy()
     expect(copy.pricingItems.length).toBeGreaterThan(0)
     expect(copy.faqs.length).toBeGreaterThan(0)
-    expect(copy.showcaseDemos).toEqual([])
+    expect(copy.showcaseDemos).toHaveLength(6)
   })
 
   it("publishes English service structured data without obsolete IT repair claims", () => {

@@ -1,0 +1,65 @@
+# Work Block Plan — Complete English Translation and Localization
+
+## Metadata
+
+- **Work Block:** `WB-2026-08-24-english-translation-completion`
+- **Governance profile:** Managed
+- **Side-effect class:** application source write (`web/**`)
+- **DB action mode:** none
+- **Owner approval:** 2026-08-24 conversation confirmation
+- **Specification:** `docs/specs/WB-2026-08-24-english-translation-completion.md` (`v1`)
+- **Baseline:** `68b15d51a0dd5c3d5bc3929e9ee9aa36b3999f73`
+- **Evaluation:** not required; deterministic UI copy, route, and unit test contracts only
+
+## Scope and Write-Set
+
+```text
+web/src/i18n.js
+web/src/app/[locale]/_home-data.ts
+web/src/app/[locale]/page.tsx
+web/src/components/shell/site-header.tsx
+web/src/components/shell/site-footer.tsx
+web/src/lib/brief-submit.ts
+web/src/app/brief/page.tsx
+web/src/components/brief/brief-form.tsx
+web/src/app/legal/page.tsx
+web/src/app/privacy/page.tsx
+web/src/app/terms/page.tsx
+web/src/app/thank-you/page.tsx
+web/src/app/data-deletion/page.tsx
+web/src/lib/portfolio-data.ts
+web/src/app/portfolio/page.tsx
+web/src/app/portfolio/[slug]/page.tsx
+web/src/app/[locale]/_home-data.test.ts
+web/src/app/[locale]/page.test.ts
+docs/specs/WB-2026-08-24-english-translation-completion.md
+docs/plans/WB-2026-08-24-english-translation-completion.md
+docs/tasklist/WB-2026-08-24-english-translation-completion.tasklist.md
+docs/reports/requirements-quality-WB-2026-08-24-english-translation-completion.md
+docs/reports/traceability-WB-2026-08-24-english-translation-completion.md
+docs/reports/critic-WB-2026-08-24-english-translation-completion.md
+docs/reports/review-WB-2026-08-24-english-translation-completion.md
+docs/reports/verification-WB-2026-08-24-english-translation-completion.md
+.agent/active-work-block.json
+.agent/critic-gate.md
+.agent/verification-gate.md
+.codex/write-gate.md
+```
+
+## Plan Tasks
+
+| ID | Type | Owner | Paths | Acceptance link | Status |
+|---|---|---|---|---|---|
+| TASK-001 | documentation | Orchestrator | spec, plan, tasklist, active gate | AC-001–AC-008 | in_progress |
+| TASK-002 | assurance | Orchestrator | requirements-quality report | REQ-001, AC-001 | ready_for_critic |
+| TASK-003 | assurance | Orchestrator | traceability/consistency report | REQ-001–REQ-008, AC-001–AC-008 | ready_for_critic |
+| TASK-004 | assurance | Critic | critic report, gate | AC-001–AC-008 | ready_for_critic |
+| TASK-005 | requirement | Scoped Coder | web/src/i18n.js | AC-001 | pending |
+| TASK-006 | requirement | Scoped Coder | web/src/app/[locale]/_home-data.ts, page.tsx | AC-002 | pending |
+| TASK-007 | requirement | Scoped Coder | web/src/components/shell/** | AC-003 | pending |
+| TASK-008 | requirement | Scoped Coder | web/src/lib/brief-submit.ts, brief/** | AC-004 | pending |
+| TASK-009 | requirement | Scoped Coder | web/src/app/legal, privacy, terms, etc. | AC-005 | pending |
+| TASK-010 | requirement | Scoped Coder | web/src/lib/portfolio-data.ts, portfolio/** | AC-006 | pending |
+| TASK-011 | requirement | Scoped Coder | web/src/app/[locale]/*.test.ts | AC-007 | pending |
+| TASK-012 | assurance | Reviewer | review report | AC-008 | pending |
+| TASK-013 | requirement | Verifier | verification report, active gate | AC-008 | pending |

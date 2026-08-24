@@ -59,18 +59,26 @@ const FOOTER_COPY = {
     ],
   },
   en: {
-    about: "Web applications and AI automation for small businesses, delivered remotely from Nice.",
-    navigationTitle: "Explore",
-    documentsTitle: "",
-    contactTitle: "Project contact",
-    serviceArea: "Remote projects from Nice, France",
+    about: "Websites and AI automation for small businesses in Nice and remote.",
+    navigationTitle: "Navigation",
+    documentsTitle: "Documents",
+    contactTitle: "Contact",
+    serviceArea: "Nice and up to 30 km around / Remote",
     links: [
       { href: "/#automation", label: "AI automation" },
-      { href: "/#services", label: "Web applications" },
-      { href: "/ai-automation", label: "Automation offer" },
+      { href: "/#websites", label: "Websites" },
+      { href: "/portfolio", label: "Portfolio" },
+      { href: "/brief", label: "Brief" },
+      { href: "/#services", label: "All services" },
+      { href: "/#pricing", label: "Pricing" },
       { href: "/#faq", label: "FAQ" },
+      { href: "/en#contact", label: "Contact" },
     ],
-    legalLinks: [],
+    legalLinks: [
+      { href: "/privacy", label: "Privacy policy" },
+      { href: "/legal", label: "Legal information" },
+      { href: "/terms", label: "Terms of service" },
+    ],
   },
 } as const;
 
@@ -104,7 +112,7 @@ export function SiteFooter({ locale }: { locale: FooterLocale }) {
             <span className="mb-4 block text-2xl font-bold text-white">AzurSysTech</span>
             <p className="text-sm leading-7 text-white/72">{copy.about}</p>
           </div>
-          <div className={`grid gap-8 ${activeLocale === "en" ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"}`}>
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             <div className="grid gap-4">
               <h2 className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/92">{copy.navigationTitle}</h2>
               <div className="grid gap-3">
@@ -118,31 +126,25 @@ export function SiteFooter({ locale }: { locale: FooterLocale }) {
                 })}
               </div>
             </div>
-            {activeLocale !== "en" ? (
-              <div className="grid gap-4">
-                <h2 className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/92">{copy.documentsTitle}</h2>
-                <div className="grid gap-3">
-                  {copy.legalLinks.map((link) => (
-                    <a key={link.href} href={link.href} className="text-base font-semibold text-white/78 transition-colors hover:text-white">
-                      {link.label}
-                    </a>
-                  ))}
-                </div>
+            <div className="grid gap-4">
+              <h2 className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/92">{copy.documentsTitle}</h2>
+              <div className="grid gap-3">
+                {copy.legalLinks.map((link) => (
+                  <a key={link.href} href={link.href} className="text-base font-semibold text-white/78 transition-colors hover:text-white">
+                    {link.label}
+                  </a>
+                ))}
               </div>
-            ) : null}
-            <div className={`grid gap-4 ${activeLocale === "en" ? "" : "sm:col-span-2 lg:col-span-1"}`}>
+            </div>
+            <div className="grid gap-4 sm:col-span-2 lg:col-span-1">
               <h2 className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/92">{copy.contactTitle}</h2>
               <div className="grid gap-3 text-base font-semibold text-white/82">
-                {activeLocale !== "en" ? (
-                  <>
-                    <a href={CONTACT.phoneHref} className="transition-colors hover:text-white">
-                      {CONTACT.phoneDisplay}
-                    </a>
-                    <a href={`mailto:${CONTACT.email}`} className="transition-colors hover:text-white">
-                      {CONTACT.email}
-                    </a>
-                  </>
-                ) : null}
+                <a href={CONTACT.phoneHref} className="transition-colors hover:text-white">
+                  {CONTACT.phoneDisplay}
+                </a>
+                <a href={`mailto:${CONTACT.email}`} className="transition-colors hover:text-white">
+                  {CONTACT.email}
+                </a>
                 <a href={CONTACT.whatsappHref} target="_blank" rel="noreferrer" className="transition-colors hover:text-white">
                   {CONTACT.whatsappDisplay}
                 </a>

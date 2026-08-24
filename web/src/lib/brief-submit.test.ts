@@ -99,4 +99,18 @@ describe("brief-submit", () => {
     });
     expect(payload.crm_handoff).toEqual(createBriefHandoff(payload.brief, "fr"));
   });
+
+  it("handles English locale correctly in validation and handoff", () => {
+    const valid = validateBriefValues(createValidBriefValues(), "en");
+    expect(valid.kind).toBe("ok");
+
+    const handoff = createBriefHandoff(createValidBriefValues(), "en");
+    expect(handoff.recommended_next_step).toBe("pilot_discussion");
+    expect(handoff.business_type).toBe("Local service company");
+    expect(handoff.priority_use_case).toBe("Initial intake via chat & messengers");
+    expect(handoff.summary).toContain("AzurSysTech");
+
+    const payload = buildBriefSubmissionPayload(createValidBriefValues(), {}, "en");
+    expect(payload.locale).toBe("en");
+  });
 });

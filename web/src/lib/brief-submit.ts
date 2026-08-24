@@ -4,10 +4,11 @@ export const BRIEF_SCHEMA_VERSION = "brief.v1" as const;
 export const BRIEF_SOURCE = "brief_form" as const;
 export const BRIEF_ROUTE = "/brief" as const;
 
-export type BriefLocale = "fr" | "ru";
+export type BriefLocale = "fr" | "ru" | "en";
 
 export function resolveBriefLocale(value?: string | null): BriefLocale {
-  return resolveLocale(value ?? undefined) === "ru" ? "ru" : "fr";
+  const resolved = resolveLocale(value ?? undefined);
+  return resolved === "ru" ? "ru" : resolved === "en" ? "en" : "fr";
 }
 
 const BRIEF_BUSINESS_TYPES = [
@@ -572,6 +573,351 @@ function createBriefFields(locale: BriefLocale): Record<BriefFieldKey, BriefFiel
     };
   }
 
+  if (locale === "en") {
+    return {
+      company_name: {
+        key: "company_name",
+        label: "Company / Project name",
+        type: "text",
+        required: true,
+        helperText: "Specify the name of your business, service, or project.",
+        placeholder: "AzurSysTech",
+        example: "AzurSysTech",
+      },
+      website_url: {
+        key: "website_url",
+        label: "Website",
+        type: "text",
+        required: false,
+        helperText: "You can leave this blank if you don't have a website yet. A simple domain is enough, e.g. azursystech.fr.",
+        placeholder: "azursystech.fr",
+        example: "azursystech.fr",
+      },
+      business_type: {
+        key: "business_type",
+        label: "Business type",
+        type: "select",
+        required: true,
+        helperText: "Choose the category closest to your business activity.",
+        assistantTrigger: true,
+        options: [
+          { value: "local_service_company", label: "Local service company" },
+          { value: "small_office_cabinet", label: "Small office / professional practice" },
+          { value: "ecommerce", label: "E-commerce" },
+          { value: "retail_store", label: "Retail / store" },
+          { value: "agency_studio", label: "Agency / studio" },
+          { value: "consultant_expert_business", label: "Consultant / expert business" },
+          { value: "other", label: "Other" },
+        ],
+        allowOther: true,
+        otherFieldKey: "business_type_other",
+        otherPlaceholder: "Briefly describe the business type",
+      },
+      target_market: {
+        key: "target_market",
+        label: "Target audience / geography",
+        type: "text",
+        required: false,
+        helperText: "You can specify a city, country, or broader market.",
+        placeholder: "Nice, Côte d'Azur, France",
+        example: "Nice, Côte d'Azur, France",
+      },
+      team_size: {
+        key: "team_size",
+        label: "Team size",
+        type: "select",
+        required: false,
+        helperText: "If you don't have an exact number, pick the closest range.",
+        options: [
+          { value: "1", label: "1" },
+          { value: "2_5", label: "2–5" },
+          { value: "6_10", label: "6–10" },
+          { value: "11_25", label: "11–25" },
+          { value: "25_plus", label: "25+" },
+        ],
+      },
+      main_goal: {
+        key: "main_goal",
+        label: "Which process do you want to automate first?",
+        type: "textarea",
+        required: true,
+        helperText: "Describe one single priority process to improve first.",
+        placeholder: "I want to automate the initial handling of enquiries coming from the website and WhatsApp.",
+        example: "I want to automate the initial handling of enquiries coming from the website and WhatsApp.",
+        assistantTrigger: true,
+      },
+      main_problem: {
+        key: "main_problem",
+        label: "What is the biggest challenge or bottleneck today?",
+        type: "textarea",
+        required: true,
+        helperText: "Specify where you lose time, visibility, or incoming leads.",
+        placeholder: "Requests arrive via multiple channels, some get lost, and the team repeats the same questions.",
+        example: "Requests arrive via multiple channels, some get lost, and the team repeats the same questions.",
+        assistantTrigger: true,
+      },
+      desired_result: {
+        key: "desired_result",
+        label: "What concrete outcome do you want to achieve?",
+        type: "textarea",
+        required: true,
+        helperText: "Describe the business result, not the technical implementation.",
+        placeholder: "I want enquiries to be aggregated, pre-qualified, and forwarded with a clear summary.",
+        example: "I want enquiries to be aggregated, pre-qualified, and forwarded with a clear summary.",
+        assistantTrigger: true,
+      },
+      priority_use_case: {
+        key: "priority_use_case",
+        label: "Which scenario is most important right now?",
+        type: "select",
+        required: true,
+        helperText: "If there are multiple scenarios, choose the most impactful first step.",
+        assistantTrigger: true,
+        options: [
+          { value: "website_leads", label: "Website leads & forms" },
+          { value: "messenger_intake", label: "Initial intake via chat & messengers" },
+          { value: "qualification", label: "Initial lead pre-qualification" },
+          { value: "customer_support", label: "Customer support on recurring questions" },
+          { value: "routing", label: "Enquiry routing" },
+          { value: "follow_up", label: "Follow-ups & reminders" },
+          { value: "document_workflow", label: "Standardized document workflow" },
+          { value: "other", label: "Other" },
+        ],
+        allowOther: true,
+        otherFieldKey: "priority_use_case_other",
+        otherPlaceholder: "Briefly describe the scenario",
+      },
+      why_now: {
+        key: "why_now",
+        label: "Why address this topic now?",
+        type: "textarea",
+        required: false,
+        helperText: "Optional, but helps us understand the context and urgency.",
+        placeholder: "Enquiry volume increased and manual processing is slowing down sales.",
+        example: "Enquiry volume increased and manual processing is slowing down sales.",
+      },
+      current_process_description: {
+        key: "current_process_description",
+        label: "How does this process work today?",
+        type: "textarea",
+        required: true,
+        helperText: "Describe the workflow in simple steps: where requests come from, who replies, what happens next.",
+        placeholder: "The client fills the website form or writes on WhatsApp, then a team member clarifies details and copies them into a sheet.",
+        example: "The client fills the website form or writes on WhatsApp, then a team member clarifies details and copies them into a sheet.",
+        assistantTrigger: true,
+      },
+      current_channels: {
+        key: "current_channels",
+        label: "Through which channels do enquiries arrive today?",
+        type: "multi_select",
+        required: true,
+        helperText: "Select all channels actively used today.",
+        assistantTrigger: true,
+        options: [
+          { value: "website_form", label: "Website / form" },
+          { value: "website_chat", label: "Website chat" },
+          { value: "whatsapp", label: "WhatsApp" },
+          { value: "facebook_instagram", label: "Facebook / Instagram" },
+          { value: "email", label: "Email" },
+          { value: "phone", label: "Phone" },
+          { value: "crm", label: "CRM" },
+          { value: "marketplace", label: "Marketplace" },
+          { value: "other", label: "Other" },
+        ],
+        allowOther: true,
+        otherFieldKey: "current_channels_other",
+        otherPlaceholder: "Specify the other channel",
+      },
+      current_owner_of_process: {
+        key: "current_owner_of_process",
+        label: "Who manages this process today?",
+        type: "text",
+        required: false,
+        helperText: "You can specify a role rather than an exact person's name.",
+        placeholder: "Owner, manager, or receptionist",
+        example: "Sales manager and business owner",
+      },
+      main_bottleneck: {
+        key: "main_bottleneck",
+        label: "Where is the biggest bottleneck located?",
+        type: "textarea",
+        required: true,
+        helperText: "Try to isolate one primary friction point.",
+        placeholder: "The biggest bottleneck is initial intake: asking the same preliminary questions manually for every request.",
+        example: "The biggest bottleneck is initial intake: asking the same preliminary questions manually for every request.",
+        assistantTrigger: true,
+      },
+      current_tools: {
+        key: "current_tools",
+        label: "Which tools or systems do you currently use?",
+        type: "textarea",
+        required: false,
+        helperText: "A simple list is enough: website, spreadsheets, CRM, messaging.",
+        placeholder: "Website, Google Sheets, WhatsApp, CRM",
+        example: "Website, Google Sheets, WhatsApp, CRM",
+      },
+      human_approval_required: {
+        key: "human_approval_required",
+        label: "At which stages is human approval mandatory?",
+        type: "multi_select",
+        required: true,
+        helperText: "This helps distinguish what can be automated from what must remain human-verified.",
+        assistantTrigger: true,
+        options: [
+          { value: "first_response", label: "First response" },
+          { value: "qualification", label: "Lead qualification" },
+          { value: "handoff_to_work", label: "Task dispatch / handoff" },
+          { value: "price_quote", label: "Price quotation / proposal" },
+          { value: "deadlines_booking", label: "Deadlines / appointments" },
+          { value: "documents", label: "Documents" },
+          { value: "final_client_reply", label: "Final client reply" },
+          { value: "not_sure", label: "Not sure yet" },
+        ],
+        notesFieldKey: "human_approval_required_notes",
+        notesPlaceholder: "You can briefly explain where manual review is mandatory and why.",
+      },
+      sensitive_data_or_constraints: {
+        key: "sensitive_data_or_constraints",
+        label: "Are there sensitive data, constraints, or specifics to respect?",
+        type: "textarea",
+        required: false,
+        helperText: "If there are data privacy, hosting, or internal document constraints, mention them here.",
+        placeholder: "For example: client personal data, financial details, internal files.",
+        example: "For example: client personal data, financial details, internal files.",
+      },
+      what_must_not_happen: {
+        key: "what_must_not_happen",
+        label: "What must NEVER happen in this automation?",
+        type: "textarea",
+        required: true,
+        helperText: "For example: the agent must not quote prices, promise deadlines, or send messages without review.",
+        placeholder: "For example: no sending messages without verification, and no modifying CRM data without review.",
+        example: "No sending messages without verification and no modifying CRM data without review.",
+        assistantTrigger: true,
+      },
+      preferred_start_mode: {
+        key: "preferred_start_mode",
+        label: "How would you like to start?",
+        type: "select",
+        required: true,
+        helperText: "When in doubt, the safest option is often an audit, a pilot, or a brief discovery call.",
+        options: [
+          { value: "audit_review", label: "Process audit & scoping" },
+          { value: "pilot_one_process", label: "Pilot on a single workflow" },
+          { value: "ai_agent_incoming_requests", label: "AI agent for incoming requests" },
+          { value: "ai_agent_customer_requests", label: "AI agent for client support" },
+          { value: "document_automation", label: "Document automation" },
+          { value: "discovery_call_only", label: "Short discovery call only" },
+          { value: "not_sure", label: "Not sure yet" },
+        ],
+        assistantTrigger: true,
+      },
+      timeline_priority: {
+        key: "timeline_priority",
+        label: "How urgent is this for you?",
+        type: "select",
+        required: false,
+        helperText: "You can choose a target range even if the exact date is not set.",
+        options: [
+          { value: "asap", label: "As soon as possible" },
+          { value: "2_4_weeks", label: "In the next 2 to 4 weeks" },
+          { value: "1_3_months", label: "In the next 1 to 3 months" },
+          { value: "exploring", label: "Just exploring options" },
+        ],
+      },
+      budget_range: {
+        key: "budget_range",
+        label: "Do you have an estimated budget range?",
+        type: "select",
+        required: false,
+        helperText: "This field is optional. It is normal if there is no fixed budget yet.",
+        options: [
+          { value: "no_budget_yet", label: "No fixed budget yet" },
+          { value: "audit_first", label: "Audit / consultation first" },
+          { value: "up_to_1000", label: "Up to €1,000" },
+          { value: "1000_3000", label: "€1,000–€3,000" },
+          { value: "3000_10000", label: "€3,000–€10,000" },
+          { value: "10000_plus", label: "€10,000+" },
+          { value: "prefer_to_discuss", label: "Prefer to discuss" },
+        ],
+      },
+      contact_name: {
+        key: "contact_name",
+        label: "Name",
+        type: "text",
+        required: true,
+        helperText: "The name of the person to contact for follow-up.",
+        placeholder: "Alex",
+        example: "Alex",
+      },
+      contact_email: {
+        key: "contact_email",
+        label: "Email",
+        type: "email",
+        required: true,
+        helperText: "Primary channel for follow-up communication.",
+        placeholder: "alex@example.com",
+        example: "alex@example.com",
+      },
+      contact_phone_or_whatsapp: {
+        key: "contact_phone_or_whatsapp",
+        label: "Phone / WhatsApp",
+        type: "text",
+        required: false,
+        helperText: "You can provide a single number for both phone and WhatsApp.",
+        placeholder: "+33 7 80 72 09 94",
+        example: "+33 7 80 72 09 94",
+      },
+      preferred_contact_method: {
+        key: "preferred_contact_method",
+        label: "Which channel do you prefer for our response?",
+        type: "select",
+        required: false,
+        helperText: "If you have no preference, choose 'Any channel works'.",
+        options: [
+          { value: "email", label: "Email" },
+          { value: "whatsapp", label: "WhatsApp" },
+          { value: "phone", label: "Phone call" },
+          { value: "meeting", label: "Video call / meeting" },
+          { value: "no_matter", label: "Any channel works" },
+        ],
+      },
+      business_type_other: {
+        key: "business_type_other",
+        label: "Business type details",
+        type: "text",
+        required: false,
+        helperText: "Fill in if you selected 'Other'.",
+        placeholder: "Briefly describe the activity",
+      },
+      priority_use_case_other: {
+        key: "priority_use_case_other",
+        label: "Scenario details",
+        type: "text",
+        required: false,
+        helperText: "Fill in if you selected 'Other'.",
+        placeholder: "Briefly describe the scenario",
+      },
+      current_channels_other: {
+        key: "current_channels_other",
+        label: "Other channel details",
+        type: "text",
+        required: false,
+        helperText: "Fill in if you selected 'Other'.",
+        placeholder: "Specify the other channel",
+      },
+      human_approval_required_notes: {
+        key: "human_approval_required_notes",
+        label: "Notes on human control",
+        type: "textarea",
+        required: false,
+        helperText: "You can briefly explain where manual review is mandatory.",
+        placeholder: "For example: first message can be automated, but quotes and schedules must be approved by a person.",
+        example: "First message can be automated, but quotes and schedules must be approved by a person.",
+      },
+    };
+  }
+
   return {
     company_name: {
       key: "company_name",
@@ -1019,6 +1365,72 @@ export function getBriefSteps(locale: BriefLocale = "ru"): BriefStepDefinition[]
     ];
   }
 
+  if (locale === "en") {
+    return [
+      {
+        id: "business-context",
+        title: "Company & Context",
+        shortDescription: "Quick overview of your business and market.",
+        fields: [
+          fields.company_name,
+          fields.website_url,
+          fields.business_type,
+          fields.target_market,
+          fields.team_size,
+        ],
+      },
+      {
+        id: "goal-and-problem",
+        title: "Goal & Challenge",
+        shortDescription: "What you want to build or automate and why.",
+        fields: [
+          fields.main_goal,
+          fields.main_problem,
+          fields.desired_result,
+          fields.priority_use_case,
+          fields.why_now,
+        ],
+      },
+      {
+        id: "current-process",
+        title: "Current Workflow",
+        shortDescription: "How things work today and where bottlenecks occur.",
+        fields: [
+          fields.current_process_description,
+          fields.current_channels,
+          fields.current_owner_of_process,
+          fields.main_bottleneck,
+        ],
+      },
+      {
+        id: "constraints-and-control",
+        title: "Systems & Human Control",
+        shortDescription: "Current tools, constraints, and required human review.",
+        fields: [
+          fields.current_tools,
+          fields.human_approval_required,
+          fields.human_approval_required_notes,
+          fields.sensitive_data_or_constraints,
+          fields.what_must_not_happen,
+        ],
+      },
+      {
+        id: "launch-and-contact",
+        title: "Launch & Contact",
+        shortDescription: "Preferred starting step and how to reach you.",
+        fields: [
+          fields.preferred_start_mode,
+          fields.timeline_priority,
+          fields.budget_range,
+          fields.contact_name,
+          fields.contact_email,
+          fields.contact_phone_or_whatsapp,
+          fields.preferred_contact_method,
+        ],
+      },
+    ];
+  }
+
   return [
     {
       id: "business-context",
@@ -1158,6 +1570,43 @@ const BRIEF_COPY = {
         humanControl: "Контроль человека",
         forbidden: "Что не должно происходить",
         nextStep: "Следующий шаг",
+      },
+    },
+  },
+  en: {
+    validation: {
+      selectAtLeastOneChannel: "Select at least one channel",
+      enterEmail: "Please provide an email",
+      fillRequiredField: "Please fill out this required field",
+      enterCompanyName: "Please enter your company or project name",
+      addMoreDetails: "Please provide a bit more detail",
+      invalidPhone: "Please check the phone number",
+      answerTooLong: "Answer is too long",
+      selectValueFromList: "Please select a value from the list",
+      specifyBusinessType: "Please specify your business type",
+      specifyUseCase: "Please specify the use case",
+      specifyOtherChannel: "Please specify the other channel",
+      selectAtLeastOneStage: "Select at least one stage",
+      invalidEmailFormat: "Please check the email format",
+      invalidPhoneFormat: "Please check the phone format",
+      invalidUrlFormat: "Please check the website URL format",
+      invalidDataFormat: "Invalid data format",
+    },
+    handoff: {
+      notSpecified: "Not specified",
+      labels: {
+        company: "Company",
+        businessType: "Business type",
+        goal: "Goal",
+        problem: "Challenge",
+        result: "Result",
+        useCase: "Use case",
+        currentProcess: "Current process",
+        channels: "Channels",
+        bottleneck: "Bottleneck",
+        humanControl: "Human control",
+        forbidden: "Must not happen",
+        nextStep: "Next step",
       },
     },
   },
@@ -1619,7 +2068,7 @@ function buildCurrentChannelsLabel(values: BriefFormValues, locale: BriefLocale)
   if (values.current_channels.includes("other") && values.current_channels_other) {
     const otherIndex = values.current_channels.indexOf("other");
     if (otherIndex >= 0) {
-      labels[otherIndex] = `${locale === "fr" ? "Autre" : "Другое"}: ${values.current_channels_other}`;
+      labels[otherIndex] = `${locale === "fr" ? "Autre" : locale === "en" ? "Other" : "Другое"}: ${values.current_channels_other}`;
     }
   }
 

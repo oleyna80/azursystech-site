@@ -1,0 +1,47 @@
+# Specification — Complete English Translation and Localization
+
+## Status
+
+- **Work Block:** `WB-2026-08-24-english-translation-completion`
+- **Status:** approved by Owner on 2026-08-24
+- **Revision:** `v1`
+- **Baseline:** `68b15d51a0dd5c3d5bc3929e9ee9aa36b3999f73`
+
+## Objective
+
+Complete the English localization of the AzurSysTech web platform (`web/`), bringing the English experience to full parity with French and Russian versions. This includes modernizing the i18n dictionary to reflect the current AI automation and web development positioning, enabling showcase demos and portfolio sections on `/en`, providing English translations for the interactive project brief, translating legal and compliance pages (`/legal`, `/privacy`, `/terms`, `/thank-you`, `/data-deletion`), and expanding header/footer language switching site-wide.
+
+## Requirements
+
+- REQ-001: Synchronize `web/src/i18n.js` English dictionary with modern AI automation and website service positioning, aligning all section keys, navbar, hero, businessValue, services (`automationCards`), whyUs, howItWorks, pricing, faq, contact, and footer.
+- REQ-002: Expand `web/src/app/[locale]/_home-data.ts` to include complete English showcase demo cards (`showcaseDemos` with 6 demos matching French/Russian cards) and localized showcase/portfolio copy; update `web/src/app/[locale]/page.tsx` to display showcase and portfolio sections on `/en`.
+- REQ-003: Update `web/src/components/shell/site-header.tsx` and `web/src/components/shell/site-footer.tsx` to enable the English language switcher globally, include portfolio in English nav, synchronize header CTA to `/brief`, and provide complete legal links, contact details, and navigation in the English footer.
+- REQ-004: Extend `web/src/lib/brief-submit.ts`, `web/src/app/brief/page.tsx`, and `web/src/components/brief/brief-form.tsx` to support `BriefLocale` `"en"` with complete English form fields, placeholders, helpers, step titles, options, assistant triggers, and validation messages.
+- REQ-005: Localize legal, policy, and utility pages (`web/src/app/legal/page.tsx`, `web/src/app/privacy/page.tsx`, `web/src/app/terms/page.tsx`, `web/src/app/thank-you/page.tsx`, `web/src/app/data-deletion/page.tsx`) with complete English translations and cookie/locale resolution.
+- REQ-006: Localize portfolio index and detail pages (`web/src/lib/portfolio-data.ts`, `web/src/app/portfolio/page.tsx`, `web/src/app/portfolio/[slug]/page.tsx`) with English metadata and UI navigation.
+- REQ-007: Update Vitest test suites (including `_home-data.test.ts`, `page.test.ts`, and brief submit tests) to validate English translations, showcase demo integrity, schema validation, and route stability.
+- REQ-008: Execute comprehensive assurance (requirements quality, consistency analysis, Critic gate, TypeScript typecheck, build validation, and verification reporting).
+
+## Acceptance Criteria
+
+- AC-001 [req=REQ-001]: `web/src/i18n.js` contains a complete English dictionary with `automationCards`, updated hero, services, pricing, faq, and contact matching French and Russian structures without missing keys.
+- AC-002 [req=REQ-002]: `web/src/app/[locale]/_home-data.ts` defines 6 English `showcaseDemos` with valid slugs, titles, categories, site types, business functions, and automation badges; `web/src/app/[locale]/page.tsx` renders showcase and portfolio sections on `/en`.
+- AC-003 [req=REQ-003]: `site-header.tsx` enables `en` across all site routes and includes portfolio in nav; `site-footer.tsx` renders legal links, contact channels, and full navigation for English visitors.
+- AC-004 [req=REQ-004]: `BriefLocale` accepts `"en"`, `createBriefFields("en")` returns localized definitions for all fields, and the brief form submits and validates successfully in English.
+- AC-005 [req=REQ-005]: `/legal`, `/privacy`, `/terms`, `/thank-you`, and `/data-deletion` resolve English locale from cookie/param and display complete English legal text and metadata.
+- AC-006 [req=REQ-006]: `/portfolio` and `/portfolio/[slug]` provide English metadata and UI links to demo sites and the brief form.
+- AC-007 [req=REQ-007]: `npm run test` executes with all tests passing, including updated assertions for 6 English showcase demos and English structured data.
+- AC-008 [req=REQ-008]: `npm run check:types` and `npm run build` pass with zero errors; Critic report and verification report confirm full acceptance.
+
+## Explicit Non-Goals
+
+- Modifying database schema or live database data in production.
+- Modifying VPS infrastructure, deploy scripts, or secrets.
+- Changing showcase demo source codes inside `showcase/app/demo/*` (showcases remain standalone reference mockups).
+- Executing autonomous `git push` or merging directly into `main`.
+
+## Provenance
+
+- **Classification:** `original`
+- **Owner Request:** 2026-08-24 instruction to create branch and complete English translation.
+- **Local delta:** Upgrades English translation across all site layers (`web/`) to complete parity with French and Russian.

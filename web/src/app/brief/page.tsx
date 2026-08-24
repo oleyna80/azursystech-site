@@ -53,6 +53,29 @@ const PAGE_COPY = {
       "После отправки бриф попадёт на ручную проверку. Мы используем его, чтобы уточнить задачу и предложить разумный первый шаг. Это не обещание цены, сроков или принятия проекта.",
     formError: "Форма временно недоступна. Свяжитесь с нами напрямую через форму на главной странице.",
   },
+  en: {
+    meta: {
+      title: "Project brief — websites and AI automation | AzurSysTech",
+      description:
+        "Describe your website or AI automation project in a few lines. A single process is enough to get started — no binding commitment.",
+    },
+    eyebrow: "AzurSysTech / project brief",
+    title: "Describe your project — website, automation, or both",
+    intro:
+      "A few lines are enough: how your workflow runs today, what gets in the way, or what you want to automate. This helps identify the right first step and a realistic starting scope.",
+    backCta: "Back to home",
+    directCta: "Contact directly",
+    noteTitle: "Things to keep in mind",
+    noteItems: [
+      "This is not a full technical specification",
+      "A single workflow or bottleneck is plenty",
+      "After submission: manual review, followed by clear next steps",
+    ],
+    footerNote:
+      "After submission, your brief is reviewed manually. We use it to understand your requirements and propose a practical starting step. It does not constitute a binding quote, deadline, or project acceptance.",
+    formError:
+      "The form is temporarily unavailable. Please contact us directly via the contact section on the home page.",
+  },
 } as const satisfies Record<BriefLocale, {
   meta: { title: string; description: string };
   eyebrow: string;

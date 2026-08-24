@@ -21,7 +21,7 @@ function getLocaleFromPath(pathname: string): HeaderLocale | null {
 }
 
 function supportsEnglishRoute(pathname: string): boolean {
-  return /\/(fr|ru|en)(?:\/ai-automation)?$/.test(pathname);
+  return true;
 }
 
 function buildLocalizedPath(pathname: string, next: HeaderLocale): string {
@@ -33,7 +33,7 @@ function buildLocalizedPath(pathname: string, next: HeaderLocale): string {
   if (COOKIE_BACKED_ROUTES.includes(pathname as (typeof COOKIE_BACKED_ROUTES)[number])) {
     return pathname;
   }
-  return next === "en" ? pathname : `/${next}`;
+  return `/${next}`;
 }
 
 const HEADER_COPY = {
@@ -56,7 +56,7 @@ const HEADER_COPY = {
     menuOpenLabel: "Open menu",
     menuCloseLabel: "Close menu",
     whatsappCta: "WhatsApp",
-    submitCta: "Discuss a project",
+    submitCta: "Describe a project",
   },
 } as const;
 
@@ -64,18 +64,8 @@ function buildNavLinks(locale: HeaderLocale) {
   const t = {
     fr: { automation: "Automatisation IA", websites: "Sites web", portfolio: "Portfolio", services: "Services", faq: "FAQ", contact: "Contact" },
     ru: { automation: "AI-автоматизация", websites: "Сайты", portfolio: "Портфолио", services: "Услуги", faq: "FAQ", contact: "Контакты" },
-    en: { automation: "AI automation", websites: "Web applications", portfolio: "", services: "Services", faq: "FAQ", contact: "Contact" },
+    en: { automation: "AI automation", websites: "Websites", portfolio: "Portfolio", services: "Services", faq: "FAQ", contact: "Contact" },
   }[locale];
-  if (locale === "en") {
-    return [
-      { href: "/en#automation", label: t.automation },
-      { href: "/en#services", label: t.websites },
-      { href: "/en/ai-automation", label: t.services },
-      { href: "/en#faq", label: t.faq },
-      { href: "/en#contact", label: t.contact },
-    ];
-  }
-  // Portfolio sits after "websites": feature discovery before meta links (faq/contact).
   return [
     { href: `/${locale}#automation`, label: t.automation },
     { href: `/${locale}#websites`, label: t.websites },
@@ -199,23 +189,12 @@ export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
           >
             {copy.whatsappCta}
           </a>
-          {locale === "en" ? (
-            <a
-              href={CONTACT.whatsappHref}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex rounded-full bg-accent-teal px-4 py-2.5 text-xs font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-accent-teal/90 sm:px-5 sm:text-sm"
-            >
-              {copy.submitCta}
-            </a>
-          ) : (
           <Link
             href="/brief"
             className="inline-flex rounded-full bg-accent-teal px-4 py-2.5 text-xs font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-accent-teal/90 sm:px-5 sm:text-sm"
           >
             {copy.submitCta}
           </Link>
-          )}
           <button
             type="button"
             onClick={() => setIsMenuOpen((prev) => !prev)}
