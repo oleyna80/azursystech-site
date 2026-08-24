@@ -120,5 +120,7 @@ export const config = {
     "/thank-you",
     "/data-deletion",
     "/ai-automation",
+    "/portfolio",
+    "/portfolio/:path*",
   ],
 };

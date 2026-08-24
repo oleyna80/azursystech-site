@@ -6,9 +6,10 @@ type Props = {
   title: string;
   intro: string;
   projects: readonly PortfolioProject[];
+  learnMoreLabel?: string;
 };
 
-export function PortfolioSection({ eyebrow, title, intro, projects }: Props) {
+export function PortfolioSection({ eyebrow, title, intro, projects, learnMoreLabel }: Props) {
   return (
     <section className="bg-[#081120] py-20 text-white md:py-28">
       <div className="container mx-auto px-4 md:px-8">
@@ -24,7 +25,7 @@ export function PortfolioSection({ eyebrow, title, intro, projects }: Props) {
 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {projects.map((project) => (
-            <PortfolioCard key={project.slug} project={project} />
+            <PortfolioCard key={project.slug} project={project} learnMoreLabel={learnMoreLabel} />
           ))}
         </div>
       </div>

@@ -21,6 +21,7 @@ const COOKIE_BACKED_ROUTES = [
   "/thank-you",
   "/data-deletion",
   "/ai-automation",
+  "/portfolio",
 ] as const;
 
 function getLocaleFromPath(pathname: string): HeaderLocale | null {

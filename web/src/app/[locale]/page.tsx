@@ -4,7 +4,7 @@ import Link from "next/link";
 import { HomeContactSection } from "@/components/sections/home-contact";
 import { PortfolioCard } from "@/components/portfolio/portfolio-card";
 import { ShowcaseSection } from "@/components/sections/showcase";
-import { PORTFOLIO_PROJECTS } from "@/lib/portfolio-data";
+import { getPortfolioProjects } from "@/lib/portfolio-data";
 import { buildHomeJsonLd, HOME_CONTENT, type HomeLocale } from "./_home-data";
 
 const SUPPORTED_LOCALES = ["fr", "ru", "en"] as const;
@@ -235,8 +235,12 @@ export default async function LocaleHomePage({
             <p className="mt-5 max-w-2xl text-lg leading-8 text-white/68">{copy.portfolioIntro}</p>
           </div>
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {PORTFOLIO_PROJECTS.slice(0, 3).map((project) => (
-              <PortfolioCard key={project.slug} project={project} />
+            {getPortfolioProjects(locale).slice(0, 3).map((project) => (
+              <PortfolioCard
+                key={project.slug}
+                project={project}
+                learnMoreLabel={locale === "ru" ? "Подробнее" : locale === "en" ? "Learn more" : "En savoir plus"}
+              />
             ))}
           </div>
           <div className="mt-10">
