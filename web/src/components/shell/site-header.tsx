@@ -21,7 +21,6 @@ const COOKIE_BACKED_ROUTES = [
   "/thank-you",
   "/data-deletion",
   "/ai-automation",
-  "/portfolio",
 ] as const;
 
 function getLocaleFromPath(pathname: string): HeaderLocale | null {
@@ -65,7 +64,7 @@ const HEADER_COPY = {
   },
 } as const;
 
-function buildNavLinks(locale: HeaderLocale) {
+export function buildNavLinks(locale: HeaderLocale) {
   const t = {
     fr: { automation: "Automatisation IA", websites: "Sites web", portfolio: "Portfolio", services: "Services", faq: "FAQ", contact: "Contact" },
     ru: { automation: "AI-автоматизация", websites: "Сайты", portfolio: "Портфолио", services: "Услуги", faq: "FAQ", contact: "Контакты" },
@@ -74,7 +73,7 @@ function buildNavLinks(locale: HeaderLocale) {
   return [
     { href: `/${locale}#automation`, label: t.automation },
     { href: `/${locale}#websites`, label: t.websites },
-    { href: "/portfolio", label: t.portfolio },
+    { href: `/${locale}/portfolio`, label: t.portfolio },
     { href: `/${locale}#services`, label: t.services },
     { href: `/${locale}#faq`, label: t.faq },
     { href: `/${locale}#contact`, label: t.contact },

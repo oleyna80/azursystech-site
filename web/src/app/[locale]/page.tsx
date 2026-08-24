@@ -10,6 +10,10 @@ import { buildHomeJsonLd, HOME_CONTENT, type HomeLocale } from "./_home-data";
 const SUPPORTED_LOCALES = ["fr", "ru", "en"] as const;
 const BASE_URL = "https://azursystech.fr";
 
+export function portfolioIndexHref(locale: HomeLocale) {
+  return `/${locale}/portfolio`;
+}
+
 const META = {
   fr: {
     title: "Automatisation IA et sites web pour petites entreprises à Nice | AzurSysTech",
@@ -238,6 +242,7 @@ export default async function LocaleHomePage({
             {getPortfolioProjects(locale).slice(0, 3).map((project) => (
               <PortfolioCard
                 key={project.slug}
+                locale={l}
                 project={project}
                 learnMoreLabel={locale === "ru" ? "Подробнее" : locale === "en" ? "Learn more" : "En savoir plus"}
               />
@@ -245,7 +250,7 @@ export default async function LocaleHomePage({
           </div>
           <div className="mt-10">
             <Link
-              href="/portfolio"
+              href={portfolioIndexHref(l)}
               className="inline-flex items-center gap-2 rounded-full bg-[#4f8cff] px-7 py-3.5 text-base font-bold text-white shadow-premium-soft transition-transform duration-150 ease-out active:scale-[0.97] hover:bg-[#4f8cff]/90"
             >
               {copy.portfolioCta}

@@ -87,9 +87,13 @@ function getLocaleFromPath(pathname: string): FooterLocale | null {
   return LOCALE_SLUGS.has(seg) ? (seg as FooterLocale) : null;
 }
 
-function localizeFooterHref(href: string, locale: FooterLocale) {
+export function localizeFooterHref(href: string, locale: FooterLocale) {
   if (href.startsWith("/#")) {
     return `/${locale}${href.slice(1)}`;
+  }
+
+  if (href === "/portfolio") {
+    return `/${locale}/portfolio`;
   }
 
   if (locale === "en" && href === "/ai-automation") {

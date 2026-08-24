@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
+import { getAllSlugs } from "@/lib/portfolio-data";
 
 const BASE_URL = "https://azursystech.fr";
-const LAST_MODIFIED = new Date("2026-05-31");
+const LOCALES = ["fr", "ru", "en"] as const;
 
 type SitemapEntry = {
   path: string;
@@ -16,25 +17,25 @@ const ROUTES: SitemapEntry[] = [
   { path: "/fr/ai-automation", changeFrequency: "monthly", priority: 0.8 },
   { path: "/ru/ai-automation", changeFrequency: "monthly", priority: 0.7 },
   { path: "/en/ai-automation", changeFrequency: "monthly", priority: 0.7 },
-  { path: "/ai-automation", changeFrequency: "monthly", priority: 0.7 },
   { path: "/brief", changeFrequency: "monthly", priority: 0.7 },
   { path: "/data-deletion", changeFrequency: "yearly", priority: 0.3 },
   { path: "/legal", changeFrequency: "yearly", priority: 0.3 },
-  { path: "/portfolio", changeFrequency: "monthly", priority: 0.8 },
-  { path: "/portfolio/plomberie", changeFrequency: "monthly", priority: 0.7 },
-  { path: "/portfolio/salon-beaute", changeFrequency: "monthly", priority: 0.7 },
-  { path: "/portfolio/bistrot", changeFrequency: "monthly", priority: 0.7 },
-  { path: "/portfolio/bijoux-artisanaux", changeFrequency: "monthly", priority: 0.7 },
-  { path: "/portfolio/assurance", changeFrequency: "monthly", priority: 0.7 },
-  { path: "/portfolio/immobilier", changeFrequency: "monthly", priority: 0.7 },
   { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },
   { path: "/terms", changeFrequency: "yearly", priority: 0.3 },
 ];
 
+const PORTFOLIO_ROUTES: SitemapEntry[] = LOCALES.flatMap((locale) => [
+  { path: `/${locale}/portfolio`, changeFrequency: "monthly", priority: 0.8 },
+  ...getAllSlugs().map((slug) => ({
+    path: `/${locale}/portfolio/${slug}`,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  })),
+]);
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  return ROUTES.map((route) => ({
+  return [...ROUTES, ...PORTFOLIO_ROUTES].map((route) => ({
     url: `${BASE_URL}${route.path}`,
-    lastModified: LAST_MODIFIED,
     changeFrequency: route.changeFrequency,
     priority: route.priority,
   }));

@@ -1,29 +1,29 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-2026-08-24-english-translation-completion",
+  "work_block_id": "WB-2026-08-24-technical-seo-multilingual-integrity",
   "governance_profile": "Managed",
   "specification": {
-    "path": "docs/specs/WB-2026-08-24-english-translation-completion.md",
-    "revision": "v3"
+    "path": "docs/specs/WB-2026-08-24-technical-seo-multilingual-integrity.md",
+    "revision": "v1"
   },
-  "base_commit": "68b15d51a0dd5c3d5bc3929e9ee9aa36b3999f73",
+  "base_commit": "d647f6ab1bf6dc40cdcde09d7e4cc554ad31882d",
   "define_quality": {
     "required": true,
     "status": "READY",
-    "requirements_review": "docs/reports/requirements-quality-WB-2026-08-24-english-translation-completion.md",
-    "traceability": "docs/reports/traceability-WB-2026-08-24-english-translation-completion.md",
-    "consistency_analysis": "docs/reports/traceability-WB-2026-08-24-english-translation-completion.md"
+    "requirements_review": "docs/reports/requirements-quality-WB-2026-08-24-technical-seo-multilingual-integrity.md",
+    "traceability": "docs/reports/traceability-WB-2026-08-24-technical-seo-multilingual-integrity.md",
+    "consistency_analysis": "docs/reports/traceability-WB-2026-08-24-technical-seo-multilingual-integrity.md"
   },
   "write_gate": {
     "status": "READY",
-    "opened_at": "2026-08-24T11:58:00+02:00"
+    "opened_at": "2026-08-24T20:24:22+02:00"
   },
   "critic": {
     "required": true,
     "status": "READY",
     "verdict": "APPROVE",
-    "report": "docs/reports/critic-WB-2026-08-24-english-translation-completion.md",
+    "report": "docs/reports/critic-WB-2026-08-24-technical-seo-multilingual-integrity.md",
     "isolation": "same-session-degraded",
     "skip_reason": ""
   },
@@ -31,16 +31,16 @@
     "review": {
       "required": true,
       "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/review-WB-2026-08-24-english-translation-completion.md",
+      "verdict": "APPROVE",
+      "report": "docs/reports/review-WB-2026-08-24-technical-seo-multilingual-integrity.md",
       "isolation": "same-session-degraded",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
       "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/verification-WB-2026-08-24-english-translation-completion.md",
+      "verdict": "PASS",
+      "report": "docs/reports/verification-WB-2026-08-24-technical-seo-multilingual-integrity.md",
       "isolation": "same-session-degraded",
       "skip_reason": ""
     },
@@ -53,79 +53,59 @@
       "rubric_revision": "",
       "benchmark_revision": "",
       "isolation": "unknown",
-      "skip_reason": "Deterministic UI copy and unit test contracts only."
+      "skip_reason": "No generative or rubric-based evaluation is required for this deterministic routing change."
     },
     "drift": {
       "required": true,
       "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/verification-WB-2026-08-24-english-translation-completion.md",
+      "verdict": "PASS",
+      "report": "docs/reports/verification-WB-2026-08-24-technical-seo-multilingual-integrity.md",
       "isolation": "same-session-degraded",
       "skip_reason": ""
     }
   },
-  "closeout_mode": "success-closeout",
+  "closeout_mode": "owner_publication_handoff_ready",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
   "write_set": [
-    "web/src/i18n.js",
-    "web/src/proxy.ts",
-    "web/src/app/layout.tsx",
-    "web/src/app/fonts",
-    "web/src/app/fonts/Geist-Variable.woff2",
-    "web/src/app/fonts/GeistMono-Variable.woff2",
-    "web/src/app/fonts/OFL.txt",
-    "web/src/app/[locale]/_home-data.ts",
+    "web/src/app/[locale]/portfolio/page.tsx",
+    "web/src/app/[locale]/portfolio/[slug]/page.tsx",
+    "web/src/app/[locale]/portfolio/page.test.ts",
+    "web/src/app/[locale]/portfolio/[slug]/page.test.ts",
+    "web/src/app/[locale]/ai-automation/page.test.ts",
+    "web/src/app/portfolio/page.tsx",
+    "web/src/app/portfolio/[slug]/page.tsx",
+    "web/src/app/portfolio/page.test.ts",
+    "web/src/app/portfolio/[slug]/page.test.ts",
+    "web/src/app/ai-automation/legacy-redirect.test.ts",
     "web/src/app/[locale]/page.tsx",
-    "web/src/app/[locale]/ai-automation/_ai-automation-data.ts",
-    "web/src/app/[locale]/ai-automation/page.tsx",
-    "web/src/app/ai-automation/page.tsx",
+    "web/src/components/portfolio/portfolio-card.tsx",
+    "web/src/components/portfolio/portfolio-card.test.ts",
+    "web/src/components/sections/portfolio-section.tsx",
+    "web/src/components/sections/portfolio-section.test.ts",
     "web/src/components/shell/site-header.tsx",
     "web/src/components/shell/site-header.test.ts",
     "web/src/components/shell/site-footer.tsx",
-    "web/src/lib/brief-submit.ts",
-    "web/src/lib/brief-assistant.ts",
-    "web/src/app/brief/page.tsx",
-    "web/src/components/brief/brief-field.tsx",
-    "web/src/components/brief/brief-progress.tsx",
-    "web/src/components/brief/brief-form.tsx",
-    "web/src/app/api/brief/submit/route.ts",
-    "web/src/app/legal/page.tsx",
-    "web/src/app/privacy/page.tsx",
-    "web/src/app/terms/page.tsx",
-    "web/src/app/thank-you/page.tsx",
-    "web/src/app/data-deletion/page.tsx",
-    "web/src/lib/portfolio-data.ts",
-    "web/src/lib/portfolio-data.test.ts",
-    "web/src/components/portfolio/portfolio-card.tsx",
-    "web/src/components/sections/portfolio-section.tsx",
-    "web/src/app/portfolio/page.tsx",
-    "web/src/app/portfolio/[slug]/page.tsx",
-    "web/src/app/[locale]/_home-data.test.ts",
-    "web/src/app/[locale]/page.test.ts",
-    "web/src/lib/brief-submit.test.ts",
-    "web/src/app/api/brief/submit/route.test.ts",
-    "web/src/lib/api-security.test.ts",
-    "docs/specs/WB-2026-08-24-english-translation-completion.md",
-    "docs/plans/WB-2026-08-24-english-translation-completion.md",
-    "docs/tasklist/WB-2026-08-24-english-translation-completion.tasklist.md",
-    "docs/reports/requirements-quality-WB-2026-08-24-english-translation-completion.md",
-    "docs/reports/traceability-WB-2026-08-24-english-translation-completion.md",
-    "docs/reports/critic-WB-2026-08-24-english-translation-completion.md",
-    "docs/reports/review-WB-2026-08-24-english-translation-completion.md",
-    "docs/reports/verification-WB-2026-08-24-english-translation-completion.md",
+    "web/src/components/shell/site-footer.test.ts",
+    "web/src/app/sitemap.ts",
+    "web/src/app/sitemap.test.ts",
+    "docs/specs/WB-2026-08-24-technical-seo-multilingual-integrity.md",
+    "docs/plans/WB-2026-08-24-technical-seo-multilingual-integrity.md",
+    "docs/tasklist/WB-2026-08-24-technical-seo-multilingual-integrity.tasklist.md",
+    "docs/reports/requirements-quality-WB-2026-08-24-technical-seo-multilingual-integrity.md",
+    "docs/reports/traceability-WB-2026-08-24-technical-seo-multilingual-integrity.md",
+    "docs/reports/critic-WB-2026-08-24-technical-seo-multilingual-integrity.md",
+    "docs/reports/review-WB-2026-08-24-technical-seo-multilingual-integrity.md",
+    "docs/reports/verification-WB-2026-08-24-technical-seo-multilingual-integrity.md",
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
     ".agent/verification-gate.md",
-    ".codex/write-gate.md",
-    ".codex/hooks/pre_tool_use_policy.py",
-    "scripts/test-github-capability-control-plane.py"
+    ".codex/write-gate.md"
   ],
   "coordination_write_set": [
     ".agent/active-work-block.json",
-    ".agent/active-work-block.default.json",
     ".agent/critic-gate.md",
     ".agent/verification-gate.md",
     ".codex/write-gate.md",
@@ -133,6 +113,17 @@
     "docs/specs/**",
     "docs/tasklist/**",
     "docs/reports/**",
+    "docs/architecture/drafts/**",
     "memory_bank/**"
-  ]
+  ],
+  "external_hard_stops": [
+    "protected_default_branch_mutation",
+    "destructive",
+    "live_infra",
+    "live_data",
+    "credentials",
+    "client_communications",
+    "irreversible_publish"
+  ],
+  "lifecycle_note": "Stage 2 Assure complete: Reviewer APPROVE; Verifier READY/PASS; drift PASS. Owner authorized and completed the local candidate commit; publication handoff is prepared for the exact local HEAD. No push, merge, or deployment was performed; external publication remains Owner-controlled."
 }

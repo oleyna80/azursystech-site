@@ -1,17 +1,23 @@
 import Link from "next/link";
-import type { PortfolioProject } from "@/lib/portfolio-data";
+import type { PortfolioLocale, PortfolioProject } from "@/lib/portfolio-data";
 import { ytThumbUrl } from "@/lib/portfolio-data";
 
+export function portfolioProjectHref(locale: PortfolioLocale, slug: string) {
+  return `/${locale}/portfolio/${slug}`;
+}
+
 export function PortfolioCard({
+  locale,
   project,
   learnMoreLabel = "En savoir plus",
 }: {
+  locale: PortfolioLocale;
   project: PortfolioProject;
   learnMoreLabel?: string;
 }) {
   return (
     <Link
-      href={`/portfolio/${project.slug}`}
+      href={portfolioProjectHref(locale, project.slug)}
       className="group flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#121a2b] shadow-[0_20px_60px_rgba(0,0,0,0.22)] transition duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-1 hover:border-[#4f8cff]/55 hover:bg-[#151f34] hover:shadow-[0_28px_80px_rgba(7,17,34,0.42)] active:scale-[0.99] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
     >
       <span className="relative block aspect-video overflow-hidden">
