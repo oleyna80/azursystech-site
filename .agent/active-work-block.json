@@ -5,7 +5,7 @@
   "governance_profile": "Managed",
   "specification": {
     "path": "docs/specs/WB-2026-08-24-english-translation-completion.md",
-    "revision": "v1"
+    "revision": "v2"
   },
   "base_commit": "68b15d51a0dd5c3d5bc3929e9ee9aa36b3999f73",
   "define_quality": {

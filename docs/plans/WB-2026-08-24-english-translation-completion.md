@@ -7,7 +7,7 @@
 - **Side-effect class:** application source write (`web/**`)
 - **DB action mode:** none
 - **Owner approval:** 2026-08-24 conversation confirmation
-- **Specification:** `docs/specs/WB-2026-08-24-english-translation-completion.md` (`v1`)
+- **Specification:** `docs/specs/WB-2026-08-24-english-translation-completion.md` (`v2`)
 - **Baseline:** `68b15d51a0dd5c3d5bc3929e9ee9aa36b3999f73`
 - **Evaluation:** not required; deterministic UI copy, route, and unit test contracts only
 
@@ -37,6 +37,9 @@ web/src/app/terms/page.tsx
 web/src/app/thank-you/page.tsx
 web/src/app/data-deletion/page.tsx
 web/src/lib/portfolio-data.ts
+web/src/lib/portfolio-data.test.ts
+web/src/components/portfolio/portfolio-card.tsx
+web/src/components/sections/portfolio-section.tsx
 web/src/app/portfolio/page.tsx
 web/src/app/portfolio/[slug]/page.tsx
 web/src/app/[locale]/_home-data.test.ts
