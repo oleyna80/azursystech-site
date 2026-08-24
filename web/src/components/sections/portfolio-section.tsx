@@ -1,7 +1,8 @@
-import type { PortfolioProject } from "@/lib/portfolio-data";
+import type { PortfolioLocale, PortfolioProject } from "@/lib/portfolio-data";
 import { PortfolioCard } from "@/components/portfolio/portfolio-card";
 
 type Props = {
+  locale: PortfolioLocale;
   eyebrow: string;
   title: string;
   intro: string;
@@ -9,7 +10,7 @@ type Props = {
   learnMoreLabel?: string;
 };
 
-export function PortfolioSection({ eyebrow, title, intro, projects, learnMoreLabel }: Props) {
+export function PortfolioSection({ locale, eyebrow, title, intro, projects, learnMoreLabel }: Props) {
   return (
     <section className="bg-[#081120] py-20 text-white md:py-28">
       <div className="container mx-auto px-4 md:px-8">
@@ -25,7 +26,12 @@ export function PortfolioSection({ eyebrow, title, intro, projects, learnMoreLab
 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {projects.map((project) => (
-            <PortfolioCard key={project.slug} project={project} learnMoreLabel={learnMoreLabel} />
+            <PortfolioCard
+              key={project.slug}
+              locale={locale}
+              project={project}
+              learnMoreLabel={learnMoreLabel}
+            />
           ))}
         </div>
       </div>

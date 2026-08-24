@@ -17,6 +17,15 @@ describe("English AI automation route", () => {
     });
   });
 
+  it("keeps each localized page self-canonical", async () => {
+    for (const locale of ["fr", "ru", "en"] as const) {
+      const metadata = await generateMetadata({ params: Promise.resolve({ locale }) });
+      expect(metadata.alternates).toMatchObject({
+        canonical: `https://azursystech.fr/${locale}/ai-automation`,
+      });
+    }
+  });
+
   it("uses English JSON-LD and WhatsApp as its sole conversion channel", () => {
     const jsonLd = JSON.stringify(buildJsonLd("en", CONTENT.en));
 
