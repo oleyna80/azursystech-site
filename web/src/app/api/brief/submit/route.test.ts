@@ -184,4 +184,79 @@ describe("POST /api/brief/submit", () => {
       issues: [{ field: "form" }],
     });
   });
+
+  it("handles English locale submissions with localized responses", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("ALLOWED_ORIGINS", "https://azursystech.fr");
+
+    const response = await POST(
+      new Request("https://azursystech.fr/api/brief/submit", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          origin: "https://azursystech.fr",
+        },
+        body: JSON.stringify({
+          values: createValidBriefValues(),
+          locale: "en",
+          ai_assist_used: true,
+          assistant_interaction_count: 1,
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    const result = await response.json();
+
+    expect(result).toMatchObject({
+      success: true,
+      message: "Your project brief has been received and is ready for manual review.",
+      payload: {
+        locale: "en",
+        metadata: {
+          ai_assist_used: true,
+          assistant_interaction_count: 1,
+        },
+      },
+      handoff: {
+        recommended_next_step: "pilot_discussion",
+        business_type: "Local service company",
+      },
+    });
+  });
+
+  it("returns English validation errors for invalid English submissions", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("ALLOWED_ORIGINS", "https://azursystech.fr");
+
+    const response = await POST(
+      new Request("https://azursystech.fr/api/brief/submit", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          origin: "https://azursystech.fr",
+        },
+        body: JSON.stringify({
+          values: {
+            ...createValidBriefValues(),
+            company_name: "",
+          },
+          locale: "en",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    const result = await response.json();
+    expect(result.success).toBe(false);
+    expect(result.message).toBe("Please check the required fields and submit again.");
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          field: "company_name",
+          message: "Please enter your company or project name",
+        }),
+      ]),
+    );
+  });
 });

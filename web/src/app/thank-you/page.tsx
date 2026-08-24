@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { LOCALE_COOKIE_KEY, resolveLocale } from "@/i18n";
 
-type ThankYouLocale = "fr" | "ru";
+type ThankYouLocale = "fr" | "ru" | "en";
 
 const CONTACT = {
   phoneDisplay: "+33 7 80 72 09 94",
@@ -83,6 +83,40 @@ const THANK_YOU_COPY = {
     homeCta: "Главная",
     faqCta: "FAQ",
   },
+  en: {
+    meta: {
+      title: "Request received | AzurSysTech",
+      description:
+        "Confirmation of receipt of your request with AzurSysTech and next steps for clarification and follow-up.",
+    },
+    eyebrow: "AzurSysTech",
+    title: "Thank you, we have received your request",
+    intro:
+      "We have received your message and will get back to you shortly to clarify requirements and agree on the best next step.",
+    nextTitle: "What happens next",
+    nextSteps: [
+      "We review your project requirements and provided contact details.",
+      "If necessary, we clarify a few points via your preferred communication channel.",
+      "Once aligned, we propose a clear, practical, and transparent next step.",
+    ],
+    urgentTitle: "If your enquiry is urgent",
+    urgentText:
+      "You can also reach us directly on WhatsApp or by phone for faster assistance with urgent requests.",
+    fallbackTitle: "Direct contact channels",
+    fallbackText:
+      "If you need to update your request or use an alternative channel, choose any option below.",
+    contactPageCta: "Open contact form",
+    callCta: `Call: ${CONTACT.phoneDisplay}`,
+    whatsappCta: `WhatsApp: ${CONTACT.whatsappDisplay}`,
+    emailCta: `Email: ${CONTACT.email}`,
+    routesTitle: "Useful links",
+    routesText:
+      "While waiting for our response, explore useful sections or review our portfolio.",
+    servicesCta: "Services",
+    businessCta: "Project brief",
+    homeCta: "Home",
+    faqCta: "FAQ",
+  },
 } as const satisfies Record<
   ThankYouLocale,
   {
@@ -110,12 +144,18 @@ const THANK_YOU_COPY = {
 >;
 
 function resolveThankYouLocale(value?: string | null): ThankYouLocale {
-  return resolveLocale(value) === "ru" ? "ru" : "fr";
+  const resolved = resolveLocale(value);
+  return resolved === "ru" ? "ru" : resolved === "en" ? "en" : "fr";
 }
 
-export async function generateMetadata(): Promise<Metadata> {
+type ThankYouPageProps = {
+  searchParams?: Promise<{ locale?: string }>;
+};
+
+export async function generateMetadata(props: ThankYouPageProps): Promise<Metadata> {
   const cookieStore = await cookies();
-  const locale = resolveThankYouLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolveThankYouLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
 
   return {
     ...THANK_YOU_COPY[locale].meta,
@@ -126,9 +166,10 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function ThankYouPage() {
+export default async function ThankYouPage(props: ThankYouPageProps) {
   const cookieStore = await cookies();
-  const locale = resolveThankYouLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolveThankYouLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
   const copy = THANK_YOU_COPY[locale];
 
   return (
@@ -193,7 +234,7 @@ export default async function ThankYouPage() {
           <p className="mt-4 max-w-3xl text-base leading-7 text-[#1F2A37]/90">{copy.routesText}</p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
-              href="/fr#services"
+              href={`/${locale}#services`}
               className="rounded-lg bg-[#1F6F78] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#185A61]"
             >
               {copy.servicesCta}
@@ -205,7 +246,7 @@ export default async function ThankYouPage() {
               {copy.businessCta}
             </Link>
             <Link
-              href="/"
+              href={`/${locale}`}
               className="rounded-lg border border-[#D8D0C4] bg-[#FFFDFC] px-5 py-3 text-sm font-semibold text-[#1F2A37] transition hover:bg-[#F6F1E8]"
             >
               {copy.homeCta}

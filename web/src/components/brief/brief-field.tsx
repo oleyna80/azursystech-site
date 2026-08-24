@@ -78,7 +78,9 @@ export function BriefField({
             aria-label={
               locale === "fr"
                 ? `Afficher l’aide : ${field.label}`
-                : `Показать подсказку: ${field.label}`
+                : locale === "en"
+                  ? `Show help: ${field.label}`
+                  : `Показать подсказку: ${field.label}`
             }
             onClick={() => setIsHelpOpen((previous) => !previous)}
           >
@@ -105,7 +107,7 @@ export function BriefField({
           ) : null}
           {inlineHelp.draftExample ? (
             <p className="mt-2 text-xs leading-5 text-[#53616E]">
-              {locale === "fr" ? "Exemple" : "Пример"}: {inlineHelp.draftExample}
+              {locale === "fr" ? "Exemple" : locale === "en" ? "Example" : "Пример"}: {inlineHelp.draftExample}
             </p>
           ) : null}
         </div>
@@ -142,7 +144,9 @@ export function BriefField({
           aria-describedby={describedBy}
           onChange={(event) => onValueChange(field.key, event.target.value)}
         >
-          <option value="">{locale === "fr" ? "Choisissez une option" : "Выберите вариант"}</option>
+          <option value="">
+            {locale === "fr" ? "Choisissez une option" : locale === "en" ? "Select an option" : "Выберите вариант"}
+          </option>
           {field.options?.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -200,7 +204,7 @@ export function BriefField({
             htmlFor={String(field.otherFieldKey)}
             className="text-sm font-medium text-[#1F2A37]"
           >
-            {locale === "fr" ? "Précisez la valeur" : "Уточните вариант"}
+            {locale === "fr" ? "Précisez la valeur" : locale === "en" ? "Specify your option" : "Уточните вариант"}
           </label>
           <input
             id={String(field.otherFieldKey)}
@@ -208,7 +212,12 @@ export function BriefField({
             type="text"
             value={otherValue}
             placeholder={
-              field.otherPlaceholder ?? (locale === "fr" ? "Précisez votre variante" : "Уточните свой вариант")
+              field.otherPlaceholder ??
+              (locale === "fr"
+                ? "Précisez votre variante"
+                : locale === "en"
+                  ? "Please specify"
+                  : "Уточните свой вариант")
             }
             className={[
               controlBase,
@@ -239,7 +248,7 @@ export function BriefField({
 
       {field.example ? (
         <p className="text-xs leading-5 text-[#7C8894]">
-          {locale === "fr" ? "Exemple" : "Пример"}:{" "}
+          {locale === "fr" ? "Exemple" : locale === "en" ? "Example" : "Пример"}:{" "}
           <span className="text-[#53616E]">{field.example}</span>
         </p>
       ) : null}

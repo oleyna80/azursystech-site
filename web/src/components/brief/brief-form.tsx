@@ -87,6 +87,28 @@ const FORM_COPY = {
       generic: "Не удалось отправить бриф. Проверьте соединение и попробуйте ещё раз.",
     },
   },
+  en: {
+    successEyebrow: "Brief received",
+    successTitle: "Thank you, your project brief has been submitted",
+    successIntro:
+      "We will review your brief manually and get back to you with the next step. This is an initial scoping review and does not constitute an automatic contract or price guarantee.",
+    resetButton: "Submit another brief",
+    directButton: "Contact directly",
+    tip:
+      "If any question is unclear, click the ? icon next to the field for concise guidance.",
+    backButton: "Back",
+    nextStepHint:
+      "Once a step is complete, you can proceed to the next step without losing your inputs.",
+    finalStepHint: "Before submitting, please verify your contact information and workflow constraints.",
+    submitting: "Submitting...",
+    continue: "Continue",
+    submit: "Submit project brief",
+    footerNote:
+      "This brief is used exclusively for initial scoping. Pricing, timelines, and project acceptance are determined after human review.",
+    submitErrors: {
+      generic: "Unable to submit the brief. Please check your connection and try again.",
+    },
+  },
 } as const;
 
 function findStepIndexForField(

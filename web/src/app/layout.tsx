@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { cookies, headers } from "next/headers";
 import Script from "next/script";
 import { ChatWidgetContainer } from "@/components/chat-widget";
@@ -9,14 +9,16 @@ import { SiteHeader } from "@/components/shell/site-header";
 import { DEFAULT_LOCALE, getPageMeta, LOCALE_COOKIE_KEY, resolveLocale } from "@/i18n";
 import "./globals.css";
 
-const geistSans = Geist({
+const geistSans = localFont({
+  src: "./fonts/Geist-Variable.woff2",
   variable: "--font-geist-sans",
-  subsets: ["latin"],
+  weight: "100 900",
 });
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+  src: "./fonts/GeistMono-Variable.woff2",
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: "100 900",
 });
 
 const defaultMeta = getPageMeta(DEFAULT_LOCALE, "/");
@@ -33,7 +35,8 @@ function resolveShellLocale(routeLocale: string | null, cookieLocale: string | u
     return routeLocale;
   }
 
-  return resolveLocale(cookieLocale) === "ru" ? "ru" : "fr";
+  const resolved = resolveLocale(cookieLocale);
+  return resolved === "ru" || resolved === "en" ? resolved : "fr";
 }
 
 export default async function RootLayout({

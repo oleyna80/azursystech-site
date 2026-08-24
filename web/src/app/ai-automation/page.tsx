@@ -3,341 +3,27 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { LOCALE_COOKIE_KEY, resolveLocale } from "@/i18n";
 
-type PageLocale = "fr" | "ru";
-type CaseIconType = "inbox" | "support" | "report" | "customer";
+import {
+  CONTENT,
+  type PageLocale,
+  type CaseIconType,
+} from "@/app/[locale]/ai-automation/_ai-automation-data";
 
 const WHATSAPP = "https://wa.me/33780720994";
 
-function resolvePageLocale(value: string | undefined): PageLocale {
-  return resolveLocale(value) === "ru" ? "ru" : "fr";
+function resolvePageLocale(value?: string | null): PageLocale {
+  const resolved = resolveLocale(value);
+  return resolved === "ru" ? "ru" : resolved === "en" ? "en" : "fr";
 }
 
-const CONTENT = {
-  fr: {
-    meta: {
-      title: "Automatisation des processus métier avec des agents IA | AzurSysTech",
-      description:
-        "AzurSysTech aide les petites entreprises à mettre en place des agents IA pour traiter les demandes entrantes, qualifier les besoins et automatiser des processus répétitifs sans réorganiser tout l’activité.",
-    },
-    jsonLd: {
-      webPageName: "Automatisation des processus métier avec des agents IA | AzurSysTech",
-      webPageDescription:
-        "AzurSysTech aide les petites entreprises à mettre en place des agents IA pour traiter les demandes entrantes, qualifier les besoins et automatiser des processus répétitifs sans réorganiser tout l’activité.",
-      serviceName: "Automatisation des processus métier avec des agents IA",
-      serviceType: "Agents IA pour intake, qualification et automatisation de processus répétitifs",
-      serviceDescription:
-        "Automatisation pragmatique de la première couche de traitement des demandes pour petites entreprises, avec validation humaine.",
-      areaServed: "Nice et zone jusqu'à 30 km",
-      inLanguage: "fr",
-    },
-    backLink: "AzurSysTech",
-    heroEyebrow: "Automatisation et IA",
-    heroTitle: "Automatisation des processus métier avec des agents IA",
-    heroIntro:
-      "AzurSysTech aide les petites entreprises à déployer des agents IA pour les demandes entrantes, la qualification initiale et l’automatisation de processus répétitifs, sans restructurer toute l’entreprise.",
-    trustBullets: [
-      "On peut commencer par un seul processus",
-      "Adapté aux petites entreprises",
-      "L’humain garde le contrôle des décisions importantes",
-    ],
-    heroPrimaryCta: "Discuter du besoin",
-    heroAnchorTitle: "Ce qu’on peut automatiser en premier",
-    heroAnchorIntro: "Commencez par un processus répétitif clair, pas par une refonte complète.",
-    heroAnchors: [
-      { href: "#incoming-requests", label: "Demandes entrantes" },
-      { href: "#support", label: "Support initial" },
-      { href: "#reports", label: "Rapports et synthèses" },
-      { href: "#customer-evaluation", label: "Qualification des clients" },
-    ],
-    heroAnchorNote: "Les décisions sensibles restent toujours du côté humain.",
-    casesLabel: "Ce que nous automatisons",
-    casesTitle: "Cas d’usage concrets pour les petites entreprises",
-    cases: [
-      {
-        id: "incoming-requests",
-        title: "Agent IA pour les demandes entrantes",
-        copy: "Réception des demandes depuis le site, WhatsApp, l’email ou le chat, clarification des détails et transmission à l’équipe dans un format déjà structuré.",
-        control: "Contrôle humain : priorité, prix, délais et cas complexes.",
-        icon: "inbox" as CaseIconType,
-      },
-      {
-        id: "support",
-        title: "Assistant IA pour le support initial",
-        copy: "Les questions répétitives sont traitées selon des règles claires, tandis que les demandes non standard sont transmises directement au spécialiste.",
-        control: "Contrôle humain : réclamations, situations litigieuses et responsabilité.",
-        icon: "support" as CaseIconType,
-      },
-      {
-        id: "reports",
-        title: "Rapports et synthèses automatiques",
-        copy: "Les données régulières issues de tableaux, formulaires ou CRM sont rassemblées dans une synthèse courte pour le dirigeant ou le responsable.",
-        control: "Contrôle humain : vérification des chiffres, interprétation et décisions de gestion.",
-        icon: "report" as CaseIconType,
-      },
-      {
-        id: "customer-evaluation",
-        title: "Qualification des clients potentiels",
-        copy: "L’agent IA pose des questions de clarification, aide à évaluer la maturité du client et transmet au commercial un résumé court.",
-        control: "Contrôle humain : offre commerciale, conditions et contact final.",
-        icon: "customer" as CaseIconType,
-      },
-    ],
-    guardrailsLabel: "Approche réaliste",
-    guardrailsTitle: "L’IA prend en charge la routine, l’équipe garde le contrôle",
-    guardrailItems: [
-      "Elle prend en charge les actions répétitives, sans remplacer les collaborateurs.",
-      "Elle aide à collecter et qualifier une demande, mais les décisions importantes restent humaines.",
-      "Elle prépare des synthèses, brouillons et étapes suivantes, sans faire de promesses commerciales.",
-      "Elle démarre sur un processus clair, pas sur une transformation complète de l’entreprise.",
-    ],
-    methodEyebrow: "De l’idée au lancement",
-    methodTitle: "Un processus à la fois",
-    methodNodes: ["Cadrage", "Pilote", "Logique", "Test", "Lancement"],
-    methodCard:
-      "Nous commençons par un seul processus, nous validons la logique sur des cas réels, puis nous élargissons l’automatisation uniquement après un résultat clair.",
-    methodCta: "Discuter du besoin",
-    stepsTitle: "Comment se passe la mise en place",
-    steps: [
-      {
-        num: "01",
-        title: "Cadrage du besoin et du processus",
-        desc: "On commence par comprendre quel processus consomme du temps aujourd’hui et à quel endroit se créent les pertes.",
-      },
-      {
-        num: "02",
-        title: "Choix d’un premier scénario pilote",
-        desc: "Au lieu d’une grande transformation, on choisit un premier scénario étroit et compréhensible.",
-      },
-      {
-        num: "03",
-        title: "Conception de la logique",
-        desc: "On définit ce que fait l’agent IA, quelles données il collecte, où l’humain intervient et comment la transmission se fait ensuite.",
-      },
-      {
-        num: "04",
-        title: "Assemblage et test",
-        desc: "La logique est mise en place, testée sur des scénarios réels puis ajustée.",
-      },
-      {
-        num: "05",
-        title: "Lancement avec contrôle",
-        desc: "L’automatisation passe en conditions réelles avec des limites explicites et un contrôle humain clair.",
-      },
-    ],
-    faqLabel: "FAQ",
-    faqTitle: "Questions fréquentes",
-    faqs: [
-      {
-        q: "Qu’est-ce qu’un agent IA pour une entreprise ?",
-        a: "C’est une couche logicielle qui prend en charge des actions répétitives : réception d’une demande, clarification, collecte de données et préparation d’une synthèse courte pour l’équipe.",
-      },
-      {
-        q: "Quelle différence avec un chatbot classique ?",
-        a: "Un chatbot classique suit souvent un scénario rigide. Un agent IA gère plus finement le contexte, affine la demande et prépare le prochain pas pour un collaborateur.",
-      },
-      {
-        q: "Peut-on commencer par un seul processus ?",
-        a: "Oui. C’est généralement le chemin le plus raisonnable. Il vaut mieux démarrer sur un scénario répétitif clair que vouloir tout automatiser d’un coup.",
-      },
-      {
-        q: "Qu’est-ce qu’on automatise en premier en général ?",
-        a: "Le plus souvent : les demandes entrantes, le support initial, les rapports et synthèses, ou la qualification de prospects.",
-      },
-      {
-        q: "Est-ce adapté à une petite entreprise ?",
-        a: "Oui, surtout s’il existe déjà un flux répétitif de demandes, d’échanges ou d’actions routinières qui consomment du temps.",
-      },
-      {
-        q: "Peut-on unifier site, chat et messageries ?",
-        a: "Oui. C’est un point de départ typique : ramener des demandes issues de plusieurs canaux vers un format commun, puis les transmettre à l’équipe avec une synthèse courte.",
-      },
-      {
-        q: "L’agent IA peut-il répondre seul aux clients ?",
-        a: "Oui, mais uniquement dans des limites définies à l’avance. Pour les scénarios sensibles, les prix, les délais et les cas non standard, un humain reste nécessaire.",
-      },
-      {
-        q: "Quel niveau de contrôle humain reste en place ?",
-        a: "Le contrôle reste là où il compte vraiment : cas complexes, décisions commerciales, validation des actions importantes et responsabilité finale sur le processus.",
-      },
-      {
-        q: "Faut-il changer tout l’existant ?",
-        a: "Non. Dans beaucoup de cas, il est plus raisonnable d’insérer l’automatisation dans un seul processus existant que de vouloir tout remplacer immédiatement.",
-      },
-    ],
-    finalTitle: "Voyons quel processus mérite d’être automatisé en premier",
-    finalIntro:
-      "On peut commencer par un seul processus, sans engagement vers une automatisation totale et sans refonte lourde de l’entreprise.",
-    finalDetail:
-      "Si vous avez déjà un flux de demandes, des échanges répétitifs ou un processus manuel qui consomme trop de temps, on peut démarrer précisément par là.",
-    finalPrimaryCta: "Discuter du besoin",
-    finalSecondaryCta: "Écrire sur WhatsApp",
-    finalNote: "L’étape suivante après le bouton « Discuter du besoin » est un brief court sur un seul processus.",
-  },
-  ru: {
-    meta: {
-      title: "Автоматизация бизнес-процессов с помощью ИИ-агентов | AzurSysTech",
-      description:
-        "AzurSysTech помогает малому бизнесу внедрять ИИ-агентов для обработки входящих заявок и обращений, их первичного приема, оценки и повторяющихся процессов — без полной перестройки бизнеса.",
-    },
-    jsonLd: {
-      webPageName: "Автоматизация бизнес-процессов с помощью ИИ-агентов | AzurSysTech",
-      webPageDescription:
-        "AzurSysTech помогает малому бизнесу внедрять ИИ-агентов для обработки входящих заявок и обращений, их первичного приема, оценки и повторяющихся процессов — без полной перестройки бизнеса.",
-      serviceName: "Автоматизация бизнес-процессов с помощью ИИ-агентов",
-      serviceType: "ИИ-автоматизация первичного приема, оценки обращений и повторяющихся процессов",
-      serviceDescription:
-        "Практичная автоматизация первого слоя обработки обращений для малого бизнеса с контролем человека.",
-      areaServed: "Nice и зона до 30 км",
-      inLanguage: "ru",
-    },
-    backLink: "AzurSysTech",
-    heroEyebrow: "Автоматизация и ИИ",
-    heroTitle: "Автоматизация бизнес-процессов с помощью ИИ-агентов",
-    heroIntro:
-      "AzurSysTech помогает малому бизнесу внедрять ИИ-агентов для обработки входящих заявок и обращений, их первичного приема и оценки, а также для автоматизации повторяющихся процессов — без полной перестройки бизнеса.",
-    trustBullets: [
-      "Можно начать с одного процесса",
-      "Подходит для малого бизнеса",
-      "Человек остаётся в контуре принятия решений",
-    ],
-    heroPrimaryCta: "Обсудить задачу",
-    heroAnchorTitle: "Что можно автоматизировать первым",
-    heroAnchorIntro: "Начните с одного повторяющегося процесса, а не с полной перестройки.",
-    heroAnchors: [
-      { href: "#incoming-requests", label: "Входящие обращения" },
-      { href: "#support", label: "Первичная поддержка" },
-      { href: "#reports", label: "Отчёты и сводки" },
-      { href: "#customer-evaluation", label: "Оценка клиентов" },
-    ],
-    heroAnchorNote: "Важные решения по-прежнему остаются за человеком.",
-    casesLabel: "Что автоматизируем",
-    casesTitle: "Практические сценарии для малого бизнеса",
-    cases: [
-      {
-        id: "incoming-requests",
-        title: "ИИ-агент для входящих обращений",
-        copy: "Прием заявок с сайта, WhatsApp, почты и чата, уточнение деталей и передача команде уже в понятном виде.",
-        control: "Контроль человека: приоритет, цена, сроки и сложные случаи.",
-        icon: "inbox" as CaseIconType,
-      },
-      {
-        id: "support",
-        title: "ИИ-помощник для первичной поддержки",
-        copy: "Повторяющиеся вопросы закрываются по правилам, а нестандартные обращения сразу уходят специалисту.",
-        control: "Контроль человека: жалобы, спорные ситуации и ответственность.",
-        icon: "support" as CaseIconType,
-      },
-      {
-        id: "reports",
-        title: "Автоматические отчёты и сводки",
-        copy: "Регулярные данные из таблиц, форм или CRM собираются в короткую сводку для владельца или руководителя.",
-        control: "Контроль человека: проверка цифр, выводы и управленческие решения.",
-        icon: "report" as CaseIconType,
-      },
-      {
-        id: "customer-evaluation",
-        title: "Оценка потенциальных клиентов",
-        copy: "ИИ-агент задаёт уточняющие вопросы, помогает понять готовность клиента и передаёт менеджеру короткое резюме.",
-        control: "Контроль человека: коммерческое предложение, условия и финальный контакт.",
-        icon: "customer" as CaseIconType,
-      },
-    ],
-    guardrailsLabel: "Реалистичный подход",
-    guardrailsTitle: "ИИ берёт на себя рутину, а контроль остаётся у команды",
-    guardrailItems: [
-      "Берёт на себя повторяющиеся действия, но не заменяет сотрудников.",
-      "Помогает собрать и оценить обращение, но важные решения остаются за человеком.",
-      "Готовит сводки, черновики и следующие шаги, но не делает коммерческих обещаний.",
-      "Запускается с одного понятного процесса, а не с полной перестройки бизнеса.",
-    ],
-    methodEyebrow: "От идеи к запуску",
-    methodTitle: "Один процесс за один пилот",
-    methodNodes: ["Разбор", "Пилот", "Логика", "Тест", "Запуск"],
-    methodCard:
-      "Начинаем с одного процесса, проверяем логику на реальных сценариях и расширяем автоматизацию только после понятного результата.",
-    methodCta: "Обсудить задачу",
-    stepsTitle: "Как проходит внедрение",
-    steps: [
-      {
-        num: "01",
-        title: "Разбор задачи и процесса",
-        desc: "Сначала нужно понять, какой именно процесс сейчас забирает время и где появляются потери.",
-      },
-      {
-        num: "02",
-        title: "Выбор одного процесса для пилота",
-        desc: "Вместо большой перестройки выбирается узкий и понятный первый сценарий.",
-      },
-      {
-        num: "03",
-        title: "Проектирование логики",
-        desc: "Определяется, что именно делает ИИ-агент, какие данные он собирает, где нужен человек и как выглядит передача задачи дальше.",
-      },
-      {
-        num: "04",
-        title: "Сборка и тестирование",
-        desc: "Логика собирается, проверяется на реальных сценариях и корректируется.",
-      },
-      {
-        num: "05",
-        title: "Запуск с контролем",
-        desc: "Автоматизация запускается в рабочем режиме, но с понятными границами и контролем со стороны человека.",
-      },
-    ],
-    faqLabel: "FAQ",
-    faqTitle: "Частые вопросы",
-    faqs: [
-      {
-        q: "Что такое ИИ-агент для бизнеса?",
-        a: "Это программный слой, который берет на себя повторяющиеся действия: прием обращений, уточнение деталей, сбор данных и подготовку короткой сводки для команды.",
-      },
-      {
-        q: "Чем ИИ-агент отличается от обычного чат-бота?",
-        a: "Обычный чат-бот чаще работает по жесткому сценарию. ИИ-агент гибче обрабатывает обращение, уточняет контекст и помогает подготовить следующий шаг для сотрудника.",
-      },
-      {
-        q: "Можно ли начать с одного процесса?",
-        a: "Да. Это как раз наиболее разумный путь. Обычно лучше начать с одного повторяющегося сценария, чем пытаться автоматизировать всё сразу.",
-      },
-      {
-        q: "Что обычно автоматизируют в первую очередь?",
-        a: "Чаще всего начинают с входящих обращений, первичной поддержки клиентов, отчетов и рабочих сводок или оценки потенциальных клиентов.",
-      },
-      {
-        q: "Подходит ли это малому бизнесу?",
-        a: "Да, особенно если у бизнеса уже есть повторяющийся поток заявок, обращений или рутинных действий, которые занимают время команды.",
-      },
-      {
-        q: "Можно ли объединить сайт, чат и мессенджеры?",
-        a: "Да. Это типичный старт: привести обращения из разных каналов к единому формату и передавать их команде уже с краткой сводкой.",
-      },
-      {
-        q: "Может ли ИИ-агент отвечать клиентам сам?",
-        a: "Да, но только в тех рамках, которые заранее определены. Для чувствительных сценариев, коммерческих обещаний, цены, сроков и нестандартных ситуаций обычно нужен человек.",
-      },
-      {
-        q: "Сколько контроля остаётся у человека?",
-        a: "Контроль остаётся там, где он действительно нужен: в сложных случаях, в коммерческих решениях, в подтверждении важных действий и в финальной ответственности за процесс.",
-      },
-      {
-        q: "Нужно ли менять весь текущий стек?",
-        a: "Нет. Во многих случаях разумнее сначала встроить автоматизацию в один существующий процесс, а не менять всё сразу.",
-      },
-    ],
-    finalTitle: "Обсудим, какой процесс имеет смысл автоматизировать первым",
-    finalIntro:
-      "Можно начать с одного процесса — без обязательства на полную автоматизацию и без большой перестройки бизнеса.",
-    finalDetail:
-      "Если у вас уже есть понятный поток заявок, повторяющиеся обращения или ручной процесс, который забирает много времени, можно начать именно с него.",
-    finalPrimaryCta: "Обсудить задачу",
-    finalSecondaryCta: "Написать в WhatsApp",
-    finalNote: "Следующий шаг после кнопки «Обсудить задачу» — короткий бриф на один процесс.",
-  },
-} as const;
+type AiAutomationPageProps = {
+  searchParams?: Promise<{ locale?: string }>;
+};
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata(props: AiAutomationPageProps): Promise<Metadata> {
   const cookieStore = await cookies();
-  const locale = resolvePageLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolvePageLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
   return CONTENT[locale].meta;
 }
 
@@ -557,9 +243,10 @@ function MethodPanel({
   );
 }
 
-export default async function AiAutomationPage() {
+export default async function AiAutomationPage(props: AiAutomationPageProps) {
   const cookieStore = await cookies();
-  const locale = resolvePageLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolvePageLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
   const copy = CONTENT[locale];
   const jsonLd = buildJsonLd(locale, copy);
 

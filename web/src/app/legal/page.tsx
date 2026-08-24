@@ -5,7 +5,7 @@ import Link from "next/link";
 import { LOCALE_COOKIE_KEY, resolveLocale } from "@/i18n";
 import { LEGAL_CONTACT, LEGAL_HOSTING } from "@/lib/legal-content";
 
-type LegalLocale = "fr" | "ru";
+type LegalLocale = "fr" | "ru" | "en";
 
 type DefinitionItem = {
   label: string;
@@ -215,6 +215,104 @@ const LEGAL_PAGE = {
     privacyLink: "политики конфиденциальности",
     privacySuffix: ".",
   },
+  en: {
+    meta: {
+      title: "Legal information | AzurSysTech",
+      description:
+        "Legal notices for AzurSysTech: site identification, publisher, hosting, contact details, and applicable legal framework in France.",
+    },
+    eyebrow: "AzurSysTech",
+    title: "Legal Information",
+    intro:
+      "This page contains mandatory legal information regarding the AzurSysTech website and its operator, pursuant to applicable French law.",
+    sections: [
+      {
+        title: "1. Website Identification",
+        definitions: [
+          { label: "Domain", value: "azursystech.fr" },
+          { label: "Brand name", value: "AzurSysTech" },
+          {
+            label: "Purpose",
+            value:
+              "Presentation of IT services and reception of enquiries via website forms, telephone, WhatsApp, and email.",
+          },
+        ],
+      },
+      {
+        title: "2. Website Operator",
+        definitions: [
+          { label: "Operator", value: "Dmitrii OLEINIK" },
+          { label: "Legal form", value: "Entrepreneur individuel (micro-entrepreneur)" },
+          { label: "SIREN", value: "940 870 140" },
+          { label: "SIRET", value: "940 870 140 00016" },
+          { label: "APE / NAF code", value: "6201Z — Computer programming activities" },
+          { label: "Business address", value: "9 AV EMMANUEL BRIDAULT, 06000 NICE, France" },
+        ],
+      },
+      {
+        title: "3. Contact Details",
+        definitions: [
+          { label: "Email", value: LEGAL_CONTACT.email, href: `mailto:${LEGAL_CONTACT.email}` },
+          { label: "Phone", value: LEGAL_CONTACT.phoneDisplay, href: LEGAL_CONTACT.phoneHref },
+          { label: "WhatsApp", value: LEGAL_CONTACT.whatsappDisplay, href: LEGAL_CONTACT.whatsappHref },
+        ],
+      },
+      {
+        title: "4. Publication Director",
+        paragraphs: [
+          "The publication director of this website is Dmitrii OLEINIK. Content is published under the AzurSysTech brand name.",
+        ],
+      },
+      {
+        title: "5. Hosting",
+        definitions: [
+          { label: "Hosting provider", value: LEGAL_HOSTING.provider },
+          { label: "Provider address", value: LEGAL_HOSTING.address },
+          { label: "Website", value: LEGAL_HOSTING.website, href: LEGAL_HOSTING.website },
+        ],
+      },
+      {
+        title: "6. Intellectual Property",
+        paragraphs: [
+          "All texts, site structure, visual assets, logos, graphics, and other content published on the AzurSysTech website are protected by applicable intellectual property legislation.",
+          "Any reproduction, distribution, or reuse without prior written authorization is prohibited, except as expressly permitted by law.",
+        ],
+      },
+      {
+        title: "7. Limitation of Liability",
+        paragraphs: [
+          "AzurSysTech strives to maintain accurate and up-to-date information. However, information is provided for general reference and may be updated without prior notice.",
+          "The website operator shall not be liable for direct or indirect consequences arising from the use of site content without prior verification, unless otherwise provided by mandatory law.",
+        ],
+      },
+      {
+        title: "8. External Links",
+        paragraphs: [
+          "The site may contain links to external resources. AzurSysTech is not responsible for the content of third-party websites accessed via these links.",
+        ],
+      },
+      {
+        title: "9. Applicable Law",
+        paragraphs: ["This website and its content are governed by the laws of France."],
+      },
+      {
+        title: "10. Data Protection",
+        paragraphs: [
+          "Detailed information regarding the collection, use, and protection of personal data is provided on our privacy policy page.",
+        ],
+      },
+      {
+        title: "11. Additional Information",
+        paragraphs: [
+          "Should any mandatory disclosures require clarification or updates due to legal, administrative, or technical changes, this page will be updated accordingly.",
+        ],
+      },
+    ] as LegalSection[],
+    privacyPrefix:
+      "Detailed information regarding the collection, use, and protection of personal data is provided on our ",
+    privacyLink: "privacy policy page",
+    privacySuffix: ".",
+  },
 } as const satisfies Record<
   LegalLocale,
   {
@@ -230,19 +328,26 @@ const LEGAL_PAGE = {
 >;
 
 function resolveLegalLocale(value?: string | null): LegalLocale {
-  return resolveLocale(value) === "ru" ? "ru" : "fr";
+  const resolved = resolveLocale(value);
+  return resolved === "ru" ? "ru" : resolved === "en" ? "en" : "fr";
 }
 
-export async function generateMetadata(): Promise<Metadata> {
+type LegalPageProps = {
+  searchParams?: Promise<{ locale?: string }>;
+};
+
+export async function generateMetadata(props: LegalPageProps): Promise<Metadata> {
   const cookieStore = await cookies();
-  const locale = resolveLegalLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolveLegalLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
 
   return LEGAL_PAGE[locale].meta;
 }
 
-export default async function LegalPage() {
+export default async function LegalPage(props: LegalPageProps) {
   const cookieStore = await cookies();
-  const locale = resolveLegalLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolveLegalLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
   const copy = LEGAL_PAGE[locale];
 
   return (

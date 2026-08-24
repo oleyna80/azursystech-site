@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
 
 import {
   getRateLimitKey,
@@ -6,6 +7,7 @@ import {
   readFormDataWithLimit,
   readJsonWithLimit,
 } from "@/lib/api-security";
+import { proxy } from "@/proxy";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -90,5 +92,41 @@ describe("api-security", () => {
     if (result.ok) {
       expect(result.value.get("company")).toBe("AzurSysTech");
     }
+  });
+
+  it("sets locale cookie and request header when visiting /en or passing locale query param", () => {
+    const req1 = new NextRequest("https://azursystech.fr/en");
+    const res1 = proxy(req1);
+    expect(res1.cookies.get("azursystech.locale")?.value).toBe("en");
+    const header1 =
+      res1.headers.get("x-middleware-request-x-azursystech-route-locale") ||
+      res1.headers.get("x-azursystech-route-locale");
+    expect(header1).toBe("en");
+
+    const req2 = new NextRequest("https://azursystech.fr/brief?locale=en");
+    const res2 = proxy(req2);
+    expect(res2.cookies.get("azursystech.locale")?.value).toBe("en");
+    const header2 =
+      res2.headers.get("x-middleware-request-x-azursystech-route-locale") ||
+      res2.headers.get("x-azursystech-route-locale");
+    expect(header2).toBe("en");
+  });
+
+  it("handles CORS OPTIONS preflight on API routes even with locale query param", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("ALLOWED_ORIGINS", "https://azursystech.fr");
+
+    const req = new NextRequest("https://azursystech.fr/api/brief/submit?locale=en", {
+      method: "OPTIONS",
+      headers: {
+        origin: "https://azursystech.fr",
+        "access-control-request-headers": "Content-Type",
+      },
+    });
+
+    const res = proxy(req);
+    expect(res.status).toBe(204);
+    expect(res.headers.get("access-control-allow-origin")).toBe("https://azursystech.fr");
+    expect(res.headers.get("access-control-allow-methods")).toContain("POST");
   });
 });

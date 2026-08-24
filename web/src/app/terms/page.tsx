@@ -5,7 +5,7 @@ import Link from "next/link";
 import { LOCALE_COOKIE_KEY, resolveLocale } from "@/i18n";
 import { LEGAL_CONTACT } from "@/lib/legal-content";
 
-type TermsLocale = "fr" | "ru";
+type TermsLocale = "fr" | "ru" | "en";
 
 type TermsSection = {
   title: string;
@@ -389,6 +389,182 @@ const TERMS_PAGE = {
     privacySuffix: ", размещённой на сайте azursystech.fr.",
     claimsPrefix: "Любая претензия должна в первую очередь направляться в письменной форме по адресу: ",
   },
+  en: {
+    meta: {
+      title: "Terms of service | AzurSysTech",
+      description:
+        "General terms of service of AzurSysTech: scope, estimates, pricing, payment, cancellation, liability, and applicable law.",
+    },
+    eyebrow: "AzurSysTech",
+    title: "Terms of Service",
+    versionLabel: "Version: 1.0",
+    updatedLabel: `Last updated: ${UPDATED_AT}`,
+    note:
+      "Important: The French version of this document is legally binding. The English version is provided for convenience.",
+    sections: [
+      {
+        title: "1. Scope",
+        paragraphs: [
+          "These General Terms of Service define the conditions under which Dmitrii OLEINIK, operating under the brand name AzurSysTech, provides IT and digital services to clients.",
+        ],
+        items: [
+          "web applications and websites development",
+          "AI automation and smart workflow integration",
+          "local IT support and workstation setup",
+          "network and device configuration",
+          "other IT services defined in an estimate, agreement, written correspondence, or invoice",
+        ],
+      },
+      {
+        title: "2. Service Provider Details",
+        details: [
+          { label: "Name", value: "Dmitrii OLEINIK" },
+          { label: "Legal status", value: "Entrepreneur individuel – micro-entrepreneur" },
+          { label: "SIREN", value: "940 870 140" },
+          { label: "SIRET", value: "940 870 140 00016" },
+          { label: "APE / NAF", value: "6201Z – Computer programming activities" },
+          { label: "Business address", value: "9 AV EMMANUEL BRIDAULT, 06000 NICE, France" },
+          { label: "Email", value: LEGAL_CONTACT.email, href: `mailto:${LEGAL_CONTACT.email}` },
+          { label: "Phone", value: LEGAL_CONTACT.phoneDisplay, href: LEGAL_CONTACT.phoneHref },
+          { label: "WhatsApp", value: LEGAL_CONTACT.whatsappDisplay, href: LEGAL_CONTACT.whatsappHref },
+          { label: "Website", value: "azursystech.fr" },
+        ],
+      },
+      {
+        title: "3. Service Area & Remote Delivery",
+        paragraphs: [
+          "AzurSysTech delivers services remotely across France and Europe, as well as on-site in Nice and up to 30 km around Nice.",
+        ],
+      },
+      {
+        title: "4. Nature of Services",
+        paragraphs: [
+          "Services may be performed on-site, remotely, or in a hybrid format depending on requirements.",
+          "AzurSysTech provides development, consulting, configuration, and IT assistance services.",
+          "Unless agreed in writing, AzurSysTech does not guarantee universal compatibility with third-party software/hardware or uninterrupted availability of third-party APIs.",
+        ],
+      },
+      {
+        title: "5. Quotes and Contract Formation",
+        paragraphs: [
+          "Services are initiated on the basis of an accepted quote (devis), a written agreement, or a confirmed work order.",
+          "A detailed quote is provided for custom developments, automation pilots, and multi-stage projects.",
+          "The contract is formed upon written acceptance of the quote or scope agreement.",
+        ],
+      },
+      {
+        title: "6. Pricing",
+        paragraphs: [
+          "All prices are quoted in Euros (€).",
+          "Indicative pricing on the website represents baseline estimates ('starting from').",
+          "Final pricing depends on specific functional requirements, technical complexity, timeline, and deliverables.",
+          "Any out-of-scope requests will require a separate agreement prior to execution.",
+        ],
+      },
+      {
+        title: "7. Deposits",
+        paragraphs: [
+          "A deposit may be required before work begins, particularly for custom developments, multi-stage projects, or when specific project capacity is reserved.",
+          "The deposit amount is specified in the quote or written agreement.",
+        ],
+      },
+      {
+        title: "8. Payment Methods",
+        paragraphs: ["AzurSysTech accepts payment via:"],
+        items: [
+          "online payment link (Stripe)",
+          "credit / debit card where available",
+          "SEPA bank transfer",
+          "instant bank transfer",
+          "cash within legal statutory limits",
+          "any other method expressly agreed in writing",
+        ],
+      },
+      {
+        title: "9. Invoicing",
+        paragraphs: [
+          "Invoices are issued in accordance with applicable French commercial regulations.",
+          "VAT exemption notes (TVA non applicable, art. 293 B du CGI) are included when applicable under the micro-enterprise regime.",
+        ],
+      },
+      {
+        title: "10. Late Payment",
+        paragraphs: [
+          "For business clients, statutory late payment interest and fixed recovery compensation may apply as specified by French law and stated on invoices.",
+        ],
+      },
+      {
+        title: "11. Service Execution & Client Cooperation",
+        paragraphs: [
+          "AzurSysTech executes services in good faith and with professional diligence under an obligation of means (obligation de moyens).",
+          "The client agrees to provide necessary access, specifications, assets, and feedback in a timely manner.",
+        ],
+      },
+      {
+        title: "12. Data Backup & Client Responsibility",
+        paragraphs: [
+          "The client remains responsible for maintaining backups of their own systems, codebase, and data prior to interventions, unless backup management is specifically contracted.",
+        ],
+      },
+      {
+        title: "13. Cancellations & Rescheduling",
+        paragraphs: [
+          "Any cancellation or rescheduling must be notified as early as possible.",
+          "Incurred costs or non-refundable reserved capacity may be retained if cancellation occurs after project commencement.",
+        ],
+      },
+      {
+        title: "14. Right of Withdrawal — Consumers",
+        paragraphs: [
+          "Consumer clients contracting at a distance generally benefit from a 14-day statutory withdrawal period under French consumer law.",
+          "If the client requests immediate execution before this period expires and the service is completed with express agreement, the right of withdrawal lapses upon full completion.",
+        ],
+      },
+      {
+        title: "15. Limitation of Liability",
+        paragraphs: [
+          "AzurSysTech shall not be liable for outages caused by third-party hosting, network providers, third-party APIs, or client modifications.",
+          "In any event, liability is limited to the total amount paid by the client for the specific service in question, except in cases of willful misconduct or gross negligence.",
+        ],
+      },
+      {
+        title: "16. Intellectual Property",
+        paragraphs: [
+          "Upon full payment, deliverables created specifically for the client are assigned in accordance with the contract terms.",
+          "Pre-existing libraries, tools, and proprietary methodologies remain the property of AzurSysTech or respective rights holders.",
+        ],
+      },
+      {
+        title: "17. Personal Data Protection",
+        paragraphs: [
+          "Personal data is processed in accordance with the privacy policy published on azursystech.fr.",
+        ],
+      },
+      {
+        title: "18. Enquiries & Claims",
+        paragraphs: [
+          "Any claim or inquiry should be directed in writing to:",
+        ],
+      },
+      {
+        title: "19. Governing Law & Dispute Resolution",
+        paragraphs: [
+          "These terms are governed by French law.",
+          "In the event of a dispute, parties agree to seek an amicable resolution prior to initiating legal proceedings in competent French courts.",
+        ],
+      },
+      {
+        title: "20. Amendments",
+        paragraphs: [
+          "AzurSysTech reserves the right to update these terms. The version in effect at the time of contract acceptance applies to each project.",
+        ],
+      },
+    ] as TermsSection[],
+    privacyPrefix: "Personal data is processed in accordance with our ",
+    privacyLink: "privacy policy",
+    privacySuffix: " published on azursystech.fr.",
+    claimsPrefix: "Any claim should first be addressed in writing to: ",
+  },
 } as const satisfies Record<
   TermsLocale,
   {
@@ -407,19 +583,26 @@ const TERMS_PAGE = {
 >;
 
 function resolveTermsLocale(value?: string | null): TermsLocale {
-  return resolveLocale(value) === "ru" ? "ru" : "fr";
+  const resolved = resolveLocale(value);
+  return resolved === "ru" ? "ru" : resolved === "en" ? "en" : "fr";
 }
 
-export async function generateMetadata(): Promise<Metadata> {
+type TermsPageProps = {
+  searchParams?: Promise<{ locale?: string }>;
+};
+
+export async function generateMetadata(props: TermsPageProps): Promise<Metadata> {
   const cookieStore = await cookies();
-  const locale = resolveTermsLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolveTermsLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
 
   return TERMS_PAGE[locale].meta;
 }
 
-export default async function TermsPage() {
+export default async function TermsPage(props: TermsPageProps) {
   const cookieStore = await cookies();
-  const locale = resolveTermsLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolveTermsLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
   const copy = TERMS_PAGE[locale];
 
   return (

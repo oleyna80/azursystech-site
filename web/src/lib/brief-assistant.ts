@@ -128,6 +128,33 @@ const FIELD_LABELS = {
     contact_phone_or_whatsapp: "Телефон или WhatsApp",
     preferred_contact_method: "Предпочтительный канал связи",
   },
+  en: {
+    company_name: "Company / Project name",
+    website_url: "Website",
+    business_type: "Business type",
+    target_market: "Target audience / geography",
+    team_size: "Team size",
+    priority_use_case: "Priority use case",
+    why_now: "Why now",
+    main_goal: "Main automation goal",
+    main_problem: "Main bottleneck today",
+    desired_result: "Desired outcome",
+    current_process_description: "Current workflow description",
+    current_channels: "Intake channels",
+    current_owner_of_process: "Who manages it today",
+    current_tools: "Current tools",
+    main_bottleneck: "Primary bottleneck",
+    human_approval_required: "Where human review is mandatory",
+    sensitive_data_or_constraints: "Constraints & sensitive data",
+    what_must_not_happen: "What must never happen",
+    preferred_start_mode: "Preferred starting step",
+    timeline_priority: "Timeline & urgency",
+    budget_range: "Estimated budget",
+    contact_name: "Contact name",
+    contact_email: "Contact email",
+    contact_phone_or_whatsapp: "Phone or WhatsApp",
+    preferred_contact_method: "Preferred reply channel",
+  },
 } as const satisfies Record<BriefLocale, Record<BriefAssistantFieldKey, string>>;
 
 const BASE_GUARDRAILS = {
@@ -140,6 +167,11 @@ const BASE_GUARDRAILS = {
     "Не указывайте цену, сроки или обещание точного соответствия в этом поле.",
     "Для первого брифа не нужно вставлять лишние чувствительные данные.",
     "Сфокусируйтесь на одном процессе и одном основном узком месте.",
+  ],
+  en: [
+    "Do not include prices, fixed deadlines, or binding commitments in this field.",
+    "For the initial brief, there is no need to provide unnecessary sensitive information.",
+    "Focus on one primary workflow and one main bottleneck.",
   ],
 } as const satisfies Record<BriefLocale, string[]>;
 
@@ -169,6 +201,19 @@ const DEFAULT_FIELD_GUIDANCE = {
       "Опишите поле коротко: кто участвует, что происходит сейчас и что должно стать понятнее после ответа.",
     shortFollowUp:
       "Если ответ уже есть, его достаточно просто привести в более короткий и ясный вид.",
+  },
+  en: {
+    title: "How to fill this field",
+    explanation: "Specify only what helps clarify the goal and next practical step.",
+    answerStructure: [
+      "Keep it brief and concrete.",
+      "Add one fact, example, or constraint.",
+      "Avoid excessive technical details.",
+    ],
+    draftExample:
+      "Briefly describe who is involved, what happens today, and what should become simpler.",
+    shortFollowUp:
+      "If you already have an answer, keep it simple, direct, and concise.",
   },
 } as const satisfies Record<BriefLocale, GuidanceSeed>;
 
@@ -472,6 +517,156 @@ const FIELD_GUIDANCE = {
       shortFollowUp: "Это поле помогает удержать безопасные границы автоматизации.",
     },
   },
+  en: {
+    business_type: {
+      title: "How to fill this field",
+      explanation: "Select the option closest to your business without worrying about a perfect taxonomy.",
+      answerStructure: [],
+      draftExample: "local service company / e-commerce / professional practice / agency",
+      shortFollowUp: "The goal is to understand context, not create an exact categorization.",
+    },
+    priority_use_case: {
+      title: "How to fill this field",
+      explanation: "Choose the single most impactful scenario to automate first.",
+      answerStructure: [],
+      draftExample: "website leads / chat intake / request routing",
+      shortFollowUp: "If there are multiple scenarios, focus on the most valuable first step.",
+    },
+    why_now: {
+      title: "How to fill this field",
+      explanation: "Briefly explain what changed or why resolving this is timely.",
+      answerStructure: [],
+      draftExample: "Lead volume increased and manual processing is slowing down sales.",
+      shortFollowUp: "One clear reason is plenty.",
+    },
+    current_channels: {
+      title: "How to fill this field",
+      explanation: "Select only the communication channels actively used today.",
+      answerStructure: [],
+      draftExample: "Website form, WhatsApp, and email.",
+      shortFollowUp: "This helps clarify how clients first reach out.",
+    },
+    preferred_start_mode: {
+      title: "How to fill this field",
+      explanation: "Choose the easiest starting step rather than scoping an entire multi-year project.",
+      answerStructure: [],
+      draftExample: "A quick scoping audit or pilot discussion.",
+      shortFollowUp: "A simple, focused first step is usually best.",
+    },
+    budget_range: {
+      title: "How to fill this field",
+      explanation: "Provide a range only if you already have one in mind; otherwise, no budget yet is completely fine.",
+      answerStructure: [],
+      draftExample: "audit first / up to €1,000 / prefer to discuss",
+      shortFollowUp: "This only helps size the initial engagement.",
+    },
+    contact_phone_or_whatsapp: {
+      title: "How to fill this field",
+      explanation: "Provide a phone number only if that is the easiest way to reach you.",
+      answerStructure: [],
+      draftExample: "+33 7 80 72 09 94",
+      shortFollowUp: "If email is preferred, you can leave this blank.",
+    },
+    main_goal: {
+      title: "How to fill this field",
+      explanation: "Describe one specific workflow you want to automate first.",
+      answerStructure: [
+        "Which process to improve first.",
+        "Why this process is the priority now.",
+        "What should become easier afterwards.",
+      ],
+      draftExample:
+        "Automate initial website lead intake: collect core details, clarify needs, and forward a structured summary.",
+      shortFollowUp: "If there are several workflows, choose one to start with.",
+    },
+    main_problem: {
+      title: "How to fill this field",
+      explanation: "Describe where time, leads, or visibility are currently lost.",
+      answerStructure: [
+        "What causes the biggest friction today.",
+        "Where in the flow it occurs.",
+        "How it impacts your team or clients.",
+      ],
+      draftExample:
+        "Requests arrive across multiple channels, team asks the same repetitive questions, and replies are delayed.",
+      shortFollowUp: "Describe the challenge in practical business terms.",
+    },
+    desired_result: {
+      title: "How to fill this field",
+      explanation: "Describe the business outcome, not technical implementation.",
+      answerStructure: [
+        "What should be faster.",
+        "What should be clearer.",
+        "What a successful result looks like for your team and clients.",
+      ],
+      draftExample:
+        "Requests are gathered, pre-qualified, and forwarded with a concise summary to our team.",
+      shortFollowUp: "Focus on tangible business results.",
+    },
+    current_process_description: {
+      title: "How to fill this field",
+      explanation: "Describe the workflow in simple steps: source, respondent, and next action.",
+      answerStructure: [
+        "Where the request comes from.",
+        "Who replies today.",
+        "Where information is stored.",
+        "Where the process slows down.",
+      ],
+      draftExample:
+        "A client reaches out via website or WhatsApp, a team member reads it, asks clarifying questions, and notes it down.",
+      shortFollowUp: "No complex diagrams needed; clear sequential steps are enough.",
+    },
+    main_bottleneck: {
+      title: "How to fill this field",
+      explanation: "Isolate the single point in the workflow that causes the most delay.",
+      answerStructure: [
+        "Where the bottleneck occurs.",
+        "Why it slows down work.",
+        "What repetitive work happens there.",
+      ],
+      draftExample:
+        "The primary bottleneck is initial triage: repetitive manual questions without structured handoff.",
+      shortFollowUp: "Focus on one primary bottleneck.",
+    },
+    human_approval_required: {
+      title: "How to fill this field",
+      explanation:
+        "Specify steps where a human must approve the decision: pricing, deadlines, final reply, or binding commitments.",
+      answerStructure: [
+        "What must not be sent automatically.",
+        "What a person must confirm.",
+        "Where review is required before dispatch.",
+      ],
+      draftExample:
+        "A person must approve pricing, deadlines, non-standard enquiries, and any action that changes client status.",
+      shortFollowUp: "When in doubt, keep commercial decisions under human review.",
+    },
+    sensitive_data_or_constraints: {
+      title: "How to fill this field",
+      explanation:
+        "Mention only constraints that affect data storage, privacy, access, or permitted actions.",
+      answerStructure: [
+        "What data is sensitive.",
+        "Storage or access limitations.",
+        "Internal rules that cannot be bypassed.",
+      ],
+      draftExample:
+        "Client personal data is collected, conversations are restricted to sales team, internal documents cannot leave local systems.",
+      shortFollowUp: "1 or 2 key constraints are enough.",
+    },
+    what_must_not_happen: {
+      title: "How to fill this field",
+      explanation: "State what actions the automation must never perform.",
+      answerStructure: [
+        "What must never be automated.",
+        "What data must never be shared.",
+        "What promises must never be made.",
+      ],
+      draftExample:
+        "The agent must not promise quotes or deadlines, send messages without review, or access unnecessary sensitive data.",
+      shortFollowUp: "This field sets the safety guardrails for the automation.",
+    },
+  },
 } as const satisfies Record<BriefLocale, Partial<Record<BriefAssistantFieldKey, GuidanceSeed>>>;
 
 function normalizeFieldKey(fieldKey?: string | null): BriefAssistantFieldKey | null {
@@ -515,17 +710,25 @@ function isLowSignalAnswer(value: string): boolean {
     "peu importe",
     "tout",
     "ia",
+    "don't know",
+    "not sure",
+    "any",
+    "anything",
+    "all",
+    "ai",
   ].some((phrase) => normalized === phrase || normalized.startsWith(`${phrase} `));
 }
 
 function getStepHint(locale: BriefLocale, fieldLabel: string, stepTitle?: string): string {
   if (stepTitle) {
-    return locale === "fr"
-      ? `Étape actuelle : ${stepTitle}. Champ : ${fieldLabel}.`
-      : `Сейчас шаг: ${stepTitle}. Поле: ${fieldLabel}.`;
+    if (locale === "fr") return `Étape actuelle : ${stepTitle}. Champ : ${fieldLabel}.`;
+    if (locale === "en") return `Current step: ${stepTitle}. Field: ${fieldLabel}.`;
+    return `Сейчас шаг: ${stepTitle}. Поле: ${fieldLabel}.`;
   }
 
-  return locale === "fr" ? `Champ actuel : ${fieldLabel}.` : `Сейчас поле: ${fieldLabel}.`;
+  if (locale === "fr") return `Champ actuel : ${fieldLabel}.`;
+  if (locale === "en") return `Current field: ${fieldLabel}.`;
+  return `Сейчас поле: ${fieldLabel}.`;
 }
 
 export function getBriefAssistantGuidance(params: {
@@ -537,7 +740,13 @@ export function getBriefAssistantGuidance(params: {
   const locale = params.locale ?? "ru";
   const normalizedKey = normalizeFieldKey(params.fieldKey);
   const localeGuidance = FIELD_GUIDANCE[locale] as Partial<Record<BriefAssistantFieldKey, GuidanceSeed>>;
-  const fieldLabel = normalizedKey ? FIELD_LABELS[locale][normalizedKey] : locale === "fr" ? "champ sélectionné" : "выбранное поле";
+  const fieldLabel = normalizedKey
+    ? FIELD_LABELS[locale][normalizedKey]
+    : locale === "fr"
+      ? "champ sélectionné"
+      : locale === "en"
+        ? "selected field"
+        : "выбранное поле";
   const baseGuidance = normalizedKey ? localeGuidance[normalizedKey] : undefined;
   const defaultGuidance = DEFAULT_FIELD_GUIDANCE[locale];
   const value = normalizeValue(params.fieldValue);
@@ -557,7 +766,12 @@ export function getBriefAssistantGuidance(params: {
   if (!normalizedKey) {
     return {
       ...guidance,
-      title: locale === "fr" ? "Comment mieux remplir ce champ" : "Как лучше заполнить поле",
+      title:
+        locale === "fr"
+          ? "Comment mieux remplir ce champ"
+          : locale === "en"
+            ? "How to fill this field"
+            : "Как лучше заполнить поле",
     };
   }
 
@@ -567,7 +781,9 @@ export function getBriefAssistantGuidance(params: {
       shortFollowUp:
         locale === "fr"
           ? "La réponse paraît encore trop générale. Ajoutez 1 ou 2 phrases pour préciser ce qui se passe réellement."
-          : "Сейчас ответ выглядит слишком общим. Добавьте 1–2 предложения, чтобы стало понятнее, что именно происходит.",
+          : locale === "en"
+            ? "The answer seems too broad. Add 1–2 sentences to clarify what actually happens."
+            : "Сейчас ответ выглядит слишком общим. Добавьте 1–2 предложения, чтобы стало понятнее, что именно происходит.",
     };
   }
 
@@ -578,7 +794,9 @@ export function getBriefAssistantGuidance(params: {
         baseGuidance?.shortFollowUp ??
         (locale === "fr"
           ? "Cela suffit déjà pour ce champ. Vous pouvez continuer."
-          : "Этого уже достаточно для поля. Можно идти дальше по форме."),
+          : locale === "en"
+            ? "This is sufficient for this field. You can proceed."
+            : "Этого уже достаточно для поля. Можно идти дальше по форме."),
     };
   }
 

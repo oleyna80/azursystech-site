@@ -13,27 +13,32 @@ const CONTACT = {
 
 const LOCALE_OPTIONS: HeaderLocale[] = ["fr", "ru", "en"];
 const LOCALE_SLUGS = new Set(["fr", "ru", "en"]);
-const COOKIE_BACKED_ROUTES = ["/brief"] as const;
+const COOKIE_BACKED_ROUTES = [
+  "/brief",
+  "/legal",
+  "/privacy",
+  "/terms",
+  "/thank-you",
+  "/data-deletion",
+  "/ai-automation",
+  "/portfolio",
+] as const;
 
 function getLocaleFromPath(pathname: string): HeaderLocale | null {
   const seg = pathname.split("/")[1];
   return LOCALE_SLUGS.has(seg) ? (seg as HeaderLocale) : null;
 }
 
-function supportsEnglishRoute(pathname: string): boolean {
-  return /\/(fr|ru|en)(?:\/ai-automation)?$/.test(pathname);
-}
-
-function buildLocalizedPath(pathname: string, next: HeaderLocale): string {
+export function buildLocalizedPath(pathname: string, next: HeaderLocale): string {
   const segs = pathname.split("/");
   if (LOCALE_SLUGS.has(segs[1])) {
     segs[1] = next;
     return segs.join("/") || `/${next}`;
   }
-  if (COOKIE_BACKED_ROUTES.includes(pathname as (typeof COOKIE_BACKED_ROUTES)[number])) {
+  if (COOKIE_BACKED_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
     return pathname;
   }
-  return next === "en" ? pathname : `/${next}`;
+  return `/${next}`;
 }
 
 const HEADER_COPY = {
@@ -56,7 +61,7 @@ const HEADER_COPY = {
     menuOpenLabel: "Open menu",
     menuCloseLabel: "Close menu",
     whatsappCta: "WhatsApp",
-    submitCta: "Discuss a project",
+    submitCta: "Describe a project",
   },
 } as const;
 
@@ -64,18 +69,8 @@ function buildNavLinks(locale: HeaderLocale) {
   const t = {
     fr: { automation: "Automatisation IA", websites: "Sites web", portfolio: "Portfolio", services: "Services", faq: "FAQ", contact: "Contact" },
     ru: { automation: "AI-автоматизация", websites: "Сайты", portfolio: "Портфолио", services: "Услуги", faq: "FAQ", contact: "Контакты" },
-    en: { automation: "AI automation", websites: "Web applications", portfolio: "", services: "Services", faq: "FAQ", contact: "Contact" },
+    en: { automation: "AI automation", websites: "Websites", portfolio: "Portfolio", services: "Services", faq: "FAQ", contact: "Contact" },
   }[locale];
-  if (locale === "en") {
-    return [
-      { href: "/en#automation", label: t.automation },
-      { href: "/en#services", label: t.websites },
-      { href: "/en/ai-automation", label: t.services },
-      { href: "/en#faq", label: t.faq },
-      { href: "/en#contact", label: t.contact },
-    ];
-  }
-  // Portfolio sits after "websites": feature discovery before meta links (faq/contact).
   return [
     { href: `/${locale}#automation`, label: t.automation },
     { href: `/${locale}#websites`, label: t.websites },
@@ -94,7 +89,7 @@ export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
   const [locale, setLocale] = useState<HeaderLocale>(routeLocale ?? initialLocale);
   const copy = HEADER_COPY[locale];
   const navLinks = useMemo(() => buildNavLinks(locale), [locale]);
-  const localeOptions = supportsEnglishRoute(pathname) ? LOCALE_OPTIONS : LOCALE_OPTIONS.filter((option) => option !== "en");
+  const localeOptions = LOCALE_OPTIONS;
 
   useEffect(() => {
     setLocale(routeLocale ?? initialLocale);
@@ -199,23 +194,12 @@ export function SiteHeader({ initialLocale }: { initialLocale: HeaderLocale }) {
           >
             {copy.whatsappCta}
           </a>
-          {locale === "en" ? (
-            <a
-              href={CONTACT.whatsappHref}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex rounded-full bg-accent-teal px-4 py-2.5 text-xs font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-accent-teal/90 sm:px-5 sm:text-sm"
-            >
-              {copy.submitCta}
-            </a>
-          ) : (
           <Link
             href="/brief"
             className="inline-flex rounded-full bg-accent-teal px-4 py-2.5 text-xs font-bold text-white shadow-premium-soft transition-transform active:scale-95 hover:bg-accent-teal/90 sm:px-5 sm:text-sm"
           >
             {copy.submitCta}
           </Link>
-          )}
           <button
             type="button"
             onClick={() => setIsMenuOpen((prev) => !prev)}

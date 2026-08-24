@@ -2,7 +2,13 @@ import Link from "next/link";
 import type { PortfolioProject } from "@/lib/portfolio-data";
 import { ytThumbUrl } from "@/lib/portfolio-data";
 
-export function PortfolioCard({ project }: { project: PortfolioProject }) {
+export function PortfolioCard({
+  project,
+  learnMoreLabel = "En savoir plus",
+}: {
+  project: PortfolioProject;
+  learnMoreLabel?: string;
+}) {
   return (
     <Link
       href={`/portfolio/${project.slug}`}
@@ -41,7 +47,7 @@ export function PortfolioCard({ project }: { project: PortfolioProject }) {
           {project.shortDescription}
         </span>
         <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[#4f8cff] transition group-hover:text-[#7badff]">
-          En savoir plus
+          {learnMoreLabel}
           <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
             <path fill="currentColor" d="M5 11h11.2l-4.6-4.6L13 5l7 7-7 7-1.4-1.4 4.6-4.6H5v-2z" />
           </svg>

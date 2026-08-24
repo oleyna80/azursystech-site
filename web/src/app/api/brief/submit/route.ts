@@ -66,6 +66,23 @@ function getRouteCopy(locale: BriefLocale) {
     };
   }
 
+  if (locale === "en") {
+    return {
+      unreadable: "Unable to read brief submission data. Please check the form and try again.",
+      invalidJson: "Invalid JSON format",
+      invalidBrief: "Please check your brief inputs and try again.",
+      missingBrief: "Brief payload data is missing",
+      requiredFields: "Please check the required fields and submit again.",
+      tooLarge: "The request payload is too large. Please shorten your responses and try again.",
+      rateLimited: "Too many submissions. Please wait a minute and try again.",
+      forbidden: "Request was forbidden. Please refresh the page and try again.",
+      invalidConversation: "Unable to associate this brief with the specified conversation.",
+      persistenceUnavailable:
+        "Unable to save the brief right now. Please try again in a few moments.",
+      success: "Your project brief has been received and is ready for manual review.",
+    };
+  }
+
   return {
     unreadable: "Не удалось прочитать данные брифа. Проверьте заполнение и попробуйте ещё раз.",
     invalidJson: "Некорректный формат JSON",

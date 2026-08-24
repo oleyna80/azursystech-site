@@ -15,7 +15,9 @@ export function BriefProgress({ steps, currentStep, locale }: BriefProgressProps
         <span>
           {locale === "fr"
             ? `Étape ${currentStep + 1} sur ${steps.length}`
-            : `Шаг ${currentStep + 1} из ${steps.length}`}
+            : locale === "en"
+              ? `Step ${currentStep + 1} of ${steps.length}`
+              : `Шаг ${currentStep + 1} из ${steps.length}`}
         </span>
         <span>{completion}%</span>
       </div>

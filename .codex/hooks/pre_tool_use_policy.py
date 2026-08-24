@@ -123,7 +123,9 @@ def normalize(raw: str, root: Path) -> str:
     pure = PurePosixPath(path.as_posix())
     if ".." in pure.parts:
         raise Denied(f"Path escapes repository: {raw}")
-    value = pure.as_posix().lstrip("./")
+    value = pure.as_posix()
+    if value.startswith("./"):
+        value = value[2:]
     if not value or value == ".":
         raise Denied(f"Cannot resolve repository path: {raw}")
     return value
@@ -132,7 +134,9 @@ def normalize(raw: str, root: Path) -> str:
 def matches(path: str, patterns: list[str]) -> bool:
     path = path.rstrip("/")
     for raw in patterns:
-        pattern = str(raw).strip().replace("\\", "/").lstrip("./")
+        pattern = str(raw).strip().replace("\\", "/")
+        if pattern.startswith("./"):
+            pattern = pattern[2:]
         if not pattern:
             continue
         if pattern.endswith("/**"):
