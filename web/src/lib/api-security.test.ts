@@ -98,11 +98,18 @@ describe("api-security", () => {
     const req1 = new NextRequest("https://azursystech.fr/en");
     const res1 = proxy(req1);
     expect(res1.cookies.get("azursystech.locale")?.value).toBe("en");
-    expect(res1.headers.get("x-middleware-request-x-azursystech-route-locale") || res1.headers.get("x-azursystech-route-locale") || true).toBeTruthy();
+    const header1 =
+      res1.headers.get("x-middleware-request-x-azursystech-route-locale") ||
+      res1.headers.get("x-azursystech-route-locale");
+    expect(header1).toBe("en");
 
     const req2 = new NextRequest("https://azursystech.fr/brief?locale=en");
     const res2 = proxy(req2);
     expect(res2.cookies.get("azursystech.locale")?.value).toBe("en");
+    const header2 =
+      res2.headers.get("x-middleware-request-x-azursystech-route-locale") ||
+      res2.headers.get("x-azursystech-route-locale");
+    expect(header2).toBe("en");
   });
 
   it("handles CORS OPTIONS preflight on API routes even with locale query param", () => {
