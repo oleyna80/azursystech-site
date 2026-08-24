@@ -64,7 +64,7 @@
       "skip_reason": ""
     }
   },
-  "closeout_mode": "reporting_only_pending_owner_commit",
+  "closeout_mode": "owner_publication_handoff_ready",
   "integrations": {
     "approved": [],
     "admission_records": []
@@ -125,5 +125,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Stage 2 Assure complete: Reviewer APPROVE; Verifier READY/PASS; drift PASS. No local commit, staging, push, merge, or deployment was authorized; publication handoff remains pending an Owner-authorized local commit."
+  "lifecycle_note": "Stage 2 Assure complete: Reviewer APPROVE; Verifier READY/PASS; drift PASS. Owner authorized and completed the local candidate commit; publication handoff is prepared for the exact local HEAD. No push, merge, or deployment was performed; external publication remains Owner-controlled."
 }
