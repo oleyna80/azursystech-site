@@ -13,15 +13,19 @@ const CONTACT = {
 
 const LOCALE_OPTIONS: HeaderLocale[] = ["fr", "ru", "en"];
 const LOCALE_SLUGS = new Set(["fr", "ru", "en"]);
-const COOKIE_BACKED_ROUTES = ["/brief"] as const;
+const COOKIE_BACKED_ROUTES = [
+  "/brief",
+  "/legal",
+  "/privacy",
+  "/terms",
+  "/thank-you",
+  "/data-deletion",
+  "/ai-automation",
+] as const;
 
 function getLocaleFromPath(pathname: string): HeaderLocale | null {
   const seg = pathname.split("/")[1];
   return LOCALE_SLUGS.has(seg) ? (seg as HeaderLocale) : null;
-}
-
-function supportsEnglishRoute(pathname: string): boolean {
-  return true;
 }
 
 function buildLocalizedPath(pathname: string, next: HeaderLocale): string {
@@ -30,7 +34,7 @@ function buildLocalizedPath(pathname: string, next: HeaderLocale): string {
     segs[1] = next;
     return segs.join("/") || `/${next}`;
   }
-  if (COOKIE_BACKED_ROUTES.includes(pathname as (typeof COOKIE_BACKED_ROUTES)[number])) {
+  if (COOKIE_BACKED_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
     return pathname;
   }
   return `/${next}`;

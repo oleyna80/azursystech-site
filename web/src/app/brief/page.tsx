@@ -89,16 +89,22 @@ const PAGE_COPY = {
   formError: string;
 }>;
 
-export async function generateMetadata(): Promise<Metadata> {
+type BriefPageProps = {
+  searchParams?: Promise<{ locale?: string }>;
+};
+
+export async function generateMetadata(props: BriefPageProps): Promise<Metadata> {
   const cookieStore = await cookies();
-  const locale = resolveBriefLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolveBriefLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
 
   return PAGE_COPY[locale].meta;
 }
 
-export default async function BriefPage() {
+export default async function BriefPage(props: BriefPageProps) {
   const cookieStore = await cookies();
-  const locale = resolveBriefLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolveBriefLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
   const copy = PAGE_COPY[locale];
   return (
     <main className="bg-[#F3EFE7] text-[#172331]">

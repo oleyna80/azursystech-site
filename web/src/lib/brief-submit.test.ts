@@ -4,9 +4,12 @@ import {
   buildBriefSubmissionPayload,
   createBriefHandoff,
   createInitialBriefValues,
+  getBriefFields,
+  getBriefSteps,
   validateBriefValues,
   type BriefFormValues,
 } from "@/lib/brief-submit";
+import { getBriefInlineHelpGuidance } from "@/lib/brief-assistant";
 
 function createValidBriefValues(): BriefFormValues {
   return {
@@ -112,5 +115,52 @@ describe("brief-submit", () => {
 
     const payload = buildBriefSubmissionPayload(createValidBriefValues(), {}, "en");
     expect(payload.locale).toBe("en");
+  });
+
+  it("provides complete native English brief fields without Cyrillic strings", () => {
+    const fields = getBriefFields("en");
+    expect(Object.keys(fields).length).toBeGreaterThanOrEqual(29);
+
+    const cyrillicRegex = /[\u0400-\u04FF]/;
+
+    for (const [key, field] of Object.entries(fields)) {
+      expect(field.label, `Field ${key} has empty label`).toBeTruthy();
+      expect(field.label).not.toMatch(cyrillicRegex);
+
+      if (field.placeholder) {
+        expect(field.placeholder).not.toMatch(cyrillicRegex);
+      }
+      if (field.helperText) {
+        expect(field.helperText).not.toMatch(cyrillicRegex);
+      }
+      if (field.example) {
+        expect(field.example).not.toMatch(cyrillicRegex);
+      }
+      if (field.options) {
+        for (const opt of field.options) {
+          expect(opt.label).not.toMatch(cyrillicRegex);
+        }
+      }
+
+      const inlineHelp = getBriefInlineHelpGuidance({
+        fieldKey: key,
+        fieldValue: "",
+        locale: "en",
+      });
+      if (inlineHelp) {
+        expect(inlineHelp.fieldLabel).not.toMatch(cyrillicRegex);
+        expect(inlineHelp.explanation).not.toMatch(cyrillicRegex);
+        for (const item of inlineHelp.answerStructure) {
+          expect(item).not.toMatch(cyrillicRegex);
+        }
+      }
+    }
+
+    const steps = getBriefSteps("en");
+    expect(steps).toHaveLength(5);
+    for (const step of steps) {
+      expect(step.title).not.toMatch(cyrillicRegex);
+      expect(step.shortDescription).not.toMatch(cyrillicRegex);
+    }
   });
 });

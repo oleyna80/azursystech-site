@@ -20,9 +20,6 @@ export type PortfolioProject = {
   demoUrl?: string;
 };
 
-// Placeholder until real video IDs are provided by the Owner.
-const YT_PLACEHOLDER = "dQw4w9WgXcQ";
-
 export const PORTFOLIO_PROJECTS: readonly PortfolioProject[] = [
   {
     slug: "plomberie",

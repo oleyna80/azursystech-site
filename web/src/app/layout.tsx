@@ -33,7 +33,8 @@ function resolveShellLocale(routeLocale: string | null, cookieLocale: string | u
     return routeLocale;
   }
 
-  return resolveLocale(cookieLocale) === "ru" ? "ru" : "fr";
+  const resolved = resolveLocale(cookieLocale);
+  return resolved === "ru" || resolved === "en" ? resolved : "fr";
 }
 
 export default async function RootLayout({

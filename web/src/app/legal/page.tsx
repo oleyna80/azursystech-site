@@ -332,16 +332,22 @@ function resolveLegalLocale(value?: string | null): LegalLocale {
   return resolved === "ru" ? "ru" : resolved === "en" ? "en" : "fr";
 }
 
-export async function generateMetadata(): Promise<Metadata> {
+type LegalPageProps = {
+  searchParams?: Promise<{ locale?: string }>;
+};
+
+export async function generateMetadata(props: LegalPageProps): Promise<Metadata> {
   const cookieStore = await cookies();
-  const locale = resolveLegalLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolveLegalLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
 
   return LEGAL_PAGE[locale].meta;
 }
 
-export default async function LegalPage() {
+export default async function LegalPage(props: LegalPageProps) {
   const cookieStore = await cookies();
-  const locale = resolveLegalLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolveLegalLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
   const copy = LEGAL_PAGE[locale];
 
   return (

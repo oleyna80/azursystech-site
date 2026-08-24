@@ -587,16 +587,22 @@ function resolveTermsLocale(value?: string | null): TermsLocale {
   return resolved === "ru" ? "ru" : resolved === "en" ? "en" : "fr";
 }
 
-export async function generateMetadata(): Promise<Metadata> {
+type TermsPageProps = {
+  searchParams?: Promise<{ locale?: string }>;
+};
+
+export async function generateMetadata(props: TermsPageProps): Promise<Metadata> {
   const cookieStore = await cookies();
-  const locale = resolveTermsLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolveTermsLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
 
   return TERMS_PAGE[locale].meta;
 }
 
-export default async function TermsPage() {
+export default async function TermsPage(props: TermsPageProps) {
   const cookieStore = await cookies();
-  const locale = resolveTermsLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolveTermsLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
   const copy = TERMS_PAGE[locale];
 
   return (

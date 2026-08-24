@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
 
 import {
   getRateLimitKey,
@@ -6,6 +7,7 @@ import {
   readFormDataWithLimit,
   readJsonWithLimit,
 } from "@/lib/api-security";
+import { proxy } from "@/proxy";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -90,5 +92,15 @@ describe("api-security", () => {
     if (result.ok) {
       expect(result.value.get("company")).toBe("AzurSysTech");
     }
+  });
+
+  it("sets locale cookie when visiting /en or passing locale query param", () => {
+    const req1 = new NextRequest("https://azursystech.fr/en");
+    const res1 = proxy(req1);
+    expect(res1.cookies.get("azursystech.locale")?.value).toBe("en");
+
+    const req2 = new NextRequest("https://azursystech.fr/brief?locale=en");
+    const res2 = proxy(req2);
+    expect(res2.cookies.get("azursystech.locale")?.value).toBe("en");
   });
 });

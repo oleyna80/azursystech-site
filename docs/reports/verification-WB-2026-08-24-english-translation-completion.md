@@ -16,11 +16,11 @@
 |---|---|---|
 | **REQ-001 / AC-001** (Dictionary) | READY | `web/src/i18n.js` `dictionaries.en` contains complete translations for all keys including `automationCards`, services, pricing, FAQs, and contact forms. Zero legacy repair strings. |
 | **REQ-002 / AC-002** (Showcase & Home) | READY | `_home-data.ts` defines 6 English showcase cards with categories and features; `page.tsx` renders showcase, portfolio, and `/brief` CTAs on `/en`. |
-| **REQ-003 / AC-003** (Shell & Navigation) | READY | `site-header.tsx` enables English language switcher and links to `/brief`; `site-footer.tsx` renders 3-column localized footer with legal links, navigation, and contact. |
-| **REQ-004 / AC-004** (Brief Intake Flow) | READY | `brief-submit.ts`, `brief-assistant.ts`, `brief/page.tsx`, `brief-form.tsx`, and `api/brief/submit/route.ts` fully support English with 29 field definitions, guidance, validation, and localized API responses. |
-| **REQ-005 / AC-005** (Legal & Utility) | READY | `legal/page.tsx`, `privacy/page.tsx`, `terms/page.tsx`, `thank-you/page.tsx`, and `data-deletion/page.tsx` provide complete English translations with cookie/header fallback. |
+| **REQ-003 / AC-003** (Shell & Navigation) | READY | `site-header.tsx` enables English language switcher, keeps current page on language toggle for cookie-backed routes, and links to `/brief`; `site-footer.tsx` renders 3-column localized footer with legal links, navigation, and contact. `layout.tsx` shell locale resolves English properly. |
+| **REQ-004 / AC-004** (Brief Intake Flow) | READY | `brief-submit.ts`, `brief-assistant.ts`, `brief/page.tsx`, `brief-form.tsx`, `brief-field.tsx`, `brief-progress.tsx`, and `api/brief/submit/route.ts` fully support English with 29 field definitions, guidance, step counters, option placeholders, example tags, validation, and localized API responses. |
+| **REQ-005 / AC-005** (Legal, AI Automation & Utility) | READY | `legal/page.tsx`, `privacy/page.tsx`, `terms/page.tsx`, `thank-you/page.tsx`, `data-deletion/page.tsx`, and `ai-automation/page.tsx` provide complete English translations with cookie and query param resolution. |
 | **REQ-006 / AC-006** (Portfolio Pages) | READY | `portfolio-data.ts`, `portfolio/page.tsx`, and `portfolio/[slug]/page.tsx` have valid metadata and navigation to `/portfolio` and `/brief`. |
-| **REQ-007 / AC-007** (Unit Tests) | READY | `_home-data.test.ts` and `brief-submit.test.ts` assert 6 English showcase demos, English structured data, validation, and handoff generation. `npm run test` exits 0 (24 test suites passed). |
+| **REQ-007 / AC-007** (Unit Tests) | READY | `_home-data.test.ts`, `brief-submit.test.ts`, `route.test.ts`, and `api-security.test.ts` assert 6 English showcase demos, English structured data, Cyrillic-free brief dictionaries, English submit/validation, and proxy cookie persistence. `npm run test -- --run` exits 0 (24 test suites, 121 tests passing). |
 | **REQ-008 / AC-008** (Build & Gate Quality) | READY | `npm run check:types` passed (0 errors); `npm run build` compiled successfully (33/33 routes static & dynamic verified). Traceability validated with `scripts/validate-define-traceability.py`. |
 
 ---
@@ -35,25 +35,25 @@
 
 2. **Unit Tests:**
    ```bash
-   npm run test
+   npm run test -- --run
    # Test Files: 24 passed | 1 skipped (25)
-   # Tests: 117 passed | 3 skipped (120)
+   # Tests: 121 passed | 3 skipped (124)
    # Exit code: 0
    ```
 
 3. **Production Build:**
    ```bash
    npm run build
-   # ✓ Compiled successfully in 8.8s
-   # ✓ Finished TypeScript in 12.5s
-   # ✓ Generating static pages (33/33) in 543ms
+   # ✓ Compiled successfully in 5.4s
+   # ✓ Finished TypeScript in 7.4s
+   # ✓ Generating static pages (33/33) in 422ms
    # Exit code: 0
    ```
 
 4. **Define & Task Traceability:**
    ```bash
    python3 scripts/validate-define-traceability.py --spec docs/specs/WB-2026-08-24-english-translation-completion.md --tasks docs/tasklist/WB-2026-08-24-english-translation-completion.tasklist.md
-   # READY: requirements=8 acceptance=8 tasks=13
+   # READY: requirements=8 acceptance=8 tasks=18
    # Exit code: 0
    ```
 

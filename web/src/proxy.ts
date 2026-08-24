@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+import { LOCALE_STORAGE_KEY } from "./i18n";
+
 const LOCALE_HEADER = "x-azursystech-route-locale";
 const ROUTE_LOCALES = new Set(["fr", "ru", "en"]);
 
@@ -49,7 +51,28 @@ export function proxy(request: NextRequest): NextResponse {
   if (ROUTE_LOCALES.has(locale)) {
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set(LOCALE_HEADER, locale);
-    return NextResponse.next({ request: { headers: requestHeaders } });
+    const response = NextResponse.next({ request: { headers: requestHeaders } });
+    if (request.cookies.get(LOCALE_STORAGE_KEY)?.value !== locale) {
+      response.cookies.set(LOCALE_STORAGE_KEY, locale, {
+        path: "/",
+        sameSite: "lax",
+        maxAge: 31536000,
+      });
+    }
+    return response;
+  }
+
+  const queryLocale = request.nextUrl.searchParams.get("locale");
+  if (queryLocale && ROUTE_LOCALES.has(queryLocale)) {
+    const response = NextResponse.next();
+    if (request.cookies.get(LOCALE_STORAGE_KEY)?.value !== queryLocale) {
+      response.cookies.set(LOCALE_STORAGE_KEY, queryLocale, {
+        path: "/",
+        sameSite: "lax",
+        maxAge: 31536000,
+      });
+    }
+    return response;
   }
 
   const origin = request.headers.get("origin");
@@ -71,5 +94,20 @@ export function proxy(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: ["/api/:path*", "/fr/:path*", "/ru/:path*", "/en/:path*"],
+  matcher: [
+    "/api/:path*",
+    "/fr",
+    "/fr/:path*",
+    "/ru",
+    "/ru/:path*",
+    "/en",
+    "/en/:path*",
+    "/brief",
+    "/legal",
+    "/privacy",
+    "/terms",
+    "/thank-you",
+    "/data-deletion",
+    "/ai-automation",
+  ],
 };

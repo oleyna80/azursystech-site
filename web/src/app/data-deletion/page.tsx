@@ -218,16 +218,22 @@ function resolveDeletionLocale(value?: string | null): DeletionLocale {
   return resolved === "ru" ? "ru" : resolved === "en" ? "en" : "fr";
 }
 
-export async function generateMetadata(): Promise<Metadata> {
+type DataDeletionPageProps = {
+  searchParams?: Promise<{ locale?: string }>;
+};
+
+export async function generateMetadata(props: DataDeletionPageProps): Promise<Metadata> {
   const cookieStore = await cookies();
-  const locale = resolveDeletionLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolveDeletionLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
 
   return DATA_DELETION_PAGE[locale].meta;
 }
 
-export default async function DataDeletionPage() {
+export default async function DataDeletionPage(props: DataDeletionPageProps) {
   const cookieStore = await cookies();
-  const locale = resolveDeletionLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolveDeletionLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
   const copy = DATA_DELETION_PAGE[locale];
 
   return (

@@ -9,7 +9,6 @@ import { buildHomeJsonLd, HOME_CONTENT, type HomeLocale } from "./_home-data";
 
 const SUPPORTED_LOCALES = ["fr", "ru", "en"] as const;
 const BASE_URL = "https://azursystech.fr";
-const WHATSAPP = "https://wa.me/33780720994";
 
 const META = {
   fr: {
@@ -58,7 +57,7 @@ export default async function LocaleHomePage({
   if (!SUPPORTED_LOCALES.includes(locale as HomeLocale)) notFound();
   const l = locale as HomeLocale;
   const copy = HOME_CONTENT[l];
-  const projectHref = "/brief";
+  const projectHref = l === "fr" ? "/brief" : `/brief?locale=${l}`;
 
   return (
     <main className="bg-base text-graphite">

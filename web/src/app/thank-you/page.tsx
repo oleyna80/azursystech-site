@@ -148,9 +148,14 @@ function resolveThankYouLocale(value?: string | null): ThankYouLocale {
   return resolved === "ru" ? "ru" : resolved === "en" ? "en" : "fr";
 }
 
-export async function generateMetadata(): Promise<Metadata> {
+type ThankYouPageProps = {
+  searchParams?: Promise<{ locale?: string }>;
+};
+
+export async function generateMetadata(props: ThankYouPageProps): Promise<Metadata> {
   const cookieStore = await cookies();
-  const locale = resolveThankYouLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolveThankYouLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
 
   return {
     ...THANK_YOU_COPY[locale].meta,
@@ -161,9 +166,10 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function ThankYouPage() {
+export default async function ThankYouPage(props: ThankYouPageProps) {
   const cookieStore = await cookies();
-  const locale = resolveThankYouLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolveThankYouLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
   const copy = THANK_YOU_COPY[locale];
 
   return (

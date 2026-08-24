@@ -434,16 +434,22 @@ function resolvePrivacyLocale(value?: string | null): PrivacyLocale {
   return resolved === "ru" ? "ru" : resolved === "en" ? "en" : "fr";
 }
 
-export async function generateMetadata(): Promise<Metadata> {
+type PrivacyPageProps = {
+  searchParams?: Promise<{ locale?: string }>;
+};
+
+export async function generateMetadata(props: PrivacyPageProps): Promise<Metadata> {
   const cookieStore = await cookies();
-  const locale = resolvePrivacyLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolvePrivacyLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
 
   return PRIVACY_PAGE[locale].meta;
 }
 
-export default async function PrivacyPage() {
+export default async function PrivacyPage(props: PrivacyPageProps) {
   const cookieStore = await cookies();
-  const locale = resolvePrivacyLocale(cookieStore.get(LOCALE_COOKIE_KEY)?.value);
+  const searchParams = await props.searchParams;
+  const locale = resolvePrivacyLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
   const copy = PRIVACY_PAGE[locale];
 
   return (
