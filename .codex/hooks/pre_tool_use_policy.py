@@ -91,9 +91,9 @@ def load_gate(root: Path) -> dict:
     try:
         gate = json.loads((root / GATE_PATH).read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        block(f"Invalid {GATE_PATH.as_posix()}: {exc}")
+        raise Denied(f"Invalid {GATE_PATH.as_posix()}: {exc}") from exc
     if not isinstance(gate, dict):
-        block("Active Work Block gate must be a JSON object.")
+        raise Denied("Active Work Block gate must be a JSON object.")
     return gate
 
 
@@ -104,8 +104,47 @@ def git(root: Path, *args: str) -> str:
             text=True, timeout=3
         )
     except (OSError, subprocess.SubprocessError) as exc:
-        raise Denied(f"Cannot inspect git state: {exc}")
+        raise Denied(f"Cannot inspect git state: {exc}") from exc
     return result.stdout.strip()
+
+
+def git_probe(root: Path, *args: str) -> str:
+    try:
+        result = subprocess.run(
+            ["git", *args], cwd=root, check=False, capture_output=True,
+            text=True, timeout=3
+        )
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    return result.stdout.strip() if result.returncode == 0 else ""
+
+
+def diagnostic(reason: str, root: Path, gate: dict | None) -> str:
+    branch = git_probe(root, "symbolic-ref", "--quiet", "--short", "HEAD") or "<detached>"
+    head = git_probe(root, "rev-parse", "HEAD") or "<unresolved>"
+    value = gate if isinstance(gate, dict) else {}
+    work_block_id = str(value.get("work_block_id") or "<missing>")
+    subject_branch = str(value.get("subject_branch") or "<missing>")
+    return (
+        f"{reason} Context: root={root}; branch={branch}; HEAD={head}; "
+        f"work_block_id={work_block_id}; subject_branch={subject_branch}. "
+        "The agent session is bound from event.cwd before command execution; "
+        "command-local cd does not rebind it. Start a new agent session from the intended worktree."
+    )
+
+
+def validate_binding(root: Path, gate: dict) -> None:
+    subject_branch = str(gate.get("subject_branch") or "").strip()
+    if not subject_branch:
+        raise Denied("Worktree/SSOT binding failed: active gate has no subject_branch.")
+    branch = git_probe(root, "symbolic-ref", "--quiet", "--short", "HEAD")
+    if not branch:
+        raise Denied("Worktree/SSOT binding failed: Git HEAD is detached.")
+    if branch != subject_branch:
+        raise Denied(
+            f"Worktree/SSOT binding mismatch: current branch {branch!r} does not match "
+            f"active gate subject_branch {subject_branch!r}."
+        )
 
 
 def normalize(raw: str, root: Path) -> str:
@@ -197,11 +236,15 @@ def require_scope(paths: list[str], patterns: list[str], label: str) -> None:
         )
 
 
-def check_paths(paths: list[str], gate: dict) -> None:
+def check_paths(paths: list[str], gate: dict, root: Path) -> None:
+    scoped = [path for path in paths if path != GATE_PATH.as_posix()]
+    if not scoped:
+        return
+    validate_binding(root, gate)
     coordination_paths = coordination(gate)
-    source = [path for path in paths if not matches(path, coordination_paths)]
+    source = [path for path in scoped if not matches(path, coordination_paths)]
     if not source:
-        require_scope(paths, coordination_paths, "Coordination write")
+        require_scope(scoped, coordination_paths, "Coordination write")
         return
     require_scope(source, validate_source_gate(gate), "Source write")
 
@@ -272,16 +315,31 @@ def shell_paths(command: str, root: Path) -> list[str]:
     return paths
 
 
-def check_bash(event: dict, gate: dict, root: Path) -> None:
+def bash_command(event: dict) -> str:
     value = event.get("tool_input")
     command = value.get("command") if isinstance(value, dict) else None
     if not isinstance(command, str):
         raise Denied("Bash input is missing tool_input.command.")
+    return command
+
+
+def direct_gate_repair_bash(command: str, root: Path) -> bool:
+    if re.search(r"\bgit\s+(commit|push)\b", command, re.I):
+        return False
+    if not (MUTATING.search(command) or REDIRECTS.search(command)):
+        return False
+    paths = shell_paths(command, root)
+    return bool(paths) and all(path == GATE_PATH.as_posix() for path in paths)
+
+
+def check_bash(event: dict, gate: dict, root: Path) -> None:
+    command = bash_command(event)
 
     if re.search(r"\bgit\s+push\b", command, re.I):
         return
 
     if re.search(r"\bgit\s+commit\b", command, re.I):
+        validate_binding(root, gate)
         staged = [
             value
             for value in git(root, "diff", "--cached", "--name-only", "--diff-filter=ACMRD").splitlines()
@@ -299,29 +357,41 @@ def check_bash(event: dict, gate: dict, root: Path) -> None:
         return
 
     if MUTATING.search(command) or REDIRECTS.search(command):
-        check_paths(shell_paths(command, root), gate)
+        check_paths(shell_paths(command, root), gate, root)
 
 
 def main() -> None:
     event = read_event()
     root = root_from(event.get("cwd"))
-    gate = load_gate(root)
     tool = str(event.get("tool_name") or "")
+    gate: dict | None = None
     try:
         if tool == "Bash":
+            command = bash_command(event)
+            if direct_gate_repair_bash(command, root):
+                return
+            gate = load_gate(root)
             check_bash(event, gate, root)
         elif tool == "apply_patch":
             value = event.get("tool_input")
             command = value.get("command") if isinstance(value, dict) else None
             if not isinstance(command, str):
                 raise Denied("apply_patch input is missing tool_input.command.")
-            check_paths(patch_paths(command, root), gate)
+            paths = patch_paths(command, root)
+            if paths and all(path == GATE_PATH.as_posix() for path in paths):
+                return
+            gate = load_gate(root)
+            check_paths(paths, gate, root)
         elif tool in {"Edit", "Write"}:
-            check_paths(explicit_tool_path(event, root), gate)
+            paths = explicit_tool_path(event, root)
+            if paths == [GATE_PATH.as_posix()]:
+                return
+            gate = load_gate(root)
+            check_paths(paths, gate, root)
         else:
             raise Denied(f"Unsupported write tool: {tool}")
     except Denied as exc:
-        block(str(exc))
+        block(diagnostic(str(exc), root, gate))
 
 
 if __name__ == "__main__":

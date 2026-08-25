@@ -1,28 +1,28 @@
 # Review Report — WB-2026-08-25-automatiser-demandes-clients-guide
 
-## Review scope
+## Binding
 
 - Role: read-only Reviewer, same-session advisory isolation.
-- Base: 5d3f3115d14fa715c7e06839aac092da5e4a8819.
-- Branch: feat/automatiser-demandes-clients-guide.
-- Reviewed scope: guide route/data/tests, two contextual reverse links, sitemap/tests, and approved Work Block evidence files.
+- Subject branch: `feat/automatiser-demandes-clients-guide`.
+- Synchronized candidate parents: `1cf1108536393421ebf1ac7d384f7d1de06b0bde` (SEO-003 candidate) and `f90cc8c6981038190a8a67ba5c58c93cdc308f11` (`origin/main`).
+- Review target: the resolved merge candidate before the local synchronization commit.
 
 ## Findings
 
 | Area | Result | Evidence |
 |---|---|---|
-| Scope | PASS | No header/footer expansion, blog/index, extra city page, CMS, dependency, database, redesign, deployment, or unrelated artifact change. |
-| Localization | PASS | FR/RU/EN data is path-locale authoritative; FR H1 and title targets are exact; alternates are reciprocal with French x-default. |
-| Content safety | PASS | The guide explains process selection and human boundaries; no unsupported statistics, outcomes, testimonials, ROI, guarantees, addresses, or invented client claims were introduced. |
-| Structured data | PASS | WebPage, Article, BreadcrumbList, and FAQPage are emitted; FAQ JSON-LD is derived from the localized FAQ source used for visible FAQ. |
-| Internal linking | PASS | Guide links to localized commercial pages, portfolio and existing examples, and the existing brief flow; Nice and AI pages link back contextually. |
-| Sitemap | PASS | Exactly three guide URLs were added; no synthetic lastModified was introduced. |
-| Maintainability | PASS | Content is centralized per locale and route helpers are directly tested. |
+| Scope | PASS | SEO-003 application/content changes are preserved; PR #18 control-plane paths are imported; no unrelated refactoring, dependency, database, deployment, or production change was introduced. |
+| Conflict resolution | PASS | Four intended lifecycle/gate conflicts resolve to SEO-003 state; no unmerged index entries or conflict markers remain. |
+| Localization | PASS | FR/RU/EN guide data remains locale-authoritative; canonical and hreflang behavior is covered by focused tests. |
+| Content safety | PASS | The guide keeps its human-decision boundaries and contains no unsupported statistics, outcomes, testimonials, ROI, guarantees, addresses, or invented client claims. |
+| Control-plane integration | PASS | New worktree-aware hooks, lifecycle script, default active block, capability contract test, and PR #18 workflow documentation are present without replacing the SEO-003 active Work Block. |
+| Internal linking and sitemap | PASS | Contextual guide links, localized route links, and exactly three guide sitemap entries remain intact. |
+| Maintainability | PASS | Content remains centralized per locale; route helpers and control-plane contracts are covered by tests. |
 
 ## Residual notes
 
-npm run lint reports six existing image-element warnings in unrelated or pre-existing image usage. It reports zero errors and no new warning category from this Work Block.
+`npm run lint` reports six existing `no-img-element` warnings and zero errors. The final sequential Crash Test Gate passed all 38 sitemap routes; an earlier parallel dev probe produced one transient 500 during concurrent compilation, so the server was restarted and the complete route probe was repeated sequentially with clean logs.
 
 ## Verdict
 
-PASS — no material blocker found. This is an advisory same-session review; it does not grant publication authority.
+PASS — no material blocker found for the resolved synchronized candidate. This is advisory evidence and grants no publication authority.

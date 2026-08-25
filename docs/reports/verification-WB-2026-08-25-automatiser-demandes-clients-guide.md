@@ -2,41 +2,44 @@
 
 ## Binding
 
-- Work Block: WB-2026-08-25-automatiser-demandes-clients-guide
-- Base and current uncommitted HEAD: 5d3f3115d14fa715c7e06839aac092da5e4a8819
-- Branch: feat/automatiser-demandes-clients-guide
-- Verification mode: local evidence, same-session advisory isolation.
+- Work Block: `WB-2026-08-25-automatiser-demandes-clients-guide`
+- Subject branch: `feat/automatiser-demandes-clients-guide`
+- Synchronized candidate parents: `1cf1108536393421ebf1ac7d384f7d1de06b0bde` and `f90cc8c6981038190a8a67ba5c58c93cdc308f11`
+- Verification target: resolved merge candidate before local synchronization commit.
+- Mode: local evidence, same-session advisory isolation.
 
 ## Required checks
 
 | Check | Result |
 |---|---|
-| Focused Vitest: guide, Nice, AI, sitemap | PASS — 4 files, 20 tests |
-| npm run test:ci | PASS — 35 files passed, 1 skipped; 158 tests passed, 3 skipped |
-| npm run check:types | PASS |
-| npm run lint | PASS — 0 errors; six existing image-element warnings |
-| npm run build | PASS — production build and static generation completed; 54/54 pages |
-| git diff --check | PASS |
+| Conflict markers / unmerged index | PASS — `git ls-files -u` empty; marker scan empty |
+| `git diff --cached --check` | PASS |
+| `git diff --check` | PASS |
+| Control-plane contract test | PASS — 11 passed, 0 failed |
+| Focused SEO-003 Vitest | PASS — 4 files, 20 tests |
+| `npm run test:ci` | PASS — 35 files passed, 1 skipped; 158 tests passed, 3 skipped |
+| `npm run check:types` | PASS |
+| `npm run lint` | PASS — 0 errors; 6 existing image-element warnings |
+| `npm run build` | PASS — production build and static generation; 54/54 pages |
 
 ## Crash Test Gate
 
-PASSED
+PASS after clean dev-server restart and sequential route probe.
 
-- /sitemap.xml: HTTP 200.
-- /fr/guides/automatiser-demandes-clients: HTTP 200.
-- /ru/guides/automatiser-demandes-clients: HTTP 200.
-- /en/guides/automatiser-demandes-clients: HTTP 200.
-- Legacy /fr/guides: HTTP 404.
-- Legacy /fr/guides/automatiser-demandes-clients-old: HTTP 404.
+- Sitemap endpoint: HTTP 200.
+- All 38 URLs listed in the sitemap: HTTP 200.
+- Localized guide routes FR/RU/EN: HTTP 200.
+- Legacy `/fr/guides` and `/fr/guides/automatiser-demandes-clients-old`: HTTP 404.
 - Sitemap contains exactly the three guide canonical URLs.
-- Existing header/footer anchors were checked against their existing target IDs.
-- Runtime smoke checks confirmed the Nice and AI pages each render the localized guide link; the guide renders localized links to Nice, AI, portfolio, examples, and the existing brief flow.
-- Dev logs after all smoke requests contained only successful GETs and no unhandled exception or hydration error.
+- Existing anchor producers and their destination IDs were inspected; the existing targets remain present.
+- Focused route tests passed and the final dev-server log contained only successful GETs and no unhandled exception or hydration error.
+
+The first parallel route probe hit one transient dev-only 500 for the Russian guide during concurrent compilation. After restart, the affected route and the complete sitemap inventory passed sequentially; this was not reproduced and the production build passed.
 
 ## Semantic parity
 
-Focused tests assert exact FR title/H1, canonical and hreflang targets, all four JSON-LD node types, FAQ source parity, localized discovery links, exact sitemap inventory, and prohibited unsupported-claim patterns.
+Focused tests assert the exact FR title/H1, localized canonical and hreflang targets, four JSON-LD node types, FAQ source parity, localized discovery links, exact sitemap inventory, and prohibited unsupported-claim patterns.
 
 ## Verdict
 
-PASS — evidence supports the defined acceptance criteria. This report is local assurance only and does not imply commit, remote publication, merge, or deployment.
+PASS — evidence supports the defined SEO-003 acceptance criteria for the resolved synchronized candidate. This report is local assurance only and does not imply commit, remote publication, merge, or deployment authority.

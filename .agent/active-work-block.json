@@ -8,7 +8,7 @@
     "revision": "v1"
   },
   "subject_branch": "feat/automatiser-demandes-clients-guide",
-  "base_commit": "5d3f3115d14fa715c7e06839aac092da5e4a8819",
+  "base_commit": "f90cc8c6981038190a8a67ba5c58c93cdc308f11",
   "define_quality": {
     "required": true,
     "status": "READY",
@@ -105,6 +105,11 @@
     ".agent/critic-gate.md",
     ".agent/verification-gate.md",
     ".codex/write-gate.md",
+    ".agent/active-work-block.default.json",
+    ".claude/hooks/work_block_gate.py",
+    ".codex/hooks/pre_tool_use_policy.py",
+    ".codex/scripts/lifecycle.py",
+    "scripts/test-github-capability-control-plane.py",
     "docs/plans/**",
     "docs/specs/**",
     "docs/tasklist/**",
@@ -121,5 +126,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Stage 0 Define, Stage 1 Execute, and Stage 2 Assure are complete on the confirmed origin/main baseline 5d3f3115d14fa715c7e06839aac092da5e4a8819: requirements-quality READY, deterministic traceability READY for 11 requirements/12 acceptance criteria/11 tasks, consistency READY, Critic APPROVE, Reviewer PASS, Verification PASS, and Drift PASS. Current HEAD is the uncommitted baseline because no local commit was executed. Stage 3 remains Owner-controlled publication handoff only. Existing unrelated untracked artifacts in the prior checkout remain pre-existing/out-of-scope."
+  "lifecycle_note": "Stage 0 Define and Stage 1 Execute are complete for SEO-003. Fresh Review, Verification, and Drift assurance passed on the resolved synchronized candidate with origin/main control-plane changes. Stage 3 is limited to the local synchronization commit and Owner-controlled publication handoff; push, merge, deployment, and production authority remain excluded."
 }

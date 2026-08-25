@@ -51,6 +51,31 @@ Technical access to a credential does not create authority to cross this boundar
 
 Do not ask the Owner to publish an unfrozen or ambiguous branch state.
 
+### Parallel worktrees and coordination SSOT
+
+A Git worktree and a Work Block have separate lifecycles. Creating a worktree does **not** close, freeze, or supersede the Work Block in another checkout.
+
+For parallel work:
+
+1. create/use a dedicated non-default Git branch and worktree for each write-capable agent session;
+2. open the Work Block from that worktree so `.agent/active-work-block.json` records the same `subject_branch` as the checked-out branch;
+3. start the agent session with its process `cwd` inside that intended worktree — a `cd /other/worktree` embedded inside a later shell command does not rebind hook identity because `event.cwd` is supplied before command execution;
+4. before source or coordination writes, verify:
+
+```text
+pwd
+git rev-parse --show-toplevel
+git branch --show-current
+git rev-parse HEAD
+cat .agent/active-work-block.json
+```
+
+The resolved top-level directory must be the intended worktree, the branch must equal `subject_branch`, and the active `work_block_id` must be the one intended for that session.
+
+Normal coordination artifacts (`docs/plans/**`, `docs/specs/**`, `.agent/critic-gate.md`, `.agent/verification-gate.md`, `.codex/write-gate.md`, and related SSOT) are branch-bound exactly like source writes. Only `.agent/active-work-block.json` remains directly repairable when stale/invalid binding state must be corrected.
+
+When prior work is complete or intentionally stopped, perform its explicit lifecycle transition (`freeze`/`close` as applicable) in that worktree. Do not treat creation of a new branch/worktree as lifecycle closeout of the old Work Block.
+
 ## Stage B — Assurance before publication handoff
 
 Run the Work Block's required assurance sequence.
@@ -85,18 +110,18 @@ Requested Owner action: publish this exact feature branch only
 
 Then stop. Do not execute the push autonomously.
 
-## Current Work Block Handoff — 2026-08-25
+## Current Work Block Handoff — 2026-08-25 synchronized candidate
 
 OWNER PUBLICATION HANDOFF
 Repository: oleyna80/azursystech-site
 Branch: feat/automatiser-demandes-clients-guide
-Exact HEAD: 5d3f3115d14fa715c7e06839aac092da5e4a8819
+Exact HEAD: PENDING — local synchronization commit after fresh assurance
 Intended remote ref: origin/feat/automatiser-demandes-clients-guide
 Scope: localized evergreen guide, contextual Nice/AI links, sitemap entry set, regressions, and lifecycle evidence in the approved write-set
-Checks: PASS — focused 4 files/20 tests, test:ci, check:types, lint, build, diff check, Crash Test Gate
-Assurance: Critic APPROVE; Reviewer PASS; Verifier PASS; Drift PASS
+Checks: PENDING — rerun focused SEO-003 tests, control-plane contracts, test:ci, check:types, lint, build, diff check, and Crash Test Gate after merge resolution
+Assurance: Critic APPROVE; fresh Reviewer/Verifier/Drift required for synchronized candidate
 Production impact: NONE
-Requested Owner action: review the uncommitted approved diff, create the local commit, record its exact SHA, then publish this exact feature branch only
+Requested Owner action: after fresh assurance, create the local synchronization commit, record its exact SHA, then publish that exact feature branch only
 
 No commit, remote publication, merge, deploy, or production action was performed for this handoff.
 

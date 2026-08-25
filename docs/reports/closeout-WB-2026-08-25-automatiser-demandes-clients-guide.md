@@ -3,22 +3,29 @@
 ## State
 
 - Stage 0 Define: READY.
-- Stage 1 Execute: complete within approved write-set.
-- Stage 2 Assure: PASS.
-- Stage 3 publication: intentionally stopped before commit and remote publication per Owner-controlled GitHub flow.
-- Local commit SHA: none; no commit was executed.
+- Stage 1 Execute: complete within the approved SEO-003 write-set plus the explicitly requested PR #18 control-plane import.
+- Stage 2 Assure: PASS for the resolved synchronized candidate.
+- Stage 3 publication: Owner-controlled; push, PR merge, deploy, and production actions were not executed.
+- Synchronization commit: pending until this assurance evidence is committed.
 
-## Frozen local subject
+## Frozen synchronized candidate
 
-- Repository: oleyna80/azursystech-site
-- Worktree: /tmp/azursystech-wb-2026-08-25-guide
-- Branch: feat/automatiser-demandes-clients-guide
-- Exact current HEAD: 5d3f3115d14fa715c7e06839aac092da5e4a8819
-- Intended remote ref: origin/feat/automatiser-demandes-clients-guide
-- Base: origin/main confirmed at 5d3f3115d14fa715c7e06839aac092da5e4a8819
+- Repository: `oleyna80/azursystech-site`
+- Worktree: `/tmp/azursystech-wb-2026-08-25-guide`
+- Branch: `feat/automatiser-demandes-clients-guide`
+- Merge parents: `1cf1108536393421ebf1ac7d384f7d1de06b0bde`, `f90cc8c6981038190a8a67ba5c58c93cdc308f11`
+- Origin main verified: `f90cc8c6981038190a8a67ba5c58c93cdc308f11`
+- Exact synchronization HEAD: recorded immediately after the local merge commit.
 
-## Owner publication handoff
+## Assurance summary
 
-The worktree contains only the approved source, test, sitemap, and lifecycle/evidence paths. Nothing is staged. The Owner should review the exact uncommitted diff, then create and publish the local commit if satisfied. Do not merge or deploy as part of this handoff.
+- Control-plane contracts: 11/11 PASS.
+- Focused SEO-003 tests: 20/20 PASS.
+- Full CI tests: 158 PASS, 3 skipped; 35 files PASS, 1 skipped.
+- Types: PASS.
+- Lint: PASS with 0 errors and 6 existing image-element warnings.
+- Build: PASS, 54/54 pages generated.
+- Diff checks and conflict-marker checks: PASS.
+- Crash Test Gate: PASS after clean restart and sequential route verification; 38 sitemap routes returned 200 and two legacy guide paths returned 404.
 
-The resulting commit SHA must be recorded after local commit and used as the only publication target. The agent did not execute commit, remote publication, merge, or deployment actions.
+The final handoff and this report must be updated with the exact local synchronization HEAD before the worktree is considered ready for Owner-controlled publication.
