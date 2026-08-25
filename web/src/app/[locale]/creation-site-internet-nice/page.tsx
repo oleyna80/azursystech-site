@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { createElement } from "react";
 
 import { CONTENT, type CreationSiteContent, type PageLocale } from "./_creation-site-data";
 
@@ -25,6 +26,7 @@ export function buildPageLinks(locale: PageLocale, copy: CreationSiteContent) {
       label: project.title,
     })),
     { href: `/${locale}/ai-automation`, label: copy.automationCta },
+    { href: `/${locale}/guides/automatiser-demandes-clients`, label: copy.guideCta },
     { href: buildBriefHref(locale), label: copy.finalCta },
   ];
 }
@@ -113,6 +115,13 @@ function SectionLabel({ children, dark = false }: { children: string; dark?: boo
 
 function LinkArrow() {
   return <span aria-hidden="true" className="text-accent-teal transition-transform group-hover:translate-x-1">→</span>;
+}
+
+function GuideLink({ locale, label }: { locale: PageLocale; label: string }) {
+  return createElement(Link, {
+    href: `/${locale}/guides/automatiser-demandes-clients`,
+    className: "group mt-4 inline-flex items-center gap-2 text-base font-bold text-accent-teal",
+  }, `${label} →`);
 }
 
 export default async function CreationSiteInternetNicePage({
@@ -279,6 +288,7 @@ export default async function CreationSiteInternetNicePage({
               {copy.automationPoints.map((item) => <li key={item} className="border-b border-white/10 pb-4">{item}</li>)}
             </ul>
             <Link href={`/${locale}/ai-automation`} className="group mt-8 inline-flex items-center gap-2 text-base font-bold text-accent-teal">{copy.automationCta} <LinkArrow /></Link>
+            {createElement(GuideLink, { locale, label: copy.guideCta })}
           </div>
         </div>
       </section>

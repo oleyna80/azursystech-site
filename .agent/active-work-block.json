@@ -1,30 +1,30 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-2026-08-25-worktree-ssot-binding",
+  "work_block_id": "WB-2026-08-25-automatiser-demandes-clients-guide",
   "governance_profile": "Managed",
   "specification": {
-    "path": "docs/specs/WB-2026-08-25-worktree-ssot-binding.md",
+    "path": "docs/specs/WB-2026-08-25-automatiser-demandes-clients-guide.md",
     "revision": "v1"
   },
-  "subject_branch": "fix/worktree-ssot-binding",
+  "subject_branch": "feat/automatiser-demandes-clients-guide",
   "base_commit": "5d3f3115d14fa715c7e06839aac092da5e4a8819",
   "define_quality": {
     "required": true,
     "status": "READY",
-    "requirements_review": "docs/reports/requirements-quality-WB-2026-08-25-worktree-ssot-binding.md",
-    "traceability": "docs/reports/traceability-WB-2026-08-25-worktree-ssot-binding.md",
-    "consistency_analysis": "docs/reports/consistency-WB-2026-08-25-worktree-ssot-binding.md"
+    "requirements_review": "docs/reports/requirements-quality-WB-2026-08-25-automatiser-demandes-clients-guide.md",
+    "traceability": "docs/reports/traceability-WB-2026-08-25-automatiser-demandes-clients-guide.md",
+    "consistency_analysis": "docs/reports/consistency-WB-2026-08-25-automatiser-demandes-clients-guide.md"
   },
   "write_gate": {
-    "status": "BLOCKED",
-    "opened_at": null
+    "status": "READY",
+    "opened_at": "2026-08-25T00:00:00+02:00"
   },
   "critic": {
     "required": true,
     "status": "READY",
     "verdict": "APPROVE",
-    "report": "docs/reports/critic-WB-2026-08-25-worktree-ssot-binding.md",
+    "report": "docs/reports/critic-WB-2026-08-25-automatiser-demandes-clients-guide.md",
     "isolation": "same-session-degraded",
     "skip_reason": ""
   },
@@ -33,7 +33,7 @@
       "required": true,
       "status": "READY",
       "verdict": "READY",
-      "report": "docs/reports/review-WB-2026-08-25-worktree-ssot-binding.md",
+      "report": "docs/reports/review-WB-2026-08-25-automatiser-demandes-clients-guide.md",
       "isolation": "same-session-degraded",
       "skip_reason": ""
     },
@@ -41,8 +41,8 @@
       "required": true,
       "status": "READY",
       "verdict": "READY",
-      "report": "docs/reports/verification-WB-2026-08-25-worktree-ssot-binding.md",
-      "isolation": "github-actions-independent-runner",
+      "report": "docs/reports/verification-WB-2026-08-25-automatiser-demandes-clients-guide.md",
+      "isolation": "same-session-degraded",
       "skip_reason": ""
     },
     "evaluation": {
@@ -54,13 +54,13 @@
       "rubric_revision": "",
       "benchmark_revision": "",
       "isolation": "unknown",
-      "skip_reason": "Deterministic control-plane change; no rubric-based or generative evaluation is required."
+      "skip_reason": "No generative or rubric-based evaluation is required for this deterministic routing change."
     },
     "drift": {
       "required": true,
       "status": "READY",
       "verdict": "ALIGNED",
-      "report": "docs/reports/drift-WB-2026-08-25-worktree-ssot-binding.md",
+      "report": "docs/reports/drift-WB-2026-08-25-automatiser-demandes-clients-guide.md",
       "isolation": "same-session-degraded",
       "skip_reason": ""
     }
@@ -71,33 +71,45 @@
     "admission_records": []
   },
   "write_set": [
-    ".agent/active-work-block.default.json",
-    ".codex/scripts/lifecycle.py",
-    ".codex/hooks/pre_tool_use_policy.py",
-    ".claude/hooks/work_block_gate.py",
-    "scripts/test-github-capability-control-plane.py",
-    ".agent/workflows/owner-controlled-github-flow.md",
-    "docs/specs/WB-2026-08-25-worktree-ssot-binding.md",
-    "docs/plans/WB-2026-08-25-worktree-ssot-binding.md",
-    "docs/tasklist/WB-2026-08-25-worktree-ssot-binding.tasklist.md",
-    "docs/reports/requirements-quality-WB-2026-08-25-worktree-ssot-binding.md",
-    "docs/reports/traceability-WB-2026-08-25-worktree-ssot-binding.md",
-    "docs/reports/consistency-WB-2026-08-25-worktree-ssot-binding.md",
-    "docs/reports/critic-WB-2026-08-25-worktree-ssot-binding.md",
-    "docs/reports/review-WB-2026-08-25-worktree-ssot-binding.md",
-    "docs/reports/verification-WB-2026-08-25-worktree-ssot-binding.md",
-    "docs/reports/drift-WB-2026-08-25-worktree-ssot-binding.md",
-    "docs/reports/closeout-WB-2026-08-25-worktree-ssot-binding.md",
+    "web/src/app/[locale]/guides/automatiser-demandes-clients/_guide-data.ts",
+    "web/src/app/[locale]/guides/automatiser-demandes-clients/page.tsx",
+    "web/src/app/[locale]/guides/automatiser-demandes-clients/page.test.ts",
+    "web/src/app/[locale]/ai-automation/_ai-automation-data.ts",
+    "web/src/app/[locale]/ai-automation/page.tsx",
+    "web/src/app/[locale]/ai-automation/page.test.ts",
+    "web/src/app/[locale]/creation-site-internet-nice/_creation-site-data.ts",
+    "web/src/app/[locale]/creation-site-internet-nice/page.tsx",
+    "web/src/app/[locale]/creation-site-internet-nice/page.test.ts",
+    "web/src/app/sitemap.ts",
+    "web/src/app/sitemap.test.ts",
+    "docs/specs/WB-2026-08-25-automatiser-demandes-clients-guide.md",
+    "docs/plans/WB-2026-08-25-automatiser-demandes-clients-guide.md",
+    "docs/plans/WB-2026-08-25-automatiser-demandes-clients-guide-design-brief.md",
+    "docs/tasklist/WB-2026-08-25-automatiser-demandes-clients-guide.tasklist.md",
+    "docs/reports/requirements-quality-WB-2026-08-25-automatiser-demandes-clients-guide.md",
+    "docs/reports/traceability-WB-2026-08-25-automatiser-demandes-clients-guide.md",
+    "docs/reports/consistency-WB-2026-08-25-automatiser-demandes-clients-guide.md",
+    "docs/reports/critic-WB-2026-08-25-automatiser-demandes-clients-guide.md",
+    "docs/reports/review-WB-2026-08-25-automatiser-demandes-clients-guide.md",
+    "docs/reports/verification-WB-2026-08-25-automatiser-demandes-clients-guide.md",
+    "docs/reports/drift-WB-2026-08-25-automatiser-demandes-clients-guide.md",
+    "docs/reports/closeout-WB-2026-08-25-automatiser-demandes-clients-guide.md",
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
     ".agent/verification-gate.md",
-    ".codex/write-gate.md"
+    ".codex/write-gate.md",
+    ".agent/workflows/owner-controlled-github-flow.md"
   ],
   "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
     ".agent/verification-gate.md",
     ".codex/write-gate.md",
+    ".agent/active-work-block.default.json",
+    ".claude/hooks/work_block_gate.py",
+    ".codex/hooks/pre_tool_use_policy.py",
+    ".codex/scripts/lifecycle.py",
+    "scripts/test-github-capability-control-plane.py",
     "docs/plans/**",
     "docs/specs/**",
     "docs/tasklist/**",
@@ -114,5 +126,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Stage 2 assurance complete for worktree/SSOT binding. Critic APPROVE; Review READY; Verification READY with GitHub Actions Control Plane Contracts #51 and CI #145 successful; Drift ALIGNED; optional evaluation SKIPPED with reason. Source Write Gate is BLOCKED for freeze. PR #18 is the publication/review surface; merge, deploy, live infrastructure, credentials, and production remain Owner-controlled."
+  "lifecycle_note": "Stage 0 Define and Stage 1 Execute are complete for SEO-003. Original Work Block base is 5d3f3115d14fa715c7e06839aac092da5e4a8819. Synchronization base f90cc8c6981038190a8a67ba5c58c93cdc308f11 and merge commit 76cd3271785bc4493111ea4bd5fe42a25e876dc2 are lifecycle/evidence context only. Review is READY/READY, Verification is READY/READY, Drift is READY/ALIGNED, and optional Evaluation is SKIPPED with reason. The source Write Gate remains READY only for the explicitly authorized local governance/evidence commit; Stage 3 remains limited to the Owner-controlled publication handoff for the exact current branch descendant. Push, merge, deployment, and production authority remain excluded."
 }

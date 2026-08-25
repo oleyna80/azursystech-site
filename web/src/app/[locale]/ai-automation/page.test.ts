@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { buildJsonLd, CONTENT, generateMetadata } from "./page";
+import { buildGuideHref, buildJsonLd, CONTENT, generateMetadata } from "./page";
 
 describe("English AI automation route", () => {
+  it("links each locale to the localized request-automation guide", () => {
+    for (const locale of ["fr", "ru", "en"] as const) {
+      expect(buildGuideHref(locale)).toBe(`/${locale}/guides/automatiser-demandes-clients`);
+    }
+  });
   it("uses the English canonical and approved language alternates", async () => {
     const metadata = await generateMetadata({ params: Promise.resolve({ locale: "en" }) });
 

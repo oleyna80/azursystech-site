@@ -31,6 +31,7 @@ export type CreationSiteContent = {
   automationIntro: string;
   automationPoints: string[];
   automationCta: string;
+  guideCta: string;
   areaTitle: string;
   areaText: string;
   faqTitle: string;
@@ -134,6 +135,7 @@ export const CONTENT: Record<PageLocale, CreationSiteContent> = {
       "Les prix, délais et décisions commerciales restent humains.",
     ],
     automationCta: "Voir l'automatisation IA",
+    guideCta: "Lire le guide sur les demandes clients",
     areaTitle: "Nice, les alentours et le travail à distance",
     areaText: "Nous intervenons à Nice et jusqu'à 30 km autour, avec accompagnement à distance. Les exemples de zone incluent Cagnes-sur-Mer, Antibes, Vence et les Alpes-Maritimes.",
     faqTitle: "Questions fréquentes",
@@ -214,6 +216,7 @@ export const CONTENT: Record<PageLocale, CreationSiteContent> = {
       "Цены, сроки и коммерческие решения остаются за человеком.",
     ],
     automationCta: "Посмотреть AI-автоматизацию",
+    guideCta: "Прочитать руководство о заявках клиентов",
     areaTitle: "Ницца, окрестности и удалённая работа",
     areaText: "Мы работаем в Ницце и до 30 км вокруг, а также сопровождаем проекты удалённо. В зоне примеров — Cagnes-sur-Mer, Antibes, Vence и Alpes-Maritimes.",
     faqTitle: "Частые вопросы",
@@ -294,6 +297,7 @@ export const CONTENT: Record<PageLocale, CreationSiteContent> = {
       "Prices, timelines and commercial decisions remain human-controlled.",
     ],
     automationCta: "Explore AI automation",
+    guideCta: "Read the guide to customer requests",
     areaTitle: "Nice, nearby areas and remote support",
     areaText: "We work in Nice and up to 30 km around it, with remote support as well. Example areas include Cagnes-sur-Mer, Antibes, Vence and Alpes-Maritimes.",
     faqTitle: "Frequently asked questions",

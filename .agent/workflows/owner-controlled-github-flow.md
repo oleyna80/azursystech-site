@@ -110,6 +110,21 @@ Requested Owner action: publish this exact feature branch only
 
 Then stop. Do not execute the push autonomously.
 
+## Current Work Block Handoff — 2026-08-25 synchronized SEO-003 candidate
+
+OWNER PUBLICATION HANDOFF
+Repository: oleyna80/azursystech-site
+Branch: feat/automatiser-demandes-clients-guide
+Exact HEAD: `<exact current branch HEAD from git rev-parse HEAD at handoff time>`
+Intended remote ref: origin/feat/automatiser-demandes-clients-guide
+Scope: localized evergreen guide, contextual Nice/AI links, sitemap entry set, regressions, and bounded governance/evidence correction in the approved write-set
+Checks: PASS — control-plane 11/11, traceability, focused SEO-003 20/20, test:ci 158 passed/3 skipped, types, lint (0 errors/6 existing warnings), build 54/54, diff checks, Crash Test Gate
+Assurance: Critic READY/APPROVE; Review READY/READY; Verification READY/READY; Drift READY/ALIGNED; optional Evaluation SKIPPED with reason
+Production impact: NONE
+Requested Owner action: publish the exact current feature branch HEAD above only; it is a descendant of synchronization merge commit 76cd3271785bc4493111ea4bd5fe42a25e876dc2
+
+The synchronization candidate/merge commit was performed before the evidence/governance descendant. No remote publication, PR merge, deploy, or production action was performed for this handoff.
+
 ## Stage D — After Owner publication
 
 After the Owner confirms the feature branch was published:

@@ -14,6 +14,9 @@ describe("sitemap", () => {
         "https://azursystech.fr/fr/ai-automation",
         "https://azursystech.fr/ru/ai-automation",
         "https://azursystech.fr/en/ai-automation",
+        "https://azursystech.fr/fr/guides/automatiser-demandes-clients",
+        "https://azursystech.fr/ru/guides/automatiser-demandes-clients",
+        "https://azursystech.fr/en/guides/automatiser-demandes-clients",
         "https://azursystech.fr/fr/creation-site-internet-nice",
         "https://azursystech.fr/ru/creation-site-internet-nice",
         "https://azursystech.fr/en/creation-site-internet-nice",
@@ -39,6 +42,12 @@ describe("sitemap", () => {
     const niceUrls = urls.filter((url) => url.includes("creation-site-internet-nice"));
     expect(niceUrls).toHaveLength(3);
     expect(new Set(niceUrls).size).toBe(3);
+    const guideUrls = urls.filter((url) => url.includes("/guides/automatiser-demandes-clients"));
+    expect(guideUrls).toEqual([
+      "https://azursystech.fr/fr/guides/automatiser-demandes-clients",
+      "https://azursystech.fr/ru/guides/automatiser-demandes-clients",
+      "https://azursystech.fr/en/guides/automatiser-demandes-clients",
+    ]);
   });
 
   it("lists every canonical localized portfolio route exactly once without synthetic dates", () => {
@@ -70,6 +79,7 @@ describe("sitemap", () => {
     expect(englishUrls).toEqual([
       "https://azursystech.fr/en",
       "https://azursystech.fr/en/ai-automation",
+      "https://azursystech.fr/en/guides/automatiser-demandes-clients",
       "https://azursystech.fr/en/creation-site-internet-nice",
       "https://azursystech.fr/en/portfolio",
       "https://azursystech.fr/en/portfolio/plomberie",
