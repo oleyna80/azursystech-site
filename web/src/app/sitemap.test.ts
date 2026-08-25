@@ -14,6 +14,9 @@ describe("sitemap", () => {
         "https://azursystech.fr/fr/ai-automation",
         "https://azursystech.fr/ru/ai-automation",
         "https://azursystech.fr/en/ai-automation",
+        "https://azursystech.fr/fr/creation-site-internet-nice",
+        "https://azursystech.fr/ru/creation-site-internet-nice",
+        "https://azursystech.fr/en/creation-site-internet-nice",
         "https://azursystech.fr/brief",
         "https://azursystech.fr/data-deletion",
         "https://azursystech.fr/legal",
@@ -32,6 +35,10 @@ describe("sitemap", () => {
     expect(urls).not.toContain("https://azursystech.fr/ai-automation");
     expect(urls.some((url) => url.startsWith("https://azursystech.fr/portfolio"))).toBe(false);
     expect(urls.some((url) => url.includes("/api/"))).toBe(false);
+
+    const niceUrls = urls.filter((url) => url.includes("creation-site-internet-nice"));
+    expect(niceUrls).toHaveLength(3);
+    expect(new Set(niceUrls).size).toBe(3);
   });
 
   it("lists every canonical localized portfolio route exactly once without synthetic dates", () => {
@@ -63,6 +70,7 @@ describe("sitemap", () => {
     expect(englishUrls).toEqual([
       "https://azursystech.fr/en",
       "https://azursystech.fr/en/ai-automation",
+      "https://azursystech.fr/en/creation-site-internet-nice",
       "https://azursystech.fr/en/portfolio",
       "https://azursystech.fr/en/portfolio/plomberie",
       "https://azursystech.fr/en/portfolio/salon-beaute",

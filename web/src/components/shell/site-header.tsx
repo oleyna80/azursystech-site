@@ -66,13 +66,14 @@ const HEADER_COPY = {
 
 export function buildNavLinks(locale: HeaderLocale) {
   const t = {
-    fr: { automation: "Automatisation IA", websites: "Sites web", portfolio: "Portfolio", services: "Services", faq: "FAQ", contact: "Contact" },
-    ru: { automation: "AI-автоматизация", websites: "Сайты", portfolio: "Портфолио", services: "Услуги", faq: "FAQ", contact: "Контакты" },
-    en: { automation: "AI automation", websites: "Websites", portfolio: "Portfolio", services: "Services", faq: "FAQ", contact: "Contact" },
+    fr: { automation: "Automatisation IA", websites: "Sites web", creation: "Création de sites", portfolio: "Portfolio", services: "Services", faq: "FAQ", contact: "Contact" },
+    ru: { automation: "AI-автоматизация", websites: "Сайты", creation: "Создание сайтов", portfolio: "Портфолио", services: "Услуги", faq: "FAQ", contact: "Контакты" },
+    en: { automation: "AI automation", websites: "Websites", creation: "Website creation", portfolio: "Portfolio", services: "Services", faq: "FAQ", contact: "Contact" },
   }[locale];
   return [
     { href: `/${locale}#automation`, label: t.automation },
     { href: `/${locale}#websites`, label: t.websites },
+    { href: `/${locale}/creation-site-internet-nice`, label: t.creation },
     { href: `/${locale}/portfolio`, label: t.portfolio },
     { href: `/${locale}#services`, label: t.services },
     { href: `/${locale}#faq`, label: t.faq },

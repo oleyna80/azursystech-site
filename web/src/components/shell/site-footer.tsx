@@ -23,6 +23,7 @@ const FOOTER_COPY = {
     links: [
       { href: "/#automation", label: "Automatisation IA" },
       { href: "/#websites", label: "Sites web" },
+      { href: "/creation-site-internet-nice", label: "Création de site à Nice" },
       { href: "/portfolio", label: "Portfolio" },
       { href: "/brief", label: "Brief" },
       { href: "/#services", label: "Tous les services" },
@@ -45,6 +46,7 @@ const FOOTER_COPY = {
     links: [
       { href: "/#automation", label: "AI-автоматизация" },
       { href: "/#websites", label: "Сайты" },
+      { href: "/creation-site-internet-nice", label: "Создание сайта в Ницце" },
       { href: "/portfolio", label: "Портфолио" },
       { href: "/brief", label: "Бриф" },
       { href: "/#services", label: "Все услуги" },
@@ -67,6 +69,7 @@ const FOOTER_COPY = {
     links: [
       { href: "/#automation", label: "AI automation" },
       { href: "/#websites", label: "Websites" },
+      { href: "/creation-site-internet-nice", label: "Website creation in Nice" },
       { href: "/portfolio", label: "Portfolio" },
       { href: "/brief", label: "Brief" },
       { href: "/#services", label: "All services" },
@@ -94,6 +97,10 @@ export function localizeFooterHref(href: string, locale: FooterLocale) {
 
   if (href === "/portfolio") {
     return `/${locale}/portfolio`;
+  }
+
+  if (href === "/creation-site-internet-nice") {
+    return `/${locale}/creation-site-internet-nice`;
   }
 
   if (locale === "en" && href === "/ai-automation") {

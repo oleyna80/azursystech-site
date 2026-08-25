@@ -8,4 +8,10 @@ describe("localizeFooterHref", () => {
     expect(localizeFooterHref("/portfolio", "ru")).toBe("/ru/portfolio");
     expect(localizeFooterHref("/portfolio", "en")).toBe("/en/portfolio");
   });
+
+  it("localizes the Nice website-creation navigation target", () => {
+    expect(localizeFooterHref("/creation-site-internet-nice", "fr")).toBe("/fr/creation-site-internet-nice");
+    expect(localizeFooterHref("/creation-site-internet-nice", "ru")).toBe("/ru/creation-site-internet-nice");
+    expect(localizeFooterHref("/creation-site-internet-nice", "en")).toBe("/en/creation-site-internet-nice");
+  });
 });
