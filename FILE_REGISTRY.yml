@@ -102,6 +102,36 @@ entries:
     status: normative
     owner: architect
 
+  docs/project-context.md:
+    role: compact_shared_project_context
+    status: durable_reference
+    owner: architect
+
+  memory_bank/orchestrator-log.md:
+    role: shared_operational_log
+    status: operational_log
+    owner: orchestrator
+
+  memory_bank/context.md:
+    role: shared_operational_context
+    status: operational_log
+    owner: orchestrator
+
+  memory_bank/progress.md:
+    role: shared_operational_progress
+    status: operational_log
+    owner: orchestrator
+
+  memory_bank/decisions.md:
+    role: shared_operational_decisions
+    status: operational_log
+    owner: orchestrator
+
+  scripts/validate-shared-context.py:
+    role: shared_context_boundary_validator
+    status: source
+    owner: tooling
+
   FILE_REGISTRY.yml:
     role: machine_readable_navigation_registry
     status: normative

@@ -42,6 +42,12 @@ AGENTS.md
 docs/
 scripts/ai_agents.py
 memory_bank/
+!memory_bank/
+memory_bank/*
+!memory_bank/orchestrator-log.md
+!memory_bank/context.md
+!memory_bank/progress.md
+!memory_bank/decisions.md
 docs/.active_ticket
 docs/AGENT_MODEL_ROUTING.md
 docs/backlog.md
@@ -124,6 +130,7 @@ codex-orchestration-skills/
 .codex/config.toml
 .codex/*.local*
 .codex/**/__pycache__/
+.codex/worktrees/
 
 # OpenCode: agents/ is committed; runtime/provider config and plugin runtime
 # state stay local. (opencode also self-generates a nested .opencode/.gitignore,
@@ -161,5 +168,4 @@ Thumbs.db
 ai_studio_chek/
 private_evidence/
 .artifacts/
-
 

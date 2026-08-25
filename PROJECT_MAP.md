@@ -10,7 +10,7 @@ release_state:
   schema_version: 1
   authority_mode: github_capability
   repository_status: operational
-  active_work_block: WB-2026-08-21-sdlc-framework-full-adaptation
+  active_work_block: see .agent/active-work-block.json
   governance_profile: Managed
   publication_mode: owner_controlled_github_free
   last_reconciled_commit: 257d529d4a81147b6f7dea29bd17f52228ea17d6

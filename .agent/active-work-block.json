@@ -1,20 +1,20 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-2026-08-24-creation-site-internet-nice",
+  "work_block_id": "WB-2026-08-25-shared-analysis-surface",
   "governance_profile": "Managed",
   "specification": {
-    "path": "docs/specs/WB-2026-08-24-creation-site-internet-nice.md",
+    "path": "docs/specs/WB-2026-08-25-shared-analysis-surface.md",
     "revision": "v1"
   },
-  "subject_branch": "feat/creation-site-internet-nice",
-  "base_commit": "1406b8e77225ad4b6c92d539120c98978071c1a3",
+  "subject_branch": "wb/2026-08-25-shared-analysis-surface",
+  "base_commit": "9d2b23bfaca4a5af63030f77cc2d7c7559c8ec18",
   "define_quality": {
     "required": true,
     "status": "READY",
-    "requirements_review": "docs/reports/requirements-quality-WB-2026-08-24-creation-site-internet-nice.md",
-    "traceability": "docs/reports/traceability-WB-2026-08-24-creation-site-internet-nice.md",
-    "consistency_analysis": "docs/reports/consistency-WB-2026-08-24-creation-site-internet-nice.md"
+    "requirements_review": "docs/reports/requirements-quality-WB-2026-08-25-shared-analysis-surface.md",
+    "traceability": "docs/reports/traceability-WB-2026-08-25-shared-analysis-surface.md",
+    "consistency_analysis": "docs/reports/consistency-WB-2026-08-25-shared-analysis-surface.md"
   },
   "write_gate": {
     "status": "READY",
@@ -24,8 +24,8 @@
     "required": true,
     "status": "READY",
     "verdict": "APPROVE",
-    "report": "docs/reports/critic-WB-2026-08-24-creation-site-internet-nice.md",
-    "isolation": "same-session-degraded",
+    "report": "docs/reports/critic-WB-2026-08-25-shared-analysis-surface.md",
+    "isolation": "same-session",
     "skip_reason": ""
   },
   "assurance": {
@@ -33,16 +33,16 @@
       "required": true,
       "status": "READY",
       "verdict": "APPROVE",
-      "report": "docs/reports/review-WB-2026-08-24-creation-site-internet-nice.md",
-      "isolation": "same-session-degraded",
+      "report": "docs/reports/review-WB-2026-08-25-shared-analysis-surface.md",
+      "isolation": "same-session",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
       "status": "READY",
       "verdict": "PASS",
-      "report": "docs/reports/verification-WB-2026-08-24-creation-site-internet-nice.md",
-      "isolation": "same-session-degraded",
+      "report": "docs/reports/verification-WB-2026-08-25-shared-analysis-surface.md",
+      "isolation": "same-session",
       "skip_reason": ""
     },
     "evaluation": {
@@ -60,8 +60,8 @@
       "required": true,
       "status": "READY",
       "verdict": "PASS",
-      "report": "docs/reports/drift-WB-2026-08-24-creation-site-internet-nice.md",
-      "isolation": "same-session-degraded",
+      "report": "docs/reports/drift-WB-2026-08-25-shared-analysis-surface.md",
+      "isolation": "same-session",
       "skip_reason": ""
     }
   },
@@ -71,29 +71,26 @@
     "admission_records": []
   },
   "write_set": [
-    "web/src/app/[locale]/creation-site-internet-nice/_creation-site-data.ts",
-    "web/src/app/[locale]/creation-site-internet-nice/page.tsx",
-    "web/src/app/[locale]/creation-site-internet-nice/page.test.ts",
-    "web/src/app/[locale]/_home-data.ts",
-    "web/src/app/[locale]/page.tsx",
-    "web/src/components/shell/site-header.tsx",
-    "web/src/components/shell/site-header.test.ts",
-    "web/src/components/shell/site-footer.tsx",
-    "web/src/components/shell/site-footer.test.ts",
-    "web/src/app/sitemap.ts",
-    "web/src/app/sitemap.test.ts",
-    "docs/specs/WB-2026-08-24-creation-site-internet-nice.md",
-    "docs/plans/WB-2026-08-24-creation-site-internet-nice.md",
-    "docs/plans/WB-2026-08-24-creation-site-internet-nice-design-brief.md",
-    "docs/tasklist/WB-2026-08-24-creation-site-internet-nice.tasklist.md",
-    "docs/reports/requirements-quality-WB-2026-08-24-creation-site-internet-nice.md",
-    "docs/reports/traceability-WB-2026-08-24-creation-site-internet-nice.md",
-    "docs/reports/consistency-WB-2026-08-24-creation-site-internet-nice.md",
-    "docs/reports/critic-WB-2026-08-24-creation-site-internet-nice.md",
-    "docs/reports/review-WB-2026-08-24-creation-site-internet-nice.md",
-    "docs/reports/verification-WB-2026-08-24-creation-site-internet-nice.md",
-    "docs/reports/drift-WB-2026-08-24-creation-site-internet-nice.md",
-    "docs/reports/closeout-WB-2026-08-24-creation-site-internet-nice.md",
+    "docs/specs/WB-2026-08-25-shared-analysis-surface.md",
+    "docs/plans/WB-2026-08-25-shared-analysis-surface.md",
+    "docs/tasklist/WB-2026-08-25-shared-analysis-surface.tasklist.md",
+    "docs/reports/requirements-quality-WB-2026-08-25-shared-analysis-surface.md",
+    "docs/reports/traceability-WB-2026-08-25-shared-analysis-surface.md",
+    "docs/reports/consistency-WB-2026-08-25-shared-analysis-surface.md",
+    "docs/reports/critic-WB-2026-08-25-shared-analysis-surface.md",
+    "docs/reports/review-WB-2026-08-25-shared-analysis-surface.md",
+    "docs/reports/verification-WB-2026-08-25-shared-analysis-surface.md",
+    "docs/reports/drift-WB-2026-08-25-shared-analysis-surface.md",
+    "docs/reports/closeout-WB-2026-08-25-shared-analysis-surface.md",
+    ".gitignore",
+    "PROJECT_MAP.md",
+    "FILE_REGISTRY.yml",
+    "docs/project-context.md",
+    "memory_bank/orchestrator-log.md",
+    "memory_bank/context.md",
+    "memory_bank/progress.md",
+    "memory_bank/decisions.md",
+    "scripts/validate-shared-context.py",
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
     ".agent/verification-gate.md",
@@ -105,11 +102,10 @@
     ".agent/critic-gate.md",
     ".agent/verification-gate.md",
     ".codex/write-gate.md",
-    "docs/plans/**",
-    "docs/specs/**",
-    "docs/tasklist/**",
+    "docs/plans/WB-2026-08-25-shared-analysis-surface.md",
+    "docs/specs/WB-2026-08-25-shared-analysis-surface.md",
+    "docs/tasklist/WB-2026-08-25-shared-analysis-surface.tasklist.md",
     "docs/reports/**",
-    "docs/architecture/drafts/**",
     "memory_bank/**"
   ],
   "external_hard_stops": [
@@ -121,5 +117,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Stage 0 Define complete: baseline origin/main is 1406b8e77225ad4b6c92d539120c98978071c1a3; traceability READY; Critic APPROVE; source Write Gate READY. Execute completed within the approved write-set. Stage 2 assurance is READY: Reviewer APPROVE, Verifier PASS, Drift PASS. Existing unrelated untracked artifacts are pre-existing/out-of-scope. Per Owner instruction, stop after Assure before commit/push; Stage 3 closeout and Owner publication handoff remain pending, and no commit, push, merge, deploy, or production action is authorized."
+  "lifecycle_note": "Stage 2 assurance complete: Reviewer APPROVE, Verification PASS, and Drift PASS after exact local commit and clean-clone validation. No push, PR, merge, deploy, or production action was performed; Owner controls publication."
 }
