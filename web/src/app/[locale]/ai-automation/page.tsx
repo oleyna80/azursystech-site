@@ -14,6 +14,10 @@ const WHATSAPP = "https://wa.me/33780720994";
 const BASE_URL = "https://azursystech.fr";
 const SUPPORTED_LOCALES = ["fr", "ru", "en"] as const;
 
+export function buildGuideHref(locale: PageLocale) {
+  return `/${locale}/guides/automatiser-demandes-clients`;
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -517,6 +521,9 @@ export default async function AiAutomationPage({
             <p className="mt-4 text-sm leading-6 text-graphite/58">
               {copy.finalNote}
             </p>
+            <Link href={buildGuideHref(l)} className="mt-5 inline-flex items-center gap-2 text-base font-bold text-accent-teal hover:text-graphite">
+              {copy.guideCta} <span aria-hidden="true">→</span>
+            </Link>
           </div>
         </div>
       </section>

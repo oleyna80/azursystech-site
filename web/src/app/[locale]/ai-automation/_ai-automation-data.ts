@@ -66,6 +66,7 @@ export interface AiAutomationContent {
   finalPrimaryCta: string;
   finalSecondaryCta: string;
   finalNote: string;
+  guideCta: string;
 }
 
 export const CONTENT: Record<PageLocale, AiAutomationContent> = {
@@ -228,6 +229,7 @@ export const CONTENT: Record<PageLocale, AiAutomationContent> = {
     finalPrimaryCta: "Discuter du besoin",
     finalSecondaryCta: "Écrire sur WhatsApp",
     finalNote: "L’étape suivante après le bouton « Discuter du besoin » est un brief court sur un seul processus.",
+    guideCta: "Lire le guide pour choisir un premier processus",
   },
   ru: {
     meta: {
@@ -388,6 +390,7 @@ export const CONTENT: Record<PageLocale, AiAutomationContent> = {
     finalPrimaryCta: "Обсудить задачу",
     finalSecondaryCta: "Написать в WhatsApp",
     finalNote: "Следующий шаг после кнопки «Обсудить задачу» — короткий бриф на один процесс.",
+    guideCta: "Прочитать руководство о выборе первого процесса",
   },
   en: {
     meta: {
@@ -548,5 +551,6 @@ export const CONTENT: Record<PageLocale, AiAutomationContent> = {
     finalPrimaryCta: "Discuss your project",
     finalSecondaryCta: "Message on WhatsApp",
     finalNote: "The next step after clicking «Discuss your project» is a short brief for a single process.",
+    guideCta: "Read the guide to choosing a first process",
   },
 };
