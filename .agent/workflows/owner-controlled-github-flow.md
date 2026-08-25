@@ -115,15 +115,15 @@ Then stop. Do not execute the push autonomously.
 OWNER PUBLICATION HANDOFF
 Repository: oleyna80/azursystech-site
 Branch: feat/automatiser-demandes-clients-guide
-Exact HEAD: PENDING — local synchronization commit after fresh assurance
+Exact HEAD: 76cd3271785bc4493111ea4bd5fe42a25e876dc2
 Intended remote ref: origin/feat/automatiser-demandes-clients-guide
 Scope: localized evergreen guide, contextual Nice/AI links, sitemap entry set, regressions, and lifecycle evidence in the approved write-set
-Checks: PENDING — rerun focused SEO-003 tests, control-plane contracts, test:ci, check:types, lint, build, diff check, and Crash Test Gate after merge resolution
-Assurance: Critic APPROVE; fresh Reviewer/Verifier/Drift required for synchronized candidate
+Checks: PASS — control-plane 11/11, focused SEO-003 20/20, test:ci 158 passed/3 skipped, types, lint (0 errors/6 existing warnings), build 54/54, diff checks, Crash Test Gate
+Assurance: Critic APPROVE; fresh Reviewer PASS, Verifier PASS, Drift PASS
 Production impact: NONE
-Requested Owner action: after fresh assurance, create the local synchronization commit, record its exact SHA, then publish that exact feature branch only
+Requested Owner action: publish this exact feature branch revision only; do not publish a different SHA
 
-No commit, remote publication, merge, deploy, or production action was performed for this handoff.
+The local synchronization commit was performed after assurance. No remote publication, PR merge, deploy, or production action was performed for this handoff.
 
 ## Stage D — After Owner publication
 
