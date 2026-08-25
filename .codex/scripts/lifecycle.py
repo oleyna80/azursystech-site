@@ -51,18 +51,61 @@ def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat()
 
 
+def run_git(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    try:
+        return subprocess.run(
+            ["git", *args],
+            cwd=root,
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=5,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise ValueError(f"cannot inspect git state: {exc}") from exc
+
+
 def git_head(root: Path) -> str:
-    result = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=root,
-        text=True,
-        capture_output=True,
-        check=False,
-        timeout=5,
-    )
-    if result.returncode != 0:
+    result = run_git(root, "rev-parse", "HEAD")
+    if result.returncode != 0 or not result.stdout.strip():
         raise ValueError("cannot resolve git HEAD")
     return result.stdout.strip()
+
+
+def git_branch(root: Path) -> str:
+    result = run_git(root, "symbolic-ref", "--quiet", "--short", "HEAD")
+    if result.returncode != 0 or not result.stdout.strip():
+        raise ValueError("source work requires an attached Git branch; HEAD is detached")
+    return result.stdout.strip()
+
+
+def git_default_branch(root: Path) -> str:
+    remote_head = run_git(root, "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD")
+    if remote_head.returncode == 0 and remote_head.stdout.strip():
+        value = remote_head.stdout.strip()
+        return value.split("/", 1)[1] if value.startswith("origin/") else value
+
+    for candidate in ("main", "master"):
+        exists = run_git(root, "show-ref", "--verify", "--quiet", f"refs/heads/{candidate}")
+        if exists.returncode == 0:
+            return candidate
+    return ""
+
+
+def source_branch(root: Path) -> str:
+    branch = git_branch(root)
+    default_branch = git_default_branch(root)
+    if default_branch and branch == default_branch:
+        raise ValueError(
+            f"source work cannot open on repository default branch {default_branch!r}; "
+            "create/switch to a feature worktree first"
+        )
+    if not default_branch and branch in {"main", "master"}:
+        raise ValueError(
+            f"source work cannot open on probable default branch {branch!r}; "
+            "create/switch to a feature worktree first"
+        )
+    return branch
 
 
 def read(path: Path) -> dict:
@@ -93,6 +136,7 @@ def default_state(reason: str = "coordination") -> dict:
         "work_block_id": "",
         "governance_profile": "Controlled",
         "specification": {"path": "", "revision": ""},
+        "subject_branch": "",
         "base_commit": "",
         "write_gate": {"status": "BLOCKED", "opened_at": None},
         "critic": {
@@ -177,6 +221,7 @@ def validate_open(args: argparse.Namespace) -> None:
 
 def open_state(root: Path, args: argparse.Namespace, current: dict) -> dict:
     validate_open(args)
+    branch = source_branch(root)
     value = default_state("source work opened by Work Block coordination")
     value["work_block_id"] = args.work_block_id.strip()
     value["governance_profile"] = args.governance_profile
@@ -184,6 +229,7 @@ def open_state(root: Path, args: argparse.Namespace, current: dict) -> dict:
         "path": args.specification_path.strip(),
         "revision": args.specification_revision.strip(),
     }
+    value["subject_branch"] = branch
     value["base_commit"] = git_head(root)
     value["write_gate"] = {"status": "READY", "opened_at": now()}
     value["write_set"] = list(dict.fromkeys(v.strip() for v in args.write if v.strip()))
