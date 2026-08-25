@@ -92,7 +92,9 @@ def normalize(raw: object, root: Path) -> str:
     pure = PurePosixPath(path.as_posix())
     if ".." in pure.parts:
         raise Denied(f"Write path escapes repository: {value}")
-    normalized = pure.as_posix().lstrip("./")
+    normalized = pure.as_posix()
+    if normalized.startswith("./"):
+        normalized = normalized[2:]
     if not normalized or normalized == ".":
         raise Denied(f"Cannot resolve repository path: {value}")
     return normalized
@@ -169,7 +171,9 @@ def validate_binding(root: Path, gate: dict) -> None:
 def matches(path: str, patterns: list[str]) -> bool:
     candidate = path.rstrip("/")
     for raw in patterns:
-        pattern = str(raw).strip().replace("\\", "/").lstrip("./")
+        pattern = str(raw).strip().replace("\\", "/")
+        if pattern.startswith("./"):
+            pattern = pattern[2:]
         if not pattern:
             continue
         if pattern.endswith("/**"):
