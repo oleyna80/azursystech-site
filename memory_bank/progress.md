@@ -8,9 +8,9 @@
 - Implementation scope is limited to the explicit shared-context boundary:
   ignore rules, project map/registry navigation, five shared context files, and
   the deterministic validator.
-- Review, Verification, Drift, isolated clean-clone verification, and exact-head
-  synchronization assurance is in progress.
-- Local synchronization merge complete and remote publication remains pending.
+- Review APPROVE, Verification PASS, Drift PASS, isolated clean-clone validation,
+  and exact-head synchronization assurance are complete.
+- Remote publication complete at exact final HEAD e17c3bb6d54b273a6e0c5147a534fa85f81ae5c7. Draft PR #20 has 21 intended paths. CI PASS. Merge is the only pending Owner action. Deployment remains separately unauthorized.
 
 ## Unknown or unavailable
 

@@ -2,13 +2,13 @@
 
 ## State
 
-ASSURANCE COMPLETE -- OWNER PUBLICATION HANDOFF
+ASSURANCE COMPLETE -- OWNER MERGE HANDOFF
 
 - Branch: wb/2026-08-25-shared-analysis-surface
 - Base: 2fc0fbd6bd996681edfc4351a581f9543dba4fb0
-- Head: exact final local subject-branch HEAD (reported with this closeout).
-- Local commit: synchronization merge commit 1a019d2b80f775a07248499b666dc32767ed90be; assurance updates remain scoped to this Work Block.
-- PR: #20 Draft; Owner-controlled publication remains pending.
+- Head: e17c3bb6d54b273a6e0c5147a534fa85f81ae5c7
+- Synchronization merge: 1a019d2b80f775a07248499b666dc32767ed90be. Corrective freshness commit is the final HEAD above.
+- PR: #20 Draft; remote branch is published at exact final HEAD e17c3bb6d54b273a6e0c5147a534fa85f81ae5c7. PR #20 remains Draft with exactly 21 intended paths.
 
 ## Verdicts
 
@@ -17,6 +17,7 @@ ASSURANCE COMPLETE -- OWNER PUBLICATION HANDOFF
 - Review: APPROVE
 - Verification: PASS
 - Drift: PASS
+- CI: PASS
 - Clean clone/shared-context validation: PASS from the synchronized subject revision
 
 ## Exact write-set
@@ -29,6 +30,5 @@ specification, plan, tasklist, active state, and matching reports.
 
 ## Owner handoff
 
-The synchronized subject revision is frozen for Owner publication. Do not push again,
-merge, deploy, change secrets, or touch the original dirty checkout without the
+The synchronized subject revision is frozen for Owner merge approval. Merge is the only pending Owner action. Do not merge or deploy, change secrets, or touch the original dirty checkout without the
 corresponding Owner authority.
