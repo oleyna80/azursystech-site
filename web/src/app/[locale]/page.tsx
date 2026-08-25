@@ -14,6 +14,10 @@ export function portfolioIndexHref(locale: HomeLocale) {
   return `/${locale}/portfolio`;
 }
 
+export function creationSiteHref(locale: HomeLocale) {
+  return `/${locale}/creation-site-internet-nice`;
+}
+
 const META = {
   fr: {
     title: "Automatisation IA et sites web pour petites entreprises à Nice | AzurSysTech",
@@ -170,6 +174,10 @@ export default async function LocaleHomePage({
                 <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
                   <path fill="currentColor" d="M5 11h11.2l-4.6-4.6L13 5l7 7-7 7-1.4-1.4 4.6-4.6H5v-2z" />
                 </svg>
+              </Link>
+              <Link href={creationSiteHref(l)} className="ml-6 mt-10 inline-flex items-center gap-2 text-base font-bold text-accent-teal hover:text-graphite">
+                {copy.creationSiteCta}
+                <span aria-hidden="true">→</span>
               </Link>
             </div>
             <div className="overflow-hidden rounded-[2rem] bg-surface shadow-premium-soft ring-1 ring-graphite/5">

@@ -20,4 +20,12 @@ describe("buildLocalizedPath", () => {
       );
     }
   });
+
+  it("uses a localized Nice website-creation link in every header navigation locale", () => {
+    for (const locale of ["fr", "ru", "en"] as const) {
+      expect(buildNavLinks(locale)).toContainEqual(
+        expect.objectContaining({ href: `/${locale}/creation-site-internet-nice` }),
+      );
+    }
+  });
 });
