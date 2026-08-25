@@ -1,30 +1,30 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-2026-08-24-creation-site-internet-nice",
+  "work_block_id": "WB-2026-08-25-worktree-ssot-binding",
   "governance_profile": "Managed",
   "specification": {
-    "path": "docs/specs/WB-2026-08-24-creation-site-internet-nice.md",
+    "path": "docs/specs/WB-2026-08-25-worktree-ssot-binding.md",
     "revision": "v1"
   },
-  "subject_branch": "feat/creation-site-internet-nice",
-  "base_commit": "1406b8e77225ad4b6c92d539120c98978071c1a3",
+  "subject_branch": "fix/worktree-ssot-binding",
+  "base_commit": "5d3f3115d14fa715c7e06839aac092da5e4a8819",
   "define_quality": {
     "required": true,
     "status": "READY",
-    "requirements_review": "docs/reports/requirements-quality-WB-2026-08-24-creation-site-internet-nice.md",
-    "traceability": "docs/reports/traceability-WB-2026-08-24-creation-site-internet-nice.md",
-    "consistency_analysis": "docs/reports/consistency-WB-2026-08-24-creation-site-internet-nice.md"
+    "requirements_review": "docs/reports/requirements-quality-WB-2026-08-25-worktree-ssot-binding.md",
+    "traceability": "docs/reports/traceability-WB-2026-08-25-worktree-ssot-binding.md",
+    "consistency_analysis": "docs/reports/consistency-WB-2026-08-25-worktree-ssot-binding.md"
   },
   "write_gate": {
-    "status": "READY",
-    "opened_at": "2026-08-25T00:00:00+02:00"
+    "status": "BLOCKED",
+    "opened_at": null
   },
   "critic": {
     "required": true,
     "status": "READY",
     "verdict": "APPROVE",
-    "report": "docs/reports/critic-WB-2026-08-24-creation-site-internet-nice.md",
+    "report": "docs/reports/critic-WB-2026-08-25-worktree-ssot-binding.md",
     "isolation": "same-session-degraded",
     "skip_reason": ""
   },
@@ -32,17 +32,17 @@
     "review": {
       "required": true,
       "status": "READY",
-      "verdict": "APPROVE",
-      "report": "docs/reports/review-WB-2026-08-24-creation-site-internet-nice.md",
+      "verdict": "READY",
+      "report": "docs/reports/review-WB-2026-08-25-worktree-ssot-binding.md",
       "isolation": "same-session-degraded",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
       "status": "READY",
-      "verdict": "PASS",
-      "report": "docs/reports/verification-WB-2026-08-24-creation-site-internet-nice.md",
-      "isolation": "same-session-degraded",
+      "verdict": "READY",
+      "report": "docs/reports/verification-WB-2026-08-25-worktree-ssot-binding.md",
+      "isolation": "github-actions-independent-runner",
       "skip_reason": ""
     },
     "evaluation": {
@@ -54,51 +54,44 @@
       "rubric_revision": "",
       "benchmark_revision": "",
       "isolation": "unknown",
-      "skip_reason": "No generative or rubric-based evaluation is required for this deterministic routing change."
+      "skip_reason": "Deterministic control-plane change; no rubric-based or generative evaluation is required."
     },
     "drift": {
       "required": true,
       "status": "READY",
-      "verdict": "PASS",
-      "report": "docs/reports/drift-WB-2026-08-24-creation-site-internet-nice.md",
+      "verdict": "ALIGNED",
+      "report": "docs/reports/drift-WB-2026-08-25-worktree-ssot-binding.md",
       "isolation": "same-session-degraded",
       "skip_reason": ""
     }
   },
-  "closeout_mode": "assurance-complete-awaiting-owner-action",
+  "closeout_mode": "success-closeout",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
   "write_set": [
-    "web/src/app/[locale]/creation-site-internet-nice/_creation-site-data.ts",
-    "web/src/app/[locale]/creation-site-internet-nice/page.tsx",
-    "web/src/app/[locale]/creation-site-internet-nice/page.test.ts",
-    "web/src/app/[locale]/_home-data.ts",
-    "web/src/app/[locale]/page.tsx",
-    "web/src/components/shell/site-header.tsx",
-    "web/src/components/shell/site-header.test.ts",
-    "web/src/components/shell/site-footer.tsx",
-    "web/src/components/shell/site-footer.test.ts",
-    "web/src/app/sitemap.ts",
-    "web/src/app/sitemap.test.ts",
-    "docs/specs/WB-2026-08-24-creation-site-internet-nice.md",
-    "docs/plans/WB-2026-08-24-creation-site-internet-nice.md",
-    "docs/plans/WB-2026-08-24-creation-site-internet-nice-design-brief.md",
-    "docs/tasklist/WB-2026-08-24-creation-site-internet-nice.tasklist.md",
-    "docs/reports/requirements-quality-WB-2026-08-24-creation-site-internet-nice.md",
-    "docs/reports/traceability-WB-2026-08-24-creation-site-internet-nice.md",
-    "docs/reports/consistency-WB-2026-08-24-creation-site-internet-nice.md",
-    "docs/reports/critic-WB-2026-08-24-creation-site-internet-nice.md",
-    "docs/reports/review-WB-2026-08-24-creation-site-internet-nice.md",
-    "docs/reports/verification-WB-2026-08-24-creation-site-internet-nice.md",
-    "docs/reports/drift-WB-2026-08-24-creation-site-internet-nice.md",
-    "docs/reports/closeout-WB-2026-08-24-creation-site-internet-nice.md",
+    ".agent/active-work-block.default.json",
+    ".codex/scripts/lifecycle.py",
+    ".codex/hooks/pre_tool_use_policy.py",
+    ".claude/hooks/work_block_gate.py",
+    "scripts/test-github-capability-control-plane.py",
+    ".agent/workflows/owner-controlled-github-flow.md",
+    "docs/specs/WB-2026-08-25-worktree-ssot-binding.md",
+    "docs/plans/WB-2026-08-25-worktree-ssot-binding.md",
+    "docs/tasklist/WB-2026-08-25-worktree-ssot-binding.tasklist.md",
+    "docs/reports/requirements-quality-WB-2026-08-25-worktree-ssot-binding.md",
+    "docs/reports/traceability-WB-2026-08-25-worktree-ssot-binding.md",
+    "docs/reports/consistency-WB-2026-08-25-worktree-ssot-binding.md",
+    "docs/reports/critic-WB-2026-08-25-worktree-ssot-binding.md",
+    "docs/reports/review-WB-2026-08-25-worktree-ssot-binding.md",
+    "docs/reports/verification-WB-2026-08-25-worktree-ssot-binding.md",
+    "docs/reports/drift-WB-2026-08-25-worktree-ssot-binding.md",
+    "docs/reports/closeout-WB-2026-08-25-worktree-ssot-binding.md",
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
     ".agent/verification-gate.md",
-    ".codex/write-gate.md",
-    ".agent/workflows/owner-controlled-github-flow.md"
+    ".codex/write-gate.md"
   ],
   "coordination_write_set": [
     ".agent/active-work-block.json",
@@ -121,5 +114,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Stage 0 Define complete: baseline origin/main is 1406b8e77225ad4b6c92d539120c98978071c1a3; traceability READY; Critic APPROVE; source Write Gate READY. Execute completed within the approved write-set. Stage 2 assurance is READY: Reviewer APPROVE, Verifier PASS, Drift PASS. Existing unrelated untracked artifacts are pre-existing/out-of-scope. Per Owner instruction, stop after Assure before commit/push; Stage 3 closeout and Owner publication handoff remain pending, and no commit, push, merge, deploy, or production action is authorized."
+  "lifecycle_note": "Stage 2 assurance complete for worktree/SSOT binding. Critic APPROVE; Review READY; Verification READY with GitHub Actions Control Plane Contracts #51 and CI #145 successful; Drift ALIGNED; optional evaluation SKIPPED with reason. Source Write Gate is BLOCKED for freeze. PR #18 is the publication/review surface; merge, deploy, live infrastructure, credentials, and production remain Owner-controlled."
 }

@@ -1,17 +1,19 @@
 # Verification Gate Record
 
-- **Work Block:** `WB-2026-08-24-creation-site-internet-nice`
+- **Work Block:** `WB-2026-08-25-worktree-ssot-binding`
 - **Status:** `READY`
-- **Verdict:** `PASS`
-- **Report:** `docs/reports/verification-WB-2026-08-24-creation-site-internet-nice.md`
-- **Isolation:** `same-session-degraded` (advisory)
-- **Reviewed at:** 2026-08-25T00:00:00+02:00
+- **Verdict:** `READY`
+- **Report:** `docs/reports/verification-WB-2026-08-25-worktree-ssot-binding.md`
+- **Isolation:** `github-actions-independent-runner`
 
 ## Current Assurance
 
-- Define traceability: `READY` (7 requirements, 14 acceptance criteria, 11 tasks).
-- Reviewer: `READY` / `APPROVE`; Verification: `READY` / `PASS`; Drift: `READY` / `PASS`.
-- Evidence: local Crash Test Gate, focused and full Vitest suites, typecheck, lint, and
-  fresh production build; see the verification report.
-- No staging, local commit, remote publication, merge, deployment, or production
-  authority is granted by this record.
+- Define traceability: `READY` (7 requirements, 13 acceptance criteria, 12 tasks).
+- Critic: `READY` / `APPROVE`.
+- Review: `READY` / `READY`.
+- Verification: `READY` / `READY`.
+- Drift: `READY` / `ALIGNED`.
+- Evaluation: optional, `SKIPPED` with deterministic-change reason.
+- Control Plane Contracts #51: `SUCCESS`, integration fixtures `PASS=11 FAIL=0`, including candidate `git diff --check`.
+- General CI #145: `SUCCESS`.
+- Source Write Gate is frozen `BLOCKED`; merge, deployment, live infrastructure, credentials, and production remain Owner-controlled.

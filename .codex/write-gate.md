@@ -1,15 +1,11 @@
 # Write Gate Record
 
-- **Work Block:** `WB-2026-08-24-creation-site-internet-nice`
-- **Write Gate Status:** `READY`
-- **Opened At:** 2026-08-25T00:00:00+02:00
+- **Work Block:** `WB-2026-08-25-worktree-ssot-binding`
+- **Write Gate Status:** `BLOCKED`
+- **Opened At:** null
 - **Critic Status:** `READY` / `APPROVE`
-- **Base Commit:** `1406b8e77225ad4b6c92d539120c98978071c1a3`
-- **Closeout Mode:** `assurance-complete-awaiting-owner-action`
+- **Base Commit:** `5d3f3115d14fa715c7e06839aac092da5e4a8819`
+- **Subject Branch:** `fix/worktree-ssot-binding`
+- **Closeout Mode:** `success-closeout`
 
-Stage 0 Define is complete (`requirements=7`, `acceptance_criteria=14`,
-`tasks=11`; Critic `APPROVE`). Source writes are limited to the approved active
-Work Block write-set. Stage 2 assurance is complete: Reviewer `APPROVE`,
-Verification `PASS`, and Drift `PASS`; see the three Work Block reports. Per
-Owner instruction, execution stops before Stage 3 closeout, commit, push, merge,
-or deployment. Those actions remain Owner-controlled.
+Stage 2 assurance is complete. Review and Verification are `READY`; Drift is `ALIGNED`; optional Evaluation is `SKIPPED` with reason. Control Plane Contracts #51 and general CI #145 are successful, including the candidate `git diff --check` fixture. Source writes are frozen. PR #18 remains the review/publication surface; merge, deployment, live infrastructure, credentials, and production remain Owner-controlled.
