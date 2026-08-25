@@ -1,11 +1,11 @@
 # Write Gate Record
 
 - **Work Block:** `WB-2026-08-25-worktree-ssot-binding`
-- **Write Gate Status:** `READY`
-- **Opened At:** 2026-08-25T13:14:00+02:00
+- **Write Gate Status:** `BLOCKED`
+- **Opened At:** null
 - **Critic Status:** `READY` / `APPROVE`
 - **Base Commit:** `5d3f3115d14fa715c7e06839aac092da5e4a8819`
 - **Subject Branch:** `fix/worktree-ssot-binding`
-- **Closeout Mode:** `pending`
+- **Closeout Mode:** `success-closeout`
 
-Stage 0 Define is complete (`requirements=7`, `acceptance_criteria=13`, `tasks=12`; Critic `APPROVE`). Source writes are limited to the approved control-plane write-set. Stage 2 Reviewer, Verification, and Drift remain pending. No merge, deploy, live infrastructure, credential, or production action is authorized.
+Stage 2 assurance is complete. Review and Verification are `READY`; Drift is `ALIGNED`; optional Evaluation is `SKIPPED` with reason. Control Plane Contracts #51 and general CI #145 are successful, including the candidate `git diff --check` fixture. Source writes are frozen. PR #18 remains the review/publication surface; merge, deployment, live infrastructure, credentials, and production remain Owner-controlled.
