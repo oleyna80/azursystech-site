@@ -17,8 +17,8 @@
     "consistency_analysis": "docs/reports/consistency-WB-2026-08-25-worktree-ssot-binding.md"
   },
   "write_gate": {
-    "status": "READY",
-    "opened_at": "2026-08-25T13:14:00+02:00"
+    "status": "BLOCKED",
+    "opened_at": null
   },
   "critic": {
     "required": true,
@@ -31,41 +31,41 @@
   "assurance": {
     "review": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
+      "status": "READY",
+      "verdict": "READY",
       "report": "docs/reports/review-WB-2026-08-25-worktree-ssot-binding.md",
-      "isolation": "unknown",
+      "isolation": "same-session-degraded",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
+      "status": "READY",
+      "verdict": "READY",
       "report": "docs/reports/verification-WB-2026-08-25-worktree-ssot-binding.md",
-      "isolation": "unknown",
+      "isolation": "github-actions-independent-runner",
       "skip_reason": ""
     },
     "evaluation": {
       "required": false,
-      "status": "PENDING",
+      "status": "SKIPPED",
       "verdict": "PENDING",
       "plan": "",
       "report": "",
       "rubric_revision": "",
       "benchmark_revision": "",
       "isolation": "unknown",
-      "skip_reason": ""
+      "skip_reason": "Deterministic control-plane change; no rubric-based or generative evaluation is required."
     },
     "drift": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
+      "status": "READY",
+      "verdict": "ALIGNED",
       "report": "docs/reports/drift-WB-2026-08-25-worktree-ssot-binding.md",
-      "isolation": "unknown",
+      "isolation": "same-session-degraded",
       "skip_reason": ""
     }
   },
-  "closeout_mode": "pending",
+  "closeout_mode": "success-closeout",
   "integrations": {
     "approved": [],
     "admission_records": []
@@ -114,5 +114,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Stage 0 Define complete for worktree/SSOT binding fix on branch fix/worktree-ssot-binding from origin/main 5d3f3115d14fa715c7e06839aac092da5e4a8819. Requirements quality, traceability, consistency, and Critic are READY/APPROVE. Source Write Gate is READY only for the bounded control-plane write-set. Stage 2 assurance remains pending; no merge, deploy, live infrastructure, credentials, or production action is authorized."
+  "lifecycle_note": "Stage 2 assurance complete for worktree/SSOT binding. Critic APPROVE; Review READY; Verification READY with GitHub Actions Control Plane Contracts #51 and CI #145 successful; Drift ALIGNED; optional evaluation SKIPPED with reason. Source Write Gate is BLOCKED for freeze. PR #18 is the publication/review surface; merge, deploy, live infrastructure, credentials, and production remain Owner-controlled."
 }
