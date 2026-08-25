@@ -1,17 +1,15 @@
 # Verification Gate Record
 
-- **Work Block:** `WB-2026-08-24-creation-site-internet-nice`
-- **Status:** `READY`
-- **Verdict:** `PASS`
-- **Report:** `docs/reports/verification-WB-2026-08-24-creation-site-internet-nice.md`
-- **Isolation:** `same-session-degraded` (advisory)
-- **Reviewed at:** 2026-08-25T00:00:00+02:00
+- **Work Block:** `WB-2026-08-25-worktree-ssot-binding`
+- **Status:** `PENDING`
+- **Verdict:** `PENDING`
+- **Report:** `docs/reports/verification-WB-2026-08-25-worktree-ssot-binding.md`
+- **Isolation:** `unknown`
 
 ## Current Assurance
 
-- Define traceability: `READY` (7 requirements, 14 acceptance criteria, 11 tasks).
-- Reviewer: `READY` / `APPROVE`; Verification: `READY` / `PASS`; Drift: `READY` / `PASS`.
-- Evidence: local Crash Test Gate, focused and full Vitest suites, typecheck, lint, and
-  fresh production build; see the verification report.
-- No staging, local commit, remote publication, merge, deployment, or production
-  authority is granted by this record.
+- Define traceability: `READY` (7 requirements, 13 acceptance criteria, 12 tasks).
+- Critic: `READY` / `APPROVE`.
+- Reviewer, Verification, and Drift: pending until implementation is frozen.
+- Required deterministic evidence: `python3 scripts/test-github-capability-control-plane.py` and `git diff --check`.
+- Merge, deployment, live infrastructure, credentials, and production remain Owner-controlled.
