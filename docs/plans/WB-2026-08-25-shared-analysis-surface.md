@@ -12,7 +12,7 @@ revision: v1
 - Objective: publish a minimal safe GitHub-readable project-analysis surface.
 - Governance: Managed.
 - Subject branch: wb/2026-08-25-shared-analysis-surface.
-- Base: 9d2b23bfaca4a5af63030f77cc2d7c7559c8ec18.
+- Base: 2fc0fbd6bd996681edfc4351a581f9543dba4fb0.
 - Original checkout: dirty and preserved; implementation is isolated in this worktree.
 - Frozen exclusion: WB-2026-08-25-worktree-ssot-binding was not present in the committed
   baseline inventory and is not modified.
@@ -62,5 +62,5 @@ Work Block coordination gates/active state.
 ## Current closeout
 
 Define, implementation, Review, Verification, and Drift are complete against
-the exact local commit. The Owner-controlled publication boundary remains in
+the synchronized subject revision. The Owner-controlled publication boundary remains in
 force; no PR, push, merge, or deployment was performed.

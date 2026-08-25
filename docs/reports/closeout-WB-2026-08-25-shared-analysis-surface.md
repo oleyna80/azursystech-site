@@ -5,10 +5,10 @@
 ASSURANCE COMPLETE -- OWNER PUBLICATION HANDOFF
 
 - Branch: wb/2026-08-25-shared-analysis-surface
-- Base: 9d2b23bfaca4a5af63030f77cc2d7c7559c8ec18
+- Base: 2fc0fbd6bd996681edfc4351a581f9543dba4fb0
 - Head: exact final local subject-branch HEAD (reported with this closeout).
-- Local commit: one scoped local commit; no additional history was created.
-- PR: none; Owner-controlled publication was not requested or authorized.
+- Local commit: synchronization merge commit 1a019d2b80f775a07248499b666dc32767ed90be; assurance updates remain scoped to this Work Block.
+- PR: #20 Draft; Owner-controlled publication remains pending.
 
 ## Verdicts
 
@@ -17,7 +17,7 @@ ASSURANCE COMPLETE -- OWNER PUBLICATION HANDOFF
 - Review: APPROVE
 - Verification: PASS
 - Drift: PASS
-- Clean clone/shared-context validation: PASS from the exact local commit
+- Clean clone/shared-context validation: PASS from the synchronized subject revision
 
 ## Exact write-set
 
@@ -29,6 +29,6 @@ specification, plan, tasklist, active state, and matching reports.
 
 ## Owner handoff
 
-The exact local commit is frozen for Owner publication. Do not push, create a PR,
+The synchronized subject revision is frozen for Owner publication. Do not push again,
 merge, deploy, change secrets, or touch the original dirty checkout without the
 corresponding Owner authority.

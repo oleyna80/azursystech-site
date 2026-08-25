@@ -6,7 +6,7 @@
 - Lifecycle stage: Define
 - Governance profile: Managed
 - Subject branch: wb/2026-08-25-shared-analysis-surface
-- Frozen base: 9d2b23bfaca4a5af63030f77cc2d7c7559c8ec18
+- Frozen base: 2fc0fbd6bd996681edfc4351a581f9543dba4fb0
 - Authority: Owner-controlled GitHub Free publication; no push, merge, or deploy is authorized in this Work Block.
 
 ## Objective

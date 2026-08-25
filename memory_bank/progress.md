@@ -9,8 +9,8 @@
   ignore rules, project map/registry navigation, five shared context files, and
   the deterministic validator.
 - Review, Verification, Drift, isolated clean-clone verification, and exact-head
-  closeout remain pending.
-- No commit or remote publication has occurred.
+  synchronization assurance is in progress.
+- Local synchronization merge complete and remote publication remains pending.
 
 ## Unknown or unavailable
 

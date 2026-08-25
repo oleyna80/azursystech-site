@@ -22,5 +22,4 @@ PASS
 
 ## Assurance boundary
 
-The exact local commit is frozen for Owner-controlled publication only. No
-push, PR creation, merge, deploy, or production action was performed.
+The synchronized subject revision is frozen for Owner-controlled publication only. No remote publication, PR merge, deployment, or production action was performed.
