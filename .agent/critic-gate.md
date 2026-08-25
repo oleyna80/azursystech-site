@@ -1,14 +1,12 @@
 # Critic Gate Record
 
-- **Work Block:** `WB-2026-08-24-creation-site-internet-nice`
+- **Work Block:** `WB-2026-08-25-worktree-ssot-binding`
 - **Status:** `READY`
 - **Verdict:** `APPROVE`
-- **Report:** `docs/reports/critic-WB-2026-08-24-creation-site-internet-nice.md`
+- **Report:** `docs/reports/critic-WB-2026-08-25-worktree-ssot-binding.md`
 - **Isolation:** `same-session-degraded` (advisory)
-- **Reviewed at:** 2026-08-25T00:00:00+02:00
+- **Reviewed at:** 2026-08-25T13:14:00+02:00
 
 ## Current state
 
-The Define package has a fresh `APPROVE` after correcting validator-facing
-traceability syntax. Source writes are limited to the active Work Block
-write-set. Production and runtime evidence remain reserved for Stage 2.
+Stage 0 Define is complete for the worktree/coordination-SSOT binding fix. The approved design binds normal writes to the active gate's `subject_branch`, keeps runtime worktree paths diagnostic-only, and preserves direct repair of `.agent/active-work-block.json`. Source writes are limited to the active Work Block write-set; Stage 2 assurance remains pending.
