@@ -85,6 +85,21 @@ Requested Owner action: publish this exact feature branch only
 
 Then stop. Do not execute the push autonomously.
 
+## Current Work Block Handoff — 2026-08-25
+
+OWNER PUBLICATION HANDOFF
+Repository: oleyna80/azursystech-site
+Branch: feat/automatiser-demandes-clients-guide
+Exact HEAD: 5d3f3115d14fa715c7e06839aac092da5e4a8819
+Intended remote ref: origin/feat/automatiser-demandes-clients-guide
+Scope: localized evergreen guide, contextual Nice/AI links, sitemap entry set, regressions, and lifecycle evidence in the approved write-set
+Checks: PASS — focused 4 files/20 tests, test:ci, check:types, lint, build, diff check, Crash Test Gate
+Assurance: Critic APPROVE; Reviewer PASS; Verifier PASS; Drift PASS
+Production impact: NONE
+Requested Owner action: review the uncommitted approved diff, create the local commit, record its exact SHA, then publish this exact feature branch only
+
+No commit, remote publication, merge, deploy, or production action was performed for this handoff.
+
 ## Stage D — After Owner publication
 
 After the Owner confirms the feature branch was published:
