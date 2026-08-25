@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -267,7 +268,7 @@ def test_hard_stops() -> None:
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push origin HEAD:main"}), "default branch push")
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push --force origin feature/capability-test"}), "force push")
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push origin --delete old-branch"}), "remote branch deletion")
-        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push --mirror origin"}), "mirror push")
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push origin --mirror"}), "mirror push")
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push --tags origin"}), "tag publication")
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "docker push ghcr.io/example/app:tag"}), "image publication")
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "ssh prod.example systemctl restart app"}), "live ssh")
@@ -591,6 +592,42 @@ def test_claude_scope_and_closeout() -> None:
         holder.cleanup()
 
 
+def test_candidate_diff_check() -> None:
+    base_branch = os.environ.get("GITHUB_BASE_REF", "").strip()
+    if base_branch:
+        base_ref = f"refs/remotes/origin/{base_branch}"
+        fetched = run(
+            [
+                "git",
+                "fetch",
+                "--no-tags",
+                "--depth=1",
+                "origin",
+                f"{base_branch}:{base_ref}",
+            ],
+            ROOT,
+        )
+        if fetched.returncode != 0:
+            raise AssertionError(
+                f"cannot fetch PR base for git diff --check: {fetched.stderr or fetched.stdout}"
+            )
+    else:
+        base_ref = ""
+        for candidate in ("origin/main", "main", "origin/master", "master"):
+            resolved = run(["git", "rev-parse", "--verify", candidate], ROOT)
+            if resolved.returncode == 0:
+                base_ref = candidate
+                break
+        if not base_ref:
+            raise AssertionError("cannot resolve repository base for git diff --check")
+
+    checked = run(["git", "diff", "--check", base_ref, "HEAD"], ROOT)
+    if checked.returncode != 0:
+        raise AssertionError(
+            f"git diff --check failed for {base_ref}..HEAD:\n{checked.stdout}{checked.stderr}"
+        )
+
+
 def test_opencode_posture() -> None:
     config = json.loads((ROOT / "opencode.json").read_text(encoding="utf-8"))
     bash = config["permission"]["bash"]
@@ -610,6 +647,7 @@ TESTS = [
     test_binding_mismatch_coordination_and_repair,
     test_parallel_worktree_isolation,
     test_claude_scope_and_closeout,
+    test_candidate_diff_check,
     test_opencode_posture,
 ]
 
