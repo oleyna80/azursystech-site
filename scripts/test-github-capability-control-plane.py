@@ -68,6 +68,29 @@ def assert_deny(result: subprocess.CompletedProcess[str], label: str) -> None:
         raise AssertionError(f"{label}: expected DENY\nstdout={result.stdout}\nstderr={result.stderr}")
 
 
+def assert_diagnostic(
+    result: subprocess.CompletedProcess[str],
+    cwd: Path,
+    *,
+    branch: str,
+    work_block_id: str,
+) -> None:
+    text = result.stdout + result.stderr
+    required = [
+        f"root={cwd.resolve()}",
+        f"branch={branch}",
+        "HEAD=",
+        f"work_block_id={work_block_id}",
+        "command-local cd does not rebind it",
+        "Start a new agent session from the intended worktree",
+    ]
+    missing = [value for value in required if value not in text]
+    if missing:
+        raise AssertionError(
+            f"diagnostic context missing {missing}\nstdout={result.stdout}\nstderr={result.stderr}"
+        )
+
+
 def ready_gate(base: dict[str, object], cwd: Path) -> dict[str, object]:
     value = copy.deepcopy(base)
     value["work_block_id"] = "WB-TEST-GITHUB-CAPABILITY"
@@ -75,6 +98,7 @@ def ready_gate(base: dict[str, object], cwd: Path) -> dict[str, object]:
         "path": "docs/plans/test.md",
         "revision": "test-spec-v1",
     }
+    value["subject_branch"] = git(cwd, "branch", "--show-current")
     value["base_commit"] = git(cwd, "rev-parse", "HEAD")
     value["write_gate"] = {"status": "READY", "opened_at": "2026-08-12T00:00:00+00:00"}
     value["critic"] = {
@@ -104,16 +128,75 @@ def make_repo() -> tuple[tempfile.TemporaryDirectory[str], Path, dict[str, objec
     (cwd / "README.md").write_text("fixture\n", encoding="utf-8")
     git(cwd, "add", "README.md")
     git(cwd, "commit", "-q", "-m", "fixture base")
+    git(cwd, "branch", "-M", "main")
     git(cwd, "switch", "-q", "-c", "feature/capability-test")
     base = json.loads(DEFAULT_GATE.read_text(encoding="utf-8"))
     write_gate(cwd, base)
     return holder, cwd, base
 
 
+def make_parallel_worktrees() -> tuple[
+    tempfile.TemporaryDirectory[str], Path, Path, dict[str, object], dict[str, object]
+]:
+    holder = tempfile.TemporaryDirectory(prefix="azursystech-worktree-binding-test-")
+    primary = Path(holder.name) / "primary"
+    secondary = Path(holder.name) / "secondary"
+    primary.mkdir()
+    git(primary, "init", "-q")
+    git(primary, "config", "user.email", "fixture@example.invalid")
+    git(primary, "config", "user.name", "Fixture")
+    (primary / "README.md").write_text("fixture\n", encoding="utf-8")
+    git(primary, "add", "README.md")
+    git(primary, "commit", "-q", "-m", "fixture base")
+    git(primary, "branch", "-M", "main")
+    git(primary, "branch", "feature/worktree-one")
+    git(primary, "branch", "feature/worktree-two")
+    git(primary, "switch", "-q", "feature/worktree-one")
+    git(primary, "worktree", "add", "-q", str(secondary), "feature/worktree-two")
+
+    base = json.loads(DEFAULT_GATE.read_text(encoding="utf-8"))
+    gate_one = ready_gate(base, primary)
+    gate_one["work_block_id"] = "WB-TEST-WORKTREE-ONE"
+    gate_two = ready_gate(base, secondary)
+    gate_two["work_block_id"] = "WB-TEST-WORKTREE-TWO"
+    write_gate(primary, gate_one)
+    write_gate(secondary, gate_two)
+    for cwd in (primary, secondary):
+        (cwd / "src").mkdir()
+        (cwd / "src/a.txt").write_text("a\n", encoding="utf-8")
+    return holder, primary, secondary, gate_one, gate_two
+
+
+def lifecycle_open(cwd: Path) -> subprocess.CompletedProcess[str]:
+    return run(
+        [
+            sys.executable,
+            str(LIFECYCLE),
+            "--root",
+            str(cwd),
+            "open",
+            "--work-block-id",
+            "WB-TEST-GITHUB-CAPABILITY",
+            "--specification-path",
+            "docs/plans/test.md",
+            "--specification-revision",
+            "test-spec-v1",
+            "--write",
+            "src/**",
+            "--critic-status",
+            "READY",
+            "--critic-verdict",
+            "APPROVE",
+        ],
+        cwd,
+    )
+
+
 def test_default_schema() -> None:
     gate = json.loads(DEFAULT_GATE.read_text(encoding="utf-8"))
     assert gate["schema_version"] == 3
     assert gate["authority_mode"] == "github_capability"
+    assert gate["subject_branch"] == ""
     assert "authorization" not in gate
     assert "hard_stop_approvals" not in gate
     assert gate["write_gate"] == {"status": "BLOCKED", "opened_at": None}
@@ -123,33 +206,13 @@ def test_default_schema() -> None:
 def test_lifecycle() -> None:
     holder, cwd, _base = make_repo()
     try:
-        result = run(
-            [
-                sys.executable,
-                str(LIFECYCLE),
-                "--root",
-                str(cwd),
-                "open",
-                "--work-block-id",
-                "WB-TEST-GITHUB-CAPABILITY",
-                "--specification-path",
-                "docs/plans/test.md",
-                "--specification-revision",
-                "test-spec-v1",
-                "--write",
-                "src/**",
-                "--critic-status",
-                "READY",
-                "--critic-verdict",
-                "APPROVE",
-            ],
-            cwd,
-        )
+        result = lifecycle_open(cwd)
         if result.returncode != 0:
             raise AssertionError(f"lifecycle open failed: {result.stdout} {result.stderr}")
         opened = json.loads((cwd / ".agent/active-work-block.json").read_text())
         assert opened["schema_version"] == 3
         assert opened["authority_mode"] == "github_capability"
+        assert opened["subject_branch"] == "feature/capability-test"
         assert opened["write_gate"]["status"] == "READY"
         assert "authorization" not in opened
         assert "hard_stop_approvals" not in opened
@@ -170,6 +233,27 @@ def test_lifecycle() -> None:
             raise AssertionError(f"lifecycle freeze failed: {result.stdout} {result.stderr}")
         frozen = json.loads((cwd / ".agent/active-work-block.json").read_text())
         assert frozen["write_gate"] == {"status": "BLOCKED", "opened_at": None}
+    finally:
+        holder.cleanup()
+
+
+def test_lifecycle_rejects_default_and_detached() -> None:
+    holder, cwd, _base = make_repo()
+    try:
+        git(cwd, "switch", "-q", "main")
+        result = lifecycle_open(cwd)
+        if result.returncode != 2 or "default branch" not in (result.stdout + result.stderr):
+            raise AssertionError(
+                f"lifecycle default-branch open should be BLOCKED\nstdout={result.stdout}\nstderr={result.stderr}"
+            )
+
+        git(cwd, "switch", "-q", "feature/capability-test")
+        git(cwd, "switch", "-q", "--detach")
+        result = lifecycle_open(cwd)
+        if result.returncode != 2 or "detached" not in (result.stdout + result.stderr):
+            raise AssertionError(
+                f"lifecycle detached-HEAD open should be BLOCKED\nstdout={result.stdout}\nstderr={result.stderr}"
+            )
     finally:
         holder.cleanup()
 
@@ -211,14 +295,18 @@ def test_codex_scope() -> None:
             ),
             "apply_patch in write-set",
         )
-        assert_deny(
-            hook(
-                CODEX_GATE,
-                cwd,
-                "apply_patch",
-                {"command": "*** Begin Patch\n*** Update File: src/a.txt\n*** Move to: forbidden/a.txt\n*** End Patch"},
-            ),
-            "apply_patch Move to outside write-set",
+        result = hook(
+            CODEX_GATE,
+            cwd,
+            "apply_patch",
+            {"command": "*** Begin Patch\n*** Update File: src/a.txt\n*** Move to: forbidden/a.txt\n*** End Patch"},
+        )
+        assert_deny(result, "apply_patch Move to outside write-set")
+        assert_diagnostic(
+            result,
+            cwd,
+            branch="feature/capability-test",
+            work_block_id="WB-TEST-GITHUB-CAPABILITY",
         )
         assert_deny(
             hook(
@@ -256,6 +344,174 @@ def test_codex_coordination_commit_scope() -> None:
         holder.cleanup()
 
 
+def test_binding_mismatch_coordination_and_repair() -> None:
+    holder, cwd, base = make_repo()
+    try:
+        gate = ready_gate(base, cwd)
+        gate["subject_branch"] = "feature/other-worktree"
+        write_gate(cwd, gate)
+        (cwd / "src").mkdir()
+        (cwd / "src/a.txt").write_text("a\n", encoding="utf-8")
+
+        codex_source = hook(
+            CODEX_GATE,
+            cwd,
+            "apply_patch",
+            {"command": "*** Begin Patch\n*** Update File: src/a.txt\n*** End Patch"},
+        )
+        assert_deny(codex_source, "Codex stale gate source write")
+        assert_diagnostic(
+            codex_source,
+            cwd,
+            branch="feature/capability-test",
+            work_block_id="WB-TEST-GITHUB-CAPABILITY",
+        )
+
+        claude_source = hook(
+            CLAUDE_GATE,
+            cwd,
+            "Edit",
+            {"file_path": str(cwd / "src/a.txt")},
+        )
+        assert_deny(claude_source, "Claude stale gate source write")
+        assert_diagnostic(
+            claude_source,
+            cwd,
+            branch="feature/capability-test",
+            work_block_id="WB-TEST-GITHUB-CAPABILITY",
+        )
+
+        codex_coordination = hook(
+            CODEX_GATE,
+            cwd,
+            "apply_patch",
+            {"command": "*** Begin Patch\n*** Add File: docs/plans/test.md\n*** End Patch"},
+        )
+        assert_deny(codex_coordination, "Codex stale gate coordination write")
+        claude_coordination = hook(
+            CLAUDE_GATE,
+            cwd,
+            "Edit",
+            {"file_path": str(cwd / ".agent/critic-gate.md")},
+        )
+        assert_deny(claude_coordination, "Claude stale gate coordination write")
+
+        assert_allow(
+            hook(
+                CODEX_GATE,
+                cwd,
+                "apply_patch",
+                {"command": "*** Begin Patch\n*** Update File: .agent/active-work-block.json\n*** End Patch"},
+            ),
+            "Codex active gate repair",
+        )
+        assert_allow(
+            hook(
+                CLAUDE_GATE,
+                cwd,
+                "Edit",
+                {"file_path": str(cwd / ".agent/active-work-block.json")},
+            ),
+            "Claude active gate repair",
+        )
+
+        missing = copy.deepcopy(gate)
+        missing["subject_branch"] = ""
+        write_gate(cwd, missing)
+        assert_deny(
+            hook(
+                CODEX_GATE,
+                cwd,
+                "apply_patch",
+                {"command": "*** Begin Patch\n*** Update File: src/a.txt\n*** End Patch"},
+            ),
+            "Codex missing subject_branch",
+        )
+        assert_deny(
+            hook(CLAUDE_GATE, cwd, "Edit", {"file_path": str(cwd / "src/a.txt")}),
+            "Claude missing subject_branch",
+        )
+
+        attached = ready_gate(base, cwd)
+        write_gate(cwd, attached)
+        git(cwd, "switch", "-q", "--detach")
+        codex_detached = hook(
+            CODEX_GATE,
+            cwd,
+            "apply_patch",
+            {"command": "*** Begin Patch\n*** Update File: src/a.txt\n*** End Patch"},
+        )
+        assert_deny(codex_detached, "Codex detached HEAD")
+        assert_diagnostic(
+            codex_detached,
+            cwd,
+            branch="<detached>",
+            work_block_id="WB-TEST-GITHUB-CAPABILITY",
+        )
+        claude_detached = hook(
+            CLAUDE_GATE,
+            cwd,
+            "Edit",
+            {"file_path": str(cwd / "src/a.txt")},
+        )
+        assert_deny(claude_detached, "Claude detached HEAD")
+    finally:
+        holder.cleanup()
+
+
+def test_parallel_worktree_isolation() -> None:
+    holder, primary, secondary, gate_one, _gate_two = make_parallel_worktrees()
+    try:
+        for cwd, work_block_id in (
+            (primary, "WB-TEST-WORKTREE-ONE"),
+            (secondary, "WB-TEST-WORKTREE-TWO"),
+        ):
+            assert_allow(
+                hook(
+                    CODEX_GATE,
+                    cwd,
+                    "apply_patch",
+                    {"command": "*** Begin Patch\n*** Update File: src/a.txt\n*** End Patch"},
+                ),
+                f"Codex matching gate in {cwd.name}",
+            )
+            assert_allow(
+                hook(CLAUDE_GATE, cwd, "Edit", {"file_path": str(cwd / "src/a.txt")}),
+                f"Claude matching gate in {cwd.name}",
+            )
+            assert work_block_id in (cwd / ".agent/active-work-block.json").read_text()
+
+        write_gate(secondary, gate_one)
+        codex_stale = hook(
+            CODEX_GATE,
+            secondary,
+            "apply_patch",
+            {"command": "*** Begin Patch\n*** Update File: src/a.txt\n*** End Patch"},
+        )
+        assert_deny(codex_stale, "Codex cross-worktree stale gate")
+        assert_diagnostic(
+            codex_stale,
+            secondary,
+            branch="feature/worktree-two",
+            work_block_id="WB-TEST-WORKTREE-ONE",
+        )
+        claude_stale = hook(
+            CLAUDE_GATE,
+            secondary,
+            "Edit",
+            {"file_path": str(secondary / "src/a.txt")},
+        )
+        assert_deny(claude_stale, "Claude cross-worktree stale gate")
+        assert_diagnostic(
+            claude_stale,
+            secondary,
+            branch="feature/worktree-two",
+            work_block_id="WB-TEST-WORKTREE-ONE",
+        )
+    finally:
+        holder.cleanup()
+
+
 def test_claude_scope_and_closeout() -> None:
     holder, cwd, base = make_repo()
     try:
@@ -267,9 +523,13 @@ def test_claude_scope_and_closeout() -> None:
             hook(CLAUDE_GATE, cwd, "Edit", {"file_path": str(cwd / "src/a.txt")}),
             "Claude in-scope Edit",
         )
-        assert_deny(
-            hook(CLAUDE_GATE, cwd, "Edit", {"file_path": str(cwd / "forbidden.txt")}),
-            "Claude out-of-scope Edit",
+        outside = hook(CLAUDE_GATE, cwd, "Edit", {"file_path": str(cwd / "forbidden.txt")})
+        assert_deny(outside, "Claude out-of-scope Edit")
+        assert_diagnostic(
+            outside,
+            cwd,
+            branch="feature/capability-test",
+            work_block_id="WB-TEST-GITHUB-CAPABILITY",
         )
 
         (cwd / "docs/reports").mkdir(parents=True)
@@ -343,9 +603,12 @@ def test_opencode_posture() -> None:
 TESTS = [
     test_default_schema,
     test_lifecycle,
+    test_lifecycle_rejects_default_and_detached,
     test_hard_stops,
     test_codex_scope,
     test_codex_coordination_commit_scope,
+    test_binding_mismatch_coordination_and_repair,
+    test_parallel_worktree_isolation,
     test_claude_scope_and_closeout,
     test_opencode_posture,
 ]
