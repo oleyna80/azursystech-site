@@ -4,8 +4,12 @@
 
 - Role: read-only Reviewer, same-session advisory isolation.
 - Subject branch: `feat/automatiser-demandes-clients-guide`.
+- Original Work Block base: `5d3f3115d14fa715c7e06839aac092da5e4a8819`.
+- Status: `READY`.
+- Verdict: `READY`.
 - Synchronized candidate parents: `1cf1108536393421ebf1ac7d384f7d1de06b0bde` (SEO-003 candidate) and `f90cc8c6981038190a8a67ba5c58c93cdc308f11` (`origin/main`).
-- Review target: the resolved merge candidate before the local synchronization commit.
+- Synchronization candidate/merge commit: `76cd3271785bc4493111ea4bd5fe42a25e876dc2`.
+- Review target: the resolved synchronized candidate; governance evidence is retained on its descendant branch HEAD.
 
 ## Findings
 
@@ -25,4 +29,4 @@
 
 ## Verdict
 
-PASS — no material blocker found for the resolved synchronized candidate. This is advisory evidence and grants no publication authority.
+READY — no material blocker found for the resolved synchronized candidate. This is advisory evidence and grants no publication authority.

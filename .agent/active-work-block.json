@@ -8,7 +8,7 @@
     "revision": "v1"
   },
   "subject_branch": "feat/automatiser-demandes-clients-guide",
-  "base_commit": "f90cc8c6981038190a8a67ba5c58c93cdc308f11",
+  "base_commit": "5d3f3115d14fa715c7e06839aac092da5e4a8819",
   "define_quality": {
     "required": true,
     "status": "READY",
@@ -31,16 +31,16 @@
   "assurance": {
     "review": {
       "required": true,
-      "status": "PASS",
-      "verdict": "PASS",
+      "status": "READY",
+      "verdict": "READY",
       "report": "docs/reports/review-WB-2026-08-25-automatiser-demandes-clients-guide.md",
       "isolation": "same-session-degraded",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "PASS",
-      "verdict": "PASS",
+      "status": "READY",
+      "verdict": "READY",
       "report": "docs/reports/verification-WB-2026-08-25-automatiser-demandes-clients-guide.md",
       "isolation": "same-session-degraded",
       "skip_reason": ""
@@ -58,14 +58,14 @@
     },
     "drift": {
       "required": true,
-      "status": "PASS",
-      "verdict": "PASS",
+      "status": "READY",
+      "verdict": "ALIGNED",
       "report": "docs/reports/drift-WB-2026-08-25-automatiser-demandes-clients-guide.md",
       "isolation": "same-session-degraded",
       "skip_reason": ""
     }
   },
-  "closeout_mode": "assurance-complete-awaiting-owner-commit",
+  "closeout_mode": "success-closeout",
   "integrations": {
     "approved": [],
     "admission_records": []
@@ -126,5 +126,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Stage 0 Define and Stage 1 Execute are complete for SEO-003. Fresh Review, Verification, and Drift assurance passed on the resolved synchronized candidate with origin/main control-plane changes. Local synchronization commit 76cd3271785bc4493111ea4bd5fe42a25e876dc2 is complete. Stage 3 is limited to the Owner-controlled publication handoff; push, merge, deployment, and production authority remain excluded."
+  "lifecycle_note": "Stage 0 Define and Stage 1 Execute are complete for SEO-003. Original Work Block base is 5d3f3115d14fa715c7e06839aac092da5e4a8819. Synchronization base f90cc8c6981038190a8a67ba5c58c93cdc308f11 and merge commit 76cd3271785bc4493111ea4bd5fe42a25e876dc2 are lifecycle/evidence context only. Review is READY/READY, Verification is READY/READY, Drift is READY/ALIGNED, and optional Evaluation is SKIPPED with reason. The source Write Gate remains READY only for the explicitly authorized local governance/evidence commit; Stage 3 remains limited to the Owner-controlled publication handoff for the exact current branch descendant. Push, merge, deployment, and production authority remain excluded."
 }

@@ -4,8 +4,12 @@
 
 - Work Block: `WB-2026-08-25-automatiser-demandes-clients-guide`
 - Subject branch: `feat/automatiser-demandes-clients-guide`
+- Original Work Block base: `5d3f3115d14fa715c7e06839aac092da5e4a8819`
+- Status: `READY`.
+- Verdict: `READY`.
 - Synchronized candidate parents: `1cf1108536393421ebf1ac7d384f7d1de06b0bde` and `f90cc8c6981038190a8a67ba5c58c93cdc308f11`
-- Verification target: resolved merge candidate before local synchronization commit.
+- Synchronization candidate/merge commit: `76cd3271785bc4493111ea4bd5fe42a25e876dc2`.
+- Verification target: resolved synchronized candidate; governance evidence is retained on its descendant branch HEAD.
 - Mode: local evidence, same-session advisory isolation.
 
 ## Required checks
@@ -42,4 +46,4 @@ Focused tests assert the exact FR title/H1, localized canonical and hreflang tar
 
 ## Verdict
 
-PASS — evidence supports the defined SEO-003 acceptance criteria for the resolved synchronized candidate. This report is local assurance only and does not imply commit, remote publication, merge, or deployment authority.
+READY — evidence supports the defined SEO-003 acceptance criteria for the resolved synchronized candidate. This report is local assurance only and does not imply remote publication, merge, or deployment authority.
