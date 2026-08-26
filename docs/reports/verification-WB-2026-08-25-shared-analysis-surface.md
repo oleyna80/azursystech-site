@@ -2,24 +2,26 @@
 
 ## Verdict
 
-PASS
+READY
 
 ## Checks
 
-- Define traceability validator: PASS (requirements=7, acceptance=11, tasks=11).
-- Python syntax compile for scripts/validate-shared-context.py: PASS.
-- git check-ignore for .codex/worktrees/representative-path: PASS.
-- git check-ignore for non-allowlisted memory_bank/review-log.md: PASS.
-- Committed-index shared-context validator: PASS; all five required files are
-  Git-tracked and readable.
-- Git-aware checks: PASS; the exact four-file memory allowlist is tracked,
-  `.codex/worktrees/` and non-allowlisted memory are ignored, and no forbidden
-  tracked local/private surface was found.
-- Clean-clone/shared-context validation: PASS from the local subject commit;
-  the clean clone reproduced the required files and validator result without
-  network access.
-- Source syntax: PASS (`python3 -m py_compile scripts/validate-shared-context.py`).
+- Lifecycle state JSON remains schema version 3 and uses the canonical executable
+  `success-closeout` mode.
+- The active state has no final remote-head field.
+- The lifecycle candidate preserves the approved Work Block, branch, base,
+  synchronization provenance, and eleven-file scope.
+- TASK-010 and TASK-011 are repository-side preparation tasks; exact remote
+  revision and CI confirmation are explicitly external.
+- Shared context Current Priorities contains only durable project principles.
+- No versioned artifact asserts that the containing commit passed an exact-SHA
+  remote or post-commit CI check.
+- Existing deterministic shared-context and clean-clone evidence remains within
+  the approved lifecycle boundary.
 
 ## Assurance boundary
 
-The synchronized subject revision is frozen for Owner-controlled publication only. No remote publication, PR merge, deployment, or production action was performed.
+This is repository-side candidate verification. After the last repository commit,
+resolve the exact remote revision, verify GitHub CI for that SHA, and perform the
+Owner-controlled handoff externally. No publication, merge, deployment, or
+production action is performed by this package.

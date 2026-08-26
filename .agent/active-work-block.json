@@ -9,7 +9,6 @@
   },
   "subject_branch": "wb/2026-08-25-shared-analysis-surface",
   "base_commit": "2fc0fbd6bd996681edfc4351a581f9543dba4fb0",
-  "final_remote_head": "e17c3bb6d54b273a6e0c5147a534fa85f81ae5c7",
   "pre_sync_base_commit": "9d2b23bfaca4a5af63030f77cc2d7c7559c8ec18",
   "synchronization_main_commit": "2fc0fbd6bd996681edfc4351a581f9543dba4fb0",
   "synchronization_merge_commit": "1a019d2b80f775a07248499b666dc32767ed90be",
@@ -36,7 +35,7 @@
     "review": {
       "required": true,
       "status": "READY",
-      "verdict": "APPROVE",
+      "verdict": "READY",
       "report": "docs/reports/review-WB-2026-08-25-shared-analysis-surface.md",
       "isolation": "same-session",
       "skip_reason": ""
@@ -44,7 +43,7 @@
     "verification": {
       "required": true,
       "status": "READY",
-      "verdict": "PASS",
+      "verdict": "READY",
       "report": "docs/reports/verification-WB-2026-08-25-shared-analysis-surface.md",
       "isolation": "same-session",
       "skip_reason": ""
@@ -63,13 +62,13 @@
     "drift": {
       "required": true,
       "status": "READY",
-      "verdict": "PASS",
+      "verdict": "ALIGNED",
       "report": "docs/reports/drift-WB-2026-08-25-shared-analysis-surface.md",
       "isolation": "same-session",
       "skip_reason": ""
     }
   },
-  "closeout_mode": "published-draft-pr-owner-merge-pending",
+  "closeout_mode": "success-closeout",
   "integrations": {
     "approved": [],
     "admission_records": []
@@ -121,5 +120,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Stage 2 assurance complete: Reviewer APPROVE, Verification PASS, and Drift PASS after synchronized subject revision and clean-clone validation. Local synchronization merge complete and remote publication completed. No PR merge, deploy, or production action was performed; Owner merge approval is pending. Deployment remains separately unauthorized."
+  "lifecycle_note": "Repository-side lifecycle package complete: Define and assurance evidence are prepared for the approved Work Block and its isolated candidate scope. Exact remote revision, GitHub CI result, and Owner merge authorization are external handoff evidence resolved after the last repository commit. Deployment remains separately unauthorized."
 }

@@ -1,7 +1,7 @@
 ---
 artifact_type: work_block
 work_block_id: WB-2026-08-25-shared-analysis-surface
-status: assurance-complete-awaiting-owner-action
+status: repository-side-package-complete
 revision: v1
 ---
 
@@ -45,8 +45,9 @@ Work Block coordination gates/active state.
   and deterministic validator.
 - Assure: Reviewer, Verifier, Drift, isolated clean-clone check, and frozen diff
   inspection.
-- Close: report exact revision and Owner-controlled publication handoff; do not
-  push or merge.
+- Close: prepare the repository-side lifecycle package and the Owner-controlled
+  handoff contract. Resolve exact remote revision and CI externally after the
+  last repository commit; do not push or merge.
 
 ## Risks and controls
 
@@ -61,6 +62,8 @@ Work Block coordination gates/active state.
 
 ## Current closeout
 
-Define, implementation, Review, Verification, and Drift are complete against
-the synchronized subject revision. The Owner-controlled publication boundary remains in
-force; no PR, push, merge, or deployment was performed.
+Define, implementation, Review, Verification, and Drift evidence are prepared for
+the repository-side lifecycle candidate. The package deliberately contains no
+current PR/CI snapshot or final remote SHA. The Owner-controlled publication and
+merge boundary remains in force; exact remote evidence is resolved externally
+after the last repository commit.

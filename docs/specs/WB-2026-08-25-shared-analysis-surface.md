@@ -81,7 +81,10 @@ working-tree paths.
 - AC-008 The validator fails when a forbidden local/private path is tracked.
 - AC-009 No secrets, credentials, private evidence, provider configuration, client data, runtime cache, or heavy generated artifact is added.
 - AC-010 The Work Block write-set excludes runtime profiles, skills, bootstrap, and agent-profile strategy.
-- AC-011 Required Define and assurance evidence binds to the exact subject branch and base/head.
+- AC-011 Required Define and assurance evidence binds to the exact Work Block, subject
+  branch, frozen base, approved scope, and synchronization provenance. The final PR
+  HEAD, remote-ref equality, GitHub CI result, and Owner merge handoff are external
+  post-commit evidence and are not required versioned fields.
 
 ## Explicit non-goals
 
@@ -94,8 +97,12 @@ database mutation, secret change, or destructive operation is authorized.
 
 The shared files are a read-only analysis surface, not an authority grant. The
 active Work Block JSON, approved specification, reports, and Git revision remain
-the authoritative governance chain. Local source zones are referenced only as
-source zones; raw local material is not copied.
+the authoritative repository-side governance chain. Versioned assurance records
+the candidate scope and deterministic evidence package; it must not assert the
+SHA of the commit that contains that assertion. Exact PR HEAD, remote-ref
+equality, GitHub CI, and Owner merge handoff are resolved externally after the
+last repository commit. Local source zones are referenced only as source zones;
+raw local material is not copied.
 
 ## Machine-readable Define records
 
@@ -116,4 +123,4 @@ source zones; raw local material is not copied.
 - AC-008 [req=REQ-005]: The validator fails when a forbidden local/private surface is tracked.
 - AC-009 [req=REQ-001,REQ-002,REQ-007]: No secret, private, client, provider, runtime, or heavy artifact is added.
 - AC-010 [req=REQ-007]: The Work Block write-set excludes runtime profiles, skills, bootstrap, and agent-profile strategy.
-- AC-011 [req=REQ-001,REQ-002,REQ-003,REQ-004,REQ-005,REQ-006,REQ-007]: Define and assurance evidence binds to the exact subject branch and revision.
+- AC-011 [req=REQ-001,REQ-002,REQ-003,REQ-004,REQ-005,REQ-006,REQ-007]: Repository-versioned Define and assurance evidence binds to the Work Block ID, subject branch, frozen base commit, approved scope/write-set, synchronization provenance, and repository-side assurance package. Exact final PR HEAD, remote branch equality, GitHub CI for that SHA, and Owner merge handoff are external post-commit evidence; final PR HEAD is resolved after the last repository commit and is not persisted as a self-referencing field.

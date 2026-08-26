@@ -2,20 +2,20 @@
 
 ## Verdict
 
-PASS
+ALIGNED
 
 ## Evidence
 
-- The subject branch remains wb/2026-08-25-shared-analysis-surface.
-- The base remains 2fc0fbd6bd996681edfc4351a581f9543dba4fb0.
-- The active JSON, specification, plan, tasklist, and reports use the same
-  Work Block ID.
-- The frozen WB-2026-08-25-worktree-ssot-binding was not modified.
-- The original dirty checkout was not staged, reset, stashed, cleaned, or
-  overwritten.
-- The changed paths are within the explicit write-set; no prohibited runtime,
-  skill, bootstrap, agent-profile, private-evidence, or source-zone publication
-  path was added.
+- The subject branch, frozen base, Work Block ID, and synchronization provenance
+  remain unchanged.
+- The lifecycle repair is restricted to the approved eleven-file write-set.
+- The active state, specification, plan, tasklist, reports, and memory records
+  use the same lifecycle contract.
+- No current PR status, remote branch SHA, CI snapshot, or mutable Owner-merge
+  snapshot is introduced into versioned shared context.
+- The original dirty checkout, runtime profiles, skills, hooks, scripts,
+  framework files, source zones, and private evidence remain out of scope.
 
-The synchronized assurance revision contains only the approved changed paths. Publication
-remains Owner-controlled and was not attempted.
+The candidate is internally consistent at repository level. External exact-head,
+remote-equality, CI, and Owner handoff evidence is intentionally resolved only
+after the last repository commit.

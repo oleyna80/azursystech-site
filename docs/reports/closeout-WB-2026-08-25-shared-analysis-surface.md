@@ -2,33 +2,40 @@
 
 ## State
 
-ASSURANCE COMPLETE -- OWNER MERGE HANDOFF
+REPOSITORY-SIDE LIFECYCLE PACKAGE COMPLETE -- OWNER HANDOFF CONTRACT PREPARED
 
 - Branch: wb/2026-08-25-shared-analysis-surface
 - Base: 2fc0fbd6bd996681edfc4351a581f9543dba4fb0
-- Head: e17c3bb6d54b273a6e0c5147a534fa85f81ae5c7
-- Synchronization merge: 1a019d2b80f775a07248499b666dc32767ed90be. Corrective freshness commit is the final HEAD above.
-- PR: #20 Draft; remote branch is published at exact final HEAD e17c3bb6d54b273a6e0c5147a534fa85f81ae5c7. PR #20 remains Draft with exactly 21 intended paths.
+- Synchronization provenance: 1a019d2b80f775a07248499b666dc32767ed90be
+- Scope: approved shared-analysis surface plus the lifecycle-semantic corrective delta.
+- Repository-side assurance package: prepared for the candidate content and approved scope.
+
+The repository-side package intentionally does not contain a current PR status, a
+remote branch SHA, a CI snapshot, or the SHA of the commit containing this report.
+Exact remote revision, GitHub CI, and Owner merge authorization are external
+handoff evidence resolved after the last repository commit.
 
 ## Verdicts
 
 - Define Quality: READY
 - Critic: APPROVE
-- Review: APPROVE
-- Verification: PASS
-- Drift: PASS
-- CI: PASS
-- Clean clone/shared-context validation: PASS from the synchronized subject revision
+- Review: READY
+- Verification: READY
+- Drift: ALIGNED
+- Repository-side shared-context validation: PASS
 
 ## Exact write-set
 
-.gitignore; PROJECT_MAP.md; FILE_REGISTRY.yml;
-docs/project-context.md; scripts/validate-shared-context.py;
-memory_bank/orchestrator-log.md; memory_bank/context.md;
-memory_bank/progress.md; memory_bank/decisions.md; the Work Block
-specification, plan, tasklist, active state, and matching reports.
+The lifecycle repair is limited to the approved eleven-file corrective set:
 
-## Owner handoff
+`.agent/active-work-block.json`; the Work Block specification, plan, tasklist,
+and matching Review/Verification/Drift/closeout reports; `memory_bank/context.md`;
+`memory_bank/progress.md`; and `docs/project-context.md`.
 
-The synchronized subject revision is frozen for Owner merge approval. Merge is the only pending Owner action. Do not merge or deploy, change secrets, or touch the original dirty checkout without the
-corresponding Owner authority.
+## Owner handoff boundary
+
+The repository-side closeout package is prepared. After the last repository commit,
+resolve the exact PR HEAD from the remote ref/API, verify GitHub CI for that SHA,
+and prepare the Owner-controlled merge handoff naming that exact revision. No
+publication, merge, deployment, secret, or production authority is granted by
+this report.

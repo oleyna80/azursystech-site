@@ -5,24 +5,21 @@
 - ID: WB-2026-08-25-shared-analysis-surface
 - Subject branch: wb/2026-08-25-shared-analysis-surface
 - Base: 2fc0fbd6bd996681edfc4351a581f9543dba4fb0
-- Stage: Execute after Define
+- Synchronization provenance: 1a019d2b80f775a07248499b666dc32767ed90be
+- Stage: Repository-side lifecycle package
 - Define Quality: READY
 - Critic: APPROVE
-- Final remote HEAD: e17c3bb6d54b273a6e0c5147a534fa85f81ae5c7
 - Synchronization: complete
-- PR #20: Draft, 21 intended paths
-- Review: APPROVE
-- Verification: PASS
-- Drift: PASS
-- CI: PASS
+- Repository-side assurance package: prepared
 - Source Write Gate: READY for the explicit Work Block write-set
 
 ## Boundaries
 
 The original checkout had unrelated dirty and untracked paths and was preserved.
 This Work Block uses an isolated worktree. The frozen
-WB-2026-08-25-worktree-ssot-binding was not modified. The synchronized branch was published and no PR merge,
-deploy, database mutation, or secret/config change is authorized.
+WB-2026-08-25-worktree-ssot-binding was not modified. Publication and merge remain
+Owner-controlled; deployment, database mutation, and secret/config change are
+separately unauthorized. Exact remote revision and CI are external handoff evidence.
 
 ## Source of truth
 

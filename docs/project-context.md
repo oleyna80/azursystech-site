@@ -49,10 +49,10 @@ local automation caches are intentionally excluded.
 
 ## Current Priorities
 
-- complete and assure WB-2026-08-25-shared-analysis-surface;
+- maintain the shared project-analysis surface as compact, committed-evidence-based context;
 - preserve the active Work Block and repository safety boundaries;
 - maintain multilingual service, portfolio, and conversion-route integrity;
-- keep publication Owner-controlled and separate from local assurance.
+- keep GitHub publication Owner-controlled and deployment separately authorized.
 
 ## Source Material
 
