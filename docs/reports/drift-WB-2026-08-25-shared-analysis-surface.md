@@ -6,20 +6,27 @@ ALIGNED
 
 ## Evidence
 
-- The subject branch, frozen base, Work Block ID, and synchronization provenance
-  remain unchanged.
-- The current candidate is restricted to the approved Work Block write-set,
-  including the P1 validator, regression fixture, and existing control-plane
-  workflow.
-- The active state, plan, tasklist, reports, and memory records use the same
-  lifecycle contract; the existing specification remains sufficient because
-  REQ-005/AC-008 already define the validator boundary.
-- No current PR status, remote branch SHA, CI snapshot, or mutable Owner-merge
-  snapshot is introduced into versioned shared context.
-- The original dirty checkout, runtime profiles, skills, hooks, scripts,
-  framework files, source zones, and private evidence remain out of scope.
+The prior Drift result is historical for the candidate that preceded the second
+P1 trigger correction. A fresh independent assessment of the complete current
+candidate found its actual scope limited to:
 
-The follow-up candidate is internally consistent at repository level. Local CI
-configuration is present and syntactically valid, but external exact-head,
-remote-equality, GitHub CI, and Owner handoff evidence is intentionally resolved
-only after the last repository commit.
+- protected-input workflow trigger coverage;
+- the workflow-derived trigger-contract regression extension;
+- transitional reconciliation evidence and active-state status; and
+- no product, runtime, deployment, or `FILE_REGISTRY.yml` changes.
+
+REQ-005 remains sufficient because it already covers the shared-context security
+boundary, validator, regression fixture, and control-plane enforcement. TASK-005
+already includes the validator, its regression fixture, and Control Plane
+Contracts enforcement. The protected-path trigger correction therefore completes
+existing enforcement rather than extending the approved requirement or task.
+
+The independent reconstruction used the GitHub baseline and the exact ten-file
+uncommitted patch. It confirmed the authorized write-set, clean index and diff,
+narrow technical change, protected-path coverage, and no product, runtime,
+deployment, secret, or authority-boundary drift. The cumulative PR remains the
+approved shared-analysis surface. Drift is ALIGNED.
+
+This repository-side report does not assert an external exact-head,
+remote-equality, GitHub CI, or Owner handoff result. Those remain external after
+the final repository commit.

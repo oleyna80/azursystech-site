@@ -122,5 +122,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Repository-side lifecycle package includes the shared-context P1 correction, regression fixture, and control-plane CI enforcement. Fresh local Review, independent-clone Verification, and Drift reconciliation pass for the current candidate; exact remote revision, GitHub CI result, and Owner merge authorization remain external after the last repository commit. Deployment remains separately unauthorized."
+  "lifecycle_note": "The first shared-context P1 correction remains historical. A second P1 locally corrects protected-input workflow trigger coverage and extends the regression contract. The complete 10-file candidate has repository-side Review and Verification READY and fresh independent Drift ALIGNED. Exact final commit, remote equality, GitHub CI result, and Owner merge authorization remain external after the final repository commit. Deployment remains separately unauthorized."
 }

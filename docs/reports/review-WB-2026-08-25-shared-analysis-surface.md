@@ -6,34 +6,30 @@ READY
 
 ## Scope
 
-Fresh read-only review of the P1-corrected candidate, active-state contract, task
-semantics, control-plane integration, closeout boundary, context content, and
-deterministic validation surfaces. The earlier repository-side package review is
-historical evidence for the pre-correction candidate; this report covers the
-follow-up candidate.
+Fresh independent review of the complete second-P1 candidate, including the
+protected-path trigger correction and reconciled lifecycle evidence. Earlier
+repository-side review evidence for the prior candidate remains historical.
 
 ## Findings
 
-- The corrective delta removes the self-referencing remote-head field.
-- The P1 validator now detects `.env` and `.env.*` by basename while preserving
-  only the exact root `.env.vps.example` exception.
-- The regression fixture exercises nine blocked and six allowed paths against the
-  real validator in an isolated temporary Git repository.
-- The existing control-plane workflow now triggers on both shared-context scripts,
-  compiles them, and runs the regression fixture followed by the real validator.
-- Versioned state retains Work Block identity, branch, base, synchronization
-  provenance, scope, repository-side evidence, and Owner-control boundaries.
-- The active write-set and plan include the regression fixture and control-plane
-  workflow; task traceability remains valid at 7 requirements, 11 acceptance
-  criteria, and 11 tasks.
-- Mutable PR, remote-ref, CI, and Owner-merge snapshots are excluded from the
-  versioned shared context.
-- The approved lifecycle workflow remains the external source for exact-head and
-  Owner merge handoff semantics.
-- No runtime, product, deployment, data, secret, framework, hook, or unrelated
-  repository path is in scope.
+- Fresh GitHub Codex review identified a P1: the workflow executed the validator
+  but did not trigger for every validator-protected input, including nested
+  `.env*` paths.
+- The local correction adds root and nested environment patterns plus
+  `memory_bank/**`, `docs/project-context.md`, `.codex/worktrees/**`, and
+  `private_evidence/**` to both `push.paths` and `pull_request.paths`.
+- The existing shared-context regression test now reads both actual workflow
+  trigger lists, requires each protected pattern, and checks representative
+  positive and negative paths without network access or checkout mutation.
+- Independent review reproduced the original bypass, confirmed complete protected
+  input coverage, precise non-product triggering, and the self-enforcing
+  property: a workflow edit removing a required pattern still starts this
+  workflow and causes the trigger-contract test to fail.
+- No validator-rejectable path remains without a matching workflow trigger. No
+  product, runtime, deployment, data, secret, framework, hook, or unrelated path
+  is in scope.
 
-The follow-up candidate has repository-side Review READY status. Local workflow
-syntax and checks pass; this does not claim that GitHub has executed the workflow.
-Exact final revision, remote equality, CI, and Owner authorization remain external
-evidence and are not claims about the uncommitted working-tree candidate.
+The second P1 technical delta is independently APPROVED and has no technical
+blocker. The complete reconciled candidate is READY at repository scope. Exact
+final-SHA confirmation and GitHub CI remain external after the final repository
+commit.

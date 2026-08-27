@@ -2,15 +2,16 @@
 
 ## State
 
-REPOSITORY-SIDE FOLLOW-UP PACKAGE COMPLETE -- OWNER HANDOFF CONTRACT PREPARED
+REPOSITORY-SIDE CLOSEOUT COMPLETE -- PUBLICATION GATE READY
 
 - Branch: wb/2026-08-25-shared-analysis-surface
 - Base: 2fc0fbd6bd996681edfc4351a581f9543dba4fb0
 - Synchronization provenance: 1a019d2b80f775a07248499b666dc32767ed90be
-- Scope: approved shared-analysis surface plus the lifecycle-semantic corrective
-  delta, P1 regression fixture, and control-plane enforcement.
-- Repository-side assurance package: fresh Review, Verification, and Drift checks
-  passed for the current candidate content and approved scope.
+- Scope: approved shared-analysis surface plus the prior P1 correction and the
+  second P1 protected-input trigger correction, trigger-contract regression, and
+  reconciliation evidence.
+- Technical correction: independently reviewed APPROVE. Independent Verification
+  is READY and fresh independent Drift is ALIGNED for the complete candidate.
 
 The repository-side package intentionally does not contain a current PR status, a
 remote branch SHA, a CI snapshot, or the SHA of the commit containing this report.
@@ -40,8 +41,7 @@ and matching Review/Verification/Drift/closeout reports; `memory_bank/context.md
 
 ## Owner handoff boundary
 
-The repository-side closeout package is prepared. After the last repository commit,
-resolve the exact PR HEAD from the remote ref/API, verify GitHub CI for that SHA,
-and prepare the Owner-controlled merge handoff naming that exact revision. No
-publication, merge, deployment, secret, or production authority is granted by
-this report.
+The repository-side package is ready for a final local corrective commit. Only
+after that commit may the exact PR HEAD, GitHub CI for that SHA, and an
+Owner-controlled merge handoff be resolved externally. No publication, merge,
+deployment, secret, or production authority is granted by this report.

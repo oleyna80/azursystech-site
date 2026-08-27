@@ -8,8 +8,9 @@
 - Implementation scope is limited to the explicit shared-context boundary:
   ignore rules, project map/registry navigation, five shared context files, and
   the deterministic validator.
-- Review, Verification, Drift, and isolated clean-clone evidence are prepared for
-  the repository-side lifecycle candidate.
+- The original Review, Verification, Drift, and isolated clean-clone evidence is
+  historical for the repository-side lifecycle candidate that preceded the second
+  P1 correction.
 - Exact remote revision, GitHub CI, and Owner merge handoff are external evidence
   resolved after the last repository commit. Deployment remains separately unauthorized.
 
@@ -18,10 +19,13 @@
 - Added the P1 shared-context regression fixture and control-plane enforcement for
   both the fixture and the real validator.
 - Active write-set now includes `.github/workflows/control-plane-contracts.yml`.
-- Fresh Review and independent Verification remain required before commit; no
-  remote revision or CI result is asserted here.
-- Fresh Review, independent-clone Verification, and Drift reconciliation passed
-  for the current uncommitted candidate; external GitHub CI remains unverified.
+- A second P1 trigger bypass was reproduced and corrected locally: protected
+  validator inputs now trigger Control Plane Contracts on both supported events,
+  and the workflow contract is regression-protected.
+- Independent technical Review returned APPROVE. Independent full-candidate
+  Verification is reconciled READY and fresh independent Drift is ALIGNED. The
+  repository-side closeout package is ready for its final local corrective commit;
+  no future final SHA or CI result is asserted here.
 
 ## Unknown or unavailable
 

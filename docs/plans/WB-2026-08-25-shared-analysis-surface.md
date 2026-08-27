@@ -1,7 +1,7 @@
 ---
 artifact_type: work_block
 work_block_id: WB-2026-08-25-shared-analysis-surface
-status: repository-side-package-complete
+status: repository-side-closeout-complete
 revision: v1
 ---
 
@@ -41,6 +41,11 @@ coordination gates/active state.
    ignore rule.
 5. The shared-context regression fixture and validator run in the existing
    control-plane workflow so the P1 boundary cannot remain present-only.
+6. The control-plane workflow must also trigger when any validator-protected
+   input class changes: root or nested `.env*`, `memory_bank/**`,
+   `docs/project-context.md`, `.codex/worktrees/**`, or `private_evidence/**`.
+   The regression fixture reads both actual workflow trigger lists and fails if
+   their protected trigger contract is removed.
 
 ## Stage plan
 
@@ -66,8 +71,11 @@ coordination gates/active state.
 
 ## Current closeout
 
-Define, implementation, follow-up Review, independent-clone Verification, and
-Drift evidence are prepared for the repository-side lifecycle candidate. The
-package deliberately contains no current PR/CI snapshot or final remote SHA. The
-Owner-controlled publication and merge boundary remains in force; exact remote
-evidence is resolved externally after the last repository commit.
+The initial P1 assurance evidence is historical after a second P1 correction
+extended protected-input workflow trigger coverage and its regression contract.
+That technical delta received an independent APPROVE review. The full candidate
+now has repository-side Review and Verification READY plus fresh independent
+Drift ALIGNED. The final local corrective commit may proceed.
+The package deliberately contains no current PR/CI snapshot or final remote SHA.
+The Owner-controlled publication and merge boundary remains in force; exact
+remote evidence is resolved externally after the last repository commit.

@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -10,6 +12,7 @@ from pathlib import Path
 
 
 VALIDATOR = Path(__file__).with_name("validate-shared-context.py").resolve()
+WORKFLOW = VALIDATOR.parents[1] / ".github/workflows/control-plane-contracts.yml"
 REQUIRED = (
     "docs/project-context.md",
     "memory_bank/orchestrator-log.md",
@@ -17,6 +20,27 @@ REQUIRED = (
     "memory_bank/progress.md",
     "memory_bank/decisions.md",
 )
+REQUIRED_TRIGGER_PATTERNS = (
+    ".env",
+    ".env.*",
+    "**/.env",
+    "**/.env.*",
+    "memory_bank/**",
+    "docs/project-context.md",
+    ".codex/worktrees/**",
+    "private_evidence/**",
+)
+TRIGGER_CASES = {
+    ".env": True,
+    ".env.production": True,
+    "web/.env.production": True,
+    "nested/a/.env.local": True,
+    "memory_bank/private-notes.md": True,
+    "docs/project-context.md": True,
+    "private_evidence/file.txt": True,
+    ".codex/worktrees/foo/bar": True,
+    "ordinary-product-file": False,
+}
 
 
 def run(command: list[str], repo: Path, *, force: bool = False) -> None:
@@ -53,6 +77,53 @@ def create_fixture(repo: Path, path: str) -> None:
     run(["add", "-f", "--", path], repo)
 
 
+def workflow_paths(event: str) -> set[str]:
+    text = WORKFLOW.read_text(encoding="utf-8")
+    match = re.search(
+        rf"(?ms)^  {re.escape(event)}:\n.*?^    paths:\n"
+        rf"(?P<paths>(?:      - \"[^\"]+\"\n)+)",
+        text,
+    )
+    if not match:
+        raise AssertionError(f"could not read {event}.paths from {WORKFLOW}")
+    return {
+        json.loads(line.strip()[2:])
+        for line in match.group("paths").splitlines()
+    }
+
+
+def path_matches(pattern: str, path: str) -> bool:
+    if pattern == path:
+        return True
+    if pattern in {".env", ".env.*"}:
+        return path.startswith(".env.") if pattern == ".env.*" else False
+    if pattern == "**/.env":
+        return Path(path).name == ".env"
+    if pattern == "**/.env.*":
+        return Path(path).name.startswith(".env.")
+    if pattern.endswith("/**"):
+        prefix = pattern[:-3]
+        return path == prefix or path.startswith(f"{prefix}/")
+    return False
+
+
+def validate_workflow_trigger_contract() -> None:
+    event_patterns = {
+        event: workflow_paths(event) for event in ("push", "pull_request")
+    }
+    for event, patterns in event_patterns.items():
+        missing = sorted(set(REQUIRED_TRIGGER_PATTERNS) - patterns)
+        if missing:
+            raise AssertionError(f"{event}.paths missing protected triggers: {missing}")
+        for path, expected in TRIGGER_CASES.items():
+            actual = any(path_matches(pattern, path) for pattern in patterns)
+            if actual != expected:
+                raise AssertionError(
+                    f"{event}.paths trigger mismatch for {path}: "
+                    f"expected {expected}, got {actual}"
+                )
+
+
 def validate(path: str, expected_exit: int) -> None:
     with tempfile.TemporaryDirectory(prefix="shared-context-regression-") as directory:
         repo = Path(directory)
@@ -83,6 +154,8 @@ def validate(path: str, expected_exit: int) -> None:
 
 
 def main() -> int:
+    validate_workflow_trigger_contract()
+
     blocked = (
         ".env",
         ".env.local",
