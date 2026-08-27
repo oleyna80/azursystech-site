@@ -29,3 +29,17 @@ opens the implementation gate only after the active state is reconciled.
 
 This is a same-session Define Critic review. Independent Reviewer and Verifier
 assurance remains required after implementation.
+
+## Follow-on REQ-005 P1 Critic
+
+**Mode:** native read-only Codex subagent
+
+**Verdict:** SUPPLEMENT, adopted before implementation.
+
+The follow-on critic confirmed the correction is confined to the existing
+REQ-005 validator and regression scope. It required raw byte-oriented
+`git ls-files -z` pathname parsing, a forced `core.quotePath=true` fixture, the
+three reported non-ASCII protected paths, and control-character pathname cases.
+It also required lifecycle evidence to preserve historical assurance rather than
+relabel it as current. All requirements were adopted; no workflow, requirement,
+dependency, runtime, product, deployment, or GitHub mutation is needed.

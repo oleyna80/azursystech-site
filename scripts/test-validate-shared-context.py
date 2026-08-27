@@ -69,6 +69,7 @@ def create_fixture(repo: Path, path: str) -> None:
     (repo / ".gitignore").write_text(
         ".env*\n**/.env*\n", encoding="utf-8"
     )
+    run(["config", "core.quotePath", "true"], repo)
     ordinary = repo / "ordinary-file.txt"
     ordinary.write_text("DUMMY_VALUE=test\n", encoding="utf-8")
     fixture = repo / path
@@ -125,7 +126,7 @@ def validate_workflow_trigger_contract() -> None:
                 )
 
 
-def validate(path: str, expected_exit: int) -> None:
+def validate(path: str, expected_exit: int, expected_message: str | None = None) -> None:
     with tempfile.TemporaryDirectory(prefix="shared-context-regression-") as directory:
         repo = Path(directory)
         run(["init", "--quiet"], repo)
@@ -142,11 +143,8 @@ def validate(path: str, expected_exit: int) -> None:
                 f"{path}: expected exit {expected_exit}, got {result.returncode}\n"
                 f"stdout={result.stdout}\nstderr={result.stderr}"
             )
-        expected_message = (
-            f"environment-value path is tracked: {path}"
-            if expected_exit
-            else "shared-context: PASS"
-        )
+        if expected_message is None:
+            expected_message = "shared-context: PASS"
         if expected_message not in result.stdout:
             raise AssertionError(
                 f"{path}: expected message {expected_message!r}\n"
@@ -178,13 +176,24 @@ def main() -> int:
     )
 
     for path in blocked:
-        validate(path, 1)
+        validate(path, 1, f"environment-value path is tracked: {path}")
     for path in allowed:
         validate(path, 0)
+
+    protected = {
+        "private_evidence/секрет.txt": "private evidence path is tracked",
+        "memory_bank/notes-français.md": "non-allowlisted memory path is tracked",
+        ".codex/worktrees/копия.txt": "worktree path is tracked",
+        "private_evidence/line\nbreak.txt": "private evidence path is tracked",
+        "memory_bank/tab\tfile.md": "non-allowlisted memory path is tracked",
+    }
+    for path, message in protected.items():
+        validate(path, 1, f"{message}: {path}")
 
     print("shared-context regression: PASS")
     print(f"- blocked cases: {len(blocked)}")
     print(f"- allowed cases: {len(allowed)}")
+    print(f"- protected quoted-path cases: {len(protected)}")
     return 0
 
 

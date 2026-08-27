@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -23,7 +24,7 @@ MEMORY_ALLOWLIST = {
 SAFE_ENV_TEMPLATES = {".env.vps.example"}
 
 
-def git(repo: Path, *args: str) -> list[str]:
+def git_text(repo: Path, *args: str) -> list[str]:
     result = subprocess.run(
         ["git", *args],
         cwd=repo,
@@ -35,10 +36,21 @@ def git(repo: Path, *args: str) -> list[str]:
     return result.stdout.splitlines()
 
 
+def git_paths(repo: Path) -> list[str]:
+    result = subprocess.run(
+        ["git", "ls-files", "-z"],
+        cwd=repo,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    return [os.fsdecode(path) for path in result.stdout.split(b"\0") if path]
+
+
 def main() -> int:
     try:
-        repo = Path(git(Path.cwd(), "rev-parse", "--show-toplevel")[0]).resolve()
-        tracked = set(git(repo, "ls-files"))
+        repo = Path(git_text(Path.cwd(), "rev-parse", "--show-toplevel")[0]).resolve()
+        tracked = set(git_paths(repo))
     except (IndexError, subprocess.CalledProcessError) as error:
         print(f"shared-context: cannot read Git index: {error}", file=sys.stderr)
         return 2

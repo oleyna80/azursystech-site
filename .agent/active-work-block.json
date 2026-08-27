@@ -122,5 +122,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Earlier shared-context P1 assurance remains historical. A follow-on exact-head P1 correction adds the private_evidence root trigger to both workflow events and corrects the regression helper so foo/** does not imply foo. The complete corrective candidate has fresh local Review and Verification READY and Drift ALIGNED. Exact final commit, remote equality, GitHub CI result, and Owner merge authorization remain external after the final repository commit. Deployment remains separately unauthorized."
+  "lifecycle_note": "Earlier shared-context P1 assurance remains historical. A follow-on exact-head P1 correction consumes raw Git index pathnames with git ls-files -z, NUL splitting, and os.fsdecode so Git C-quoted output cannot bypass protected-prefix checks. Regressions force core.quotePath=true and cover non-ASCII plus newline and tab protected paths. The mandatory follow-on Critic SUPPLEMENT was adopted before implementation. Fresh local Review and Verification must be READY and Drift ALIGNED for the complete corrective candidate. Exact final commit, remote equality, GitHub CI result, and Owner merge authorization remain external after the final repository commit. Deployment remains separately unauthorized."
 }

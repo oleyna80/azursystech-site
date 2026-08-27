@@ -36,7 +36,9 @@ coordination gates/active state.
 2. .env.vps.example remains allowed as an existing non-secret template; all
    other value-bearing .env and .env.* paths are forbidden by validation.
 3. Git index checks are the source of truth for publication safety. Filesystem
-   presence alone is insufficient.
+   presence alone is insufficient. Index pathnames are consumed as raw
+   NUL-delimited records from `git ls-files -z`, never from Git's display-form
+   line output.
 4. Existing .codex/worktrees/ content remains in place and is protected by the
    ignore rule.
 5. The shared-context regression fixture and validator run in the existing
@@ -73,12 +75,13 @@ coordination gates/active state.
 
 ## Current closeout
 
-Earlier P1 assurance evidence is historical after a follow-on root-path
-correction found by a fresh exact-head Review. The correction adds the exact
-`private_evidence` trigger for both supported events and fixes the regression
-helper so `foo/**` cannot falsely cover `foo`. Fresh local Review, Verification,
-and Drift evidence cover the complete corrective candidate. The final local
-corrective commit may proceed.
+Earlier P1 assurance evidence is historical after a follow-on exact-head Review
+found Git C-quoted pathname bypasses. The correction changes the validator to
+consume `git ls-files -z` records, split only at NUL, and decode each pathname
+with `os.fsdecode`. The regression fixture forces `core.quotePath=true` and
+covers non-ASCII private-evidence, memory-bank, and worktree paths plus newline
+and tab names. Fresh local Review, Verification, and Drift evidence cover the
+complete corrective candidate. The final local corrective commit may proceed.
 The package deliberately contains no current PR/CI snapshot or final remote SHA.
 The Owner-controlled publication and merge boundary remains in force; exact
 remote evidence is resolved externally after the last repository commit.
