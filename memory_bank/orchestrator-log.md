@@ -209,3 +209,4 @@
 | 2026-08-05 | push-approval | push: APPROVED origin main - Owner requested merge of feat/web-development into main | Owner |
 | 2026-08-05 | push-approval | push: APPROVED origin main - Owner requested merge of feat/showcase-links-and-immobilier-fix into main | Owner |
 | 2026-08-27 | WB-2026-08-25-shared-analysis-surface | Stage 0.5: follow-on Critic SUPPLEMENT adopted — parse raw NUL-delimited Git pathnames, force `core.quotePath`, and cover non-ASCII plus control-character protected paths. No GitHub mutation, push, merge, or deployment. | Control Tower |
+| 2026-08-27 | WB-2026-08-25-shared-analysis-surface | Stage 0.5: memory-reconciliation Critic SUPPLEMENT adopted — replace stale root-trigger P1 text in `context.md` and `progress.md` with the NUL-path correction and current local assurance only; no exact final SHA, remote, CI, push, merge, or deployment claim. | Control Tower |

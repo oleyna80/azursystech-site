@@ -19,13 +19,19 @@
 - Added the P1 shared-context regression fixture and control-plane enforcement for
   both the fixture and the real validator.
 - Active write-set includes `.github/workflows/control-plane-contracts.yml`.
-- A follow-on exact-head P1 reproduced the `private_evidence/**` false-positive
-  match for the exact `private_evidence` root. The correction adds that root to
-  both events and makes `foo/**` descendant-only in the regression helper.
-- Independent technical Review returned APPROVE. Independent full-candidate
-  Verification is reconciled READY and fresh independent Drift is ALIGNED. The
-  repository-side closeout package is ready for its final local corrective commit;
-  no future final SHA or CI result is asserted here.
+- The earlier follow-on P1 that added the exact `private_evidence` root trigger
+  and made `foo/**` descendant-only is historical.
+- The current REQ-005 P1 corrects Git pathname handling: the validator reads
+  `git ls-files -z` bytes, splits only on NUL, and applies `os.fsdecode` before
+  protected-prefix checks. This prevents Git C-quoted output from bypassing
+  checks for non-ASCII paths.
+- Deterministic regressions force `core.quotePath=true` and reject protected
+  non-ASCII private-evidence, memory-bank, and worktree paths, plus literal
+  newline and tab pathnames, with category-specific diagnostics.
+- Fresh repository-side Review and Verification are READY and Drift is ALIGNED
+  for the NUL-path correction. This shared-memory reconciliation asserts no
+  exact final SHA, remote equality, or GitHub CI result; those remain external
+  observations after any separately authorized publication.
 
 ## Unknown or unavailable
 
