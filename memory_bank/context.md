@@ -10,9 +10,9 @@
 - Define Quality: READY
 - Critic: APPROVE
 - Synchronization: complete
-- Second P1 trigger correction: locally corrected and independently technically
-  approved; full-candidate Verification is READY and fresh independent Drift is
-  ALIGNED
+- Follow-on exact-head P1 correction: `private_evidence` root trigger coverage
+  and strict `/**` regression semantics are locally corrected; full-candidate
+  Review and Verification are READY and Drift is ALIGNED.
 - Source Write Gate: READY for the explicit Work Block write-set
 
 ## Boundaries
@@ -22,10 +22,10 @@ This Work Block uses an isolated worktree. The frozen
 WB-2026-08-25-worktree-ssot-binding was not modified. Publication and merge remain
 Owner-controlled; deployment, database mutation, and secret/config change are
 separately unauthorized. The first shared-context P1 correction is covered by a
-regression fixture and the existing control-plane workflow. A second P1 adds
-protected-input workflow trigger coverage and trigger-contract regression
-protection. Independent Verification completed successfully for the complete
-uncommitted candidate and fresh independent Drift is ALIGNED. The repository-side
+  regression fixture and the existing control-plane workflow. A follow-on P1 adds
+  the exact private-evidence root trigger and corrects trigger-pattern semantics.
+  Fresh local Review and Verification cover the complete uncommitted candidate
+  and Drift is ALIGNED. The repository-side
 package is ready for its final local corrective commit; exact final revision and
 GitHub CI result remain external handoff evidence after that commit.
 

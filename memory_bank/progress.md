@@ -18,10 +18,10 @@
 
 - Added the P1 shared-context regression fixture and control-plane enforcement for
   both the fixture and the real validator.
-- Active write-set now includes `.github/workflows/control-plane-contracts.yml`.
-- A second P1 trigger bypass was reproduced and corrected locally: protected
-  validator inputs now trigger Control Plane Contracts on both supported events,
-  and the workflow contract is regression-protected.
+- Active write-set includes `.github/workflows/control-plane-contracts.yml`.
+- A follow-on exact-head P1 reproduced the `private_evidence/**` false-positive
+  match for the exact `private_evidence` root. The correction adds that root to
+  both events and makes `foo/**` descendant-only in the regression helper.
 - Independent technical Review returned APPROVE. Independent full-candidate
   Verification is reconciled READY and fresh independent Drift is ALIGNED. The
   repository-side closeout package is ready for its final local corrective commit;

@@ -122,5 +122,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "The first shared-context P1 correction remains historical. A second P1 locally corrects protected-input workflow trigger coverage and extends the regression contract. The complete 10-file candidate has repository-side Review and Verification READY and fresh independent Drift ALIGNED. Exact final commit, remote equality, GitHub CI result, and Owner merge authorization remain external after the final repository commit. Deployment remains separately unauthorized."
+  "lifecycle_note": "Earlier shared-context P1 assurance remains historical. A follow-on exact-head P1 correction adds the private_evidence root trigger to both workflow events and corrects the regression helper so foo/** does not imply foo. The complete corrective candidate has fresh local Review and Verification READY and Drift ALIGNED. Exact final commit, remote equality, GitHub CI result, and Owner merge authorization remain external after the final repository commit. Deployment remains separately unauthorized."
 }

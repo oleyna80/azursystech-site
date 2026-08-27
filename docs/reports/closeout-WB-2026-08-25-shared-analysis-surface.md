@@ -8,10 +8,10 @@ REPOSITORY-SIDE CLOSEOUT COMPLETE -- PUBLICATION GATE READY
 - Base: 2fc0fbd6bd996681edfc4351a581f9543dba4fb0
 - Synchronization provenance: 1a019d2b80f775a07248499b666dc32767ed90be
 - Scope: approved shared-analysis surface plus the prior P1 correction and the
-  second P1 protected-input trigger correction, trigger-contract regression, and
-  reconciliation evidence.
-- Technical correction: independently reviewed APPROVE. Independent Verification
-  is READY and fresh independent Drift is ALIGNED for the complete candidate.
+  protected-input corrections, exact private-evidence root trigger, strict
+  trigger-contract semantics, and reconciliation evidence.
+- Technical correction: fresh local Review and Verification are READY; fresh
+  local Drift is ALIGNED for the complete candidate.
 
 The repository-side package intentionally does not contain a current PR status, a
 remote branch SHA, a CI snapshot, or the SHA of the commit containing this report.

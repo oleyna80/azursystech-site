@@ -43,7 +43,9 @@ coordination gates/active state.
    control-plane workflow so the P1 boundary cannot remain present-only.
 6. The control-plane workflow must also trigger when any validator-protected
    input class changes: root or nested `.env*`, `memory_bank/**`,
-   `docs/project-context.md`, `.codex/worktrees/**`, or `private_evidence/**`.
+   `docs/project-context.md`, `.codex/worktrees/**`, or the exact
+   `private_evidence` root and its descendants. The regression helper models
+   `foo/**` as descendant-only, so an exact root requires its own pattern.
    The regression fixture reads both actual workflow trigger lists and fails if
    their protected trigger contract is removed.
 
@@ -71,11 +73,12 @@ coordination gates/active state.
 
 ## Current closeout
 
-The initial P1 assurance evidence is historical after a second P1 correction
-extended protected-input workflow trigger coverage and its regression contract.
-That technical delta received an independent APPROVE review. The full candidate
-now has repository-side Review and Verification READY plus fresh independent
-Drift ALIGNED. The final local corrective commit may proceed.
+Earlier P1 assurance evidence is historical after a follow-on root-path
+correction found by a fresh exact-head Review. The correction adds the exact
+`private_evidence` trigger for both supported events and fixes the regression
+helper so `foo/**` cannot falsely cover `foo`. Fresh local Review, Verification,
+and Drift evidence cover the complete corrective candidate. The final local
+corrective commit may proceed.
 The package deliberately contains no current PR/CI snapshot or final remote SHA.
 The Owner-controlled publication and merge boundary remains in force; exact
 remote evidence is resolved externally after the last repository commit.

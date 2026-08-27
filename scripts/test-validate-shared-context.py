@@ -28,6 +28,7 @@ REQUIRED_TRIGGER_PATTERNS = (
     "memory_bank/**",
     "docs/project-context.md",
     ".codex/worktrees/**",
+    "private_evidence",
     "private_evidence/**",
 )
 TRIGGER_CASES = {
@@ -37,6 +38,7 @@ TRIGGER_CASES = {
     "nested/a/.env.local": True,
     "memory_bank/private-notes.md": True,
     "docs/project-context.md": True,
+    "private_evidence": True,
     "private_evidence/file.txt": True,
     ".codex/worktrees/foo/bar": True,
     "ordinary-product-file": False,
@@ -102,8 +104,7 @@ def path_matches(pattern: str, path: str) -> bool:
     if pattern == "**/.env.*":
         return Path(path).name.startswith(".env.")
     if pattern.endswith("/**"):
-        prefix = pattern[:-3]
-        return path == prefix or path.startswith(f"{prefix}/")
+        return path.startswith(pattern[:-2])
     return False
 
 

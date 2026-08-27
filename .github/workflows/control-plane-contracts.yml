@@ -24,6 +24,7 @@ on:
       - "memory_bank/**"
       - "docs/project-context.md"
       - ".codex/worktrees/**"
+      - "private_evidence"
       - "private_evidence/**"
       - ".github/workflows/control-plane-contracts.yml"
   pull_request:
@@ -47,6 +48,7 @@ on:
       - "memory_bank/**"
       - "docs/project-context.md"
       - ".codex/worktrees/**"
+      - "private_evidence"
       - "private_evidence/**"
       - ".github/workflows/control-plane-contracts.yml"
   workflow_dispatch:
