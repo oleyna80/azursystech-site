@@ -13,6 +13,16 @@
 - Exact remote revision, GitHub CI, and Owner merge handoff are external evidence
   resolved after the last repository commit. Deployment remains separately unauthorized.
 
+## 2026-08-27
+
+- Added the P1 shared-context regression fixture and control-plane enforcement for
+  both the fixture and the real validator.
+- Active write-set now includes `.github/workflows/control-plane-contracts.yml`.
+- Fresh Review and independent Verification remain required before commit; no
+  remote revision or CI result is asserted here.
+- Fresh Review, independent-clone Verification, and Drift reconciliation passed
+  for the current uncommitted candidate; external GitHub CI remains unverified.
+
 ## Unknown or unavailable
 
 Broader business priority outside the committed repository evidence is not

@@ -6,11 +6,11 @@
 - Subject branch: wb/2026-08-25-shared-analysis-surface
 - Base: 2fc0fbd6bd996681edfc4351a581f9543dba4fb0
 - Synchronization provenance: 1a019d2b80f775a07248499b666dc32767ed90be
-- Stage: Repository-side lifecycle package
+- Stage: Repository-side P1 correction and assurance
 - Define Quality: READY
 - Critic: APPROVE
 - Synchronization: complete
-- Repository-side assurance package: prepared
+- Repository-side assurance package: prepared for current P1 candidate
 - Source Write Gate: READY for the explicit Work Block write-set
 
 ## Boundaries
@@ -19,7 +19,9 @@ The original checkout had unrelated dirty and untracked paths and was preserved.
 This Work Block uses an isolated worktree. The frozen
 WB-2026-08-25-worktree-ssot-binding was not modified. Publication and merge remain
 Owner-controlled; deployment, database mutation, and secret/config change are
-separately unauthorized. Exact remote revision and CI are external handoff evidence.
+separately unauthorized. The shared-context P1 correction is covered by a
+regression fixture and the existing control-plane workflow. Exact remote revision
+and CI result remain external handoff evidence after the final repository commit.
 
 ## Source of truth
 

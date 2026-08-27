@@ -24,8 +24,10 @@ docs/plans/WB-2026-08-25-shared-analysis-surface.md,
 docs/tasklist/WB-2026-08-25-shared-analysis-surface.tasklist.md,
 the matching Define/assurance reports, .gitignore, PROJECT_MAP.md,
 FILE_REGISTRY.yml, docs/project-context.md, the four allowlisted
-memory_bank/*.md files, scripts/validate-shared-context.py, and the new
-Work Block coordination gates/active state.
+memory_bank/*.md files, scripts/validate-shared-context.py,
+scripts/test-validate-shared-context.py,
+.github/workflows/control-plane-contracts.yml, and the new Work Block
+coordination gates/active state.
 
 ## Implementation decisions
 
@@ -37,6 +39,8 @@ Work Block coordination gates/active state.
    presence alone is insufficient.
 4. Existing .codex/worktrees/ content remains in place and is protected by the
    ignore rule.
+5. The shared-context regression fixture and validator run in the existing
+   control-plane workflow so the P1 boundary cannot remain present-only.
 
 ## Stage plan
 
@@ -62,8 +66,8 @@ Work Block coordination gates/active state.
 
 ## Current closeout
 
-Define, implementation, Review, Verification, and Drift evidence are prepared for
-the repository-side lifecycle candidate. The package deliberately contains no
-current PR/CI snapshot or final remote SHA. The Owner-controlled publication and
-merge boundary remains in force; exact remote evidence is resolved externally
-after the last repository commit.
+Define, implementation, follow-up Review, independent-clone Verification, and
+Drift evidence are prepared for the repository-side lifecycle candidate. The
+package deliberately contains no current PR/CI snapshot or final remote SHA. The
+Owner-controlled publication and merge boundary remains in force; exact remote
+evidence is resolved externally after the last repository commit.

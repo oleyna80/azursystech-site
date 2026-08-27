@@ -13,3 +13,5 @@
   exception.
 - Keep source zones such as 00_strategy/ through 08_showcase/ local unless
   individual files are already intentionally tracked.
+- Run the shared-context regression fixture and validator in the existing
+  control-plane workflow to enforce the P1 environment-file boundary.

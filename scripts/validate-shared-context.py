@@ -57,7 +57,8 @@ def main() -> int:
             errors.append(f"worktree path is tracked: {path}")
         if path == "private_evidence" or path.startswith("private_evidence/"):
             errors.append(f"private evidence path is tracked: {path}")
-        if path == ".env" or path.startswith(".env."):
+        basename = Path(path).name
+        if basename == ".env" or basename.startswith(".env."):
             if path not in SAFE_ENV_TEMPLATES:
                 errors.append(f"environment-value path is tracked: {path}")
 
