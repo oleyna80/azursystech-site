@@ -15,6 +15,17 @@ on:
       - "scripts/validate-installation-profile.py"
       - "scripts/test-github-capability-control-plane.py"
       - "scripts/test-github-capability-github-cli-hard-stops.py"
+      - "scripts/validate-shared-context.py"
+      - "scripts/test-validate-shared-context.py"
+      - ".env"
+      - ".env.*"
+      - "**/.env"
+      - "**/.env.*"
+      - "memory_bank/**"
+      - "docs/project-context.md"
+      - ".codex/worktrees/**"
+      - "private_evidence"
+      - "private_evidence/**"
       - ".github/workflows/control-plane-contracts.yml"
   pull_request:
     paths:
@@ -28,6 +39,17 @@ on:
       - "scripts/validate-installation-profile.py"
       - "scripts/test-github-capability-control-plane.py"
       - "scripts/test-github-capability-github-cli-hard-stops.py"
+      - "scripts/validate-shared-context.py"
+      - "scripts/test-validate-shared-context.py"
+      - ".env"
+      - ".env.*"
+      - "**/.env"
+      - "**/.env.*"
+      - "memory_bank/**"
+      - "docs/project-context.md"
+      - ".codex/worktrees/**"
+      - "private_evidence"
+      - "private_evidence/**"
       - ".github/workflows/control-plane-contracts.yml"
   workflow_dispatch:
 
@@ -60,7 +82,9 @@ jobs:
             scripts/validate-evaluation.py \
             scripts/validate-installation-profile.py \
             scripts/test-github-capability-control-plane.py \
-            scripts/test-github-capability-github-cli-hard-stops.py
+            scripts/test-github-capability-github-cli-hard-stops.py \
+            scripts/validate-shared-context.py \
+            scripts/test-validate-shared-context.py
 
       - name: Validate schema v3 blocked-default contract only
         run: |
@@ -78,6 +102,9 @@ jobs:
 
       - name: Run GitHub CLI/API Hard Stop fixtures
         run: python scripts/test-github-capability-github-cli-hard-stops.py
+
+      - name: Run shared-context boundary regression and validation
+        run: python scripts/test-validate-shared-context.py && python scripts/validate-shared-context.py
 
       - name: Run native Codex apply-patch payload fixture
         run: bash .codex/hooks/tests/apply-patch-fixtures.sh

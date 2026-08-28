@@ -1,3 +1,4 @@
+| 2026-08-25 | WB-2026-08-25-shared-analysis-surface | Define READY; implementation isolated on the subject branch; original dirty checkout preserved; no publication action authorized | Orchestrator |
 | 2026-07-13 | push-approval | push: APPROVED origin main - fixture | Control Tower |
 | 2026-07-23 | WB-2026-07-23-immobilier-hero-video-restore | amendment: write-set + showcase/components/immobilier/home.module.css - Critic Report literal write-set synchronization required by enforced gate before final approved CSS correction | Control Tower |
 | 2026-07-23 | WB-2026-07-23-immobilier-hero-video-restore | amendment: write-set + docs/tasklist/WB-2026-07-23-immobilier-hero-video-restore.tasklist.md - mandatory Stage 3 live-status synchronization after implementation and runtime-verification result | Control Tower |
@@ -207,3 +208,5 @@
 | 2026-08-05 | push-approval | push: APPROVED origin main - Owner requested merge of sync/agentic-sdlc-framework into main | Owner |
 | 2026-08-05 | push-approval | push: APPROVED origin main - Owner requested merge of feat/web-development into main | Owner |
 | 2026-08-05 | push-approval | push: APPROVED origin main - Owner requested merge of feat/showcase-links-and-immobilier-fix into main | Owner |
+| 2026-08-27 | WB-2026-08-25-shared-analysis-surface | Stage 0.5: follow-on Critic SUPPLEMENT adopted — parse raw NUL-delimited Git pathnames, force `core.quotePath`, and cover non-ASCII plus control-character protected paths. No GitHub mutation, push, merge, or deployment. | Control Tower |
+| 2026-08-27 | WB-2026-08-25-shared-analysis-surface | Stage 0.5: memory-reconciliation Critic SUPPLEMENT adopted — replace stale root-trigger P1 text in `context.md` and `progress.md` with the NUL-path correction and current local assurance only; no exact final SHA, remote, CI, push, merge, or deployment claim. | Control Tower |

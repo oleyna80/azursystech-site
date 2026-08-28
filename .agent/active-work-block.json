@@ -1,20 +1,23 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-2026-08-25-automatiser-demandes-clients-guide",
+  "work_block_id": "WB-2026-08-25-shared-analysis-surface",
   "governance_profile": "Managed",
   "specification": {
-    "path": "docs/specs/WB-2026-08-25-automatiser-demandes-clients-guide.md",
+    "path": "docs/specs/WB-2026-08-25-shared-analysis-surface.md",
     "revision": "v1"
   },
-  "subject_branch": "feat/automatiser-demandes-clients-guide",
-  "base_commit": "5d3f3115d14fa715c7e06839aac092da5e4a8819",
+  "subject_branch": "wb/2026-08-25-shared-analysis-surface",
+  "base_commit": "2fc0fbd6bd996681edfc4351a581f9543dba4fb0",
+  "pre_sync_base_commit": "9d2b23bfaca4a5af63030f77cc2d7c7559c8ec18",
+  "synchronization_main_commit": "2fc0fbd6bd996681edfc4351a581f9543dba4fb0",
+  "synchronization_merge_commit": "1a019d2b80f775a07248499b666dc32767ed90be",
   "define_quality": {
     "required": true,
     "status": "READY",
-    "requirements_review": "docs/reports/requirements-quality-WB-2026-08-25-automatiser-demandes-clients-guide.md",
-    "traceability": "docs/reports/traceability-WB-2026-08-25-automatiser-demandes-clients-guide.md",
-    "consistency_analysis": "docs/reports/consistency-WB-2026-08-25-automatiser-demandes-clients-guide.md"
+    "requirements_review": "docs/reports/requirements-quality-WB-2026-08-25-shared-analysis-surface.md",
+    "traceability": "docs/reports/traceability-WB-2026-08-25-shared-analysis-surface.md",
+    "consistency_analysis": "docs/reports/consistency-WB-2026-08-25-shared-analysis-surface.md"
   },
   "write_gate": {
     "status": "READY",
@@ -24,8 +27,8 @@
     "required": true,
     "status": "READY",
     "verdict": "APPROVE",
-    "report": "docs/reports/critic-WB-2026-08-25-automatiser-demandes-clients-guide.md",
-    "isolation": "same-session-degraded",
+    "report": "docs/reports/critic-WB-2026-08-25-shared-analysis-surface.md",
+    "isolation": "same-session",
     "skip_reason": ""
   },
   "assurance": {
@@ -33,16 +36,16 @@
       "required": true,
       "status": "READY",
       "verdict": "READY",
-      "report": "docs/reports/review-WB-2026-08-25-automatiser-demandes-clients-guide.md",
-      "isolation": "same-session-degraded",
+      "report": "docs/reports/review-WB-2026-08-25-shared-analysis-surface.md",
+      "isolation": "same-session",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
       "status": "READY",
       "verdict": "READY",
-      "report": "docs/reports/verification-WB-2026-08-25-automatiser-demandes-clients-guide.md",
-      "isolation": "same-session-degraded",
+      "report": "docs/reports/verification-WB-2026-08-25-shared-analysis-surface.md",
+      "isolation": "same-session",
       "skip_reason": ""
     },
     "evaluation": {
@@ -60,8 +63,8 @@
       "required": true,
       "status": "READY",
       "verdict": "ALIGNED",
-      "report": "docs/reports/drift-WB-2026-08-25-automatiser-demandes-clients-guide.md",
-      "isolation": "same-session-degraded",
+      "report": "docs/reports/drift-WB-2026-08-25-shared-analysis-surface.md",
+      "isolation": "same-session",
       "skip_reason": ""
     }
   },
@@ -71,50 +74,43 @@
     "admission_records": []
   },
   "write_set": [
-    "web/src/app/[locale]/guides/automatiser-demandes-clients/_guide-data.ts",
-    "web/src/app/[locale]/guides/automatiser-demandes-clients/page.tsx",
-    "web/src/app/[locale]/guides/automatiser-demandes-clients/page.test.ts",
-    "web/src/app/[locale]/ai-automation/_ai-automation-data.ts",
-    "web/src/app/[locale]/ai-automation/page.tsx",
-    "web/src/app/[locale]/ai-automation/page.test.ts",
-    "web/src/app/[locale]/creation-site-internet-nice/_creation-site-data.ts",
-    "web/src/app/[locale]/creation-site-internet-nice/page.tsx",
-    "web/src/app/[locale]/creation-site-internet-nice/page.test.ts",
-    "web/src/app/sitemap.ts",
-    "web/src/app/sitemap.test.ts",
-    "docs/specs/WB-2026-08-25-automatiser-demandes-clients-guide.md",
-    "docs/plans/WB-2026-08-25-automatiser-demandes-clients-guide.md",
-    "docs/plans/WB-2026-08-25-automatiser-demandes-clients-guide-design-brief.md",
-    "docs/tasklist/WB-2026-08-25-automatiser-demandes-clients-guide.tasklist.md",
-    "docs/reports/requirements-quality-WB-2026-08-25-automatiser-demandes-clients-guide.md",
-    "docs/reports/traceability-WB-2026-08-25-automatiser-demandes-clients-guide.md",
-    "docs/reports/consistency-WB-2026-08-25-automatiser-demandes-clients-guide.md",
-    "docs/reports/critic-WB-2026-08-25-automatiser-demandes-clients-guide.md",
-    "docs/reports/review-WB-2026-08-25-automatiser-demandes-clients-guide.md",
-    "docs/reports/verification-WB-2026-08-25-automatiser-demandes-clients-guide.md",
-    "docs/reports/drift-WB-2026-08-25-automatiser-demandes-clients-guide.md",
-    "docs/reports/closeout-WB-2026-08-25-automatiser-demandes-clients-guide.md",
+    "docs/specs/WB-2026-08-25-shared-analysis-surface.md",
+    "docs/plans/WB-2026-08-25-shared-analysis-surface.md",
+    "docs/tasklist/WB-2026-08-25-shared-analysis-surface.tasklist.md",
+    "docs/reports/requirements-quality-WB-2026-08-25-shared-analysis-surface.md",
+    "docs/reports/traceability-WB-2026-08-25-shared-analysis-surface.md",
+    "docs/reports/consistency-WB-2026-08-25-shared-analysis-surface.md",
+    "docs/reports/critic-WB-2026-08-25-shared-analysis-surface.md",
+    "docs/reports/review-WB-2026-08-25-shared-analysis-surface.md",
+    "docs/reports/verification-WB-2026-08-25-shared-analysis-surface.md",
+    "docs/reports/drift-WB-2026-08-25-shared-analysis-surface.md",
+    "docs/reports/closeout-WB-2026-08-25-shared-analysis-surface.md",
+    ".gitignore",
+    "PROJECT_MAP.md",
+    "FILE_REGISTRY.yml",
+    "docs/project-context.md",
+    "memory_bank/orchestrator-log.md",
+    "memory_bank/context.md",
+    "memory_bank/progress.md",
+    "memory_bank/decisions.md",
+    "scripts/validate-shared-context.py",
+    "scripts/test-validate-shared-context.py",
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
     ".agent/verification-gate.md",
     ".codex/write-gate.md",
-    ".agent/workflows/owner-controlled-github-flow.md"
+    ".agent/workflows/owner-controlled-github-flow.md",
+    ".github/workflows/control-plane-contracts.yml"
   ],
   "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
     ".agent/verification-gate.md",
     ".codex/write-gate.md",
-    ".agent/active-work-block.default.json",
-    ".claude/hooks/work_block_gate.py",
-    ".codex/hooks/pre_tool_use_policy.py",
-    ".codex/scripts/lifecycle.py",
-    "scripts/test-github-capability-control-plane.py",
-    "docs/plans/**",
-    "docs/specs/**",
-    "docs/tasklist/**",
+    "docs/plans/WB-2026-08-25-shared-analysis-surface.md",
+    "docs/specs/WB-2026-08-25-shared-analysis-surface.md",
+    "docs/tasklist/WB-2026-08-25-shared-analysis-surface.tasklist.md",
     "docs/reports/**",
-    "docs/architecture/drafts/**",
     "memory_bank/**"
   ],
   "external_hard_stops": [
@@ -126,5 +122,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Stage 0 Define and Stage 1 Execute are complete for SEO-003. Original Work Block base is 5d3f3115d14fa715c7e06839aac092da5e4a8819. Synchronization base f90cc8c6981038190a8a67ba5c58c93cdc308f11 and merge commit 76cd3271785bc4493111ea4bd5fe42a25e876dc2 are lifecycle/evidence context only. Review is READY/READY, Verification is READY/READY, Drift is READY/ALIGNED, and optional Evaluation is SKIPPED with reason. The source Write Gate remains READY only for the explicitly authorized local governance/evidence commit; Stage 3 remains limited to the Owner-controlled publication handoff for the exact current branch descendant. Push, merge, deployment, and production authority remain excluded."
+  "lifecycle_note": "Earlier shared-context P1 assurance remains historical. A follow-on exact-head P1 correction consumes raw Git index pathnames with git ls-files -z, NUL splitting, and os.fsdecode so Git C-quoted output cannot bypass protected-prefix checks. Regressions force core.quotePath=true and cover non-ASCII plus newline and tab protected paths. The mandatory follow-on Critic SUPPLEMENT was adopted before implementation. Fresh local Review and Verification must be READY and Drift ALIGNED for the complete corrective candidate. Exact final commit, remote equality, GitHub CI result, and Owner merge authorization remain external after the final repository commit. Deployment remains separately unauthorized."
 }
