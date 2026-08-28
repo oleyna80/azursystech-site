@@ -19,7 +19,10 @@ Owner-controlled remote-branch and worktree cleanup.
 ## Requirements
 
 - REQ-001: The active Work Block SSOT, registry, Project Map, gates, and shared
-  operational memory shall identify this Work Block as the sole active local work.
+  operational memory shall identify this Work Block as the sole active local work;
+  release-state enforcement shall fail closed if the operational active JSON identity
+  differs from the canonical active plan projection, or if its declared
+  specification path is missing or outside the specification surface.
 - REQ-002: The completed shared-context Work Block shall have truthful terminal
   lifecycle markers and one canonical repository-side closeout without mutable
   hosting-provider claims.
@@ -40,7 +43,8 @@ Owner-controlled remote-branch and worktree cleanup.
 ## Acceptance Criteria
 
 - AC-001 [req=REQ-001]: Exactly one current active Work Block is represented by
-  the active JSON, registry, and Project Map.
+  the active JSON, registry, and Project Map, with deterministic rejection of
+  missing, malformed, stale, or mismatched operational active state.
 - AC-002 [req=REQ-002]: The completed PR20-era Work Block meets terminal
   lifecycle parsing and has a canonical approved closeout.
 - AC-003 [req=REQ-003]: `python3 scripts/validate-release-state.py` and its

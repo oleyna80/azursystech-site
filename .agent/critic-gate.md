@@ -10,4 +10,6 @@
 
 The Critic required a complete release-state projection, canonical historical
 closeout, regression fixture, workflow, and non-ancestry-only cleanup classes.
-Those supplements are in the approved write-set. No remote mutation is granted.
+Its follow-on P1 supplement requires operational JSON identity/path validation,
+disposable mismatch fixtures, and fresh local assurance. Those supplements are
+in the approved write-set. No remote mutation is granted.

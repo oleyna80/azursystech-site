@@ -41,6 +41,13 @@
   canonical closeout, machine registry, project map, deterministic validator
   regression, and CI contract. Branch/worktree classifications are evidence-only
   recommendations; no cleanup or remote action is authorized.
+- Follow-on P1 correction: release-state validation now cross-checks the active
+  operational JSON identity against the canonical registry/Project Map active
+  plan, validates its declared specification path, and rejects missing,
+  malformed, stale, or divergent state through disposable real-validator fixtures.
+- Fresh repository-side Review and Verification are READY and Drift is ALIGNED
+  for this correction; no exact final SHA, remote equality, or GitHub CI claim is
+  recorded here.
 
 ## Unknown or unavailable
 

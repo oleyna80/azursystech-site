@@ -2,23 +2,20 @@
 
 ## Current Work Block
 
-- ID: WB-2026-08-25-shared-analysis-surface
-- Subject branch: wb/2026-08-25-shared-analysis-surface
-- Base: 2fc0fbd6bd996681edfc4351a581f9543dba4fb0
-- Synchronization provenance: 1a019d2b80f775a07248499b666dc32767ed90be
-- Stage: Repository-side shared-memory reconciliation for the current P1
+- ID: WB-2026-08-28-repository-lifecycle-normalization
+- Subject branch: wb/2026-08-28-repository-lifecycle-normalization
+- Base: 96dbd44102785005bfd23b0f99192f5bfeb17e68
+- Stage: Repository lifecycle SSOT normalization and operational active-record correction
 - Define Quality: READY
-- Critic: Define APPROVE; follow-on P1 SUPPLEMENT adopted
-- Synchronization: complete
-- Current REQ-005 P1 correction: the validator consumes original Git index
-  pathnames through `git ls-files -z`, byte-NUL splitting, and `os.fsdecode`, so
-  Git C-quoted display output cannot bypass protected-prefix checks. Regression
-  fixtures force `core.quotePath=true` and reject non-ASCII protected paths plus
-  newline and tab pathnames with category diagnostics. The earlier
-  `private_evidence` root-trigger and `/**` semantics correction is historical.
-- Assurance for the NUL-path correction is repository-side Review READY,
-  Verification READY, and Drift ALIGNED. This shared record asserts no exact
-  final SHA, remote equality, or GitHub CI result.
+- Critic: SUPPLEMENT adopted for the operational active-record P1
+- Current correction: the release-state validator resolves the canonical active
+  plan from registry/Project Map, cross-checks its Work Block ID against the
+  operational JSON, validates the declared specification path, and fails closed
+  for missing, malformed, stale, or mismatched operational state. Disposable
+  fixtures cover matching and divergent projections.
+- Assurance is repository-side Review READY, Verification READY, and Drift
+  ALIGNED. This shared record asserts no exact final SHA, remote equality, or
+  GitHub CI result.
 - Source Write Gate: READY for the explicit Work Block write-set
 
 ## Boundaries

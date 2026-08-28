@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path, PurePosixPath
 import re
 import sys
@@ -283,6 +284,57 @@ def validate_active_work_block(root: Path, relative: str) -> dict[str, Any]:
             f"active Work Block requires one of {sorted(ACTIVE_STATUSES)}, found {status!r}"
         )
     return frontmatter
+
+
+def load_operational_active_work_block(root: Path) -> dict[str, Any]:
+    path = root / ".agent" / "active-work-block.json"
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise ReleaseStateError("operational active Work Block is missing") from exc
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ReleaseStateError(f"operational active Work Block is malformed: {exc}") from exc
+    if not isinstance(value, dict):
+        raise ReleaseStateError("operational active Work Block must be a JSON object")
+    return value
+
+
+def validate_operational_active_work_block(
+    root: Path, active: str | None, active_frontmatter: dict[str, Any] | None
+) -> None:
+    """Cross-check the operational gate record against canonical release state."""
+    operational = load_operational_active_work_block(root)
+    work_block_id = operational.get("work_block_id")
+    specification = operational.get("specification")
+
+    if active is None:
+        operational_path = (
+            specification.get("path") if isinstance(specification, dict) else specification
+        )
+        if work_block_id not in {"", None} or operational_path not in {"", None}:
+            raise ReleaseStateError(
+                "operational active Work Block must be inactive when release state has no active Work Block"
+            )
+        return
+
+    if not isinstance(work_block_id, str) or not work_block_id.strip():
+        raise ReleaseStateError("operational active Work Block requires work_block_id")
+    if not isinstance(specification, dict):
+        raise ReleaseStateError("operational active Work Block requires specification object")
+    specification_path, specification_file = safe_repo_path(
+        root, specification.get("path"), "operational active Work Block specification.path"
+    )
+    if not specification_path.startswith("docs/specs/") or not specification_path.endswith(".md"):
+        raise ReleaseStateError(
+            "operational active Work Block specification.path must be under docs/specs"
+        )
+    if not specification_file.is_file():
+        raise ReleaseStateError("operational active Work Block specification.path is missing")
+    expected_id = active_frontmatter.get("work_block_id") if active_frontmatter else None
+    if work_block_id != expected_id:
+        raise ReleaseStateError(
+            "operational active Work Block ID does not match release-state active Work Block"
+        )
 
 
 def validate_release_assets(root: Path, release_state: dict[str, Any]) -> None:
@@ -597,6 +649,7 @@ def validate_repository(root: Path) -> dict[str, Any]:
 
     active_value = migration.get("active_work_block")
     active: str | None
+    active_frontmatter: dict[str, Any] | None = None
     if active_value is None:
         active = None
     else:
@@ -617,6 +670,7 @@ def validate_repository(root: Path) -> dict[str, Any]:
     if map_active != active:
         raise ReleaseStateError("PROJECT_MAP active Work Block does not match FILE_REGISTRY.yml")
     validate_map_projection(map_text, active)
+    validate_operational_active_work_block(root, active, active_frontmatter)
 
     release_state = registry.get("release_state")
     if not isinstance(release_state, dict):
