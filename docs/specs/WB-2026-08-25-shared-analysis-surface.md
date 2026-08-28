@@ -1,3 +1,9 @@
+---
+artifact_type: specification
+work_block_id: WB-2026-08-25-shared-analysis-surface
+revision: v1
+---
+
 # WB-2026-08-25 Shared Analysis Surface
 
 ## Status

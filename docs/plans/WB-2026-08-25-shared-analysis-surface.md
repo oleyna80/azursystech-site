@@ -1,8 +1,8 @@
 ---
 artifact_type: work_block
 work_block_id: WB-2026-08-25-shared-analysis-surface
-status: repository-side-closeout-complete
-revision: v1
+status: completed
+revision: v2
 ---
 
 # Work Block Plan: Shared Analysis Surface
@@ -85,3 +85,14 @@ complete corrective candidate. The final local corrective commit may proceed.
 The package deliberately contains no current PR/CI snapshot or final remote SHA.
 The Owner-controlled publication and merge boundary remains in force; exact
 remote evidence is resolved externally after the last repository commit.
+
+## Final State
+
+- **Stage state:** completed
+- **Review gate:** READY
+- **Verification verdict:** READY
+- **Evaluation verdict:** SKIPPED — deterministic repository-governance correction; no generative or rubric evaluation applies.
+- **Drift gate:** ALIGNED
+- **Closeout mode:** success-closeout
+- **Task status:** completed
+- **External VCS state:** non-normative repository boundary; hosting-provider state is not repository SSOT.

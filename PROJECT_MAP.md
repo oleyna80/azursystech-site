@@ -5,16 +5,28 @@ This map is the primary orientation layer for humans and AI agents entering the
 
 ## Release State
 
+<!-- release-state
+completed_work_blocks:
+  - docs/plans/WB-2026-08-25-shared-analysis-surface.md
+active_work_block: docs/plans/WB-2026-08-28-repository-lifecycle-normalization.md
+-->
+
 ```yaml
 release_state:
   schema_version: 1
   authority_mode: github_capability
   repository_status: operational
-  active_work_block: see .agent/active-work-block.json
+  active_work_block: docs/plans/WB-2026-08-28-repository-lifecycle-normalization.md
   governance_profile: Managed
   publication_mode: owner_controlled_github_free
-  last_reconciled_commit: 257d529d4a81147b6f7dea29bd17f52228ea17d6
+  last_reconciled_commit: repository_evidence_only
 ```
+
+## Migration Work
+
+- Active implementation Work Block: `WB-2026-08-28-repository-lifecycle-normalization`
+  at `docs/plans/WB-2026-08-28-repository-lifecycle-normalization.md`.
+- The completed migration index is machine-readable in `FILE_REGISTRY.yml:migration_state`.
 
 ## Architecture
 

@@ -33,6 +33,28 @@
   exact final SHA, remote equality, or GitHub CI result; those remain external
   observations after any separately authorized publication.
 
+## 2026-08-28
+
+- Started `WB-2026-08-28-repository-lifecycle-normalization` from immutable main
+  base `96dbd44102785005bfd23b0f99192f5bfeb17e68` in an isolated checkout.
+- The lifecycle projection is being normalized with a completed historical plan,
+  canonical closeout, machine registry, project map, deterministic validator
+  regression, and CI contract. Branch/worktree classifications are evidence-only
+  recommendations; no cleanup or remote action is authorized.
+- Follow-on P1 correction: release-state validation now cross-checks the active
+  operational JSON identity against the canonical registry/Project Map active
+  plan, validates its declared specification path, and rejects missing,
+  malformed, stale, or divergent state through disposable real-validator fixtures.
+- Follow-on specification-binding and workflow-trigger correction: the validator
+  now parses that declared specification's frontmatter, requires
+  `artifact_type: specification`, and matches its Work Block ID to the canonical
+  active plan. Regressions cover the existing prior Work Block specification,
+  wrong artifact type, and missing/malformed frontmatter; the workflow contract
+  includes `docs/specs/**` for both event types and locally simulates content,
+  deletion, and rename path sets. Fresh repository-side Review and Verification
+  are READY and Drift is ALIGNED; no exact final SHA, remote equality, or GitHub
+  CI claim is recorded here.
+
 ## Unknown or unavailable
 
 Broader business priority outside the committed repository evidence is not

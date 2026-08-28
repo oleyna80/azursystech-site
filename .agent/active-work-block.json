@@ -1,126 +1,29 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-2026-08-25-shared-analysis-surface",
+  "work_block_id": "WB-2026-08-28-repository-lifecycle-normalization",
   "governance_profile": "Managed",
-  "specification": {
-    "path": "docs/specs/WB-2026-08-25-shared-analysis-surface.md",
-    "revision": "v1"
-  },
-  "subject_branch": "wb/2026-08-25-shared-analysis-surface",
-  "base_commit": "2fc0fbd6bd996681edfc4351a581f9543dba4fb0",
-  "pre_sync_base_commit": "9d2b23bfaca4a5af63030f77cc2d7c7559c8ec18",
-  "synchronization_main_commit": "2fc0fbd6bd996681edfc4351a581f9543dba4fb0",
-  "synchronization_merge_commit": "1a019d2b80f775a07248499b666dc32767ed90be",
-  "define_quality": {
-    "required": true,
-    "status": "READY",
-    "requirements_review": "docs/reports/requirements-quality-WB-2026-08-25-shared-analysis-surface.md",
-    "traceability": "docs/reports/traceability-WB-2026-08-25-shared-analysis-surface.md",
-    "consistency_analysis": "docs/reports/consistency-WB-2026-08-25-shared-analysis-surface.md"
-  },
-  "write_gate": {
-    "status": "READY",
-    "opened_at": "2026-08-25T00:00:00+02:00"
-  },
-  "critic": {
-    "required": true,
-    "status": "READY",
-    "verdict": "APPROVE",
-    "report": "docs/reports/critic-WB-2026-08-25-shared-analysis-surface.md",
-    "isolation": "same-session",
-    "skip_reason": ""
-  },
+  "specification": {"path": "docs/specs/WB-2026-08-28-repository-lifecycle-normalization.md", "revision": "v1"},
+  "subject_branch": "wb/2026-08-28-repository-lifecycle-normalization",
+  "base_commit": "96dbd44102785005bfd23b0f99192f5bfeb17e68",
+  "define_quality": {"required": true, "status": "READY", "requirements_review": "docs/reports/requirements-quality-WB-2026-08-28-repository-lifecycle-normalization.md", "traceability": "docs/reports/traceability-WB-2026-08-28-repository-lifecycle-normalization.md", "consistency_analysis": "docs/reports/consistency-WB-2026-08-28-repository-lifecycle-normalization.md"},
+  "write_gate": {"status": "READY", "opened_at": "2026-08-28T00:00:00+02:00"},
+  "critic": {"required": true, "status": "READY", "verdict": "SUPPLEMENT", "report": "docs/reports/critic-WB-2026-08-28-repository-lifecycle-normalization.md", "isolation": "native-subagent", "skip_reason": ""},
   "assurance": {
-    "review": {
-      "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/review-WB-2026-08-25-shared-analysis-surface.md",
-      "isolation": "same-session",
-      "skip_reason": ""
-    },
-    "verification": {
-      "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/verification-WB-2026-08-25-shared-analysis-surface.md",
-      "isolation": "same-session",
-      "skip_reason": ""
-    },
-    "evaluation": {
-      "required": false,
-      "status": "SKIPPED",
-      "verdict": "PENDING",
-      "plan": "",
-      "report": "",
-      "rubric_revision": "",
-      "benchmark_revision": "",
-      "isolation": "unknown",
-      "skip_reason": "No generative or rubric-based evaluation is required for this deterministic routing change."
-    },
-    "drift": {
-      "required": true,
-      "status": "READY",
-      "verdict": "ALIGNED",
-      "report": "docs/reports/drift-WB-2026-08-25-shared-analysis-surface.md",
-      "isolation": "same-session",
-      "skip_reason": ""
-    }
+    "review": {"required": true, "status": "READY", "verdict": "READY", "report": "docs/reports/review-WB-2026-08-28-repository-lifecycle-normalization.md", "isolation": "same-session-degraded", "skip_reason": ""},
+    "verification": {"required": true, "status": "READY", "verdict": "READY", "report": "docs/reports/verification-WB-2026-08-28-repository-lifecycle-normalization.md", "isolation": "same-session-degraded", "skip_reason": ""},
+    "evaluation": {"required": false, "status": "SKIPPED", "verdict": "PENDING", "plan": "", "report": "", "rubric_revision": "", "benchmark_revision": "", "isolation": "not_applicable", "skip_reason": "Deterministic repository-lifecycle normalization has no generative or rubric-based deliverable."},
+    "drift": {"required": true, "status": "READY", "verdict": "ALIGNED", "report": "docs/reports/drift-WB-2026-08-28-repository-lifecycle-normalization.md", "isolation": "same-session-degraded", "skip_reason": ""}
   },
-  "closeout_mode": "success-closeout",
-  "integrations": {
-    "approved": [],
-    "admission_records": []
-  },
+  "closeout_mode": "pending",
+  "integrations": {"approved": [], "admission_records": []},
   "write_set": [
-    "docs/specs/WB-2026-08-25-shared-analysis-surface.md",
-    "docs/plans/WB-2026-08-25-shared-analysis-surface.md",
-    "docs/tasklist/WB-2026-08-25-shared-analysis-surface.tasklist.md",
-    "docs/reports/requirements-quality-WB-2026-08-25-shared-analysis-surface.md",
-    "docs/reports/traceability-WB-2026-08-25-shared-analysis-surface.md",
-    "docs/reports/consistency-WB-2026-08-25-shared-analysis-surface.md",
-    "docs/reports/critic-WB-2026-08-25-shared-analysis-surface.md",
-    "docs/reports/review-WB-2026-08-25-shared-analysis-surface.md",
-    "docs/reports/verification-WB-2026-08-25-shared-analysis-surface.md",
-    "docs/reports/drift-WB-2026-08-25-shared-analysis-surface.md",
-    "docs/reports/closeout-WB-2026-08-25-shared-analysis-surface.md",
-    ".gitignore",
-    "PROJECT_MAP.md",
-    "FILE_REGISTRY.yml",
-    "docs/project-context.md",
-    "memory_bank/orchestrator-log.md",
-    "memory_bank/context.md",
-    "memory_bank/progress.md",
-    "memory_bank/decisions.md",
-    "scripts/validate-shared-context.py",
-    "scripts/test-validate-shared-context.py",
-    ".agent/active-work-block.json",
-    ".agent/critic-gate.md",
-    ".agent/verification-gate.md",
-    ".codex/write-gate.md",
-    ".agent/workflows/owner-controlled-github-flow.md",
-    ".github/workflows/control-plane-contracts.yml"
+    ".agent/active-work-block.json", ".agent/critic-gate.md", ".agent/verification-gate.md", ".codex/write-gate.md", "FILE_REGISTRY.yml", "PROJECT_MAP.md", "governance/release-state.md",
+    "docs/specs/WB-2026-08-28-repository-lifecycle-normalization.md", "docs/specs/WB-2026-08-25-shared-analysis-surface.md", "docs/plans/WB-2026-08-28-repository-lifecycle-normalization.md", "docs/tasklist/WB-2026-08-28-repository-lifecycle-normalization.tasklist.md", "docs/plans/WB-2026-08-25-shared-analysis-surface.md", "docs/reports/closeout/WB-2026-08-25-shared-analysis-surface.md",
+    "docs/reports/requirements-quality-WB-2026-08-28-repository-lifecycle-normalization.md", "docs/reports/traceability-WB-2026-08-28-repository-lifecycle-normalization.md", "docs/reports/consistency-WB-2026-08-28-repository-lifecycle-normalization.md", "docs/reports/critic-WB-2026-08-28-repository-lifecycle-normalization.md", "docs/reports/repository-branch-lifecycle-audit-2026-08-28.md", "docs/reports/repository-worktree-audit-2026-08-28.md", "docs/reports/review-WB-2026-08-28-repository-lifecycle-normalization.md", "docs/reports/verification-WB-2026-08-28-repository-lifecycle-normalization.md", "docs/reports/drift-WB-2026-08-28-repository-lifecycle-normalization.md",
+    "memory_bank/orchestrator-log.md", "memory_bank/context.md", "memory_bank/progress.md", "memory_bank/decisions.md", "scripts/validate-release-state.py", "scripts/test-release-state-contracts.py", ".github/workflows/release-state-contract.yml"
   ],
-  "coordination_write_set": [
-    ".agent/active-work-block.json",
-    ".agent/critic-gate.md",
-    ".agent/verification-gate.md",
-    ".codex/write-gate.md",
-    "docs/plans/WB-2026-08-25-shared-analysis-surface.md",
-    "docs/specs/WB-2026-08-25-shared-analysis-surface.md",
-    "docs/tasklist/WB-2026-08-25-shared-analysis-surface.tasklist.md",
-    "docs/reports/**",
-    "memory_bank/**"
-  ],
-  "external_hard_stops": [
-    "protected_default_branch_mutation",
-    "destructive",
-    "live_infra",
-    "live_data",
-    "credentials",
-    "client_communications",
-    "irreversible_publish"
-  ],
-  "lifecycle_note": "Earlier shared-context P1 assurance remains historical. A follow-on exact-head P1 correction consumes raw Git index pathnames with git ls-files -z, NUL splitting, and os.fsdecode so Git C-quoted output cannot bypass protected-prefix checks. Regressions force core.quotePath=true and cover non-ASCII plus newline and tab protected paths. The mandatory follow-on Critic SUPPLEMENT was adopted before implementation. Fresh local Review and Verification must be READY and Drift ALIGNED for the complete corrective candidate. Exact final commit, remote equality, GitHub CI result, and Owner merge authorization remain external after the final repository commit. Deployment remains separately unauthorized."
+  "coordination_write_set": [".agent/active-work-block.json", ".agent/critic-gate.md", ".agent/verification-gate.md", ".codex/write-gate.md", "FILE_REGISTRY.yml", "PROJECT_MAP.md", "docs/plans/**", "docs/reports/**", "memory_bank/**"],
+  "external_hard_stops": ["protected_default_branch_mutation", "destructive", "live_infra", "live_data", "credentials", "client_communications", "irreversible_publish"],
+  "lifecycle_note": "This Work Block normalizes local repository lifecycle evidence after a completed prior Work Block. Its branch/worktree inventory is advisory and timestamped. Remote branch deletion, worktree prune or deletion, push, PR mutation, merge, deployment, and any final external VCS claim remain outside this Work Block."
 }

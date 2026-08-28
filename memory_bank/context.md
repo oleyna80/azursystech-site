@@ -2,26 +2,31 @@
 
 ## Current Work Block
 
-- ID: WB-2026-08-25-shared-analysis-surface
-- Subject branch: wb/2026-08-25-shared-analysis-surface
-- Base: 2fc0fbd6bd996681edfc4351a581f9543dba4fb0
-- Synchronization provenance: 1a019d2b80f775a07248499b666dc32767ed90be
-- Stage: Repository-side shared-memory reconciliation for the current P1
+- ID: WB-2026-08-28-repository-lifecycle-normalization
+- Subject branch: wb/2026-08-28-repository-lifecycle-normalization
+- Base: 96dbd44102785005bfd23b0f99192f5bfeb17e68
+- Stage: Repository lifecycle SSOT normalization and operational specification-binding correction
 - Define Quality: READY
-- Critic: Define APPROVE; follow-on P1 SUPPLEMENT adopted
-- Synchronization: complete
-- Current REQ-005 P1 correction: the validator consumes original Git index
-  pathnames through `git ls-files -z`, byte-NUL splitting, and `os.fsdecode`, so
-  Git C-quoted display output cannot bypass protected-prefix checks. Regression
-  fixtures force `core.quotePath=true` and reject non-ASCII protected paths plus
-  newline and tab pathnames with category diagnostics. The earlier
-  `private_evidence` root-trigger and `/**` semantics correction is historical.
-- Assurance for the NUL-path correction is repository-side Review READY,
-  Verification READY, and Drift ALIGNED. This shared record asserts no exact
-  final SHA, remote equality, or GitHub CI result.
+- Critic: SUPPLEMENT adopted for the operational active-record and specification-binding P1s
+- Current correction: the release-state validator resolves the canonical active
+  plan from registry/Project Map, cross-checks its Work Block ID against the
+  operational JSON, parses the declared specification frontmatter, and requires
+  its artifact type and Work Block ID to match the canonical active plan. It
+  fails closed for missing, malformed, stale, divergent, or wrong-existing-
+  specification state. Disposable fixtures cover matching and divergent projections;
+  the workflow contract also covers specification-path changes.
+- Fresh repository-side Review and Verification are READY and Drift is ALIGNED
+  for this correction. This shared record asserts no exact final SHA, remote
+  equality, or GitHub CI result.
 - Source Write Gate: READY for the explicit Work Block write-set
 
 ## Boundaries
+
+The active Work Block is `WB-2026-08-28-repository-lifecycle-normalization`.
+It normalizes repository-owned lifecycle evidence after the prior shared-context
+Work Block. A timestamped branch/worktree inventory is advisory only: remote
+branch deletion, local worktree prune/deletion, push, PR mutation, merge, and
+deployment remain separately Owner-controlled.
 
 The original checkout had unrelated dirty and untracked paths and was preserved.
 This Work Block uses an isolated worktree. The frozen

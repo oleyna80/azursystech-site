@@ -1,21 +1,14 @@
 # Write Gate Record
 
-- **Work Block:** `WB-2026-08-25-automatiser-demandes-clients-guide`
+- **Work Block:** `WB-2026-08-28-repository-lifecycle-normalization`
 - **Write Gate Status:** `READY`
-- **Opened At:** `2026-08-25T00:00:00+02:00`
-- **Critic Status:** `READY` / `APPROVE`
-- **Original Work Block Base Commit:** `5d3f3115d14fa715c7e06839aac092da5e4a8819`
-- **Closeout Mode:** `success-closeout`
-- **Synchronization Base:** `f90cc8c6981038190a8a67ba5c58c93cdc308f11`
-- **Synchronization Candidate/Merge Commit:** `76cd3271785bc4493111ea4bd5fe42a25e876dc2`
+- **Opened At:** `2026-08-28T00:00:00+02:00`
+- **Critic:** `READY` / `SUPPLEMENT` adopted
+- **Base commit:** `96dbd44102785005bfd23b0f99192f5bfeb17e68`
+- **Closeout Mode:** `pending`
 
-Stage 0 Define is complete (`requirements=11`, `acceptance_criteria=12`,
-`tasks=11`; Critic `READY` / `APPROVE`). Requirements-quality, traceability,
-and consistency reports are READY. Stage 2 assurance is Review `READY`/`READY`,
-Verification `READY`/`READY`, Drift `READY`/`ALIGNED`, with optional Evaluation
-`SKIPPED` and a deterministic-change reason. The source write gate remains
-`READY` only for the explicitly authorized local governance/evidence commit.
-The merge commit is
-the synchronized candidate context; the Owner handoff must use the exact
-current branch HEAD, which may be a descendant after evidence commits. No
-push, merge, deployment, or production authority is granted by this gate.
+The gate permits only the explicit local lifecycle-normalization write-set in
+the isolated checkout. It grants no push, force-push, PR mutation, merge,
+deployment, remote branch deletion, worktree prune, or local worktree deletion.
+The follow-on operational active-record and specification-binding P1s remain
+within that write-set.

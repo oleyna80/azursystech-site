@@ -1,0 +1,22 @@
+name: Release State Contract
+
+on:
+  push:
+    branches: [main]
+    paths: [.agent/active-work-block.json, FILE_REGISTRY.yml, PROJECT_MAP.md, governance/release-state.md, docs/plans/**, docs/specs/**, docs/reports/closeout/**, scripts/validate-release-state.py, scripts/test-release-state-contracts.py, .github/workflows/release-state-contract.yml]
+  pull_request:
+    paths: [.agent/active-work-block.json, FILE_REGISTRY.yml, PROJECT_MAP.md, governance/release-state.md, docs/plans/**, docs/specs/**, docs/reports/closeout/**, scripts/validate-release-state.py, scripts/test-release-state-contracts.py, .github/workflows/release-state-contract.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-state:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install --disable-pip-version-check PyYAML
+      - run: python scripts/test-release-state-contracts.py

@@ -90,6 +90,21 @@ repair_assurance:
   limits: {implementation_passes: 1, ndr_corrections: 1, stabilization_items: 3, stabilization_corrections: 2}
   authority: none
 
+migration_state:
+  completed_work_blocks:
+    - docs/plans/WB-2026-08-25-shared-analysis-surface.md
+  active_work_block: docs/plans/WB-2026-08-28-repository-lifecycle-normalization.md
+
+release_state:
+  contract: governance/release-state.md
+  validator: scripts/validate-release-state.py
+  fixtures: scripts/test-release-state-contracts.py
+  workflow: .github/workflows/release-state-contract.yml
+  authority: assurance_only
+  external_vcs_state: non_normative
+  latest_completed_work_block: docs/plans/WB-2026-08-25-shared-analysis-surface.md
+  closeout_report: docs/reports/closeout/WB-2026-08-25-shared-analysis-surface.md
+
 entries:
   AGENTS.md:
     role: project_operating_contract
