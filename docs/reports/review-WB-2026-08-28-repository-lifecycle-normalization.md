@@ -1,17 +1,18 @@
 # Local review — WB-2026-08-28-repository-lifecycle-normalization
 
 **Verdict:** READY.
-**Isolation:** same-session-degraded; frozen local candidate review.
+**Isolation:** same-session-degraded; fresh local candidate review.
 
-Fresh follow-on review of the approved P1 write-set confirms that the release-state
-validator resolves the canonical registry/Project Map active plan, cross-checks its
-frontmatter identity against the operational JSON, validates the declared
-specification path, and rejects absent, malformed, or stale operational state. The
-fixture invokes the real validator from disposable copies and verifies matching
-state, both mismatch directions, missing/malformed state, and inactive canonical
-state with a stale operational record. The workflow listens to the exact active
-JSON path on both supported event types. No secret, application, dependency-lock,
-or deployment change exists.
+Fresh follow-on review confirms that the validator parses the operationally
+referenced specification frontmatter and requires `artifact_type: specification`
+plus exact Work Block identity equality with the canonical active plan. The real-
+validator fixtures cover matching state, the existing previous-Work-Block
+specification, wrong artifact type, missing/malformed frontmatter, existing
+operational mismatch cases, and inactive canonical state residue. The workflow
+now includes `docs/specs/**` for both supported event types; its local
+path-contract simulation covers content, deletion, and rename directions. No
+secret, application, dependency-lock, or deployment change exists.
 
-Checks passed: diff hygiene; release-state positive/negative regression; Define
-traceability; control-plane fixtures; shared-context regression and validator.
+Checks passed: diff hygiene; release-state positive/negative regression and
+workflow path-contract simulation; Define traceability; control-plane fixtures;
+shared-context regression and validator.

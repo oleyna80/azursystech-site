@@ -3,9 +3,9 @@ name: Release State Contract
 on:
   push:
     branches: [main]
-    paths: [.agent/active-work-block.json, FILE_REGISTRY.yml, PROJECT_MAP.md, governance/release-state.md, docs/plans/**, docs/reports/closeout/**, scripts/validate-release-state.py, scripts/test-release-state-contracts.py, .github/workflows/release-state-contract.yml]
+    paths: [.agent/active-work-block.json, FILE_REGISTRY.yml, PROJECT_MAP.md, governance/release-state.md, docs/plans/**, docs/specs/**, docs/reports/closeout/**, scripts/validate-release-state.py, scripts/test-release-state-contracts.py, .github/workflows/release-state-contract.yml]
   pull_request:
-    paths: [.agent/active-work-block.json, FILE_REGISTRY.yml, PROJECT_MAP.md, governance/release-state.md, docs/plans/**, docs/reports/closeout/**, scripts/validate-release-state.py, scripts/test-release-state-contracts.py, .github/workflows/release-state-contract.yml]
+    paths: [.agent/active-work-block.json, FILE_REGISTRY.yml, PROJECT_MAP.md, governance/release-state.md, docs/plans/**, docs/specs/**, docs/reports/closeout/**, scripts/validate-release-state.py, scripts/test-release-state-contracts.py, .github/workflows/release-state-contract.yml]
   workflow_dispatch:
 
 permissions:

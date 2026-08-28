@@ -335,6 +335,18 @@ def validate_operational_active_work_block(
         raise ReleaseStateError(
             "operational active Work Block ID does not match release-state active Work Block"
         )
+    specification_frontmatter, _, _ = parse_frontmatter(
+        specification_file, "operational active Work Block specification"
+    )
+    if specification_frontmatter.get("artifact_type") != "specification":
+        raise ReleaseStateError(
+            "operational active Work Block specification requires artifact_type=specification"
+        )
+    if specification_frontmatter.get("work_block_id") != expected_id:
+        raise ReleaseStateError(
+            "operational active Work Block specification Work Block ID does not match "
+            "release-state active Work Block"
+        )
 
 
 def validate_release_assets(root: Path, release_state: dict[str, Any]) -> None:

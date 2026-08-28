@@ -2,7 +2,7 @@
 artifact_type: work_block
 work_block_id: WB-2026-08-28-repository-lifecycle-normalization
 status: in_progress
-revision: v2
+revision: v3
 ---
 
 # Work Block Plan: Repository Lifecycle Normalization
@@ -17,9 +17,9 @@ recommend but do not execute any external or destructive cleanup.
 ## Scope
 
 Lifecycle SSOT, Define and assurance evidence, release-contract test/workflow,
-safe memory records, and read-only inventory reports. The only historical
-content normalized is the completed shared-context plan and its canonical
-closeout projection.
+specification identity binding, safe memory records, and read-only inventory
+reports. The only historical content normalized is the completed shared-context
+specification, plan, and canonical closeout projection.
 
 ## Exclusions and stops
 
@@ -32,7 +32,7 @@ dirty-checkout modification. A manifest never authorizes its own execution.
 `.agent/active-work-block.json`, `.agent/critic-gate.md`,
 `.agent/verification-gate.md`, `.codex/write-gate.md`, `FILE_REGISTRY.yml`,
 `PROJECT_MAP.md`, the matching specification/plan/tasklist/reports, the prior
-shared-context plan and canonical closeout, `scripts/test-release-state-contracts.py`,
+shared-context specification/plan and canonical closeout, `scripts/test-release-state-contracts.py`,
 `scripts/validate-release-state.py`, `.github/workflows/release-state-contract.yml`, and the four allowlisted
 `memory_bank/*.md` records.
 
@@ -43,11 +43,16 @@ shared-context plan and canonical closeout, `scripts/test-release-state-contract
 3. Replace stale active lifecycle records with this Work Block and capture audit manifests.
 4. Cross-check the operational active record against the canonical registry/Map/plan
    projection and cover each mismatch direction with disposable real-validator fixtures.
-5. Run fresh local assurance, then create a scoped local commit and hand off the exact SHA.
+5. Bind the operational specification frontmatter to the canonical active Work Block
+   identity and cover wrong-existing-specification, artifact-type, and frontmatter failures.
+6. Trigger the release contract for specification changes and simulate content,
+   deletion, and rename path sets deterministically.
+7. Run fresh local assurance, then create a scoped local commit and hand off the exact SHA.
 
 ## Final State
 
-Repository-side assurance, including the operational active-record correction, is
-Review READY, Verification READY, and Drift ALIGNED, and a scoped local corrective
-commit exists. Publication and all external state remain outside this Work Block.
-No provider-state assertion belongs here.
+Fresh repository-side assurance for the follow-on specification-binding and
+workflow-trigger correction is Review READY, Verification READY, and Drift
+ALIGNED, and a scoped local corrective commit exists. Publication and all
+external state remain outside this Work Block; no provider-state assertion
+belongs here.

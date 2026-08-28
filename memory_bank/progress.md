@@ -45,9 +45,15 @@
   operational JSON identity against the canonical registry/Project Map active
   plan, validates its declared specification path, and rejects missing,
   malformed, stale, or divergent state through disposable real-validator fixtures.
-- Fresh repository-side Review and Verification are READY and Drift is ALIGNED
-  for this correction; no exact final SHA, remote equality, or GitHub CI claim is
-  recorded here.
+- Follow-on specification-binding and workflow-trigger correction: the validator
+  now parses that declared specification's frontmatter, requires
+  `artifact_type: specification`, and matches its Work Block ID to the canonical
+  active plan. Regressions cover the existing prior Work Block specification,
+  wrong artifact type, and missing/malformed frontmatter; the workflow contract
+  includes `docs/specs/**` for both event types and locally simulates content,
+  deletion, and rename path sets. Fresh repository-side Review and Verification
+  are READY and Drift is ALIGNED; no exact final SHA, remote equality, or GitHub
+  CI claim is recorded here.
 
 ## Unknown or unavailable
 

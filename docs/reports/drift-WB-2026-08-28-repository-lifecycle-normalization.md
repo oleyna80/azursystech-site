@@ -6,7 +6,9 @@
 The specification, plan, tasklist, active Work Block record, gate records,
 memory records, registry, project map, historical completed plan, and canonical
 historical closeout agree on lifecycle ownership. Release-state enforcement now
-also binds the operational JSON identity to the canonical active plan and rejects
-an invalid declared specification path or inactive-state residue. The prior Work
-Block is completed in migration state; this Work Block remains active. Audit
-classifications remain recommendations only and do not expand authority.
+binds the operational JSON identity and the referenced specification artifact/
+Work Block identity to the canonical active plan, rejecting an invalid declared
+specification path, wrong existing specification, invalid frontmatter, or
+inactive-state residue. The workflow contract covers specification paths. The
+prior Work Block is completed in migration state; this Work Block remains active.
+Audit classifications remain recommendations only and do not expand authority.

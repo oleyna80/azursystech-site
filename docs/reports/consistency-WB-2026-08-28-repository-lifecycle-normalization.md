@@ -10,6 +10,6 @@ release index; this Work Block remains active. No versioned document asserts a
 current PR, CI, or remote-ref state as a durable fact.
 
 The follow-on correction preserves that model: the operational JSON names the
-same Work Block ID as the canonical active plan and declares an existing
-specification path, while the registry and Project Map retain the canonical
-active plan path.
+same Work Block ID as the canonical active plan, and its referenced specification
+has formal specification frontmatter with the same Work Block identity. The
+registry and Project Map retain the canonical active plan path.

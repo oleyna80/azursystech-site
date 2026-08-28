@@ -43,6 +43,40 @@ def require_workflow_active_gate_path(root: Path) -> None:
         paths = workflow["on"][trigger]["paths"]
         if ".agent/active-work-block.json" not in paths:
             raise AssertionError(f"{trigger} does not trigger on .agent/active-work-block.json")
+        if "docs/specs/**" not in paths:
+            raise AssertionError(f"{trigger} does not trigger on docs/specs/**")
+        require_workflow_path_contract(paths, trigger)
+
+
+def workflow_path_matches(pattern: str, changed_path: str) -> bool:
+    """Model the literal and recursive directory patterns used by this workflow."""
+    if pattern.endswith("/**"):
+        return changed_path.startswith(pattern[:-2])
+    return changed_path == pattern
+
+
+def workflow_runs_for_paths(patterns: list[str], changed_paths: list[str]) -> bool:
+    return any(
+        workflow_path_matches(pattern, changed_path)
+        for pattern in patterns
+        for changed_path in changed_paths
+    )
+
+
+def require_workflow_path_contract(paths: list[str], trigger: str) -> None:
+    cases = {
+        "specification content change": ["docs/specs/WB-current.md"],
+        "specification deletion": ["docs/specs/WB-removed.md"],
+        "rename into specifications": ["docs/plans/WB-old.md", "docs/specs/WB-new.md"],
+        "rename out of specifications": ["docs/specs/WB-old.md", "docs/plans/WB-new.md"],
+    }
+    for label, changed_paths in cases.items():
+        if not workflow_runs_for_paths(paths, changed_paths):
+            raise AssertionError(
+                f"{trigger} does not trigger for {label}: {changed_paths!r}"
+            )
+    if workflow_runs_for_paths(paths, ["docs/specifications/WB-unrelated.md"]):
+        raise AssertionError(f"{trigger} docs/specs/** matcher overmatches docs/specifications")
 
 def main() -> int:
     require(run(ROOT), 0, "repository release-state contract")
@@ -94,6 +128,55 @@ def main() -> int:
             fixture,
             "operational specification path changed without registry and map must fail",
             "operational active Work Block specification.path is missing",
+        )
+    with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
+        fixture = fixture_root(holder)
+        active = fixture / ".agent/active-work-block.json"
+        data = json.loads(active.read_text(encoding="utf-8"))
+        data["specification"]["path"] = (
+            "docs/specs/WB-2026-08-25-shared-analysis-surface.md"
+        )
+        active.write_text(json.dumps(data), encoding="utf-8")
+        require_failure(
+            fixture,
+            "existing prior Work Block specification must fail",
+            "operational active Work Block specification Work Block ID does not match "
+            "release-state active Work Block",
+        )
+    with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
+        fixture = fixture_root(holder)
+        specification = fixture / "docs/specs/WB-2026-08-28-repository-lifecycle-normalization.md"
+        specification.write_text(
+            specification.read_text(encoding="utf-8").replace(
+                "artifact_type: specification", "artifact_type: work_block", 1
+            ),
+            encoding="utf-8",
+        )
+        require_failure(
+            fixture,
+            "operational specification with wrong artifact type must fail",
+            "operational active Work Block specification requires artifact_type=specification",
+        )
+    with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
+        fixture = fixture_root(holder)
+        specification = fixture / "docs/specs/WB-2026-08-28-repository-lifecycle-normalization.md"
+        specification.write_text(
+            specification.read_text(encoding="utf-8").replace("---\n", "", 1),
+            encoding="utf-8",
+        )
+        require_failure(
+            fixture,
+            "operational specification without frontmatter must fail",
+            "operational active Work Block specification requires YAML frontmatter",
+        )
+    with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
+        fixture = fixture_root(holder)
+        specification = fixture / "docs/specs/WB-2026-08-28-repository-lifecycle-normalization.md"
+        specification.write_text("---\nartifact_type: specification\n", encoding="utf-8")
+        require_failure(
+            fixture,
+            "operational specification with malformed frontmatter must fail",
+            "operational active Work Block specification has unterminated YAML frontmatter",
         )
     with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
         fixture = fixture_root(holder)

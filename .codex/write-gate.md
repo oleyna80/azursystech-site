@@ -10,4 +10,5 @@
 The gate permits only the explicit local lifecycle-normalization write-set in
 the isolated checkout. It grants no push, force-push, PR mutation, merge,
 deployment, remote branch deletion, worktree prune, or local worktree deletion.
-The follow-on operational active-record P1 remains within that write-set.
+The follow-on operational active-record and specification-binding P1s remain
+within that write-set.
