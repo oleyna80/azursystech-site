@@ -33,6 +33,15 @@
   exact final SHA, remote equality, or GitHub CI result; those remain external
   observations after any separately authorized publication.
 
+## 2026-08-28
+
+- Started `WB-2026-08-28-repository-lifecycle-normalization` from immutable main
+  base `96dbd44102785005bfd23b0f99192f5bfeb17e68` in an isolated checkout.
+- The lifecycle projection is being normalized with a completed historical plan,
+  canonical closeout, machine registry, project map, deterministic validator
+  regression, and CI contract. Branch/worktree classifications are evidence-only
+  recommendations; no cleanup or remote action is authorized.
+
 ## Unknown or unavailable
 
 Broader business priority outside the committed repository evidence is not

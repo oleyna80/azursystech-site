@@ -23,6 +23,12 @@
 
 ## Boundaries
 
+The active Work Block is `WB-2026-08-28-repository-lifecycle-normalization`.
+It normalizes repository-owned lifecycle evidence after the prior shared-context
+Work Block. A timestamped branch/worktree inventory is advisory only: remote
+branch deletion, local worktree prune/deletion, push, PR mutation, merge, and
+deployment remain separately Owner-controlled.
+
 The original checkout had unrelated dirty and untracked paths and was preserved.
 This Work Block uses an isolated worktree. The frozen
 WB-2026-08-25-worktree-ssot-binding was not modified. Publication and merge remain

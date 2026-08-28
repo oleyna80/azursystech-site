@@ -8,6 +8,11 @@
 - Protect .codex/worktrees/ without moving existing worktrees.
 - Make PROJECT_MAP.md point to .agent/active-work-block.json as the active
   Work Block SSOT.
+- Use `FILE_REGISTRY.yml:migration_state` plus the release-state validator as
+  the machine-readable lifecycle projection; `PROJECT_MAP.md` is its visible
+  human projection.
+- Treat remote branch and local-worktree inventories as timestamped operational
+  evidence, never as autonomous cleanup authority.
 - Validate Git index membership and forbidden tracked surfaces without network
   access. The existing .env.vps.example template is the only environment-file
   exception.
