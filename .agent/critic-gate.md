@@ -1,10 +1,10 @@
 # Critic Gate Record
 
 - **Work Block:** `WB-2026-08-29-repository-closeout-cleanup`
-- **Status:** `COMPLETED`
+- **Status:** `READY`
 - **Verdict:** `APPROVE`
 - **Report:** `docs/reports/critic-WB-2026-08-29-repository-closeout-cleanup.md`
-- **Isolation:** `native-subagent`
+- **Isolation:** `same-session-degraded`
 - **Reviewed at:** `2026-08-29T00:00:00+02:00`
 - **Base commit:** `feb38b0c8eb13df73024d5a8f7e7a23dc9d42fd1`
 
