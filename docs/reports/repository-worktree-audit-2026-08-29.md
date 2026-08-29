@@ -1,6 +1,7 @@
 # Repository worktree and checkout audit — 2026-08-29
 
-No prune, removal, deletion, reset, clean, checkout, or stash was run.
+This table is the Phase 1 non-destructive snapshot. No prune, removal, deletion,
+reset, clean, checkout, or stash was run during that phase.
 
 | Path / record | Registration, ref and state | Class / advisory disposition |
 |---|---|---|
@@ -16,3 +17,14 @@ No prune, removal, deletion, reset, clean, checkout, or stash was run.
 
 All clean-directory claims are contingent on the listed repository evidence
 remaining available at execution time; dirty locations are excluded from deletion.
+
+## Post-authorized execution reconciliation
+
+The showcase registered worktree and four exact clean, unregistered standalone
+directories were executed only after separate Owner authorization and refreshed
+matching preconditions. No prune occurred: the stale
+`/tmp/azursystech-shared-analysis-surface` record refreshed to `05bc097...`, not
+the authorized `515bb6d...`, so the single prune batch and its companion record
+were preserved. The canonical checkout remains DIRTY_PRESERVE with 4 modified and
+22 untracked paths; the five assurance checkouts remain DIRTY_PRESERVE. See the
+separate non-normative execution evidence for detail.

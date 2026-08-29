@@ -2,7 +2,8 @@
 
 **Verdict:** READY.
 
-Five bounded requirements and five testable acceptance criteria cover closeout,
+Six bounded requirements and six testable acceptance criteria cover closeout,
 SSOT, all remote heads, all relevant local locations, the four-batch advisory
-manifest, and the no-mutation Owner gate. No product, runtime, contract, or
-provider-state claim is within scope.
+manifest, the no-mutation Owner gate, and separately authorized execution
+reconciliation. No product, runtime, contract, or normative provider-state claim
+is within scope.

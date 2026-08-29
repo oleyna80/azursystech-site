@@ -1,7 +1,9 @@
 # Critic — WB-2026-08-29-repository-closeout-cleanup
 
-**Verdict:** APPROVE. **Isolation:** native-subagent.
+**Verdict:** APPROVE. **Isolation:** same-session-degraded.
 
-The audit must preserve the canonical dirty checkout, retain the stated baseline,
-recover the media-curation intent, bind all batch candidates to current SHA/state,
-and keep the manifest advisory. Those constraints are present.
+The final scope remains lifecycle/evidence-only, including the expressly
+authorized regression-fixture repair. Separate Owner authorization, exact
+preflight, and skip-on-mismatch behavior remain explicit; the manifest did not
+self-authorize execution. Preserve/recover items remain protected, and mutable
+external observations remain outside canonical lifecycle authority.

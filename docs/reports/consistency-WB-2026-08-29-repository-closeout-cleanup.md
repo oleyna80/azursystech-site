@@ -3,6 +3,6 @@
 **Verdict:** READY.
 
 The specification, plan, tasklist, active JSON, gates, registry, Project Map,
-audit reports, and manifest use the same Work Block, branch, immutable base,
-and lifecycle-only write boundary. The predecessor is completed; this is sole
-active Work Block.
+audit reports, manifest, and post-authorized execution record use the same Work
+Block, branch, immutable base, and lifecycle-only write boundary. The predecessor
+and this Work Block are completed; no Work Block remains active.

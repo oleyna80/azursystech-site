@@ -1,24 +1,23 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-2026-08-29-repository-closeout-cleanup",
-  "governance_profile": "Managed",
-  "specification": {"path": "docs/specs/WB-2026-08-29-repository-closeout-cleanup.md", "revision": "v1"},
-  "subject_branch": "wb/2026-08-29-repository-closeout-cleanup",
-  "base_commit": "feb38b0c8eb13df73024d5a8f7e7a23dc9d42fd1",
-  "define_quality": {"required": true, "status": "READY", "requirements_review": "docs/reports/requirements-quality-WB-2026-08-29-repository-closeout-cleanup.md", "traceability": "docs/reports/traceability-WB-2026-08-29-repository-closeout-cleanup.md", "consistency_analysis": "docs/reports/consistency-WB-2026-08-29-repository-closeout-cleanup.md"},
-  "write_gate": {"status": "READY", "opened_at": "2026-08-29T00:00:00+02:00"},
-  "critic": {"required": true, "status": "READY", "verdict": "APPROVE", "report": "docs/reports/critic-WB-2026-08-29-repository-closeout-cleanup.md", "isolation": "native-subagent", "skip_reason": ""},
+  "work_block_id": "",
+  "governance_profile": "Controlled",
+  "specification": {"path": "", "revision": ""},
+  "subject_branch": "",
+  "base_commit": "",
+  "define_quality": {"required": false, "status": "PENDING", "requirements_review": "", "traceability": "", "consistency_analysis": ""},
+  "write_gate": {"status": "BLOCKED", "opened_at": null},
+  "critic": {"required": true, "status": "PENDING", "verdict": "PENDING", "report": "", "isolation": "unknown", "skip_reason": ""},
   "assurance": {
-    "review": {"required": true, "status": "READY", "verdict": "READY", "report": "docs/reports/review-WB-2026-08-29-repository-closeout-cleanup.md", "isolation": "same-session-degraded", "skip_reason": ""},
-    "verification": {"required": true, "status": "READY", "verdict": "READY", "report": "docs/reports/verification-WB-2026-08-29-repository-closeout-cleanup.md", "isolation": "same-session-degraded", "skip_reason": ""},
-    "evaluation": {"required": false, "status": "SKIPPED", "verdict": "SKIPPED", "plan": "", "report": "", "rubric_revision": "", "benchmark_revision": "", "isolation": "not_applicable", "skip_reason": "Advisory repository cleanup evidence has no generative or rubric-based deliverable."},
-    "drift": {"required": true, "status": "READY", "verdict": "ALIGNED", "report": "docs/reports/drift-WB-2026-08-29-repository-closeout-cleanup.md", "isolation": "same-session-degraded", "skip_reason": ""}
+    "review": {"required": true, "status": "PENDING", "verdict": "PENDING", "report": "", "isolation": "unknown", "skip_reason": ""},
+    "verification": {"required": true, "status": "PENDING", "verdict": "PENDING", "report": "", "isolation": "unknown", "skip_reason": ""},
+    "evaluation": {"required": false, "status": "PENDING", "verdict": "PENDING", "plan": "", "report": "", "rubric_revision": "", "benchmark_revision": "", "isolation": "unknown", "skip_reason": ""},
+    "drift": {"required": false, "status": "PENDING", "verdict": "PENDING", "report": "", "isolation": "unknown", "skip_reason": ""}
   },
   "closeout_mode": "pending",
   "integrations": {"approved": [], "admission_records": []},
-  "write_set": [".agent/active-work-block.json", ".agent/critic-gate.md", ".agent/verification-gate.md", ".codex/write-gate.md", "FILE_REGISTRY.yml", "PROJECT_MAP.md", "scripts/test-release-state-contracts.py", "docs/specs/WB-2026-08-29-repository-closeout-cleanup.md", "docs/plans/WB-2026-08-29-repository-closeout-cleanup.md", "docs/tasklist/WB-2026-08-29-repository-closeout-cleanup.tasklist.md", "docs/plans/WB-2026-08-28-repository-lifecycle-normalization.md", "docs/reports/closeout/WB-2026-08-28-repository-lifecycle-normalization.md", "docs/reports/requirements-quality-WB-2026-08-29-repository-closeout-cleanup.md", "docs/reports/traceability-WB-2026-08-29-repository-closeout-cleanup.md", "docs/reports/consistency-WB-2026-08-29-repository-closeout-cleanup.md", "docs/reports/critic-WB-2026-08-29-repository-closeout-cleanup.md", "docs/reports/review-WB-2026-08-29-repository-closeout-cleanup.md", "docs/reports/verification-WB-2026-08-29-repository-closeout-cleanup.md", "docs/reports/drift-WB-2026-08-29-repository-closeout-cleanup.md", "docs/reports/repository-branch-lifecycle-audit-2026-08-29.md", "docs/reports/repository-worktree-audit-2026-08-29.md", "docs/reports/repository-cleanup-manifest-2026-08-29.md"],
-  "coordination_write_set": [".agent/active-work-block.json", ".agent/critic-gate.md", ".agent/verification-gate.md", ".codex/write-gate.md", "FILE_REGISTRY.yml", "PROJECT_MAP.md", "docs/plans/**", "docs/reports/**"],
-  "external_hard_stops": ["protected_default_branch_mutation", "destructive", "live_infra", "live_data", "credentials", "client_communications", "irreversible_publish"],
-  "lifecycle_note": "This Work Block is advisory cleanup preparation only. It stops at OWNER_CLEANUP_GATE and grants no push, provider mutation, remote deletion, worktree prune/remove, local deletion, reset, clean, stash, merge, or deployment."
+  "write_set": [],
+  "coordination_write_set": [".agent/active-work-block.json", ".agent/critic-gate.md", ".agent/verification-gate.md", ".codex/write-gate.md", "docs/plans/**", "docs/specs/**", "docs/tasklist/**", "docs/reports/**", "docs/architecture/drafts/**", "memory_bank/**"],
+  "external_hard_stops": ["protected_default_branch_mutation", "destructive", "live_infra", "live_data", "credentials", "client_communications", "irreversible_publish"]
 }

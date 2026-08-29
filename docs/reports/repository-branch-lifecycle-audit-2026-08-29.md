@@ -28,3 +28,14 @@ Read-only provider evidence associates historical changes for the seven prior
 known candidates and the two Work Blocks; deterministic ancestry resolves the
 four former investigations. Totals: KEEP 2, SAFE_REMOTE_DELETE 13,
 RECOVER_INTENT 1, DIRTY_PRESERVE 1, INVESTIGATE 0.
+
+## Post-authorized execution reconciliation
+
+The table above is the Phase 1 planning snapshot, not a current provider-state
+assertion. A separate Owner-authorized, preflight-bound batch subsequently
+executed eleven eligible remote candidates. The two dependent candidates
+`feat/automatiser-demandes-clients-guide` and
+`wb/2026-08-25-shared-analysis-surface` were preserved because the required
+single prune batch was skipped on a stale-record SHA mismatch. See
+`docs/reports/repository-cleanup-execution-2026-08-29.md` for operational
+evidence; no future deletion is authorized by this audit.

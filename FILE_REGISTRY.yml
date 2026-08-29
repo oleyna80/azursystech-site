@@ -94,7 +94,8 @@ migration_state:
   completed_work_blocks:
     - docs/plans/WB-2026-08-25-shared-analysis-surface.md
     - docs/plans/WB-2026-08-28-repository-lifecycle-normalization.md
-  active_work_block: docs/plans/WB-2026-08-29-repository-closeout-cleanup.md
+    - docs/plans/WB-2026-08-29-repository-closeout-cleanup.md
+  active_work_block: null
 
 release_state:
   contract: governance/release-state.md
@@ -103,8 +104,8 @@ release_state:
   workflow: .github/workflows/release-state-contract.yml
   authority: assurance_only
   external_vcs_state: non_normative
-  latest_completed_work_block: docs/plans/WB-2026-08-28-repository-lifecycle-normalization.md
-  closeout_report: docs/reports/closeout/WB-2026-08-28-repository-lifecycle-normalization.md
+  latest_completed_work_block: docs/plans/WB-2026-08-29-repository-closeout-cleanup.md
+  closeout_report: docs/reports/closeout/WB-2026-08-29-repository-closeout-cleanup.md
 
 entries:
   AGENTS.md:
