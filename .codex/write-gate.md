@@ -1,14 +1,11 @@
 # Write Gate Record
 
-- **Work Block:** `WB-2026-08-28-repository-lifecycle-normalization`
-- **Write Gate Status:** `READY`
-- **Opened At:** `2026-08-28T00:00:00+02:00`
-- **Critic:** `READY` / `SUPPLEMENT` adopted
-- **Base commit:** `96dbd44102785005bfd23b0f99192f5bfeb17e68`
-- **Closeout Mode:** `pending`
+- **Work Block:** none
+- **Write Gate Status:** `BLOCKED`
+- **Opened At:** null
+- **Critic:** `READY` / `APPROVE`
+- **Base commit:** `feb38b0c8eb13df73024d5a8f7e7a23dc9d42fd1`
+- **Closeout Mode:** `success-closeout`
 
-The gate permits only the explicit local lifecycle-normalization write-set in
-the isolated checkout. It grants no push, force-push, PR mutation, merge,
-deployment, remote branch deletion, worktree prune, or local worktree deletion.
-The follow-on operational active-record and specification-binding P1s remain
-within that write-set.
+No active Work Block exists. The write gate is fail-closed until a successor Work
+Block is defined and independently opens its own authorized write-set.

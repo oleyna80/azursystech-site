@@ -1,13 +1,13 @@
 # Verification Gate Record
 
-- **Work Block:** `WB-2026-08-28-repository-lifecycle-normalization`
+- **Work Block:** `WB-2026-08-29-repository-closeout-cleanup`
 - **Status:** `READY`
 - **Verdict:** `READY`
-- **Report:** `docs/reports/verification-WB-2026-08-28-repository-lifecycle-normalization.md`
+- **Report:** `docs/reports/verification-WB-2026-08-29-repository-closeout-cleanup.md`
 - **Isolation:** `same-session-degraded`
-- **Base commit:** `96dbd44102785005bfd23b0f99192f5bfeb17e68`
+- **Base commit:** `feb38b0c8eb13df73024d5a8f7e7a23dc9d42fd1`
 
-Focused local validation is READY after the operational specification-binding and
-workflow-trigger correction: the release contract and expanded disposable
-regressions pass with fresh local Review and Drift. It cannot authorize push, PR
-mutation, remote deletion, worktree cleanup, merge, or deployment.
+Final local validation is READY after lifecycle reconciliation. The completed
+registry, Project Map, inactive operational record, terminal state, and canonical
+closeout agree. This record cannot authorize push, provider mutation, cleanup,
+merge, or deployment.
