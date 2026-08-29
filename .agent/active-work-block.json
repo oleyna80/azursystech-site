@@ -1,29 +1,24 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-2026-08-28-repository-lifecycle-normalization",
+  "work_block_id": "WB-2026-08-29-repository-closeout-cleanup",
   "governance_profile": "Managed",
-  "specification": {"path": "docs/specs/WB-2026-08-28-repository-lifecycle-normalization.md", "revision": "v1"},
-  "subject_branch": "wb/2026-08-28-repository-lifecycle-normalization",
-  "base_commit": "96dbd44102785005bfd23b0f99192f5bfeb17e68",
-  "define_quality": {"required": true, "status": "READY", "requirements_review": "docs/reports/requirements-quality-WB-2026-08-28-repository-lifecycle-normalization.md", "traceability": "docs/reports/traceability-WB-2026-08-28-repository-lifecycle-normalization.md", "consistency_analysis": "docs/reports/consistency-WB-2026-08-28-repository-lifecycle-normalization.md"},
-  "write_gate": {"status": "READY", "opened_at": "2026-08-28T00:00:00+02:00"},
-  "critic": {"required": true, "status": "READY", "verdict": "SUPPLEMENT", "report": "docs/reports/critic-WB-2026-08-28-repository-lifecycle-normalization.md", "isolation": "native-subagent", "skip_reason": ""},
+  "specification": {"path": "docs/specs/WB-2026-08-29-repository-closeout-cleanup.md", "revision": "v1"},
+  "subject_branch": "wb/2026-08-29-repository-closeout-cleanup",
+  "base_commit": "feb38b0c8eb13df73024d5a8f7e7a23dc9d42fd1",
+  "define_quality": {"required": true, "status": "READY", "requirements_review": "docs/reports/requirements-quality-WB-2026-08-29-repository-closeout-cleanup.md", "traceability": "docs/reports/traceability-WB-2026-08-29-repository-closeout-cleanup.md", "consistency_analysis": "docs/reports/consistency-WB-2026-08-29-repository-closeout-cleanup.md"},
+  "write_gate": {"status": "READY", "opened_at": "2026-08-29T00:00:00+02:00"},
+  "critic": {"required": true, "status": "READY", "verdict": "APPROVE", "report": "docs/reports/critic-WB-2026-08-29-repository-closeout-cleanup.md", "isolation": "native-subagent", "skip_reason": ""},
   "assurance": {
-    "review": {"required": true, "status": "READY", "verdict": "READY", "report": "docs/reports/review-WB-2026-08-28-repository-lifecycle-normalization.md", "isolation": "same-session-degraded", "skip_reason": ""},
-    "verification": {"required": true, "status": "READY", "verdict": "READY", "report": "docs/reports/verification-WB-2026-08-28-repository-lifecycle-normalization.md", "isolation": "same-session-degraded", "skip_reason": ""},
-    "evaluation": {"required": false, "status": "SKIPPED", "verdict": "PENDING", "plan": "", "report": "", "rubric_revision": "", "benchmark_revision": "", "isolation": "not_applicable", "skip_reason": "Deterministic repository-lifecycle normalization has no generative or rubric-based deliverable."},
-    "drift": {"required": true, "status": "READY", "verdict": "ALIGNED", "report": "docs/reports/drift-WB-2026-08-28-repository-lifecycle-normalization.md", "isolation": "same-session-degraded", "skip_reason": ""}
+    "review": {"required": true, "status": "READY", "verdict": "READY", "report": "docs/reports/review-WB-2026-08-29-repository-closeout-cleanup.md", "isolation": "same-session-degraded", "skip_reason": ""},
+    "verification": {"required": true, "status": "READY", "verdict": "READY", "report": "docs/reports/verification-WB-2026-08-29-repository-closeout-cleanup.md", "isolation": "same-session-degraded", "skip_reason": ""},
+    "evaluation": {"required": false, "status": "SKIPPED", "verdict": "SKIPPED", "plan": "", "report": "", "rubric_revision": "", "benchmark_revision": "", "isolation": "not_applicable", "skip_reason": "Advisory repository cleanup evidence has no generative or rubric-based deliverable."},
+    "drift": {"required": true, "status": "READY", "verdict": "ALIGNED", "report": "docs/reports/drift-WB-2026-08-29-repository-closeout-cleanup.md", "isolation": "same-session-degraded", "skip_reason": ""}
   },
   "closeout_mode": "pending",
   "integrations": {"approved": [], "admission_records": []},
-  "write_set": [
-    ".agent/active-work-block.json", ".agent/critic-gate.md", ".agent/verification-gate.md", ".codex/write-gate.md", "FILE_REGISTRY.yml", "PROJECT_MAP.md", "governance/release-state.md",
-    "docs/specs/WB-2026-08-28-repository-lifecycle-normalization.md", "docs/specs/WB-2026-08-25-shared-analysis-surface.md", "docs/plans/WB-2026-08-28-repository-lifecycle-normalization.md", "docs/tasklist/WB-2026-08-28-repository-lifecycle-normalization.tasklist.md", "docs/plans/WB-2026-08-25-shared-analysis-surface.md", "docs/reports/closeout/WB-2026-08-25-shared-analysis-surface.md",
-    "docs/reports/requirements-quality-WB-2026-08-28-repository-lifecycle-normalization.md", "docs/reports/traceability-WB-2026-08-28-repository-lifecycle-normalization.md", "docs/reports/consistency-WB-2026-08-28-repository-lifecycle-normalization.md", "docs/reports/critic-WB-2026-08-28-repository-lifecycle-normalization.md", "docs/reports/repository-branch-lifecycle-audit-2026-08-28.md", "docs/reports/repository-worktree-audit-2026-08-28.md", "docs/reports/review-WB-2026-08-28-repository-lifecycle-normalization.md", "docs/reports/verification-WB-2026-08-28-repository-lifecycle-normalization.md", "docs/reports/drift-WB-2026-08-28-repository-lifecycle-normalization.md",
-    "memory_bank/orchestrator-log.md", "memory_bank/context.md", "memory_bank/progress.md", "memory_bank/decisions.md", "scripts/validate-release-state.py", "scripts/test-release-state-contracts.py", ".github/workflows/release-state-contract.yml"
-  ],
-  "coordination_write_set": [".agent/active-work-block.json", ".agent/critic-gate.md", ".agent/verification-gate.md", ".codex/write-gate.md", "FILE_REGISTRY.yml", "PROJECT_MAP.md", "docs/plans/**", "docs/reports/**", "memory_bank/**"],
+  "write_set": [".agent/active-work-block.json", ".agent/critic-gate.md", ".agent/verification-gate.md", ".codex/write-gate.md", "FILE_REGISTRY.yml", "PROJECT_MAP.md", "scripts/test-release-state-contracts.py", "docs/specs/WB-2026-08-29-repository-closeout-cleanup.md", "docs/plans/WB-2026-08-29-repository-closeout-cleanup.md", "docs/tasklist/WB-2026-08-29-repository-closeout-cleanup.tasklist.md", "docs/plans/WB-2026-08-28-repository-lifecycle-normalization.md", "docs/reports/closeout/WB-2026-08-28-repository-lifecycle-normalization.md", "docs/reports/requirements-quality-WB-2026-08-29-repository-closeout-cleanup.md", "docs/reports/traceability-WB-2026-08-29-repository-closeout-cleanup.md", "docs/reports/consistency-WB-2026-08-29-repository-closeout-cleanup.md", "docs/reports/critic-WB-2026-08-29-repository-closeout-cleanup.md", "docs/reports/review-WB-2026-08-29-repository-closeout-cleanup.md", "docs/reports/verification-WB-2026-08-29-repository-closeout-cleanup.md", "docs/reports/drift-WB-2026-08-29-repository-closeout-cleanup.md", "docs/reports/repository-branch-lifecycle-audit-2026-08-29.md", "docs/reports/repository-worktree-audit-2026-08-29.md", "docs/reports/repository-cleanup-manifest-2026-08-29.md"],
+  "coordination_write_set": [".agent/active-work-block.json", ".agent/critic-gate.md", ".agent/verification-gate.md", ".codex/write-gate.md", "FILE_REGISTRY.yml", "PROJECT_MAP.md", "docs/plans/**", "docs/reports/**"],
   "external_hard_stops": ["protected_default_branch_mutation", "destructive", "live_infra", "live_data", "credentials", "client_communications", "irreversible_publish"],
-  "lifecycle_note": "This Work Block normalizes local repository lifecycle evidence after a completed prior Work Block. Its branch/worktree inventory is advisory and timestamped. Remote branch deletion, worktree prune or deletion, push, PR mutation, merge, deployment, and any final external VCS claim remain outside this Work Block."
+  "lifecycle_note": "This Work Block is advisory cleanup preparation only. It stops at OWNER_CLEANUP_GATE and grants no push, provider mutation, remote deletion, worktree prune/remove, local deletion, reset, clean, stash, merge, or deployment."
 }

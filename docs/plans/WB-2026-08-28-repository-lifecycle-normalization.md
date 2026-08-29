@@ -1,7 +1,7 @@
 ---
 artifact_type: work_block
 work_block_id: WB-2026-08-28-repository-lifecycle-normalization
-status: in_progress
+status: completed
 revision: v3
 ---
 
@@ -51,8 +51,13 @@ shared-context specification/plan and canonical closeout, `scripts/test-release-
 
 ## Final State
 
-Fresh repository-side assurance for the follow-on specification-binding and
-workflow-trigger correction is Review READY, Verification READY, and Drift
-ALIGNED, and a scoped local corrective commit exists. Publication and all
-external state remain outside this Work Block; no provider-state assertion
-belongs here.
+- **Stage state:** completed
+- **Review gate:** READY
+- **Verification verdict:** READY
+- **Evaluation verdict:** SKIPPED — deterministic repository-lifecycle normalization has no generative or rubric-based deliverable.
+- **Drift gate:** ALIGNED
+- **Closeout mode:** success-closeout
+- **Task status:** completed
+
+Repository closeout is canonical repository evidence. External VCS state remains
+non-normative and is not asserted by this terminal state.

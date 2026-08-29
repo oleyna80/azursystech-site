@@ -34,6 +34,22 @@ def require_failure(root: Path, label: str, expected_error: str) -> None:
         raise AssertionError(f"{label}: missing deterministic error {expected_error!r}: {result.stderr}")
 
 
+def active_paths(root: Path) -> tuple[str, str, str]:
+    """Resolve current repository-owned active lifecycle identities."""
+    registry = yaml.safe_load((root / "FILE_REGISTRY.yml").read_text(encoding="utf-8"))
+    plan = registry["migration_state"]["active_work_block"]
+    if not isinstance(plan, str):
+        raise AssertionError("fixture repository must have a canonical active Work Block")
+    operational = json.loads(
+        (root / ".agent/active-work-block.json").read_text(encoding="utf-8")
+    )
+    work_block_id = operational["work_block_id"]
+    specification = operational["specification"]["path"]
+    if not all(isinstance(value, str) and value for value in (work_block_id, specification)):
+        raise AssertionError("fixture repository must have a valid operational active Work Block")
+    return plan, work_block_id, specification
+
+
 def require_workflow_active_gate_path(root: Path) -> None:
     workflow = yaml.load(
         (root / ".github/workflows/release-state-contract.yml").read_text(encoding="utf-8"),
@@ -90,11 +106,11 @@ def main() -> int:
         require_failure(fixture, "missing migration-state must fail", "FILE_REGISTRY.yml requires migration_state")
     with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
         fixture = fixture_root(holder)
-        plan = "docs/plans/WB-2026-08-28-repository-lifecycle-normalization.md"
+        plan, active_id, _ = active_paths(fixture)
         alternate = "docs/plans/alternate-active-work-block.md"
         (fixture / alternate).write_text(
             (fixture / plan).read_text(encoding="utf-8").replace(
-                "WB-2026-08-28-repository-lifecycle-normalization",
+                active_id,
                 "WB-alternate-active-work-block",
             ),
             encoding="utf-8",
@@ -133,19 +149,29 @@ def main() -> int:
         fixture = fixture_root(holder)
         active = fixture / ".agent/active-work-block.json"
         data = json.loads(active.read_text(encoding="utf-8"))
-        data["specification"]["path"] = (
-            "docs/specs/WB-2026-08-25-shared-analysis-surface.md"
+        _, active_id, specification_path = active_paths(fixture)
+        wrong_specification = "docs/specs/WB-disposable-wrong-identity.md"
+        (fixture / wrong_specification).write_text(
+            "---\n"
+            "artifact_type: specification\n"
+            "work_block_id: WB-disposable-wrong-identity\n"
+            "revision: v1\n"
+            "---\n\n"
+            "# Disposable wrong identity specification\n",
+            encoding="utf-8",
         )
+        data["specification"]["path"] = wrong_specification
         active.write_text(json.dumps(data), encoding="utf-8")
         require_failure(
             fixture,
-            "existing prior Work Block specification must fail",
+            "existing specification with wrong Work Block identity must fail",
             "operational active Work Block specification Work Block ID does not match "
             "release-state active Work Block",
         )
     with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
         fixture = fixture_root(holder)
-        specification = fixture / "docs/specs/WB-2026-08-28-repository-lifecycle-normalization.md"
+        _, _, specification_path = active_paths(fixture)
+        specification = fixture / specification_path
         specification.write_text(
             specification.read_text(encoding="utf-8").replace(
                 "artifact_type: specification", "artifact_type: work_block", 1
@@ -159,7 +185,8 @@ def main() -> int:
         )
     with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
         fixture = fixture_root(holder)
-        specification = fixture / "docs/specs/WB-2026-08-28-repository-lifecycle-normalization.md"
+        _, _, specification_path = active_paths(fixture)
+        specification = fixture / specification_path
         specification.write_text(
             specification.read_text(encoding="utf-8").replace("---\n", "", 1),
             encoding="utf-8",
@@ -171,7 +198,8 @@ def main() -> int:
         )
     with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
         fixture = fixture_root(holder)
-        specification = fixture / "docs/specs/WB-2026-08-28-repository-lifecycle-normalization.md"
+        _, _, specification_path = active_paths(fixture)
+        specification = fixture / specification_path
         specification.write_text("---\nartifact_type: specification\n", encoding="utf-8")
         require_failure(
             fixture,
@@ -189,15 +217,16 @@ def main() -> int:
         require_failure(fixture, "malformed operational active record must fail", "operational active Work Block is malformed")
     with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
         fixture = fixture_root(holder)
+        plan, active_id, _ = active_paths(fixture)
         registry = fixture / "FILE_REGISTRY.yml"
-        registry.write_text(registry.read_text(encoding="utf-8").replace("active_work_block: docs/plans/WB-2026-08-28-repository-lifecycle-normalization.md", "active_work_block: null", 1), encoding="utf-8")
+        registry.write_text(registry.read_text(encoding="utf-8").replace(f"active_work_block: {plan}", "active_work_block: null", 1), encoding="utf-8")
         project_map = fixture / "PROJECT_MAP.md"
         project_map.write_text(
             project_map.read_text(encoding="utf-8")
-            .replace("active_work_block: docs/plans/WB-2026-08-28-repository-lifecycle-normalization.md", "active_work_block: null", 1)
+            .replace(f"active_work_block: {plan}", "active_work_block: null", 1)
             .replace(
-                "- Active implementation Work Block: `WB-2026-08-28-repository-lifecycle-normalization`\n"
-                "  at `docs/plans/WB-2026-08-28-repository-lifecycle-normalization.md`.",
+                f"- Active implementation Work Block: `{active_id}`\n"
+                f"  at `{plan}`.",
                 "No active implementation Work Block.",
                 1,
             ),
