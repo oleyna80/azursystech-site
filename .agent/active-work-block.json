@@ -1,86 +1,69 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation",
+  "work_block_id": "",
   "governance_profile": "Controlled",
   "specification": {
-    "path": "docs/specs/WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation.md",
-    "revision": "v1"
+    "path": "",
+    "revision": ""
   },
-  "subject_branch": "fix/lifecycle-inactive-publication-reconciliation",
-  "base_commit": "8db5b65fcbd60345d588c292cfbc97b2b01df47b",
+  "subject_branch": "",
+  "base_commit": "",
   "write_gate": {
-    "status": "READY",
-    "opened_at": "2026-09-03T21:27:28.559663+00:00"
+    "status": "BLOCKED",
+    "opened_at": null
   },
   "critic": {
     "required": true,
-    "status": "READY",
-    "verdict": "APPROVE",
-    "report": "docs/reports/critic-WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation.md",
-    "isolation": "same-session-degraded",
+    "status": "PENDING",
+    "verdict": "PENDING",
+    "report": "",
+    "isolation": "unknown",
     "skip_reason": ""
   },
   "assurance": {
     "review": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation-review.md",
-      "isolation": "same-session-degraded",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation-verification.md",
-      "isolation": "same-session-degraded",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     },
     "evaluation": {
       "required": false,
-      "status": "SKIPPED",
-      "verdict": "SKIPPED",
+      "status": "PENDING",
+      "verdict": "PENDING",
       "plan": "",
       "report": "",
       "rubric_revision": "",
       "benchmark_revision": "",
       "isolation": "unknown",
-      "skip_reason": "No separate evaluation benchmark is required for deterministic control-plane regression repair."
+      "skip_reason": ""
     },
     "drift": {
       "required": false,
-      "status": "READY",
-      "verdict": "ALIGNED",
-      "report": "docs/reports/WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation-drift.md",
-      "isolation": "same-session-degraded",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     }
   },
-  "closeout_mode": "pending",
+  "closeout_mode": "success-closeout",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
-  "write_set": [
-    ".agent/active-work-block.default.json",
-    ".agent/active-work-block.json",
-    ".claude/hooks/work_block_gate.py",
-    ".codex/hooks/pre_tool_use_policy.py",
-    ".codex/scripts/lifecycle.py",
-    "scripts/validate-installation-profile.py",
-    "scripts/test-github-capability-control-plane.py",
-    "scripts/test-release-state-contracts.py",
-    ".agent/workflows/sdd-protocol.md",
-    "governance/artifacts.md",
-    "FILE_REGISTRY.yml",
-    "PROJECT_MAP.md",
-    "docs/specs/WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation.md",
-    "docs/plans/WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation.md",
-    "docs/tasklist/WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation.tasklist.md",
-    "docs/reports/**"
-  ],
+  "write_set": [],
   "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
@@ -104,5 +87,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "source work opened by Work Block coordination"
+  "lifecycle_note": "Verified lifecycle reconciliation closed; inactive coordination-only closeout follows."
 }
