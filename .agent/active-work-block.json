@@ -1,23 +1,98 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "",
-  "governance_profile": "Controlled",
-  "specification": {"path": "", "revision": ""},
-  "subject_branch": "",
-  "base_commit": "",
-  "define_quality": {"required": false, "status": "PENDING", "requirements_review": "", "traceability": "", "consistency_analysis": ""},
-  "write_gate": {"status": "BLOCKED", "opened_at": null},
-  "critic": {"required": true, "status": "PENDING", "verdict": "PENDING", "report": "", "isolation": "unknown", "skip_reason": ""},
-  "assurance": {
-    "review": {"required": true, "status": "PENDING", "verdict": "PENDING", "report": "", "isolation": "unknown", "skip_reason": ""},
-    "verification": {"required": true, "status": "PENDING", "verdict": "PENDING", "report": "", "isolation": "unknown", "skip_reason": ""},
-    "evaluation": {"required": false, "status": "PENDING", "verdict": "PENDING", "plan": "", "report": "", "rubric_revision": "", "benchmark_revision": "", "isolation": "unknown", "skip_reason": ""},
-    "drift": {"required": false, "status": "PENDING", "verdict": "PENDING", "report": "", "isolation": "unknown", "skip_reason": ""}
+  "work_block_id": "WB-2026-09-03-technical-seo-cwv-entity-audit",
+  "governance_profile": "Managed",
+  "specification": {
+    "path": "docs/specs/WB-2026-09-03-technical-seo-cwv-entity-audit.md",
+    "revision": "v1"
   },
-  "closeout_mode": "pending",
-  "integrations": {"approved": [], "admission_records": []},
-  "write_set": [],
-  "coordination_write_set": [".agent/active-work-block.json", ".agent/critic-gate.md", ".agent/verification-gate.md", ".codex/write-gate.md", "docs/plans/**", "docs/specs/**", "docs/tasklist/**", "docs/reports/**", "docs/architecture/drafts/**", "memory_bank/**"],
-  "external_hard_stops": ["protected_default_branch_mutation", "destructive", "live_infra", "live_data", "credentials", "client_communications", "irreversible_publish"]
+  "subject_branch": "audit/technical-seo-cwv-entity",
+  "base_commit": "a8e4c672632a2c2cca4d5ea60770231da32d1e1c",
+  "write_gate": {
+    "status": "BLOCKED",
+    "opened_at": null
+  },
+  "critic": {
+    "required": true,
+    "status": "READY",
+    "verdict": "APPROVE",
+    "report": "docs/reports/critic-WB-2026-09-03.md",
+    "isolation": "same-session-degraded",
+    "skip_reason": ""
+  },
+  "assurance": {
+    "review": {
+      "required": true,
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/review-WB-2026-09-03.md",
+      "isolation": "same-session-degraded",
+      "skip_reason": ""
+    },
+    "verification": {
+      "required": true,
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/verification-WB-2026-09-03.md",
+      "isolation": "same-session-degraded",
+      "skip_reason": ""
+    },
+    "evaluation": {
+      "required": false,
+      "status": "SKIPPED",
+      "verdict": "SKIPPED",
+      "plan": "",
+      "report": "",
+      "rubric_revision": "",
+      "benchmark_revision": "",
+      "isolation": "unknown",
+      "skip_reason": "Not applicable: audit/reporting Work Block with no product behavior change."
+    },
+    "drift": {
+      "required": true,
+      "status": "READY",
+      "verdict": "ALIGNED",
+      "report": "docs/reports/drift-WB-2026-09-03.md",
+      "isolation": "same-session-degraded",
+      "skip_reason": ""
+    }
+  },
+  "closeout_mode": "reporting-only",
+  "integrations": {
+    "approved": [],
+    "admission_records": []
+  },
+  "write_set": [
+    ".agent/active-work-block.json",
+    ".agent/critic-gate.md",
+    ".agent/verification-gate.md",
+    ".codex/write-gate.md",
+    "docs/specs/WB-2026-09-03-technical-seo-cwv-entity-audit.md",
+    "docs/plans/WB-2026-09-03-technical-seo-cwv-entity-audit.md",
+    "docs/tasklist/WB-2026-09-03-technical-seo-cwv-entity-audit.tasklist.md",
+    "docs/reports/**"
+  ],
+  "coordination_write_set": [
+    ".agent/active-work-block.json",
+    ".agent/critic-gate.md",
+    ".agent/verification-gate.md",
+    ".codex/write-gate.md",
+    "docs/plans/**",
+    "docs/specs/**",
+    "docs/tasklist/**",
+    "docs/reports/**",
+    "docs/architecture/drafts/**",
+    "memory_bank/**"
+  ],
+  "external_hard_stops": [
+    "protected_default_branch_mutation",
+    "destructive",
+    "live_infra",
+    "live_data",
+    "credentials",
+    "client_communications",
+    "irreversible_publish"
+  ],
+  "lifecycle_note": "Focused docs-only correction pass complete; implementation remains deferred to successor Work Blocks"
 }

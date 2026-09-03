@@ -1,11 +1,11 @@
 # Write Gate Record
 
-- **Work Block:** none
-- **Write Gate Status:** `BLOCKED`
+- **Work Block:** `WB-2026-09-03-technical-seo-cwv-entity-audit`
+- **Write Gate Status:** `BLOCKED` (frozen after focused docs-only correction pass)
 - **Opened At:** null
 - **Critic:** `READY` / `APPROVE`
-- **Base commit:** `feb38b0c8eb13df73024d5a8f7e7a23dc9d42fd1`
-- **Closeout Mode:** `success-closeout`
+- **Base commit:** `a8e4c672632a2c2cca4d5ea60770231da32d1e1c`
+- **Closeout Mode:** `reporting-only`
 
-No active Work Block exists. The write gate is fail-closed until a successor Work
-Block is defined and independently opens its own authorized write-set.
+The audit write gate is frozen and fail-closed. A successor Work Block is required
+for any implementation or source change.
