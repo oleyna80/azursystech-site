@@ -289,6 +289,10 @@ def test_reporting_only_closeout_inactive_coordination_scope() -> None:
         (cwd / "PROJECT_MAP.md").write_text("# Project map\n", encoding="utf-8")
         (cwd / "src").mkdir()
         (cwd / "src/a.txt").write_text("source\n", encoding="utf-8")
+        git(cwd, "add", "src/a.txt")
+        git(cwd, "commit", "-q", "-m", "track fixture source")
+        (cwd / "src/a.txt").write_text("changed source\n", encoding="utf-8")
+        (cwd / "pathspecs.txt").write_text("src/a.txt\n", encoding="utf-8")
         assert_allow(
             hook(
                 CODEX_GATE,
@@ -312,6 +316,35 @@ def test_reporting_only_closeout_inactive_coordination_scope() -> None:
         git(cwd, "add", "FILE_REGISTRY.yml", "PROJECT_MAP.md", "docs/plans/closeout.md")
         assert_allow(hook(CODEX_GATE, cwd, "Bash", {"command": "git commit -m closeout"}), "Codex inactive coordination commit")
         assert_allow(hook(CLAUDE_GATE, cwd, "Bash", {"command": "git commit -m closeout"}), "Claude inactive coordination commit")
+        unsafe_commits = (
+            "git commit -a -m closeout",
+            "git commit --all -m closeout",
+            "git commit -i src/a.txt -m closeout",
+            "git commit --include src/a.txt -m closeout",
+            "git commit -o src/a.txt -m closeout",
+            "git commit --only src/a.txt -m closeout",
+            "git commit -m closeout -- src/a.txt",
+            "git commit -m closeout --pathspec-from-file=pathspecs.txt",
+            "git -C . commit -a -m closeout",
+            "git -c color.ui=false commit -m closeout -- src/a.txt",
+            "git --exec-path=/usr/lib/git-core commit -a -m closeout",
+            "git --no-advice commit -a -m closeout",
+            "command git commit -a -m closeout",
+            "command -p git commit -a -m closeout",
+            "env GIT_EDITOR=: git commit -a -m closeout",
+            "env -C . git commit -a -m closeout",
+        "env -u GIT_EDITOR git commit -a -m closeout",
+        "env --ignore-signal git commit -a -m closeout",
+        "env --ignore-signal HUP git commit -a -m closeout",
+        "env -S 'git commit -a -m closeout'",
+        "env -S'git commit -a -m closeout'",
+        "env -S'env -u GIT_EDITOR git commit -a -m closeout'",
+        "env --split-string='git commit -a -m closeout'",
+        "/usr/bin/git commit -a -m closeout",
+        )
+        for command in unsafe_commits:
+            assert_deny(hook(CODEX_GATE, cwd, "Bash", {"command": command}), f"Codex inactive selector {command}")
+            assert_deny(hook(CLAUDE_GATE, cwd, "Bash", {"command": command}), f"Claude inactive selector {command}")
         git(cwd, "reset", "-q")
         git(cwd, "add", "src/a.txt")
         assert_deny(hook(CODEX_GATE, cwd, "Bash", {"command": "git commit -m source"}), "Codex inactive source commit")
@@ -478,6 +511,20 @@ def test_binding_mismatch_coordination_and_repair() -> None:
             {"file_path": str(cwd / ".agent/critic-gate.md")},
         )
         assert_deny(claude_coordination, "Claude stale gate coordination write")
+
+        (cwd / ".agent/critic-gate.md").write_text("critic\n", encoding="utf-8")
+        git(cwd, "add", ".agent/critic-gate.md")
+        stale_codex_commit = hook(CODEX_GATE, cwd, "Bash", {"command": "git commit -m coordination"})
+        assert_deny(stale_codex_commit, "Codex stale gate coordination commit")
+        assert_diagnostic(
+            stale_codex_commit,
+            cwd,
+            branch="feature/capability-test",
+            work_block_id="WB-TEST-GITHUB-CAPABILITY",
+        )
+        stale_claude_commit = hook(CLAUDE_GATE, cwd, "Bash", {"command": "git commit -m coordination"})
+        assert_deny(stale_claude_commit, "Claude stale gate coordination commit")
+        git(cwd, "reset", "-q")
 
         assert_allow(
             hook(

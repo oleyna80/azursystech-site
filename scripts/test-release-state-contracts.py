@@ -289,6 +289,11 @@ def main() -> int:
             "- No active implementation Work Block.",
             1,
         )
+        map_text = map_text.replace(
+            f"- Active implementation Work Block: `{plan}`.",
+            "- No active implementation Work Block.",
+            1,
+        )
         project_map.write_text(
             map_text,
             encoding="utf-8",

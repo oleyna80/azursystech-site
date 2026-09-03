@@ -1,69 +1,81 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "",
+  "work_block_id": "WB-2026-09-03-lifecycle-inactive-commit-bypass-correction",
   "governance_profile": "Controlled",
   "specification": {
-    "path": "",
-    "revision": ""
+    "path": "docs/specs/WB-2026-09-03-lifecycle-inactive-commit-bypass-correction.md",
+    "revision": "v1"
   },
-  "subject_branch": "",
-  "base_commit": "",
+  "subject_branch": "fix/lifecycle-inactive-publication-reconciliation",
+  "base_commit": "223955758367d2b78b873c499d279ebdfb7f394c",
+  "define_quality": {
+    "required": true,
+    "status": "READY",
+    "requirements_review": "docs/reports/requirements-WB-2026-09-03-lifecycle-inactive-commit-bypass-correction.md",
+    "traceability": "scripts/validate-define-traceability.py",
+    "consistency_analysis": "docs/reports/consistency-WB-2026-09-03-lifecycle-inactive-commit-bypass-correction.md"
+  },
   "write_gate": {
-    "status": "BLOCKED",
-    "opened_at": null
+    "status": "READY",
+    "opened_at": "2026-09-03T00:00:00+00:00"
   },
   "critic": {
     "required": true,
-    "status": "PENDING",
-    "verdict": "PENDING",
-    "report": "",
-    "isolation": "unknown",
+    "status": "READY",
+    "verdict": "SUPPLEMENT",
+    "report": "docs/reports/critic-WB-2026-09-03-lifecycle-inactive-commit-bypass-correction.md",
+    "isolation": "same-session-degraded",
     "skip_reason": ""
   },
   "assurance": {
     "review": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
-      "isolation": "unknown",
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/WB-2026-09-03-lifecycle-inactive-commit-bypass-correction-review.md",
+      "isolation": "same-session-degraded",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
-      "isolation": "unknown",
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/WB-2026-09-03-lifecycle-inactive-commit-bypass-correction-verification.md",
+      "isolation": "same-session-degraded",
       "skip_reason": ""
     },
     "evaluation": {
       "required": false,
-      "status": "PENDING",
-      "verdict": "PENDING",
+      "status": "SKIPPED",
+      "verdict": "SKIPPED",
       "plan": "",
       "report": "",
       "rubric_revision": "",
       "benchmark_revision": "",
-      "isolation": "unknown",
-      "skip_reason": ""
+      "isolation": "same-session-degraded",
+      "skip_reason": "No user-facing or benchmarkable output changed; deterministic control-plane tests are the approved observable evaluation."
     },
     "drift": {
       "required": false,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
-      "isolation": "unknown",
+      "status": "READY",
+      "verdict": "ALIGNED",
+      "report": "docs/reports/drift-WB-2026-09-03-lifecycle-inactive-commit-bypass-correction.md",
+      "isolation": "same-session-degraded",
       "skip_reason": ""
     }
   },
-  "closeout_mode": "success-closeout",
+  "closeout_mode": "pending",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
-  "write_set": [],
+  "write_set": [
+    ".claude/hooks/work_block_gate.py",
+    ".codex/hooks/pre_tool_use_policy.py",
+    "scripts/test-github-capability-control-plane.py",
+    "scripts/test-release-state-contracts.py"
+  ],
   "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
@@ -87,5 +99,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Verified lifecycle reconciliation closed; inactive coordination-only closeout follows."
+  "lifecycle_note": "P1 inactive commit-bypass correction is active and limited to both runtime gates and their deterministic regression."
 }

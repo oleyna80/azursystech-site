@@ -98,7 +98,7 @@ migration_state:
     - docs/plans/WB-2026-09-03-lifecycle-inactive-publication-reconciliation.md
     - docs/plans/WB-2026-09-03-lifecycle-inactive-publication-commit-reconciliation.md
     - docs/plans/WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation.md
-  active_work_block: null
+  active_work_block: docs/plans/WB-2026-09-03-lifecycle-inactive-commit-bypass-correction.md
 
 release_state:
   contract: governance/release-state.md
