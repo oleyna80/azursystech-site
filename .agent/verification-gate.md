@@ -1,8 +1,8 @@
 # Verification Gate Record
 
 - **Work Block:** `WB-2026-09-03-lifecycle-inactive-publication-commit-reconciliation`
-- **Status:** `PENDING`
-- **Verdict:** `PENDING`
+- **Status:** `READY`
+- **Verdict:** `READY`
 
-The successor uses predecessor verification evidence for the frozen diff; its
-post-commit verification is pending.
+Post-commit verification passed. Evidence:
+`docs/reports/WB-2026-09-03-lifecycle-inactive-publication-commit-reconciliation-verification.md`.

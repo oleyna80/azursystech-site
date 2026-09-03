@@ -11,7 +11,8 @@ completed_work_blocks:
   - docs/plans/WB-2026-08-28-repository-lifecycle-normalization.md
   - docs/plans/WB-2026-08-29-repository-closeout-cleanup.md
   - docs/plans/WB-2026-09-03-lifecycle-inactive-publication-reconciliation.md
-active_work_block: docs/plans/WB-2026-09-03-lifecycle-inactive-publication-commit-reconciliation.md
+  - docs/plans/WB-2026-09-03-lifecycle-inactive-publication-commit-reconciliation.md
+active_work_block: docs/plans/WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation.md
 -->
 
 ```yaml
@@ -19,7 +20,7 @@ release_state:
   schema_version: 1
   authority_mode: github_capability
   repository_status: operational
-  active_work_block: docs/plans/WB-2026-09-03-lifecycle-inactive-publication-commit-reconciliation.md
+  active_work_block: docs/plans/WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation.md
   governance_profile: Managed
   publication_mode: owner_controlled_github_free
   last_reconciled_commit: repository_evidence_only
@@ -27,8 +28,9 @@ release_state:
 
 ## Migration Work
 
-- Active implementation Work Block: `WB-2026-09-03-lifecycle-inactive-publication-commit-reconciliation`
-  at `docs/plans/WB-2026-09-03-lifecycle-inactive-publication-commit-reconciliation.md`.
+- Active implementation Work Block:
+  `WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation` at
+  `docs/plans/WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation.md`.
 - The completed migration index is machine-readable in `FILE_REGISTRY.yml:migration_state`.
 
 ## Architecture

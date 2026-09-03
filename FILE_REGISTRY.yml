@@ -96,7 +96,8 @@ migration_state:
     - docs/plans/WB-2026-08-28-repository-lifecycle-normalization.md
     - docs/plans/WB-2026-08-29-repository-closeout-cleanup.md
     - docs/plans/WB-2026-09-03-lifecycle-inactive-publication-reconciliation.md
-  active_work_block: docs/plans/WB-2026-09-03-lifecycle-inactive-publication-commit-reconciliation.md
+    - docs/plans/WB-2026-09-03-lifecycle-inactive-publication-commit-reconciliation.md
+  active_work_block: docs/plans/WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation.md
 
 release_state:
   contract: governance/release-state.md
@@ -105,8 +106,8 @@ release_state:
   workflow: .github/workflows/release-state-contract.yml
   authority: assurance_only
   external_vcs_state: non_normative
-  latest_completed_work_block: docs/plans/WB-2026-09-03-lifecycle-inactive-publication-reconciliation.md
-  closeout_report: docs/reports/closeout/WB-2026-09-03-lifecycle-inactive-publication-reconciliation.md
+  latest_completed_work_block: docs/plans/WB-2026-09-03-lifecycle-inactive-publication-commit-reconciliation.md
+  closeout_report: docs/reports/closeout/WB-2026-09-03-lifecycle-inactive-publication-commit-reconciliation.md
 
 entries:
   AGENTS.md:

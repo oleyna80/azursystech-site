@@ -72,10 +72,12 @@ Only completed required assurance permits successful closeout. Otherwise use
 1. Determine closeout mode (`success-closeout` or `reporting-only`).
 2. Synchronize derived artifacts with the approved specification and delivered state.
 3. Update task status in the tasklist and reset the operational active Work Block
-   record to its canonical inactive state.
-   Inactive state permits only declared coordination artifacts to be edited, staged,
-   and locally committed; source writes and staged source commits remain denied until
-   a successor Work Block explicitly opens a branch-bound write gate.
+   record to its canonical inactive state. The canonical coordination list includes
+   the exact release-state projections `FILE_REGISTRY.yml` and `PROJECT_MAP.md`,
+   but no root or directory wildcard. Inactive state permits only declared
+   coordination artifacts to be edited, staged, and locally committed; source
+   writes and staged source commits remain denied until a successor Work Block
+   explicitly opens a branch-bound write gate.
 4. Promote durable, reusable engineering knowledge to `docs/engineering-memory/`.
 5. For changes ready for publication, generate the canonical **Owner publication handoff** (`.agent/workflows/owner-controlled-github-flow.md`).
 

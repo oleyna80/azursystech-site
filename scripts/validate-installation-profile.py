@@ -34,6 +34,8 @@ EXPECTED_COORDINATION_WRITE_SET = [
     ".agent/critic-gate.md",
     ".agent/verification-gate.md",
     ".codex/write-gate.md",
+    "FILE_REGISTRY.yml",
+    "PROJECT_MAP.md",
     "docs/plans/**",
     "docs/specs/**",
     "docs/tasklist/**",

@@ -267,19 +267,49 @@ def test_reporting_only_closeout_inactive_coordination_scope() -> None:
         assert inactive["write_set"] == []
         assert inactive["write_gate"] == {"status": "BLOCKED", "opened_at": None}
         assert inactive["closeout_mode"] == "reporting-only"
+        assert inactive["coordination_write_set"] == _base["coordination_write_set"]
+        assert inactive["coordination_write_set"] == [
+            ".agent/active-work-block.json",
+            ".agent/critic-gate.md",
+            ".agent/verification-gate.md",
+            ".codex/write-gate.md",
+            "FILE_REGISTRY.yml",
+            "PROJECT_MAP.md",
+            "docs/plans/**",
+            "docs/specs/**",
+            "docs/tasklist/**",
+            "docs/reports/**",
+            "docs/architecture/drafts/**",
+            "memory_bank/**",
+        ]
 
         (cwd / "docs/plans").mkdir(parents=True)
         (cwd / "docs/plans/closeout.md").write_text("closeout\n", encoding="utf-8")
+        (cwd / "FILE_REGISTRY.yml").write_text("release_state: {}\n", encoding="utf-8")
+        (cwd / "PROJECT_MAP.md").write_text("# Project map\n", encoding="utf-8")
         (cwd / "src").mkdir()
         (cwd / "src/a.txt").write_text("source\n", encoding="utf-8")
-        for gate, edit_tool, coordination_input, source_input, label in (
-            (CODEX_GATE, "apply_patch", {"command": "*** Begin Patch\n*** Update File: docs/plans/closeout.md\n*** End Patch"}, {"command": "*** Begin Patch\n*** Update File: src/a.txt\n*** End Patch"}, "Codex"),
-            (CLAUDE_GATE, "Edit", {"file_path": str(cwd / "docs/plans/closeout.md")}, {"file_path": str(cwd / "src/a.txt")}, "Claude"),
+        assert_allow(
+            hook(
+                CODEX_GATE,
+                cwd,
+                "apply_patch",
+                {"command": "*** Begin Patch\n*** Update File: FILE_REGISTRY.yml\n*** Update File: PROJECT_MAP.md\n*** Update File: docs/plans/closeout.md\n*** End Patch"},
+            ),
+            "Codex inactive complete coordination write",
+        )
+        for path in ("FILE_REGISTRY.yml", "PROJECT_MAP.md", "docs/plans/closeout.md"):
+            assert_allow(
+                hook(CLAUDE_GATE, cwd, "Edit", {"file_path": str(cwd / path)}),
+                f"Claude inactive coordination write {path}",
+            )
+        for gate, edit_tool, source_input, label in (
+            (CODEX_GATE, "apply_patch", {"command": "*** Begin Patch\n*** Update File: src/a.txt\n*** End Patch"}, "Codex"),
+            (CLAUDE_GATE, "Edit", {"file_path": str(cwd / "src/a.txt")}, "Claude"),
         ):
-            assert_allow(hook(gate, cwd, edit_tool, coordination_input), f"{label} inactive coordination write")
             assert_deny(hook(gate, cwd, edit_tool, source_input), f"{label} inactive source write")
 
-        git(cwd, "add", "docs/plans/closeout.md")
+        git(cwd, "add", "FILE_REGISTRY.yml", "PROJECT_MAP.md", "docs/plans/closeout.md")
         assert_allow(hook(CODEX_GATE, cwd, "Bash", {"command": "git commit -m closeout"}), "Codex inactive coordination commit")
         assert_allow(hook(CLAUDE_GATE, cwd, "Bash", {"command": "git commit -m closeout"}), "Claude inactive coordination commit")
         git(cwd, "reset", "-q")

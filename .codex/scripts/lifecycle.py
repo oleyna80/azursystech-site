@@ -22,6 +22,8 @@ DEFAULT_COORDINATION = [
     ".agent/critic-gate.md",
     ".agent/verification-gate.md",
     ".codex/write-gate.md",
+    "FILE_REGISTRY.yml",
+    "PROJECT_MAP.md",
     "docs/plans/**",
     "docs/specs/**",
     "docs/tasklist/**",
