@@ -1,0 +1,7 @@
+# Tasklist: Lifecycle Inactive Publication Reconciliation
+
+- [x] TASK-001 [type=documentation] [req=REQ-001,REQ-002,REQ-003,REQ-004,REQ-005,REQ-006] [ac=AC-001,AC-002,AC-003,AC-004,AC-005] [paths=docs/specs/WB-2026-09-03-lifecycle-inactive-publication-reconciliation.md,docs/plans/WB-2026-09-03-lifecycle-inactive-publication-reconciliation.md,docs/tasklist/WB-2026-09-03-lifecycle-inactive-publication-reconciliation.tasklist.md] Define traceable lifecycle reconciliation scope.
+- [x] TASK-002 [type=requirement] [req=REQ-001,REQ-002,REQ-003,REQ-004] [ac=AC-001,AC-002,AC-003] [paths=.codex/scripts/lifecycle.py,.codex/hooks/pre_tool_use_policy.py,.claude/hooks/work_block_gate.py] Implement canonical inactive closeout and coordination-only inactive gates while retaining active binding.
+- [x] TASK-003 [type=requirement] [req=REQ-006] [ac=AC-004] [paths=scripts/test-github-capability-control-plane.py,scripts/test-release-state-contracts.py] Add deterministic lifecycle and cooperative-gate regressions.
+- [x] TASK-004 [type=requirement] [req=REQ-005] [ac=AC-005] [paths=.agent/workflows/sdd-protocol.md,governance/artifacts.md,FILE_REGISTRY.yml,PROJECT_MAP.md] Synchronize lifecycle documentation and release-state projections.
+- [x] TASK-005 [type=assurance] [req=REQ-001,REQ-002,REQ-003,REQ-004,REQ-005,REQ-006] [ac=AC-001,AC-002,AC-003,AC-004,AC-005] [paths=docs/reports/WB-2026-09-03-lifecycle-inactive-publication-reconciliation-*,docs/reports/closeout/WB-2026-09-03-lifecycle-inactive-publication-reconciliation.md] Review, verify, drift-check, and close.

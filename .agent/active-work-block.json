@@ -1,64 +1,64 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-2026-09-03-technical-seo-cwv-entity-audit",
+  "work_block_id": "WB-2026-09-03-lifecycle-inactive-publication-commit-reconciliation",
   "governance_profile": "Managed",
   "specification": {
-    "path": "docs/specs/WB-2026-09-03-technical-seo-cwv-entity-audit.md",
+    "path": "docs/specs/WB-2026-09-03-lifecycle-inactive-publication-commit-reconciliation.md",
     "revision": "v1"
   },
-  "subject_branch": "audit/technical-seo-cwv-entity",
-  "base_commit": "a8e4c672632a2c2cca4d5ea60770231da32d1e1c",
+  "subject_branch": "fix/lifecycle-inactive-publication-reconciliation",
+  "base_commit": "8a72041dcce75798cb0462f32a7432e70dc9c125",
   "write_gate": {
-    "status": "BLOCKED",
-    "opened_at": null
+    "status": "READY",
+    "opened_at": "2026-09-03T20:56:38.730543+00:00"
   },
   "critic": {
     "required": true,
     "status": "READY",
     "verdict": "APPROVE",
-    "report": "docs/reports/critic-WB-2026-09-03.md",
+    "report": "docs/reports/critic-WB-2026-09-03-lifecycle-inactive-publication-commit-reconciliation.md",
     "isolation": "same-session-degraded",
     "skip_reason": ""
   },
   "assurance": {
     "review": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/review-WB-2026-09-03.md",
-      "isolation": "same-session-degraded",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/verification-WB-2026-09-03.md",
-      "isolation": "same-session-degraded",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     },
     "evaluation": {
       "required": false,
-      "status": "SKIPPED",
-      "verdict": "SKIPPED",
+      "status": "PENDING",
+      "verdict": "PENDING",
       "plan": "",
       "report": "",
       "rubric_revision": "",
       "benchmark_revision": "",
       "isolation": "unknown",
-      "skip_reason": "Not applicable: audit/reporting Work Block with no product behavior change."
+      "skip_reason": ""
     },
     "drift": {
-      "required": true,
-      "status": "READY",
-      "verdict": "ALIGNED",
-      "report": "docs/reports/drift-WB-2026-09-03.md",
-      "isolation": "same-session-degraded",
+      "required": false,
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     }
   },
-  "closeout_mode": "reporting-only",
+  "closeout_mode": "pending",
   "integrations": {
     "approved": [],
     "admission_records": []
@@ -67,11 +67,15 @@
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
     ".agent/verification-gate.md",
+    ".agent/workflows/sdd-protocol.md",
+    ".claude/hooks/work_block_gate.py",
+    ".codex/hooks/pre_tool_use_policy.py",
+    ".codex/scripts/lifecycle.py",
     ".codex/write-gate.md",
-    "docs/specs/WB-2026-09-03-technical-seo-cwv-entity-audit.md",
-    "docs/plans/WB-2026-09-03-technical-seo-cwv-entity-audit.md",
-    "docs/tasklist/WB-2026-09-03-technical-seo-cwv-entity-audit.tasklist.md",
-    "docs/reports/**"
+    "FILE_REGISTRY.yml",
+    "PROJECT_MAP.md",
+    "governance/artifacts.md",
+    "scripts/test-github-capability-control-plane.py"
   ],
   "coordination_write_set": [
     ".agent/active-work-block.json",
@@ -94,5 +98,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Focused docs-only correction pass complete; implementation remains deferred to successor Work Blocks"
+  "lifecycle_note": "source work opened by Work Block coordination"
 }

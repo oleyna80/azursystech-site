@@ -192,6 +192,22 @@ def coordination(gate: dict) -> list[str]:
     return DEFAULT_COORDINATION
 
 
+def canonical_inactive(gate: dict) -> bool:
+    """Return whether the operational record is the coordination-only terminal state."""
+    specification = gate.get("specification")
+    return (
+        gate.get("schema_version") == 3
+        and gate.get("authority_mode") == "github_capability"
+        and gate.get("work_block_id") == ""
+        and gate.get("subject_branch") == ""
+        and gate.get("base_commit") == ""
+        and specification == {"path": "", "revision": ""}
+        and gate.get("write_gate") == {"status": "BLOCKED", "opened_at": None}
+        and gate.get("write_set") == []
+        and gate.get("coordination_write_set") == DEFAULT_COORDINATION
+    )
+
+
 def validate_source_gate(gate: dict) -> list[str]:
     if gate.get("schema_version") != 3:
         raise Denied("Source writes require active-work-block schema_version=3.")
@@ -245,9 +261,14 @@ def check_paths(paths: list[str], gate: dict, root: Path) -> None:
     scoped = [path for path in paths if path != GATE_PATH.as_posix()]
     if not scoped:
         return
-    validate_binding(root, gate)
     coordination_paths = coordination(gate)
     source = [path for path in scoped if not matches(path, coordination_paths)]
+    if canonical_inactive(gate):
+        if source:
+            raise Denied("Inactive Work Block permits coordination writes only.")
+        require_scope(scoped, DEFAULT_COORDINATION, "Inactive coordination write")
+        return
+    validate_binding(root, gate)
     if not source:
         require_scope(scoped, coordination_paths, "Coordination write")
         return
@@ -329,7 +350,6 @@ def check_bash(event: dict, gate: dict, root: Path) -> None:
         return
 
     if re.search(r"\bgit\s+commit\b", command, re.I):
-        validate_binding(root, gate)
         staged = [
             value
             for value in git(
@@ -341,6 +361,12 @@ def check_bash(event: dict, gate: dict, root: Path) -> None:
             raise Denied("git commit has no staged paths to validate.")
         coordination_paths = coordination(gate)
         source = [path for path in staged if not matches(path, coordination_paths)]
+        if canonical_inactive(gate):
+            if source:
+                raise Denied("Inactive Work Block permits coordination commits only.")
+            require_scope(staged, DEFAULT_COORDINATION, "Inactive coordination commit")
+            return
+        validate_binding(root, gate)
         if not source:
             require_scope(staged, coordination_paths, "Coordination commit")
             return

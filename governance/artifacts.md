@@ -212,6 +212,13 @@ Successful closeout requires:
 
 Otherwise use reporting-only closeout and keep the Work Block blocked.
 
+After either terminal closeout mode, the operational active Work Block record must be
+canonical inactive: it contains no Work Block ID, specification binding, branch
+binding, base commit, or source write set. Cooperative runtime gates may then allow
+only the declared coordination paths for edits, staging, and local commits. This
+does not reopen source scope; a successor Work Block must explicitly establish its
+branch-bound active record and resolved write gate.
+
 ## Narrow Deterministic Repair Artifacts
 
 An eligible Controlled NDR uses exactly one `repair record` and one independent
