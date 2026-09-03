@@ -1,7 +1,7 @@
 ---
 artifact_type: work_block
 work_block_id: WB-2026-09-03-lifecycle-inactive-commit-bypass-correction
-status: in_progress
+status: completed
 revision: v1
 ---
 
@@ -13,6 +13,13 @@ The Owner directed this narrow correction after an exact-head review found a
 P1 inactive commit bypass and a P2 stale Critic Gate record. The expected result
 is a new locally verified branch revision that closes the bypass. Publication,
 merge, and deployment remain separate Owner-controlled actions.
+
+## Final State
+
+The bypass correction passed review, verification, drift, and deterministic
+control-plane regression checks. The Work Block was closed with
+`success-closeout`; `.agent/active-work-block.json` is canonical inactive and
+the release-state projections contain no active Work Block.
 
 ## Write Set and Ownership
 
