@@ -1,8 +1,8 @@
 # Branch / Lifecycle Reconciliation Audit
 
-**Work Block:** `WB-2026-09-04-branch-lifecycle-reconciliation`  
-**Observed:** 2026-09-04, Europe/Paris  
-**Role:** Orchestrator  
+**Work Block:** `WB-2026-09-04-branch-lifecycle-reconciliation`
+**Observed:** 2026-09-04, Europe/Paris
+**Role:** Orchestrator
 **Mode:** read-only inventory; no refs or worktrees mutated
 
 ## Executive result
