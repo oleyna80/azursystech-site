@@ -13,7 +13,7 @@
 | Browser/mobile probe | PASS: Playwright snapshot of `/fr` at 360x800; no state-changing action |
 | Full taxonomy | PASS: 41/41 rows and count table present |
 | CWV/GSC claims | PASS: explicitly UNVERIFIED; no lab score presented as field data |
-| Correction pass | PASS: matrix counts unchanged (`PASS 5 / PARTIAL 22 / FAIL 6 / UNVERIFIED 8`); P0 is consolidated to one production/release-drift root cause and `/brief` is P1 |
+| Correction pass | PASS: matrix counts are `PASS 5 / PARTIAL 23 / FAIL 5 / UNVERIFIED 8`; P0 is consolidated to one production/release-drift root cause, `/brief` is P1, and row 33 is not a proven redirect defect |
 | Application diff | PASS: no `web/` or application source path changed |
 | `git diff --check` | PASS during correction-pass reassurence |
 

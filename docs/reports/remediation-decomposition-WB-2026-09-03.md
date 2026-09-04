@@ -4,8 +4,9 @@ This report proposes bounded successor Work Blocks. No remediation is authorized
 by the audit Work Block.
 
 1. **WB-Crawl-Indexation-Reconciliation (P0):** reconcile deployed revision and
-   source routes; repair sitemap and legacy redirects; decide `/brief` policy;
-   replace stale internal links; run a full crawl.
+   source routes; repair sitemap and legacy redirects; run a full crawl. Treat
+   `/brief` indexation as a separate P1 policy decision, and change source links
+   only if post-reconciliation crawling proves stale targets or redirects.
 2. **WB-CWV-Image-Mobile (P1):** collect field/lab baselines; measure template
    LCP/CLS/INP; inventory image bytes and formats; test mobile interaction and
    implement only measured improvements.
