@@ -87,5 +87,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Nice/SEO handoff reconciliation complete; follow-up Owner decisions remain"
+  "lifecycle_note": "Lifecycle/branch cleanup audit complete; destructive cleanup remains Owner-gated"
 }
