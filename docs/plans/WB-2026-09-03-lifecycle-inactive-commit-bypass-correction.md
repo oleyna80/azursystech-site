@@ -16,6 +16,13 @@ merge, and deployment remain separate Owner-controlled actions.
 
 ## Final State
 
+- **Stage state:** completed
+- **Review gate:** READY
+- **Verification verdict:** READY
+- **Drift gate:** ALIGNED
+- **Closeout mode:** success-closeout
+- **Task status:** completed
+
 The bypass correction passed review, verification, drift, and deterministic
 control-plane regression checks. The Work Block was closed with
 `success-closeout`; `.agent/active-work-block.json` is canonical inactive and

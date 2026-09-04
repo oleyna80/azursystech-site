@@ -108,8 +108,8 @@ release_state:
   workflow: .github/workflows/release-state-contract.yml
   authority: assurance_only
   external_vcs_state: non_normative
-  latest_completed_work_block: docs/plans/WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation.md
-  closeout_report: docs/reports/closeout/WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation.md
+  latest_completed_work_block: docs/plans/WB-2026-09-03-lifecycle-inactive-commit-bypass-correction.md
+  closeout_report: docs/reports/closeout/WB-2026-09-03-lifecycle-inactive-commit-bypass-correction.md
 
 entries:
   AGENTS.md:
