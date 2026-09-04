@@ -22,6 +22,8 @@ DEFAULT_COORDINATION = [
     ".agent/critic-gate.md",
     ".agent/verification-gate.md",
     ".codex/write-gate.md",
+    "FILE_REGISTRY.yml",
+    "PROJECT_MAP.md",
     "docs/plans/**",
     "docs/specs/**",
     "docs/tasklist/**",
@@ -359,7 +361,10 @@ def main() -> int:
         value = blocked_copy(current, args.reason)
     else:
         validate_closeout_state(current, args.mode)
-        value = blocked_copy(current, args.reason)
+        # A terminal closeout must not leave a branch-bound active record behind.
+        # The inactive record retains only the closeout classification and the
+        # coordination note; a subsequent Work Block must explicitly reopen scope.
+        value = default_state(args.reason)
         value["closeout_mode"] = args.mode
 
     atomic(state, value)

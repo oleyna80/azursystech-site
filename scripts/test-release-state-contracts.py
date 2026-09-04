@@ -273,15 +273,29 @@ def main() -> int:
         registry = fixture / "FILE_REGISTRY.yml"
         registry.write_text(registry.read_text(encoding="utf-8").replace(f"active_work_block: {plan}", "active_work_block: null", 1), encoding="utf-8")
         project_map = fixture / "PROJECT_MAP.md"
+        map_text = project_map.read_text(encoding="utf-8").replace(
+            f"active_work_block: {plan}", "active_work_block: null"
+        )
+        map_text = map_text.replace(
+            f"- Active implementation Work Block: `{active_id}`\n"
+            f"  at `{plan}`.",
+            "- No active implementation Work Block.",
+            1,
+        )
+        map_text = map_text.replace(
+            f"- Active implementation Work Block:\n"
+            f"  `{active_id}` at\n"
+            f"  `{plan}`.",
+            "- No active implementation Work Block.",
+            1,
+        )
+        map_text = map_text.replace(
+            f"- Active implementation Work Block: `{plan}`.",
+            "- No active implementation Work Block.",
+            1,
+        )
         project_map.write_text(
-            project_map.read_text(encoding="utf-8")
-            .replace(f"active_work_block: {plan}", "active_work_block: null", 1)
-            .replace(
-                f"- Active implementation Work Block: `{active_id}`\n"
-                f"  at `{plan}`.",
-                "No active implementation Work Block.",
-                1,
-            ),
+            map_text,
             encoding="utf-8",
         )
         require_failure(fixture, "stale operational active record with no canonical active Work Block must fail", "operational active Work Block must be inactive")

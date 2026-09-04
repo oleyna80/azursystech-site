@@ -238,6 +238,121 @@ def test_lifecycle() -> None:
         holder.cleanup()
 
 
+def test_reporting_only_closeout_inactive_coordination_scope() -> None:
+    holder, cwd, _base = make_repo()
+    try:
+        result = lifecycle_open(cwd)
+        if result.returncode != 0:
+            raise AssertionError(f"lifecycle open failed: {result.stdout} {result.stderr}")
+        active_path = cwd / ".agent/active-work-block.json"
+        active = json.loads(active_path.read_text(encoding="utf-8"))
+        active["assurance"] = {
+            "review": {"required": True, "status": "BLOCKED", "verdict": "BLOCKED", "report": "", "isolation": "unknown", "skip_reason": ""},
+            "verification": {"required": True, "status": "BLOCKED", "verdict": "BLOCKED", "report": "", "isolation": "unknown", "skip_reason": ""},
+            "evaluation": {"required": False, "status": "SKIPPED", "verdict": "PENDING", "plan": "", "report": "", "rubric_revision": "", "benchmark_revision": "", "isolation": "unknown", "skip_reason": "not required for fixture"},
+            "drift": {"required": False, "status": "SKIPPED", "verdict": "PENDING", "report": "", "isolation": "unknown", "skip_reason": "not required for fixture"},
+        }
+        write_gate(cwd, active)
+        result = run(
+            [sys.executable, str(LIFECYCLE), "--root", str(cwd), "close", "--mode", "reporting-only", "--reason", "fixture reporting-only closeout"],
+            cwd,
+        )
+        if result.returncode != 0:
+            raise AssertionError(f"lifecycle close failed: {result.stdout} {result.stderr}")
+        inactive = json.loads(active_path.read_text(encoding="utf-8"))
+        assert inactive["work_block_id"] == ""
+        assert inactive["specification"] == {"path": "", "revision": ""}
+        assert inactive["subject_branch"] == ""
+        assert inactive["base_commit"] == ""
+        assert inactive["write_set"] == []
+        assert inactive["write_gate"] == {"status": "BLOCKED", "opened_at": None}
+        assert inactive["closeout_mode"] == "reporting-only"
+        assert inactive["coordination_write_set"] == _base["coordination_write_set"]
+        assert inactive["coordination_write_set"] == [
+            ".agent/active-work-block.json",
+            ".agent/critic-gate.md",
+            ".agent/verification-gate.md",
+            ".codex/write-gate.md",
+            "FILE_REGISTRY.yml",
+            "PROJECT_MAP.md",
+            "docs/plans/**",
+            "docs/specs/**",
+            "docs/tasklist/**",
+            "docs/reports/**",
+            "docs/architecture/drafts/**",
+            "memory_bank/**",
+        ]
+
+        (cwd / "docs/plans").mkdir(parents=True)
+        (cwd / "docs/plans/closeout.md").write_text("closeout\n", encoding="utf-8")
+        (cwd / "FILE_REGISTRY.yml").write_text("release_state: {}\n", encoding="utf-8")
+        (cwd / "PROJECT_MAP.md").write_text("# Project map\n", encoding="utf-8")
+        (cwd / "src").mkdir()
+        (cwd / "src/a.txt").write_text("source\n", encoding="utf-8")
+        git(cwd, "add", "src/a.txt")
+        git(cwd, "commit", "-q", "-m", "track fixture source")
+        (cwd / "src/a.txt").write_text("changed source\n", encoding="utf-8")
+        (cwd / "pathspecs.txt").write_text("src/a.txt\n", encoding="utf-8")
+        assert_allow(
+            hook(
+                CODEX_GATE,
+                cwd,
+                "apply_patch",
+                {"command": "*** Begin Patch\n*** Update File: FILE_REGISTRY.yml\n*** Update File: PROJECT_MAP.md\n*** Update File: docs/plans/closeout.md\n*** End Patch"},
+            ),
+            "Codex inactive complete coordination write",
+        )
+        for path in ("FILE_REGISTRY.yml", "PROJECT_MAP.md", "docs/plans/closeout.md"):
+            assert_allow(
+                hook(CLAUDE_GATE, cwd, "Edit", {"file_path": str(cwd / path)}),
+                f"Claude inactive coordination write {path}",
+            )
+        for gate, edit_tool, source_input, label in (
+            (CODEX_GATE, "apply_patch", {"command": "*** Begin Patch\n*** Update File: src/a.txt\n*** End Patch"}, "Codex"),
+            (CLAUDE_GATE, "Edit", {"file_path": str(cwd / "src/a.txt")}, "Claude"),
+        ):
+            assert_deny(hook(gate, cwd, edit_tool, source_input), f"{label} inactive source write")
+
+        git(cwd, "add", "FILE_REGISTRY.yml", "PROJECT_MAP.md", "docs/plans/closeout.md")
+        assert_allow(hook(CODEX_GATE, cwd, "Bash", {"command": "git commit -m closeout"}), "Codex inactive coordination commit")
+        assert_allow(hook(CLAUDE_GATE, cwd, "Bash", {"command": "git commit -m closeout"}), "Claude inactive coordination commit")
+        unsafe_commits = (
+            "git commit -a -m closeout",
+            "git commit --all -m closeout",
+            "git commit -i src/a.txt -m closeout",
+            "git commit --include src/a.txt -m closeout",
+            "git commit -o src/a.txt -m closeout",
+            "git commit --only src/a.txt -m closeout",
+            "git commit -m closeout -- src/a.txt",
+            "git commit -m closeout --pathspec-from-file=pathspecs.txt",
+            "git -C . commit -a -m closeout",
+            "git -c color.ui=false commit -m closeout -- src/a.txt",
+            "git --exec-path=/usr/lib/git-core commit -a -m closeout",
+            "git --no-advice commit -a -m closeout",
+            "command git commit -a -m closeout",
+            "command -p git commit -a -m closeout",
+            "env GIT_EDITOR=: git commit -a -m closeout",
+            "env -C . git commit -a -m closeout",
+        "env -u GIT_EDITOR git commit -a -m closeout",
+        "env --ignore-signal git commit -a -m closeout",
+        "env --ignore-signal HUP git commit -a -m closeout",
+        "env -S 'git commit -a -m closeout'",
+        "env -S'git commit -a -m closeout'",
+        "env -S'env -u GIT_EDITOR git commit -a -m closeout'",
+        "env --split-string='git commit -a -m closeout'",
+        "/usr/bin/git commit -a -m closeout",
+        )
+        for command in unsafe_commits:
+            assert_deny(hook(CODEX_GATE, cwd, "Bash", {"command": command}), f"Codex inactive selector {command}")
+            assert_deny(hook(CLAUDE_GATE, cwd, "Bash", {"command": command}), f"Claude inactive selector {command}")
+        git(cwd, "reset", "-q")
+        git(cwd, "add", "src/a.txt")
+        assert_deny(hook(CODEX_GATE, cwd, "Bash", {"command": "git commit -m source"}), "Codex inactive source commit")
+        assert_deny(hook(CLAUDE_GATE, cwd, "Bash", {"command": "git commit -m source"}), "Claude inactive source commit")
+    finally:
+        holder.cleanup()
+
+
 def test_lifecycle_rejects_default_and_detached() -> None:
     holder, cwd, _base = make_repo()
     try:
@@ -396,6 +511,20 @@ def test_binding_mismatch_coordination_and_repair() -> None:
             {"file_path": str(cwd / ".agent/critic-gate.md")},
         )
         assert_deny(claude_coordination, "Claude stale gate coordination write")
+
+        (cwd / ".agent/critic-gate.md").write_text("critic\n", encoding="utf-8")
+        git(cwd, "add", ".agent/critic-gate.md")
+        stale_codex_commit = hook(CODEX_GATE, cwd, "Bash", {"command": "git commit -m coordination"})
+        assert_deny(stale_codex_commit, "Codex stale gate coordination commit")
+        assert_diagnostic(
+            stale_codex_commit,
+            cwd,
+            branch="feature/capability-test",
+            work_block_id="WB-TEST-GITHUB-CAPABILITY",
+        )
+        stale_claude_commit = hook(CLAUDE_GATE, cwd, "Bash", {"command": "git commit -m coordination"})
+        assert_deny(stale_claude_commit, "Claude stale gate coordination commit")
+        git(cwd, "reset", "-q")
 
         assert_allow(
             hook(
@@ -640,6 +769,7 @@ def test_opencode_posture() -> None:
 TESTS = [
     test_default_schema,
     test_lifecycle,
+    test_reporting_only_closeout_inactive_coordination_scope,
     test_lifecycle_rejects_default_and_detached,
     test_hard_stops,
     test_codex_scope,

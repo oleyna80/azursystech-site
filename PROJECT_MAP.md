@@ -10,6 +10,10 @@ completed_work_blocks:
   - docs/plans/WB-2026-08-25-shared-analysis-surface.md
   - docs/plans/WB-2026-08-28-repository-lifecycle-normalization.md
   - docs/plans/WB-2026-08-29-repository-closeout-cleanup.md
+  - docs/plans/WB-2026-09-03-lifecycle-inactive-publication-reconciliation.md
+  - docs/plans/WB-2026-09-03-lifecycle-inactive-publication-commit-reconciliation.md
+  - docs/plans/WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation.md
+  - docs/plans/WB-2026-09-03-lifecycle-inactive-commit-bypass-correction.md
 active_work_block: null
 -->
 

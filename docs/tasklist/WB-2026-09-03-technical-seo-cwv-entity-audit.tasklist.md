@@ -1,0 +1,9 @@
+# Tasklist: WB-2026-09-03-technical-seo-cwv-entity-audit
+
+- [x] TASK-001 [type=requirement] [req=REQ-001] [ac=AC-001] [paths=.agent/active-work-block.json,.agent/critic-gate.md,.codex/write-gate.md,docs/specs/WB-2026-09-03-technical-seo-cwv-entity-audit.md,docs/plans/WB-2026-09-03-technical-seo-cwv-entity-audit.md,docs/tasklist/WB-2026-09-03-technical-seo-cwv-entity-audit.tasklist.md] Open and bind the Managed audit Work Block to the exact subject branch and base.
+- [x] TASK-002 [type=requirement] [req=REQ-002,REQ-003] [ac=AC-002,AC-003] [paths=docs/reports/technical-audit-WB-2026-09-03.md] Produce the complete 41-item source/runtime audit matrix with evidence taxonomy and required fields.
+- [x] TASK-003 [type=requirement] [req=REQ-004] [ac=AC-004] [paths=docs/reports/technical-audit-WB-2026-09-03.md] Assess CWV/performance with explicit field/lab separation and thresholds.
+- [x] TASK-004 [type=requirement] [req=REQ-005] [ac=AC-005] [paths=docs/reports/technical-audit-WB-2026-09-03.md,docs/reports/prioritized-findings-WB-2026-09-03.md] Test H1-H7 and prioritize evidence-backed findings.
+- [x] TASK-005 [type=requirement] [req=REQ-006] [ac=AC-006] [paths=docs/reports/prioritized-findings-WB-2026-09-03.md,docs/reports/remediation-decomposition-WB-2026-09-03.md,docs/reports/review-WB-2026-09-03.md,docs/reports/verification-WB-2026-09-03.md,docs/reports/drift-WB-2026-09-03.md] Complete assurance and future-WB decomposition.
+- [x] TASK-006 [type=requirement] [req=REQ-007] [ac=AC-007] [paths=docs/reports/verification-WB-2026-09-03.md,docs/reports/drift-WB-2026-09-03.md] Prove changed-path, diff-check, and audit-only integrity.
+- [x] TASK-007 [type=assurance] [req=-] [ac=-] [paths=docs/reports/requirements-quality-WB-2026-09-03.md,docs/reports/traceability-WB-2026-09-03.md,docs/reports/consistency-WB-2026-09-03.md,docs/reports/critic-WB-2026-09-03.md] Record Define-quality and Critic evidence.

@@ -17,6 +17,8 @@ DEFAULT_COORDINATION = [
     ".agent/critic-gate.md",
     ".agent/verification-gate.md",
     ".codex/write-gate.md",
+    "FILE_REGISTRY.yml",
+    "PROJECT_MAP.md",
     "docs/plans/**",
     "docs/specs/**",
     "docs/tasklist/**",
@@ -192,6 +194,22 @@ def coordination(gate: dict) -> list[str]:
     return DEFAULT_COORDINATION
 
 
+def canonical_inactive(gate: dict) -> bool:
+    """Return whether the operational record is the coordination-only terminal state."""
+    specification = gate.get("specification")
+    return (
+        gate.get("schema_version") == 3
+        and gate.get("authority_mode") == "github_capability"
+        and gate.get("work_block_id") == ""
+        and gate.get("subject_branch") == ""
+        and gate.get("base_commit") == ""
+        and specification == {"path": "", "revision": ""}
+        and gate.get("write_gate") == {"status": "BLOCKED", "opened_at": None}
+        and gate.get("write_set") == []
+        and gate.get("coordination_write_set") == DEFAULT_COORDINATION
+    )
+
+
 def validate_source_gate(gate: dict) -> list[str]:
     if gate.get("schema_version") != 3:
         raise Denied("Source writes require active-work-block schema_version=3.")
@@ -245,9 +263,14 @@ def check_paths(paths: list[str], gate: dict, root: Path) -> None:
     scoped = [path for path in paths if path != GATE_PATH.as_posix()]
     if not scoped:
         return
-    validate_binding(root, gate)
     coordination_paths = coordination(gate)
     source = [path for path in scoped if not matches(path, coordination_paths)]
+    if canonical_inactive(gate):
+        if source:
+            raise Denied("Inactive Work Block permits coordination writes only.")
+        require_scope(scoped, DEFAULT_COORDINATION, "Inactive coordination write")
+        return
+    validate_binding(root, gate)
     if not source:
         require_scope(scoped, coordination_paths, "Coordination write")
         return
@@ -312,6 +335,154 @@ def bash_command(event: dict) -> str:
     return command
 
 
+GIT_GLOBAL_OPTIONS_WITH_VALUE = {
+    "-C", "-c", "--git-dir", "--work-tree", "--namespace", "--super-prefix", "--config-env",
+}
+GIT_GLOBAL_OPTIONS = {
+    "--bare", "--no-replace-objects", "--no-lazy-fetch", "--no-optional-locks",
+    "--literal-pathspecs", "--glob-pathspecs", "--noglob-pathspecs", "--icase-pathspecs",
+    "--paginate", "--no-pager",
+}
+COMMIT_OPTIONS_WITH_VALUE = {
+    "-m", "-F", "--message", "--file", "--author", "--date", "--cleanup", "--status",
+    "--untracked-files", "--trailer", "--template", "--fixup", "--squash", "--reuse-message",
+    "--reedit-message",
+}
+CONTENT_SELECTING_COMMIT_OPTIONS = {"--all", "--include", "--only", "--pathspec-from-file"}
+ENV_OPTIONS_WITH_VALUE = {
+    "-C", "-f", "-u", "-S", "-a", "--chdir", "--file", "--unset", "--split-string",
+    "--argv0",
+}
+ENV_SIGNAL_OPTIONS = {"--ignore-signal", "--default-signal", "--block-signal"}
+
+
+def direct_git_tokens(command: str) -> list[str] | None:
+    """Return a direct Git invocation after safe shell execution prefixes."""
+    if re.search(r";|&&|\|\||(?<!\|)\|(?!\|)", command):
+        return None
+    try:
+        tokens = shlex.split(command, posix=True)
+    except ValueError as exc:
+        raise Denied(f"Cannot parse Git invocation: {exc}") from exc
+    index = 0
+    while index < len(tokens) and re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", tokens[index]):
+        index += 1
+    if index < len(tokens) and Path(tokens[index]).name == "command":
+        index += 1
+        if index < len(tokens) and tokens[index] == "-p":
+            index += 1
+        if index < len(tokens) and tokens[index] == "--":
+            index += 1
+    if index < len(tokens) and Path(tokens[index]).name == "env":
+        index += 1
+        while index < len(tokens):
+            token = tokens[index]
+            if token == "--":
+                index += 1
+                break
+            if token == "-S":
+                if index + 1 >= len(tokens):
+                    raise Denied("Cannot parse env -S without a split string")
+                try:
+                    tokens[index:index + 2] = shlex.split(tokens[index + 1], posix=True)
+                except ValueError as exc:
+                    raise Denied(f"Cannot parse env -S split string: {exc}") from exc
+                continue
+            if token.startswith("-S"):
+                try:
+                    tokens[index:index + 1] = shlex.split(token[2:], posix=True)
+                except ValueError as exc:
+                    raise Denied(f"Cannot parse attached env -S split string: {exc}") from exc
+                continue
+            if token.startswith("--split-string="):
+                try:
+                    tokens[index:index + 1] = shlex.split(token.split("=", 1)[1], posix=True)
+                except ValueError as exc:
+                    raise Denied(f"Cannot parse env --split-string: {exc}") from exc
+                continue
+            if token == "--split-string":
+                if index + 1 >= len(tokens):
+                    raise Denied("Cannot parse env --split-string without a value")
+                try:
+                    tokens[index:index + 2] = shlex.split(tokens[index + 1], posix=True)
+                except ValueError as exc:
+                    raise Denied(f"Cannot parse env --split-string: {exc}") from exc
+                continue
+            if token in ENV_SIGNAL_OPTIONS:
+                if index + 1 < len(tokens) and re.fullmatch(r"(?:SIG)?[A-Z][A-Z0-9_]*|[0-9]+", tokens[index + 1]):
+                    index += 2
+                else:
+                    index += 1
+                continue
+            if token in ENV_OPTIONS_WITH_VALUE:
+                index += 2
+                continue
+            if any(token.startswith(option + "=") for option in ENV_OPTIONS_WITH_VALUE if option.startswith("--")):
+                index += 1
+                continue
+            if token.startswith("-") or re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", token):
+                index += 1
+                continue
+            break
+    if index < len(tokens) and Path(tokens[index]).name == "env":
+        return direct_git_tokens(" ".join(shlex.quote(token) for token in tokens[index:]))
+    if index >= len(tokens) or Path(tokens[index]).name != "git":
+        return None
+    return tokens[index:]
+
+
+def git_commit_arguments(command: str) -> list[str] | None:
+    """Return commit arguments after Git global options, fail-closed for unknown prefixes."""
+    tokens = direct_git_tokens(command)
+    if tokens is None:
+        return None
+    index = 1
+    while index < len(tokens):
+        token = tokens[index]
+        if token in GIT_GLOBAL_OPTIONS_WITH_VALUE:
+            index += 2
+        elif any(token.startswith(option + "=") for option in GIT_GLOBAL_OPTIONS_WITH_VALUE if option.startswith("--")):
+            index += 1
+        elif token in GIT_GLOBAL_OPTIONS:
+            index += 1
+        elif token.startswith("-"):
+            try:
+                commit_index = tokens.index("commit", index + 1)
+            except ValueError:
+                return None
+            return tokens[commit_index + 1:]
+        else:
+            return tokens[index + 1:] if token == "commit" else None
+    return None
+
+
+def inactive_commit_selector(arguments: list[str]) -> str | None:
+    """Identify commit arguments that can bypass staged-set validation."""
+    index = 0
+    while index < len(arguments):
+        argument = arguments[index]
+        if argument == "--":
+            return "an explicit pathspec"
+        if argument in CONTENT_SELECTING_COMMIT_OPTIONS or any(
+            argument.startswith(option + "=") for option in CONTENT_SELECTING_COMMIT_OPTIONS
+        ):
+            return argument
+        if argument == "-a" or (argument.startswith("-") and not argument.startswith("--") and any(
+            flag in argument[1:] for flag in ("a", "i", "o")
+        )):
+            return argument
+        if argument in COMMIT_OPTIONS_WITH_VALUE:
+            index += 2
+            continue
+        if any(argument.startswith(option + "=") for option in COMMIT_OPTIONS_WITH_VALUE if option.startswith("--")):
+            index += 1
+            continue
+        if not argument.startswith("-"):
+            return "an explicit pathspec"
+        index += 1
+    return None
+
+
 def direct_gate_repair_bash(command: str, root: Path) -> bool:
     if re.search(r"\bgit\s+(commit|push)\b", command, re.I):
         return False
@@ -328,8 +499,15 @@ def check_bash(event: dict, gate: dict, root: Path) -> None:
     if re.search(r"\bgit\s+push\b", command, re.I):
         return
 
-    if re.search(r"\bgit\s+commit\b", command, re.I):
-        validate_binding(root, gate)
+    commit_arguments = git_commit_arguments(command)
+    if commit_arguments is not None:
+        if canonical_inactive(gate):
+            selector = inactive_commit_selector(commit_arguments)
+            if selector:
+                raise Denied(
+                    "Inactive Work Block denies git commit arguments that can select "
+                    f"working-tree content: {selector}."
+                )
         staged = [
             value
             for value in git(
@@ -341,6 +519,12 @@ def check_bash(event: dict, gate: dict, root: Path) -> None:
             raise Denied("git commit has no staged paths to validate.")
         coordination_paths = coordination(gate)
         source = [path for path in staged if not matches(path, coordination_paths)]
+        if canonical_inactive(gate):
+            if source:
+                raise Denied("Inactive Work Block permits coordination commits only.")
+            require_scope(staged, DEFAULT_COORDINATION, "Inactive coordination commit")
+            return
+        validate_binding(root, gate)
         if not source:
             require_scope(staged, coordination_paths, "Coordination commit")
             return
