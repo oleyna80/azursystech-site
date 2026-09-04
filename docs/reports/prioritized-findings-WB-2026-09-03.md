@@ -9,13 +9,15 @@ implementation requires successor Work Blocks.
 
 ## P0
 
-- Reconcile production/source route and sitemap drift before SEO changes.
-- Define the indexation policy for `/brief` and its query-locale variants.
-- Replace stale internal links exposing `/portfolio` and obsolete demo topology.
+- Reconcile production/source route and sitemap drift before SEO changes. This is
+  one root cause with multiple manifestations, not five independent fixes.
 
 ## P1
 
 - Run a complete production crawl with 200/self-canonical assertions after deployment reconciliation.
+- Define the indexation policy for `/brief` and its query-locale variants.
+- Reassess internal links after reconciliation; `/portfolio` is production evidence,
+  while `/demo/*` remains an intentional showcase route contract.
 - Obtain CrUX/GSC and mobile lab measurements for LCP, INP, and CLS.
 - Establish consistent breadcrumb, Organization, and structured-data contracts.
 - Verify mobile interaction, tap targets, chat overlap, and final route parity.

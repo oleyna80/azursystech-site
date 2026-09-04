@@ -14,6 +14,7 @@ completed_work_blocks:
   - docs/plans/WB-2026-09-03-lifecycle-inactive-publication-commit-reconciliation.md
   - docs/plans/WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation.md
   - docs/plans/WB-2026-09-03-lifecycle-inactive-commit-bypass-correction.md
+  - docs/plans/WB-2026-09-03-technical-seo-cwv-entity-audit.md
 active_work_block: null
 -->
 

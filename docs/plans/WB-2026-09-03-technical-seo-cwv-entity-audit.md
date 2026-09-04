@@ -1,7 +1,7 @@
 ---
 artifact_type: work_block
 work_block_id: WB-2026-09-03-technical-seo-cwv-entity-audit
-status: in_progress
+status: completed
 revision: v1
 ---
 
@@ -39,3 +39,16 @@ Source evidence is labeled `repository`; HTTP headers/status/body and browser ob
 ## Future implementation grouping
 
 Recommendations should normally be grouped into: (1) crawl/indexation and URL integrity, (2) CWV/image/mobile performance, and (3) entity/structured-data cleanup. A separate content/architecture WB is proposed only if evidence requires it.
+
+## Final State
+
+- **Stage state:** completed
+- **Review gate:** READY
+- **Verification verdict:** READY
+- **Drift gate:** ALIGNED
+- **Closeout mode:** success-closeout
+- **Task status:** completed
+
+The audit scope is complete. Search Console and field CWV evidence remain
+explicitly unverified where access was unavailable; remediation remains deferred
+to future implementation Work Blocks.

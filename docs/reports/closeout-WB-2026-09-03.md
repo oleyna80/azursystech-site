@@ -12,5 +12,7 @@ Evaluation was not applicable because this Work Block produces an evidence repor
 not a product behavior change. Search Console and CWV datasets remain explicitly
 unverified. A successor implementation Work Block is required for remediation.
 
-No application code, deployment, push, merge, PR, commit, database mutation, or
-external state change occurred.
+At the original local closeout time, before Owner publication, no application
+code, deployment, push, merge, PR, commit, database mutation, or external state
+change had occurred. Subsequent publication is tracked separately by the
+Owner-controlled lifecycle reconciliation Work Block.
