@@ -87,5 +87,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Nice lifecycle closeout reconciliation complete; canonical worktree write phase remains separately gated"
+  "lifecycle_note": "Lifecycle/branch cleanup audit complete; Nice lifecycle closeout reconciled; destructive cleanup remains Owner-gated"
 }
