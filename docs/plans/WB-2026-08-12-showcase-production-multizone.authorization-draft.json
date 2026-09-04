@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "work_block_id": "WB-2026-08-12-showcase-production-multizone",
+  "specification": {
+    "path": "docs/plans/WB-2026-08-12-showcase-production-multizone.md",
+    "revision": "sha256:ca5fc5c9f5075629542a1fd5ea8e42cc12525c8522ce5e76d01b766e97894ea9"
+  },
+  "spec_digest": "sha256:ca5fc5c9f5075629542a1fd5ea8e42cc12525c8522ce5e76d01b766e97894ea9",
+  "write_set": [
+    "Dockerfile.showcase",
+    "showcase/next.config.ts",
+    "showcase/app/demo/health/route.ts",
+    "docker-compose.vps.yml",
+    "nginx.proxy.conf",
+    "deploy.sh",
+    "scripts/tests/showcase-deploy-contract-fixtures.sh",
+    ".github/workflows/docker-publish.yml",
+    ".github/workflows/deploy-vps.yml",
+    ".agent/skills/deploy-operations/SKILL.md",
+    ".claude/skills/deploy-operations/SKILL.md",
+    ".opencode/skills/deploy-operations/SKILL.md",
+    ".agent/active-work-block.json",
+    ".agent/critic-gate.md",
+    ".agent/verification-gate.md",
+    "docs/plans/WB-2026-08-12-showcase-production-multizone.md",
+    "docs/plans/WB-2026-08-12-showcase-production-multizone.authorization-draft.json",
+    "docs/tasklist/WB-2026-08-12-showcase-production-multizone.tasklist.md",
+    "docs/reports/critic-WB-2026-08-12-showcase-production-multizone.md",
+    "docs/reports/review-WB-2026-08-12-showcase-production-multizone.md",
+    "docs/reports/WB-2026-08-12-showcase-production-multizone-verification.md",
+    "docs/reports/WB-2026-08-12-showcase-production-multizone-evaluation.md",
+    "docs/reports/WB-2026-08-12-showcase-production-multizone-drift.md"
+  ],
+  "expires_at": "2026-08-13T20:00:00+02:00",
+  "status": "APPROVED",
+  "owner_evidence": {
+    "date": "2026-08-12",
+    "instruction": "Owner approved the separate showcase VPS architecture and instructed the Orchestrator to begin the gated Work Block",
+    "authorized_after_signature_gate": [
+      "repository implementation inside the exact signed write-set",
+      "isolated local build and pre-deploy verification artifacts"
+    ],
+    "excluded_pending_separate_approval": [
+      "git commit",
+      "git push",
+      "Docker Publish",
+      "VPS Deploy or production restart",
+      "secret changes",
+      "database, schema, migration, or live-data actions",
+      "admin publish or deploy",
+      "destructive operations"
+    ]
+  },
+  "hard_stop_approvals": {
+    "live_infra": false,
+    "git_commit": false,
+    "git_push": false,
+    "default_branch_push": false,
+    "live_data": false,
+    "credentials": false,
+    "client_communications": false,
+    "destructive": false
+  },
+  "critic": {
+    "required": true,
+    "status": "READY",
+    "verdict": "APPROVE",
+    "report": "docs/reports/critic-WB-2026-08-12-showcase-production-multizone.md",
+    "isolation": "separate-subagent",
+    "skip_reason": ""
+  },
+  "signature": {
+    "path": ".agent/authorizations/WB-2026-08-12-showcase-production-multizone.json.sig"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "work_block_id": "WB-2026-08-11-deploy-recovery",
+  "specification": {
+    "path": "docs/plans/WB-2026-08-11-deploy-recovery.md",
+    "revision": "sha256:c005376372d6f232f5dbd0973b67e63f336c5562dee418bcf94ad5b75ea44fae"
+  },
+  "spec_digest": "sha256:c005376372d6f232f5dbd0973b67e63f336c5562dee418bcf94ad5b75ea44fae",
+  "write_set": [
+    ".github/workflows/docker-publish.yml",
+    ".agent/skills/deploy-operations/SKILL.md",
+    ".claude/skills/deploy-operations/SKILL.md",
+    ".opencode/skills/deploy-operations/SKILL.md",
+    ".agent/active-work-block.json",
+    ".agent/critic-gate.md",
+    ".agent/verification-gate.md",
+    "docs/plans/WB-2026-08-11-deploy-recovery.md",
+    "docs/plans/WB-2026-08-11-deploy-recovery.authorization-draft.json",
+    "docs/tasklist/WB-2026-08-11-deploy-recovery.tasklist.md",
+    "docs/reports/critic-WB-2026-08-11-deploy-recovery.md",
+    "docs/reports/WB-2026-08-11-deploy-recovery-verification.md"
+  ],
+  "expires_at": "2026-08-11T19:15:00+02:00",
+  "status": "APPROVED",
+  "owner_evidence": {
+    "date": "2026-08-11",
+    "live_infra": "Owner explicitly approved Docker Publish and VPS Deploy for c129fad3d79f30f62edf164a83ef243521b8ad00 with publish_admin=false and include_admin=false",
+    "governance_commit": "Owner explicitly approved one local governance-only commit for the authorization record and detached signature",
+    "excluded": [
+      "database migrations",
+      "admin publish or deploy",
+      "application commit",
+      "git push"
+    ]
+  },
+  "hard_stop_approvals": {
+    "live_infra": true,
+    "git_commit": true,
+    "git_push": false,
+    "default_branch_push": false,
+    "live_data": false,
+    "credentials": false,
+    "client_communications": false,
+    "destructive": false
+  },
+  "critic": {
+    "required": true,
+    "status": "READY",
+    "verdict": "APPROVE",
+    "report": "docs/reports/critic-WB-2026-08-11-deploy-recovery.md",
+    "isolation": "same-session-degraded",
+    "skip_reason": ""
+  },
+  "signature": {
+    "path": ".agent/authorizations/WB-2026-08-11-deploy-recovery.json.sig"
+  }
+}
