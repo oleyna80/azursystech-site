@@ -8,4 +8,3 @@
 | REQ-004 | AC-004 | TASK-004 | Canonical lifecycle close and release-state validation |
 
 Coverage: 4/4 requirements, 4/4 acceptance criteria, 4/4 tasks.
-

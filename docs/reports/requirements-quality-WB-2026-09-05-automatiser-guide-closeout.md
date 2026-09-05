@@ -5,4 +5,3 @@ Verdict: `READY`.
 The four requirements and four acceptance criteria are bounded, testable, and
 limited to lifecycle/documentation reconciliation. Application implementation,
 deployment, publication mutation, and branch deletion are explicit non-goals.
-
