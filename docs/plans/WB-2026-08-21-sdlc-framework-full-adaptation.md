@@ -1,5 +1,8 @@
 # Work Block Plan — Full Agentic SDLC Framework Adaptation
 
+> Historical lifecycle reconciliation completed by
+> `WB-2026-09-05-lifecycle-framework-reconciliation`.
+
 ## Metadata
 
 - **Work Block:** `WB-2026-08-21-sdlc-framework-full-adaptation`
@@ -66,16 +69,16 @@ docs/reports/verification-WB-2026-08-21-sdlc-framework-full-adaptation.md
 
 | ID | Type | Owner | Paths | Acceptance link | Status |
 |---|---|---|---|---|---|
-| TASK-001 | documentation | Orchestrator | spec, plan, tasklist, active gate | AC-001–AC-008 | in_progress |
-| TASK-002 | assurance | Orchestrator | requirements-quality report | REQ-001, AC-001 | ready_for_critic |
-| TASK-003 | assurance | Orchestrator | traceability/consistency report | REQ-001–REQ-008, AC-001–AC-008 | ready_for_critic |
-| TASK-004 | requirement | Scoped Coder | governance/** | AC-001 | pending |
-| TASK-005 | requirement | Scoped Coder | AGENTS.md, docs/session-bootstrap.md | AC-002 | pending |
-| TASK-006 | requirement | Scoped Coder | PROJECT_MAP.md, FILE_REGISTRY.yml | AC-003 | pending |
-| TASK-007 | requirement | Scoped Coder | .agent/ROSTER.md, .agent/workflows/sdd-protocol.md | AC-004 | pending |
-| TASK-008 | requirement | Scoped Coder | docs/templates/** | AC-005 | pending |
-| TASK-009 | requirement | Scoped Coder | scripts/validate-*.py | AC-006 | pending |
-| TASK-010 | requirement | Scoped Coder | .agent/skills/**, docs/engineering-memory/** | AC-007 | pending |
-| TASK-011 | assurance | Reviewer | frozen diff, review report | AC-001–AC-008 | pending |
-| TASK-012 | assurance | Verifier | test runs, verification report | AC-001–AC-008 | pending |
-| TASK-013 | coordination | Orchestrator | tasklist, gate records, closeout report | AC-008 | pending |
+| TASK-001 | documentation | Orchestrator | spec, plan, tasklist, active gate | AC-001–AC-008 | completed |
+| TASK-002 | assurance | Orchestrator | requirements-quality report | REQ-001, AC-001 | completed |
+| TASK-003 | assurance | Orchestrator | traceability/consistency report | REQ-001–REQ-008, AC-001–AC-008 | completed |
+| TASK-004 | requirement | Scoped Coder | governance/** | AC-001 | completed |
+| TASK-005 | requirement | Scoped Coder | AGENTS.md, docs/session-bootstrap.md | AC-002 | completed |
+| TASK-006 | requirement | Scoped Coder | PROJECT_MAP.md, FILE_REGISTRY.yml | AC-003 | completed |
+| TASK-007 | requirement | Scoped Coder | .agent/ROSTER.md, .agent/workflows/sdd-protocol.md | AC-004 | completed |
+| TASK-008 | requirement | Scoped Coder | docs/templates/** | AC-005 | completed |
+| TASK-009 | requirement | Scoped Coder | scripts/validate-*.py | AC-006 | completed |
+| TASK-010 | requirement | Scoped Coder | .agent/skills/**, docs/engineering-memory/** | AC-007 | completed |
+| TASK-011 | assurance | Reviewer | frozen diff, review report | AC-001–AC-008 | completed |
+| TASK-012 | assurance | Verifier | test runs, verification report | AC-001–AC-008 | completed |
+| TASK-013 | coordination | Orchestrator | tasklist, gate records, closeout report | AC-008 | completed |
