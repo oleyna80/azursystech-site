@@ -87,5 +87,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Schema-v3 Work-Block commit linkage implemented and assured; no shared hook activation or external side effects"
+  "lifecycle_note": "sprint-analysis evidence hardening implemented and verified; approved scope complete"
 }
