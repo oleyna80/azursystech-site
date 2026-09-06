@@ -2,7 +2,7 @@
 
 - **Work Block:** none
 - **Write Gate Status:** `BLOCKED`
-- **Closeout mode:** `reporting-only`
+- **Closeout mode:** `success-closeout`
 
 The Work Block is closed. Provider calls, credentials, deployment, shared hook
 activation, publication, merge, and deletion remain prohibited absent separate
