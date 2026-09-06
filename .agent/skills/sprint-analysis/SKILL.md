@@ -136,5 +136,7 @@ cross-check the relevant WB plan, reports, and commit subjects before saying a
 process breach definitely happened. The period-end repository snapshot is
 also a caveat: dirty, ahead, unpushed, or unavailable-upstream state limits
 evidence completeness but is not an automatic governance breach. Never emit
-`READY` when required evidence is missing, unresolved, or contradicted; label
-the result `UNVERIFIED`/`INCOMPLETE` instead.
+`READY` when required evidence is missing, unresolved, or contradicted. Use
+`UNVERIFIED` when evidence is missing but analysis can continue, `DEGRADED`
+for partial evidence with an explicit caveat, and `BLOCKED` when a required
+source is unavailable and the result cannot be substantiated.

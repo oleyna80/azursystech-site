@@ -58,7 +58,7 @@
       "skip_reason": ""
     }
   },
-  "closeout_mode": "success-closeout",
+  "closeout_mode": "reporting-only",
   "integrations": {
     "approved": [],
     "admission_records": []
@@ -87,5 +87,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "sprint-analysis evidence hardening implemented and verified; approved scope complete"
+  "lifecycle_note": "focused sprint-analysis contract, fixture, CI, and evidence correction complete"
 }

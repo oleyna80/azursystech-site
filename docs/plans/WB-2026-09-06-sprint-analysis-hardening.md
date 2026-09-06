@@ -19,8 +19,10 @@ and Critic approval. Historical files are evidence only.
 1. Add trailer-first parsing and explicit classes to `extract.sh`.
 2. Add period-end status snapshot and caveat classification.
 3. Align `SKILL.md` workflow, linkage rules, and false-READY guidance.
-4. Add deterministic local fixtures, including a temporary Git repository where
-   practical.
+4. Add deterministic local fixtures, including disposable repositories,
+   synced/ahead bare-upstream states, dirty-state counts, same-day heuristic
+   isolation, and local identity configuration only.
+5. Run the fixture suite from Control Plane CI without adding trigger paths.
 
 ## Stage 2 — Review and Verification
 

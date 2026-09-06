@@ -42,6 +42,9 @@ not a commit-enforcement mechanism.
   precedence rules, and caveat semantics.
 - REQ-012: Commit output is stable and parseable with SHA, date, subject,
   class, canonical ID when present, legacy/heuristic candidates, and notes.
+- REQ-013: The control-plane workflow runs the sprint-analysis evidence fixture
+  suite using disposable local repositories without global Git configuration
+  mutation or network-dependent test behavior.
 
 ## Acceptance criteria
 
@@ -58,6 +61,8 @@ not a commit-enforcement mechanism.
 - AC-011 [req=REQ-001,REQ-003,REQ-004,REQ-005,REQ-006,REQ-007,REQ-008,REQ-009]: Deterministic fixtures cover linkage and repository-state cases.
 - AC-012 [req=REQ-001,REQ-002,REQ-003,REQ-004,REQ-005,REQ-006,REQ-007,REQ-008,REQ-009,REQ-010,REQ-011,REQ-012]: Historical commits remain analyzable without retroactive trailer claims.
 - AC-013 [req=REQ-012]: No application or framework paths are modified; lifecycle, traceability, and release-state validations pass.
+- AC-014 [req=REQ-013]: Control-plane CI invokes the sprint-analysis fixture
+  suite, while existing path triggers remain unchanged.
 
 ## Scope
 

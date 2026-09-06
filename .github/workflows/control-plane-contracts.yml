@@ -115,3 +115,6 @@ jobs:
 
       - name: Run Work Block commit linkage and bootstrap fixtures
         run: bash .githooks/tests/commit-msg-fixtures.sh
+
+      - name: Run sprint-analysis evidence fixtures
+        run: bash .agent/skills/sprint-analysis/tests/commit-linkage-fixtures.sh

@@ -133,16 +133,24 @@ printf 'head=%s\n' "$(git rev-parse HEAD 2>/dev/null || printf unknown)"
 porcelain="$(git status --porcelain 2>/dev/null || true)"
 if [ -n "$porcelain" ]; then snapshot_status=dirty; else snapshot_status=clean; fi
 printf 'status=%s\n' "$snapshot_status"
+printf 'status_short_branch:\n'
+git status --short --branch 2>/dev/null || true
+printf '\n'
 printf 'staged=%s\n' "$(printf '%s\n' "$porcelain" | awk 'NF && substr($0,1,1) != " " && substr($0,1,2) != "??" { n++ } END { print n+0 }')"
 printf 'unstaged=%s\n' "$(printf '%s\n' "$porcelain" | awk 'NF && substr($0,2,1) != " " && substr($0,1,2) != "??" { n++ } END { print n+0 }')"
 printf 'untracked=%s\n' "$(printf '%s\n' "$porcelain" | awk '$1 == "??" { n++ } END { print n+0 }')"
 if upstream_counts="$(git rev-list --left-right --count '@{upstream}...HEAD' 2>/dev/null)"; then
-  behind="${upstream_counts%% *}"; ahead="${upstream_counts##* }"
-  printf 'upstream=available\nbehind=%s\nahead_unpushed=%s\n' "$behind" "$ahead"
-  if [ "$snapshot_status" = dirty ] || [ "$ahead" -gt 0 ]; then
-    printf 'evidence_caveat=repository-state-caveat\n'
+  read -r behind ahead <<< "$upstream_counts"
+  if [[ "$behind" =~ ^[0-9]+$ && "$ahead" =~ ^[0-9]+$ ]]; then
+    printf 'upstream=available\nbehind=%s\nahead_unpushed=%s\n' "$behind" "$ahead"
+    if [ "$snapshot_status" = dirty ] || [ "$ahead" -gt 0 ]; then
+      printf 'evidence_caveat=repository-state-caveat\n'
+    else
+      printf 'evidence_caveat=none\n'
+    fi
   else
-    printf 'evidence_caveat=none\n'
+    printf 'upstream=unavailable\nbehind=unknown\nahead_unpushed=unknown\n'
+    printf 'evidence_caveat=upstream-unverified\n'
   fi
 else
   printf 'upstream=unavailable\nbehind=unknown\nahead_unpushed=unknown\n'
