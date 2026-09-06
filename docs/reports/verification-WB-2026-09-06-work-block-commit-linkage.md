@@ -9,7 +9,9 @@ READY
 - Baseline `origin/main`: `7533f15b8132167d211d130cecc09c64dafa4d4c`.
 - Historical source remains at `00cd532d7e3ca57751dcdc71b8fc5ad8af3e48e8`.
 - `bash -n` passes for hook, fixtures, and bootstrap.
-- All 19 disposable hook/bootstrap fixture cases pass.
+- All 20 disposable hook/bootstrap fixture cases pass, including an actual
+  active-repository commit rejection without the trailer and successful
+  `git commit --no-verify` bypass.
 - Fixture activation is local to a temporary repository; this repository's
   `core.hooksPath` was not modified.
 - Git trailer parsing uses `git interpret-trailers --parse`; JSON state uses
