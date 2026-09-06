@@ -14,8 +14,13 @@ READY
   criteria, 7 tasks.
 - YAML template parse: PASS.
 - `git diff --check`: PASS.
-- State-machine review: PASS; only `accepted-with-id` allows bounded retrieval,
-  and ambiguous/timeout/transport outcomes cannot resubmit.
+- State-machine review: PASS after focused correction; `not-submitted` cannot
+  transition directly to `timeout`, and only `accepted-with-id` permits bounded
+  retrieval. Timeout means that bounded retrieval for an `accepted-with-id`
+  transaction reached its approved deadline/bound. Ambiguous/timeout/transport
+  outcomes cannot resubmit.
+- AC-002 / REQ-002: PASS; the corrected transition table is semantically
+  consistent with the retrieval gate and terminal-state rules.
 - Prohibited-content review: PASS; template contains no tokens, headers,
   cookies, signed URLs, raw bodies, source media, prompt content, or secret
   values.

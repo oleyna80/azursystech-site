@@ -2,7 +2,7 @@
 
 | Requirement coverage | Evidence | Status |
 |---|---|---|
-| REQ-001 / REQ-002 | Skill authority boundary, eight-state model, and transition table | PASS |
+| REQ-001 / REQ-002 | Skill authority boundary, eight-state model, and corrected transition table: `timeout` is reachable only from `accepted-with-id` through bounded retrieval | PASS |
 | REQ-003 / REQ-004 | No-resubmission rules and finite provider-capability retrieval bound | PASS |
 | REQ-005 / REQ-006 | Declarative YAML template and `privacy.never_record` list | PASS |
 | REQ-007 | Unconfirmed provenance requires quarantine and blocks publication readiness | PASS |

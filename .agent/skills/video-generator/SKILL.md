@@ -63,14 +63,15 @@ Use exactly these states:
   traceable; terminal and handed to QC.
 - `output-present-provenance-unconfirmed`: output exists but origin cannot be
   proved; terminal and quarantined.
-- `timeout`: bounded retrieval ended; terminal and never resubmitted.
+- `timeout`: bounded retrieval for an `accepted-with-id` transaction reached its
+  approved deadline/bound; terminal and never resubmitted.
 - `transport-failure`: acknowledgement is unknown after transport failure;
   terminal for submission and never resubmitted.
 
 Permitted transitions are:
 
 ```text
-not-submitted -> rejected | accepted-with-id | accepted-without-id | timeout | transport-failure
+not-submitted -> rejected | accepted-with-id | accepted-without-id | transport-failure
 accepted-with-id -> completed-traceable-output | output-present-provenance-unconfirmed | timeout | transport-failure
 accepted-without-id -> output-present-provenance-unconfirmed  # only if output already exists
 transport-failure -> output-present-provenance-unconfirmed    # only if output already exists
