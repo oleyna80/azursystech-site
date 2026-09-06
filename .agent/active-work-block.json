@@ -87,5 +87,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Video-generator transaction contract implemented and assured; no provider execution; publication handoff pending Owner gate"
+  "lifecycle_note": "Schema-v3 Work-Block commit linkage implemented and assured; no shared hook activation or external side effects"
 }
