@@ -1,0 +1,68 @@
+# Declarative transaction record only. Populate only in a separately approved
+# execution Work Block. This is not a provider request or credential store.
+schema_version: 1
+record_kind: provider-transaction-record
+
+transaction:
+  execution_mode: null # api-single-request | manual-console-handoff
+  outcome_state: not-submitted
+  approved_work_block_ref: null
+
+preflight:
+  provider_route_ref: null
+  model_version_ref: null
+  approved_budget_ref: null
+  price_evidence_ref: null
+  price_checked_at: null
+  terms_capability_evidence_ref: null
+  input_set:
+    opaque_internal_id: null
+  idempotency_capability: unknown # supported | unsupported | unknown
+  retrieval:
+    approved: false
+    provider_status_capability_ref: null
+    deadline_at: null
+    max_attempts: 0
+    attempts_made: 0
+    stopping_condition: null
+
+submission:
+  acknowledged_at: null
+  provider_request_id: null # record only when returned by the provider
+
+cost:
+  estimated_amount: null
+  actual_amount: null
+  currency_code: null
+
+output:
+  completed_at: null
+  provenance_confidence: unconfirmed # traceable | unconfirmed
+  quarantine_required: true
+  local_checksum_sha256: null
+  technical_metadata:
+    container: null
+    duration_seconds: null
+    width_px: null
+    height_px: null
+
+decisions:
+  technical_validity: pending # pending | valid | invalid
+  provenance_confidence: unconfirmed # pending | traceable | unconfirmed
+  commercial_publication_authorization: pending # pending | authorized | rejected
+
+privacy:
+  never_record:
+    - tokens
+    - authorization_headers
+    - cookies_or_session_credentials
+    - signed_urls
+    - account_or_session_identifiers
+    - raw_provider_responses
+    - raw_request_bodies
+    - source_media_data
+    - source_paths_or_filenames
+    - source_checksums_or_raw_metadata
+    - data_uris
+    - prompt_content
+    - secret_bearing_environment_values
