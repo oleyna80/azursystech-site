@@ -44,7 +44,8 @@ digs into operational friction; sprint-analysis measures the sprint.
 1. Extract raw data (one call, no context waste):
    `bash .agent/skills/sprint-analysis/scripts/extract.sh [SINCE] [UNTIL]`
    Emits: log rows in period, per-WB event counts, evidence-gap heuristics,
-   commits, and file churn.
+   trailer-first commit linkage, commits, file churn, and a period-end
+   repository snapshot.
 2. If a WB's story is unclear from counts, read its rows in the extract
    output (they carry full reasons) and, when referenced, the report files
    in `docs/reports/`.
@@ -73,12 +74,19 @@ mentioning amended/added write-set); WBs spawned by findings of another WB
 (fix-WBs created same/next day citing a discovery); critic RECONSIDER
 rounds; quick-fixes that grew into full WBs.
 
-**4. Git linkage and evidence gaps.** Commits in period vs WBs: map by same-day
-+ subject overlap (heuristic — say so). Read the extractor's evidence-gap
-section before making this judgment. Flag: WBs with implementation/DONE rows
-but no verification row, WBs with verification READY/SKIPPED but weak commit
-linkage, and commits with no explicit WB reference (out-of-process change —
-worth a process note, not an accusation).
+**4. Git linkage and evidence gaps.** Use the extractor's `COMMIT LINKAGE`
+section as the authoritative first pass. It parses commit trailers with
+`git interpret-trailers --parse` and emits stable classes: `trailer`,
+`legacy`, `missing`, `malformed-trailer`, and `multiple-valid-trailers`.
+Exactly one valid canonical `Work-Block` trailer wins over subject/date or
+same-day heuristics. `legacy` IDs are compatibility evidence only; malformed
+or multiple valid trailers remain unresolved. Subject/date overlap may be
+reported only as secondary heuristic evidence and never as a governance
+breach by itself. Read the extractor's evidence-gap section before making a
+judgment. Flag WBs with implementation/DONE rows but no verification row,
+WBs with verification READY/SKIPPED but weak commit linkage, and commits with
+no explicit WB reference as evidence gaps worth a process note, not an
+accusation.
 
 **5. Improvement candidates.** When the period exposes repeated friction,
 missed evidence, or a clear recurring pattern, surface follow-up candidates
@@ -125,4 +133,10 @@ failure to analyze.
 Evidence-gap sections emitted by the extractor are heuristics, not verdicts.
 They are useful smoke alarms: report them as candidates for human review, then
 cross-check the relevant WB plan, reports, and commit subjects before saying a
-process breach definitely happened.
+process breach definitely happened. The period-end repository snapshot is
+also a caveat: dirty, ahead, unpushed, or unavailable-upstream state limits
+evidence completeness but is not an automatic governance breach. Never emit
+`READY` when required evidence is missing, unresolved, or contradicted. Use
+`UNVERIFIED` when evidence is missing but analysis can continue, `DEGRADED`
+for partial evidence with an explicit caveat, and `BLOCKED` when a required
+source is unavailable and the result cannot be substantiated.
