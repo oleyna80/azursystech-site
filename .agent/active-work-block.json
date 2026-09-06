@@ -58,7 +58,7 @@
       "skip_reason": ""
     }
   },
-  "closeout_mode": "success-closeout",
+  "closeout_mode": "reporting-only",
   "integrations": {
     "approved": [],
     "admission_records": []
@@ -87,5 +87,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Customer-request automation guide implementation is merged through PR #19 and present in current origin/main; historical feature branch has no identified unmerged functional value, so this lifecycle-only WB is closed as implementation-complete for separate Owner-controlled cleanup."
+  "lifecycle_note": "Disposition audit complete; Owner-approved selective salvage decisions recorded; target branch retained pending the three bounded salvage WBs; audit publication separately Owner-authorized; destructive cleanup / branch deletion remains separately Owner-controlled."
 }
