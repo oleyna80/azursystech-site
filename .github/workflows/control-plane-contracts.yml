@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - ".agent/**"
+      - ".githooks/**"
       - ".claude/**"
       - ".codex/**"
       - ".opencode/**"
@@ -17,6 +18,7 @@ on:
       - "scripts/test-github-capability-github-cli-hard-stops.py"
       - "scripts/validate-shared-context.py"
       - "scripts/test-validate-shared-context.py"
+      - "scripts/bootstrap.sh"
       - ".env"
       - ".env.*"
       - "**/.env"
@@ -30,6 +32,7 @@ on:
   pull_request:
     paths:
       - ".agent/**"
+      - ".githooks/**"
       - ".claude/**"
       - ".codex/**"
       - ".opencode/**"
@@ -41,6 +44,7 @@ on:
       - "scripts/test-github-capability-github-cli-hard-stops.py"
       - "scripts/validate-shared-context.py"
       - "scripts/test-validate-shared-context.py"
+      - "scripts/bootstrap.sh"
       - ".env"
       - ".env.*"
       - "**/.env"
@@ -108,3 +112,6 @@ jobs:
 
       - name: Run native Codex apply-patch payload fixture
         run: bash .codex/hooks/tests/apply-patch-fixtures.sh
+
+      - name: Run Work Block commit linkage and bootstrap fixtures
+        run: bash .githooks/tests/commit-msg-fixtures.sh

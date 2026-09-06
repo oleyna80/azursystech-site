@@ -8,6 +8,34 @@ PROFILE_VALIDATOR="$ROOT/scripts/validate-installation-profile.py"
 ACTIVE_WORK_BLOCK="$ROOT/.agent/active-work-block.json"
 DEFAULT_WORK_BLOCK="$ROOT/.agent/active-work-block.default.json"
 
+case "${1:-}" in
+  --install-git-hooks)
+    [ -x "$ROOT/.githooks/commit-msg" ] || {
+      echo "FAIL: .githooks/commit-msg is missing or not executable" >&2
+      exit 1
+    }
+    git -C "$ROOT" config core.hooksPath .githooks
+    [ "$(git -C "$ROOT" config --get core.hooksPath)" = ".githooks" ] || {
+      echo "FAIL: could not configure core.hooksPath=.githooks" >&2
+      exit 1
+    }
+    echo "Git hooks installed locally: .githooks"
+    exit 0
+    ;;
+  --check-git-hooks)
+    [ -x "$ROOT/.githooks/commit-msg" ] || {
+      echo "FAIL: .githooks/commit-msg is missing or not executable" >&2
+      exit 1
+    }
+    [ "$(git -C "$ROOT" config --get core.hooksPath || true)" = ".githooks" ] || {
+      echo "FAIL: core.hooksPath is not .githooks" >&2
+      exit 1
+    }
+    echo "Git hooks check passed: .githooks"
+    exit 0
+    ;;
+esac
+
 echo "==> Bootstrap: verifying Agentic SDLC layer at $ROOT"
 
 [ -f "$PROFILE_FILE" ] || {
