@@ -58,7 +58,7 @@
       "skip_reason": ""
     }
   },
-  "closeout_mode": "reporting-only",
+  "closeout_mode": "success-closeout",
   "integrations": {
     "approved": [],
     "admission_records": []
@@ -87,5 +87,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Disposition audit complete; Owner-approved selective salvage decisions recorded; target branch retained pending the three bounded salvage WBs; audit publication separately Owner-authorized; destructive cleanup / branch deletion remains separately Owner-controlled."
+  "lifecycle_note": "Video-generator transaction contract implemented and assured; no provider execution; publication handoff pending Owner gate"
 }
