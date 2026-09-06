@@ -1,6 +1,6 @@
 # Write Gate Record
 
-- **Work Block:** `WB-2026-09-05-shared-analysis-closeout` (closed; operational state inactive)
+- **Work Block:** `WB-2026-09-05-automatiser-guide-closeout`
 - **Write Gate Status:** `BLOCKED`
 - **Closeout mode:** `success-closeout`
 
