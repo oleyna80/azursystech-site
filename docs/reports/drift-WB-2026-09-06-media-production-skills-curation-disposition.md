@@ -14,9 +14,12 @@
 ## Disposition impact
 
 This is a reconciliation/disposition issue, not evidence that every target
-commit is defective. The correct response is selective extraction into bounded
-WBs and historical retention until the Owner decides whether those clusters
-still have value.
+commit is defective. The Owner-approved response is selective extraction into
+three bounded WBs: video-generator transaction contract, commit ↔ Work Block
+trailer hook redesign, and sprint-analysis evidence/linkage hardening. Retain
+the target until those WBs are complete or explicitly rejected; historical
+application/media implementation is not in the salvage backlog and historical
+docs are reference-only.
 
 ## Unverified items
 

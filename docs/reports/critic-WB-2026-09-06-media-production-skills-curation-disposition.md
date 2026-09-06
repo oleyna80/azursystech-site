@@ -27,9 +27,12 @@ state.
 
 ## Required reviewer boundary
 
-Recommend retain/hold the remote branch until disposition evidence is published
-and Owner chooses between archive and deletion. Do not port the whole branch,
-merge it, or delete it as part of this audit.
+Recommend retain/hold the remote branch while the three Owner-approved bounded
+salvage WBs are completed or explicitly rejected: video-generator transaction
+contract, commit ↔ Work Block trailer hook redesign, and sprint-analysis
+evidence/linkage hardening. After that, deletion remains a separate
+Owner-controlled action. Do not port the whole branch, merge it, or delete it
+as part of this audit.
 
 ## Critic execution note
 

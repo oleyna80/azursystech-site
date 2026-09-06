@@ -87,5 +87,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Read-only branch disposition audit complete; preserve evidence, defer bounded extraction decisions, no publication or destructive cleanup authorized."
+  "lifecycle_note": "Disposition audit complete; Owner-approved selective salvage decisions recorded; target branch retained pending the three bounded salvage WBs; audit publication separately Owner-authorized; destructive cleanup / branch deletion remains separately Owner-controlled."
 }

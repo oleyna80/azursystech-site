@@ -13,9 +13,9 @@ WBs; historical docs are reference-only and historical application/media
 implementation is not to be migrated.
 
 The intended sequence is publication of this audit, three separate salvage
-decisions/implementations, retention of the target branch until those decisions
-are complete, and only then Owner-controlled deletion. Framework upstreaming is
-deferred.
+implementations or explicit rejections, retention of the target branch until
+those outcomes are complete, and only then Owner-controlled deletion.
+Framework upstreaming is deferred.
 
 ## Assurance
 

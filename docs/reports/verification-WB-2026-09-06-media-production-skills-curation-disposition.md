@@ -16,7 +16,9 @@ READY for read-only disposition evidence.
 - No PR was found for the remote target branch.
 - Disposition matrix records `REJECT WHOLE-BRANCH MERGE`, three separate
   `SALVAGE`/`REDESIGN + SALVAGE` clusters, `REFERENCE ONLY` historical docs,
-  and `DO NOT MIGRATE` application/media implementation.
+  and `DO NOT MIGRATE` application/media implementation, including the
+  historical `generate_hero_veo.py` script; only its transaction-contract
+  semantics are eligible for fresh adaptation.
 - Framework changes are explicitly deferred and no framework path is in the
   audit write-set.
 

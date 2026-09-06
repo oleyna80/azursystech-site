@@ -12,6 +12,6 @@
 | Preserve audit boundary | No `web/`, `admin/`, or `showcase/` writes in this WB | PASS |
 | Reject whole-branch merge | Owner-approved disposition matrix | PASS |
 | Record three salvage clusters | Video contract, governance hook, sprint-analysis linkage | PASS |
-| Record non-salvage clusters | Historical docs `REFERENCE ONLY`; application/media `DO NOT MIGRATE` | PASS |
+| Record non-salvage clusters | Historical docs `REFERENCE ONLY`; application/media and historical `generate_hero_veo.py` script `DO NOT MIGRATE` | PASS |
 | Defer framework work | Framework candidates recorded as future-only; no framework files changed | PASS |
 | Preserve target branch | Target ref remains `00cd532...`; no target mutation or deletion | PASS |

@@ -9,8 +9,9 @@ multi-purpose development line, not a merge-ready feature branch. It contains
 useful historical evidence and three potentially reusable payload clusters, but
 also stale gates, old Work Block records, and a superseded immobilier hero
 implementation. The safe disposition is to retain it temporarily as evidence,
-extract any desired payload into new bounded WBs, then delete the remote branch
-only after those decisions are recorded.
+extract the three approved salvage payloads into new bounded WBs, then retain it
+until those WBs are complete or explicitly rejected before a separate
+Owner-controlled deletion decision.
 
 ## Frozen identity
 
@@ -39,8 +40,8 @@ and 4 other paths.
 | Immobilier `HomePage.tsx` | Target blob `025d67c...`; main blob identical | Already integrated | No port; retain only as historical overlap evidence |
 | `hero-part2.mp4` | Target and main blob `d4b8623...`, 4,952,640 bytes | Already integrated | No port |
 | Immobilier `HeroMedia.tsx` + CSS | Target differs from main; main has a later `HeroMedia` using `hero-veo-20260724.mp4`, static priority image and no loop | Historical alternative; regression risk if copied blindly | No direct port; if needed, open a new showcase review WB with browser/mobile evidence |
-| `generate_hero_veo.py` | Unique to target; 191 lines | Potential reusable transaction implementation | New bounded media-generator WB only, with fresh gates and provider exclusion |
-| video-generator skill/template | Unique target additions; provider-neutral state machine and allowlisted record template | Reusable governance documentation | New docs-only governance WB, or explicitly re-adopt after comparison with current skill contract |
+| `generate_hero_veo.py` | Unique to target; 191 lines | Historical script, not a current implementation baseline | **DO NOT MIGRATE / REFERENCE ONLY**; do not port or use the script as implementation. Salvage only its transaction-contract semantics, skill/template, and architecture rules, freshly adapted to current `main` |
+| video-generator skill/template | Unique target additions; provider-neutral state machine and allowlisted record template | Reusable transaction-contract semantics and governance documentation | **SALVAGE** in a separate bounded video-generator transaction-contract WB; adapt to current `main`, not the historical implementation |
 | commit hook/tests | Unique target `.githooks/commit-msg` and fixture test | Potential local trailer control | New governance-control WB; not a direct merge because current main lacks this payload |
 | historical July docs/gates | 50 coordination/docs paths; several closed, blocked, UNVERIFIED, or pending records | Evidence, not current state | Preserve as historical reference; do not treat target gate as active |
 
@@ -66,34 +67,43 @@ and 4 other paths.
   implied.
 - **P0:** none. No production outage or security defect was established by this
   disposition audit.
-- **P1:** decide and document whether the unique generator, governance skill,
-  and hook payloads are still wanted; retain the target until that decision.
-- **P2:** if the immobilier hero variant is desired, validate it in a fresh
-  bounded showcase WB; reconcile IVR-06 only with explicit ownership and fresh
-  gates.
+- **P1:** execute or explicitly reject the three Owner-approved salvage
+  clusters: video-generator transaction contract, commit ↔ Work Block trailer
+  hook redesign, and sprint-analysis evidence/linkage hardening. Retain the
+  target until those bounded WBs are complete or explicitly rejected.
+- **P2:** historical application/media implementation, including the old
+  generator script, is not part of the salvage backlog; historical docs remain
+  reference-only. A future immobilier hero/media review or historical
+  lifecycle closeout requires a new need and a separate Owner decision.
 - **P3:** preserve or prune historical documentation after all references and
   retention needs are checked.
 
 ## Recommended future Work Blocks
 
-1. **Media generator transaction contract adoption** — docs/script scope only;
-   compare `generate_hero_veo.py` and the current skill contract, add tests, no
-   provider call or media publication.
-2. **Governance commit-trailer control** — `.githooks/**`, bootstrap and tests;
-   independently review bypass behavior and repository integration.
-3. **Immobilier hero/media review** — `showcase/components/immobilier/**` and
-   explicitly named media only; browser, mobile, reduced-motion and playback
-   verification required.
-4. **Historical lifecycle closeout** — docs/control-plane only; resolve the
-   meaning of IVR-06 and archive evidence without reactivating old gates.
+1. **Video-generator transaction contract** — separate AzurSysTech WB;
+   salvage state-machine, acknowledgement, retrieval, provenance/quarantine,
+   template, and technical/provenance/commercial semantics; no direct script
+   migration, provider call, or media publication.
+2. **Commit ↔ Work Block trailer hook redesign** — separate governance WB;
+   redesign and test the historical hook against the current lifecycle record
+   format and its active/inactive and malformed-input cases.
+3. **Sprint-analysis evidence/linkage hardening** — separate small AzurSysTech
+   WB; strengthen trailer-first attribution, fallback classification, status
+   caveats, and evidence-gap language.
+
+Immobilier hero/media review and historical lifecycle closeout are not current
+recommended salvage WBs; either requires a separate future need and new Owner
+decision.
 
 ## Final recommendation
 
-Do not merge the remote branch. Keep it as a short-lived evidence source while
-the Owner decides which bounded WBs, if any, should extract its unique value.
-After those decisions are recorded and no payload is selected for adoption,
-the branch is a deletion candidate; until then, deletion would risk losing
-unique generator, governance, sprint-analysis, and historical evidence.
+Do not merge the remote branch. The Owner has already selected three salvage
+clusters: the video-generator transaction contract, the commit ↔ Work Block
+trailer hook redesign, and sprint-analysis evidence/linkage hardening. Retain
+the target branch until those three bounded WBs are implemented or explicitly
+rejected. Once the needed payloads are preserved or rejected, the branch
+becomes a candidate for separate Owner-controlled deletion; until then,
+deletion risks losing unique evidence.
 
 ## Owner-approved disposition matrix
 
