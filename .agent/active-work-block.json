@@ -1,14 +1,14 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-2026-09-08-active-work-block-state-recovery",
+  "work_block_id": "",
   "governance_profile": "Controlled",
   "specification": {
-    "path": "docs/specs/WB-2026-09-08-active-work-block-state-recovery.md",
-    "revision": "amendment-terminal-publication-v1"
+    "path": "",
+    "revision": ""
   },
-  "subject_branch": "fix/active-work-block-state-recovery",
-  "base_commit": "6485a7da7956f5451c52c4331af1b757c86e062f",
+  "subject_branch": "",
+  "base_commit": "",
   "define_quality": {
     "required": false,
     "status": "PENDING",
@@ -17,75 +17,60 @@
     "consistency_analysis": ""
   },
   "write_gate": {
-    "status": "READY",
-    "opened_at": "2026-09-08T16:01:57.369257+00:00"
+    "status": "BLOCKED",
+    "opened_at": null
   },
   "critic": {
     "required": true,
-    "status": "READY",
-    "verdict": "APPROVE",
+    "status": "PENDING",
+    "verdict": "PENDING",
     "report": "",
-    "isolation": "same_context",
+    "isolation": "unknown",
     "skip_reason": ""
   },
   "assurance": {
     "review": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/review-WB-2026-09-08-active-work-block-state-recovery.md",
-      "isolation": "same-session-degraded",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/verification-WB-2026-09-08-active-work-block-state-recovery.md",
-      "isolation": "same-session-degraded",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     },
     "evaluation": {
       "required": false,
-      "status": "SKIPPED",
-      "verdict": "SKIPPED",
+      "status": "PENDING",
+      "verdict": "PENDING",
       "plan": "",
       "report": "",
       "rubric_revision": "",
       "benchmark_revision": "",
       "isolation": "unknown",
-      "skip_reason": "not required for deterministic control-plane correction"
+      "skip_reason": ""
     },
     "drift": {
       "required": false,
-      "status": "SKIPPED",
-      "verdict": "SKIPPED",
+      "status": "PENDING",
+      "verdict": "PENDING",
       "report": "",
       "isolation": "unknown",
-      "skip_reason": "no material drift in deterministic control-plane amendment"
+      "skip_reason": ""
     }
   },
-  "closeout_mode": "pending",
+  "closeout_mode": "success-closeout",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
-  "write_set": [
-    ".agent/hooks/hard_stop_policy.py",
-    "governance/authority.md",
-    "governance/lifecycle.md",
-    ".agent/workflows/owner-controlled-github-flow.md",
-    "scripts/test-github-capability-control-plane.py",
-    "docs/specs/WB-2026-09-08-active-work-block-state-recovery.md",
-    "docs/plans/WB-2026-09-08-active-work-block-state-recovery.md",
-    "docs/tasklist/WB-2026-09-08-active-work-block-state-recovery.tasklist.md",
-    "docs/reports/**",
-    "FILE_REGISTRY.yml",
-    "PROJECT_MAP.md",
-    ".agent/active-work-block.json",
-    ".codex/write-gate.md",
-    ".agent/hooks/__pycache__/hard_stop_policy.cpython-314.pyc"
-  ],
+  "write_set": [],
   "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
@@ -109,5 +94,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "source work opened by Work Block coordination"
+  "lifecycle_note": "Terminal canonical inactive closeout for subject candidate"
 }
