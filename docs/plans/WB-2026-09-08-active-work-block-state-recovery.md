@@ -41,7 +41,7 @@ deployment, default-branch, or merge changes are permitted.
 - **Verification verdict:** READY
 - **Drift gate:** ALIGNED
 - **Closeout mode:** success-closeout
-- **Task status:** completed after Owner REVISION v3
+- **Task status:** completed
 
 ## Risks
 

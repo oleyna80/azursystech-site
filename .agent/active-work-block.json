@@ -1,14 +1,14 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "",
+  "work_block_id": "WB-2026-09-08-active-work-block-state-recovery",
   "governance_profile": "Controlled",
   "specification": {
-    "path": "",
-    "revision": ""
+    "path": "docs/specs/WB-2026-09-08-active-work-block-state-recovery.md",
+    "revision": "amendment-recovery-v3"
   },
-  "subject_branch": "",
-  "base_commit": "",
+  "subject_branch": "fix/active-work-block-state-recovery",
+  "base_commit": "1d6087ddf47cf07afc729edd6cd4523bbc3f8a66",
   "define_quality": {
     "required": false,
     "status": "PENDING",
@@ -17,15 +17,15 @@
     "consistency_analysis": ""
   },
   "write_gate": {
-    "status": "BLOCKED",
-    "opened_at": null
+    "status": "READY",
+    "opened_at": "2026-09-08T19:23:09.104824+00:00"
   },
   "critic": {
     "required": true,
-    "status": "PENDING",
-    "verdict": "PENDING",
-    "report": "",
-    "isolation": "unknown",
+    "status": "READY",
+    "verdict": "APPROVE",
+    "report": "docs/reports/2026-09-08-active-work-block-state-recovery-critic.md",
+    "isolation": "independent",
     "skip_reason": ""
   },
   "assurance": {
@@ -65,12 +65,15 @@
       "skip_reason": ""
     }
   },
-  "closeout_mode": "success-closeout",
+  "closeout_mode": "pending",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
-  "write_set": [],
+  "write_set": [
+    "docs/plans/WB-2026-09-08-active-work-block-state-recovery.md",
+    ".agent/active-work-block.json"
+  ],
   "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
@@ -94,5 +97,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Final terminal inactive closeout after focused recovery correction"
+  "lifecycle_note": "source work opened by Work Block coordination"
 }
