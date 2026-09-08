@@ -31,38 +31,38 @@
   "assurance": {
     "review": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
-      "isolation": "unknown",
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/review-WB-2026-09-08-active-work-block-state-recovery.md",
+      "isolation": "independent-readonly-root",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
-      "isolation": "unknown",
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/verification-WB-2026-09-08-active-work-block-state-recovery.md",
+      "isolation": "independent-readonly-root",
       "skip_reason": ""
     },
     "evaluation": {
       "required": false,
-      "status": "PENDING",
+      "status": "SKIPPED",
       "verdict": "PENDING",
       "plan": "",
       "report": "",
       "rubric_revision": "",
       "benchmark_revision": "",
       "isolation": "unknown",
-      "skip_reason": ""
+      "skip_reason": "deterministic control-plane correction; no generative deliverable"
     },
     "drift": {
       "required": false,
-      "status": "PENDING",
+      "status": "SKIPPED",
       "verdict": "PENDING",
       "report": "",
       "isolation": "unknown",
-      "skip_reason": ""
+      "skip_reason": "no separate drift gate required; corrective scope is traceable"
     }
   },
   "closeout_mode": "pending",
