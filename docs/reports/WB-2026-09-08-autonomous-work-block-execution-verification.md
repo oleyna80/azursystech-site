@@ -76,3 +76,18 @@ This conservative parser boundary is an intentional operational constraint:
 safe commands that would otherwise use executable substitutions must be
 written as separate literal commands. It neither widens autonomous authority
 nor weakens any Owner-controlled hard stop.
+
+## Owner REVISION corrective verification
+
+The focused Verifier confirmed the two requested corrections against candidate
+`00be63609e3e42b4e8883c8c0dbb1657c160437e`: the focused source diff contains
+only `governance/lifecycle.md` and `.codex/AGENTS.md`, NDR and Integration
+Stabilization ceilings no longer independently require Owner input, and the
+Codex adapter no longer requires approval of a Codex-authored plan. Canonical
+authority, root operating instructions, and runtime enforcement remain aligned.
+
+**Corrective verification verdict: READY.** The control-plane, GitHub CLI,
+Codex/Claude fixture, release-state, traceability, and diff-hygiene checks all
+passed again. External GitHub branch protection remains the previously
+disclosed cooperative-control residual risk and was not changed by this
+repository-local correction.

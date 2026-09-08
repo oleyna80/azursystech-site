@@ -212,17 +212,28 @@ An eligible NDR has one repair record, one Coder implementation pass, and one
 independent read-only combined assurance pass. The repair record names the root
 cause, allowlist, prohibited changes, deterministic commands, and stop condition.
 Combined assurance records logical review, deterministic verification, and its
-final verdict. NDR allows at most one correction round; a failed eligibility
-condition or second correction requires an Owner decision.
+final verdict. NDR allows at most one correction round. If that procedural
+ceiling is exceeded, NDR mode terminates and the Orchestrator reclassifies the
+work under the appropriate broader governance profile or ordinary corrective
+loop within the same approved Work Block. Execution continues autonomously
+when the approved architecture, scope, authority, and risk boundary are
+unchanged. An Owner decision is required only when the reclassification itself
+would change one of those boundaries (including a prohibited-domain change),
+or when another Owner-controlled Hard Stop is reached.
 
 #### Integration Stabilization
 
 Integration Stabilization is a bounded execution envelope, not a profile. It may
 group at most three sequentially discovered eligible NDR items and at most two
 correction rounds. Every item keeps its own exact CI/bootstrap/runtime-validation
-allowlist. Exceeding either ceiling, changing a prohibited domain, or requiring an
-architecture decision stops for Owner decision rather than creating another gate
-cycle.
+allowlist. Exceeding either procedural ceiling terminates the stabilization
+envelope and causes the Orchestrator to reclassify the work under the
+appropriate broader governance profile or ordinary corrective loop within the
+same approved Work Block. It may continue autonomously when architecture,
+scope, authority, and risk boundaries remain unchanged. A prohibited-domain
+change, architecture decision, or other material boundary change requires the
+Owner decision that the reclassification entails; the numeric ceiling alone is
+not a human blocker.
 
 ### Managed
 

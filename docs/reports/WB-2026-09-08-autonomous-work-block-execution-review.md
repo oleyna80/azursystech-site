@@ -58,3 +58,17 @@ literal subject-branch push, remain available as standalone commands.
 **Final focused verdict: READY.** The Reviewer independently rechecked the
 expanded negative matrix and the runtime-neutral policy wording. It found no
 remaining material governance or enforcement issue.
+
+## Owner REVISION corrective review
+
+The Owner's focused `REVISION` findings were limited to the procedural NDR and
+Integration Stabilization ceilings and the Codex adapter's plan-approval
+wording. The corrective review confirmed that both findings are resolved:
+numeric ceilings now terminate and reclassify the simplified envelope without
+creating an automatic human blocker, while material architecture, scope,
+authority, risk, prohibited-domain, and other Hard Stop changes still require
+Owner escalation. The adapter now starts autonomous planning after approval of
+the Work Block objective and boundaries, without a separate plan approval.
+
+**Corrective review verdict: READY.** The focused Reviewer found no unrelated
+working-tree changes or drift from the canonical authority source.

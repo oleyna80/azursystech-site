@@ -82,7 +82,10 @@ Approval rules:
 - Always stop for approval before: production code changes outside approved scope, architecture changes outside approved scope, database/schema/migration changes, new dependencies, config/secrets/env changes, deploys, payment/checkout/order changes, destructive operations, and every Owner-controlled publication action. An approved Work Block may instead authorize local commits and the sole bounded candidate push defined in `governance/authority.md`.
 
 Autonomous Execution Mode:
-- If the Owner explicitly approves an autonomous execution plan, continue through the approved stages without asking for confirmation after every small subtask.
+- Once the Owner has approved the Work Block objective, scope, architectural
+  constraints, and authority boundary, Codex autonomously performs planning and
+  the remaining lifecycle without asking for confirmation after every small
+  subtask.
 - Stay strictly within the approved scope.
 - After each stage, report: completed stage, files changed, checks run, review/verification result, risks, next stage.
 - Stop and ask for Owner approval if a stop condition occurs.
