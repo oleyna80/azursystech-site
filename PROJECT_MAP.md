@@ -15,7 +15,8 @@ completed_work_blocks:
   - docs/plans/WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation.md
   - docs/plans/WB-2026-09-03-lifecycle-inactive-commit-bypass-correction.md
   - docs/plans/WB-2026-09-03-technical-seo-cwv-entity-audit.md
-active_work_block: docs/plans/WB-2026-09-08-autonomous-work-block-execution.md
+  - docs/plans/WB-2026-09-08-active-work-block-state-recovery.md
+active_work_block: null
 -->
 
 ```yaml
@@ -23,7 +24,7 @@ release_state:
   schema_version: 1
   authority_mode: github_capability
   repository_status: operational
-  active_work_block: docs/plans/WB-2026-09-08-autonomous-work-block-execution.md
+  active_work_block: null
   governance_profile: Managed
   publication_mode: autonomous_assured_subject_branch_owner_merge_decision
   last_reconciled_commit: repository_evidence_only
@@ -31,7 +32,7 @@ release_state:
 
 ## Migration Work
 
-- Active implementation Work Block: `docs/plans/WB-2026-09-08-autonomous-work-block-execution.md`.
+- No active implementation Work Block.
 - The completed migration index is machine-readable in `FILE_REGISTRY.yml:migration_state`.
 
 ## Architecture

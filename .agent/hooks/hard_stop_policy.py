@@ -23,6 +23,16 @@ RUNTIME_COMMANDS = {
     "claude": "claude-code-cli",
 }
 
+TERMINAL_CLOSEOUT_PATHS = {
+    ".agent/active-work-block.json",
+    ".agent/critic-gate.md",
+    ".agent/verification-gate.md",
+    ".codex/write-gate.md",
+    "FILE_REGISTRY.yml",
+    "PROJECT_MAP.md",
+}
+TERMINAL_WORK_BLOCK = re.compile(r"^Work-Block:\s*(\S+)\s*$", re.MULTILINE)
+
 CONSEQUENTIAL = [
     (
         re.compile(
@@ -388,6 +398,17 @@ def tag_publish(command: str) -> bool:
     return False
 
 
+def wrapped_push_invocation(command: str) -> bool:
+    """Reject wrapper forms whose quoted payload would execute a Git push."""
+    return bool(
+        re.search(
+            r"(?:^|[;&|\n]\s*)(?:env|command|bash|sh|zsh)\b[^;&|\n]*\bgit\s+push\b",
+            command,
+            re.I,
+        )
+    )
+
+
 def canonical_branch_ref(value: str) -> str:
     ref = value.strip()
     if ref.startswith("refs/heads/"):
@@ -488,6 +509,83 @@ def define_quality_ready(gate: dict) -> bool:
     )
 
 
+def canonical_terminal_inactive(gate: dict) -> bool:
+    return (
+        gate.get("schema_version") == 3
+        and gate.get("authority_mode") == "github_capability"
+        and gate.get("work_block_id") == ""
+        and gate.get("specification") == {"path": "", "revision": ""}
+        and gate.get("subject_branch") == ""
+        and gate.get("base_commit") == ""
+        and gate.get("write_set") == []
+        and gate.get("write_gate") == {"status": "BLOCKED", "opened_at": None}
+        and gate.get("closeout_mode") == "success-closeout"
+    )
+
+
+def commit_work_block_id(root: Path, revision: str) -> str:
+    message = git(root, "show", "-s", "--format=%B", revision)
+    matches = TERMINAL_WORK_BLOCK.findall(message)
+    return matches[0] if len(matches) == 1 else ""
+
+
+def terminal_diff_allowed(root: Path) -> bool:
+    paths = git(root, "diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD").splitlines()
+    return bool(paths) and all(path in TERMINAL_CLOSEOUT_PATHS for path in paths)
+
+
+def terminal_closeout_push_allowed(command: str, gate: dict, root: Path) -> bool:
+    """Allow only the one committed active-to-inactive closeout transition."""
+    if not canonical_terminal_inactive(gate):
+        return False
+    current = current_branch(root)
+    configured_default = default_branch(root)
+    if not current or not configured_default or current == configured_default:
+        return False
+    commands = shell_command_segments(command)
+    if commands is None or len(commands) != 1:
+        return False
+    argv = commands[0]
+    refspec = f"HEAD:refs/heads/{current}"
+    if argv != ["git", "push", "origin", refspec]:
+        return False
+    segments = push_segments(command)
+    if len(segments) != 1:
+        return False
+    tokens, positional = parse_push_segment(segments[0])
+    if tokens != ["origin", refspec] or positional != ["origin", refspec]:
+        return False
+    try:
+        parents = git(root, "rev-list", "--parents", "-n", "1", "HEAD").split()
+        parent = parents[1] if len(parents) == 2 else ""
+        child_state = json.loads(git(root, "show", "HEAD:.agent/active-work-block.json"))
+        parent_state = json.loads(git(root, "show", f"{parent}:.agent/active-work-block.json"))
+    except (json.JSONDecodeError, IndexError, TypeError):
+        return False
+    if not parent or not isinstance(child_state, dict) or not isinstance(parent_state, dict):
+        return False
+    work_block_id = str(parent_state.get("work_block_id") or "").strip()
+    if not work_block_id or not canonical_terminal_inactive(child_state):
+        return False
+    if parent_state.get("schema_version") != 3 or parent_state.get("authority_mode") != "github_capability":
+        return False
+    if str(parent_state.get("subject_branch") or "").strip() != current:
+        return False
+    if parent_state.get("write_gate", {}).get("status") != "READY":
+        return False
+    if (
+        not define_quality_ready(parent_state)
+        or not required_critic_ready(parent_state)
+        or not required_assurance_ready(parent_state)
+    ):
+        return False
+    return (
+        commit_work_block_id(root, parent) == work_block_id
+        and commit_work_block_id(root, "HEAD") == work_block_id
+        and terminal_diff_allowed(root)
+    )
+
+
 def autonomous_subject_push_allowed(command: str, gate: dict, root: Path) -> bool:
     """Allow only a fully explicit, assured push of this Work Block's HEAD."""
     commands = shell_command_segments(command)
@@ -496,6 +594,8 @@ def autonomous_subject_push_allowed(command: str, gate: dict, root: Path) -> boo
     argv = commands[0]
     if len(argv) != 4 or argv[:3] != ["git", "push", "origin"]:
         return False
+    if terminal_closeout_push_allowed(command, gate, root):
+        return True
     segments = push_segments(command)
     if len(segments) != 1:
         return False
@@ -564,6 +664,8 @@ def check_command(command: str, gate: dict, root: Path) -> None:
         deny("Broad or destructive remote push is outside the normal agent capability boundary.")
     if tag_publish(command):
         deny("External tag publication is outside the normal agent capability boundary.")
+    if wrapped_push_invocation(command):
+        deny("Wrapped Git push commands are outside the literal subject-publication allowance.")
     if push_segments(command):
         if pushes_default_branch(command, root):
             deny("Direct default-branch push is outside the normal agent capability boundary.")

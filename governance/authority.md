@@ -94,20 +94,33 @@ routine Owner escalation. Test failures, `CHANGES_REQUIRED`, refactoring, and
 other corrective work remain autonomous while the approved requirement, risk,
 architecture, authority, and write-set boundaries do not change.
 
-Autonomous remote publication requires a `READY` write gate, formal
-Define-quality evidence where the governance profile requires it, a `READY`
-Critic, and `READY` Review and Verification. It is then limited to one normal
-non-force command form: the current `HEAD` must be pushed through `origin` to
-`refs/heads/<subject_branch>`, where the attached non-default branch exactly
-matches the active Work Block `subject_branch`. The push must be the sole shell
-command; it cannot be coupled to a consequential action, wrapper, or shell
-command substitution. Runtime controls fail closed for executable command or
-process substitutions; single-quoted literal prose is not an executable
-substitution. The command is
-explicit so its remote destination cannot be inferred from mutable upstream
-configuration. A successful candidate push is reported to the Owner for the
-final `MERGE / REVISION / REJECT` decision; it is not a merge or deployment
-authorization.
+Autonomous remote publication has two distinct subject-candidate paths. An
+assured active candidate requires a `READY` write gate, formal Define-quality
+evidence where the governance profile requires it, a `READY` Critic, and
+`READY` Review and Verification. Its only normal non-force command form pushes
+`HEAD` through `origin` to `refs/heads/<subject_branch>`, where the attached
+non-default branch exactly matches the active Work Block `subject_branch`.
+
+A final terminal closeout candidate uses that same literal command form, but is
+admitted only when committed Git ancestry proves one immediate transition from
+that same publication-eligible active parent to a canonical terminal inactive
+child. The parent must carry the matching Work Block, exact subject branch,
+READY formal Define-quality evidence where the governance profile requires it,
+and READY Critic/Review/Verification state. The child must contain
+the exact canonical inactive state, the matching `Work-Block:` commit linkage,
+and only the minimal lifecycle/closeout coordination allowlist. Inactive state
+alone never grants publication authority; arbitrary inactive-state publication
+is denied.
+
+For both paths the push must be the sole shell command; it cannot be coupled to
+a consequential action, wrapper, or shell command substitution. Runtime
+controls fail closed for executable command or process substitutions;
+single-quoted literal prose is not an executable substitution. The explicit
+command prevents the remote destination from being inferred from mutable
+upstream configuration. A successful candidate push is reported to the Owner
+for the final `MERGE / REVISION / REJECT` decision; it is not a merge or
+deployment authorization. Force/default/protected/tag/release/deletion and
+other external hard stops remain Owner-controlled.
 
 Technical credential presence, a runtime permission prompt, and project-local
 state alone do not create authority. They may enable the narrowly authorized

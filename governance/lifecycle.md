@@ -72,6 +72,14 @@ Required outcome:
 - the diff is frozen or its exact revision is recorded;
 - implementation concerns and unresolved assumptions are reported.
 
+Subject publication has two separate Stage 1 outcomes: an assured active
+candidate may use the active Work Block READY predicate; a final terminal
+candidate may use the terminal predicate only when committed history proves one
+immediate child transition from that publication-eligible active commit to the
+canonical inactive closeout state. The inactive state itself never authorizes
+publication, and terminal diffs remain limited to the canonical closeout /
+coordination allowlist.
+
 Within approved scope, ordinary reversible development operations may include
 staging, local commits, and corrective loops. After required assurance is READY,
 the explicit exact-subject candidate push defined by `governance/authority.md`

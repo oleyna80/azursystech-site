@@ -151,9 +151,98 @@ def make_repo() -> tuple[tempfile.TemporaryDirectory[str], Path, dict[str, objec
     git(cwd, "commit", "-q", "-m", "fixture base")
     git(cwd, "branch", "-M", "main")
     git(cwd, "switch", "-q", "-c", "feature/capability-test")
+    (cwd / ".agent").mkdir(parents=True, exist_ok=True)
+    shutil.copy2(DEFAULT_GATE, cwd / ".agent/active-work-block.default.json")
     base = json.loads(DEFAULT_GATE.read_text(encoding="utf-8"))
     write_gate(cwd, base)
     return holder, cwd, base
+
+
+def make_terminal_repo(
+    *,
+    parent_mutator: object = None,
+    malformed_parent: bool = False,
+    source_mutation: bool = False,
+    extra_terminal_path: str = "",
+) -> tuple[tempfile.TemporaryDirectory[str], Path, str]:
+    holder, cwd, base = make_repo()
+    parent = ready_gate(base, cwd)
+    if callable(parent_mutator):
+        parent_mutator(parent)
+    if malformed_parent:
+        (cwd / ".agent/active-work-block.json").write_text("not-json\n", encoding="utf-8")
+    else:
+        write_gate(cwd, parent)
+    git(cwd, "add", ".agent/active-work-block.json")
+    git(cwd, "commit", "-q", "-m", "admit assured terminal fixture\n\nWork-Block: WB-TEST-GITHUB-CAPABILITY")
+
+    inactive = copy.deepcopy(base)
+    inactive.update(
+        {
+            "work_block_id": "",
+            "specification": {"path": "", "revision": ""},
+            "subject_branch": "",
+            "base_commit": "",
+            "write_set": [],
+            "write_gate": {"status": "BLOCKED", "opened_at": None},
+            "closeout_mode": "success-closeout",
+        }
+    )
+    write_gate(cwd, inactive)
+    git(cwd, "add", ".agent/active-work-block.json")
+    paths = [".agent/active-work-block.json"]
+    if source_mutation:
+        (cwd / "src").mkdir()
+        (cwd / "src/terminal.py").write_text("source mutation\n", encoding="utf-8")
+        git(cwd, "add", "src/terminal.py")
+        paths.append("src/terminal.py")
+    if extra_terminal_path:
+        extra = cwd / extra_terminal_path
+        extra.parent.mkdir(parents=True, exist_ok=True)
+        extra.write_text("unexpected\n", encoding="utf-8")
+        git(cwd, "add", extra_terminal_path)
+        paths.append(extra_terminal_path)
+    git(cwd, "commit", "-q", "-m", "close terminal fixture\n\nWork-Block: WB-TEST-GITHUB-CAPABILITY")
+    return holder, cwd, "git push origin HEAD:refs/heads/feature/capability-test"
+
+
+def test_terminal_closeout_publication() -> None:
+    exact = "git push origin HEAD:refs/heads/feature/capability-test"
+    cases = []
+    cases.append((make_terminal_repo(), True, "valid one-commit terminal closeout"))
+    cases.append((make_terminal_repo(parent_mutator=lambda gate: gate.update(subject_branch="feature/other")), False, "wrong parent subject branch"))
+    cases.append((make_terminal_repo(parent_mutator=lambda gate: gate["assurance"]["review"].update(status="PENDING", verdict="PENDING")), False, "parent without READY assurance"))
+    cases.append((make_terminal_repo(malformed_parent=True), False, "malformed parent active state"))
+    cases.append((make_terminal_repo(source_mutation=True), False, "source mutation in terminal commit"))
+    cases.append((make_terminal_repo(extra_terminal_path="docs/notes.txt"), False, "unlisted terminal path"))
+    for fixture, expected, label in cases:
+        holder, cwd, _fixture_exact = fixture
+        try:
+            result = hook(HARD_STOP, cwd, "Bash", {"command": exact})
+            if expected:
+                assert_allow(result, label)
+            else:
+                assert_deny(result, label)
+        finally:
+            holder.cleanup()
+
+    holder, cwd, _exact = make_terminal_repo()
+    try:
+        for command, label in (
+            ("git push origin HEAD:refs/heads/feature/capability-test HEAD:refs/heads/second", "terminal multiple refspecs"),
+            ("git push -f origin HEAD:refs/heads/feature/capability-test", "terminal force push"),
+            ("git push origin --delete feature/capability-test", "terminal delete push"),
+            (f"{exact}; echo chained", "terminal chained push"),
+            ("env -S 'git push origin HEAD:refs/heads/feature/capability-test'", "terminal wrapper push"),
+            ("echo $(git push origin HEAD:refs/heads/feature/capability-test)", "terminal substitution push"),
+        ):
+            assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": command}), label)
+        (cwd / "README.md").write_text("post-terminal\n", encoding="utf-8")
+        git(cwd, "add", "README.md")
+        git(cwd, "commit", "-q", "-m", "arbitrary post-terminal commit\n\nWork-Block: WB-TEST-GITHUB-CAPABILITY")
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "second commit after terminal closeout")
+    finally:
+        holder.cleanup()
 
 
 def make_parallel_worktrees() -> tuple[
@@ -909,6 +998,7 @@ TESTS = [
     test_reporting_only_closeout_inactive_coordination_scope,
     test_lifecycle_rejects_default_and_detached,
     test_hard_stops,
+    test_terminal_closeout_publication,
     test_codex_scope,
     test_codex_coordination_commit_scope,
     test_binding_mismatch_coordination_and_repair,
