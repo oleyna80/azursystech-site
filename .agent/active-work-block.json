@@ -1,48 +1,48 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-2026-09-08-autonomous-work-block-execution",
-  "governance_profile": "Managed",
+  "work_block_id": "",
+  "governance_profile": "Controlled",
   "specification": {
-    "path": "docs/specs/WB-2026-09-08-autonomous-work-block-execution.md",
-    "revision": "owner-request-2026-09-08"
+    "path": "",
+    "revision": ""
   },
-  "subject_branch": "governance/autonomous-work-block-execution",
-  "base_commit": "4ec6a2236a9d5736ffaee6456cfc4e76bd04ece4",
+  "subject_branch": "",
+  "base_commit": "",
   "define_quality": {
-    "required": true,
-    "status": "READY",
-    "requirements_review": "docs/reports/WB-2026-09-08-autonomous-work-block-execution-requirements-quality.md",
-    "traceability": "docs/tasklist/WB-2026-09-08-autonomous-work-block-execution.tasklist.md",
-    "consistency_analysis": "docs/reports/WB-2026-09-08-autonomous-work-block-execution-define-consistency.md"
+    "required": false,
+    "status": "PENDING",
+    "requirements_review": "",
+    "traceability": "",
+    "consistency_analysis": ""
   },
   "write_gate": {
-    "status": "READY",
-    "opened_at": "2026-09-08T12:33:08.560742+00:00"
+    "status": "BLOCKED",
+    "opened_at": null
   },
   "critic": {
     "required": true,
-    "status": "READY",
-    "verdict": "SUPPLEMENT",
-    "report": "docs/reports/WB-2026-09-08-autonomous-work-block-execution-critic.md",
-    "isolation": "separate-subagent",
+    "status": "PENDING",
+    "verdict": "PENDING",
+    "report": "",
+    "isolation": "unknown",
     "skip_reason": ""
   },
   "assurance": {
     "review": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/WB-2026-09-08-autonomous-work-block-execution-review.md",
-      "isolation": "separate-subagent",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/WB-2026-09-08-autonomous-work-block-execution-verification.md",
-      "isolation": "separate-subagent",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     },
     "evaluation": {
@@ -65,50 +65,12 @@
       "skip_reason": ""
     }
   },
-  "closeout_mode": "pending",
+  "closeout_mode": "success-closeout",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
-  "write_set": [
-    "AGENTS.md",
-    "PROJECT_MAP.md",
-    "FILE_REGISTRY.yml",
-    "governance/authority.md",
-    "governance/artifacts.md",
-    "governance/lifecycle.md",
-    ".agent/active-work-block.default.json",
-    ".agent/authorizations/README.md",
-    ".agent/hooks/hard_stop_policy.py",
-    ".agent/workflows/sdd-protocol.md",
-    ".agent/workflows/owner-controlled-github-flow.md",
-    ".codex/hooks/hard-stop.sh",
-    ".codex/AGENTS.md",
-    ".codex/hooks/hard_stop_policy.py",
-    ".codex/hooks/pre_tool_use_policy.py",
-    ".codex/scripts/lifecycle.py",
-    ".codex/write-gate.md",
-    ".claude/hooks/work_block_gate.py",
-    ".claude/hooks/tests/hard-stop-fixtures.sh",
-    ".opencode/agents/architect.md",
-    ".opencode/agents/coder.md",
-    ".opencode/agents/critic.md",
-    ".opencode/agents/reviewer.md",
-    ".opencode/agents/verifier.md",
-    ".opencode/agents/build.md",
-    "opencode.json",
-    "docs/templates/work-block-template.md",
-    "docs/templates/subagent-mission-brief-template.md",
-    "docs/engineering-memory/github-free-owner-controlled-flow.md",
-    "docs/engineering-memory/README.md",
-    "docs/engineering-memory/source-of-truth-chains.md",
-    "scripts/test-github-capability-control-plane.py",
-    "scripts/test-github-capability-github-cli-hard-stops.py",
-    ".codex/hooks/tests/hard-stop-fixtures.sh",
-    "docs/specs/WB-2026-09-08-autonomous-work-block-execution.md",
-    "docs/plans/WB-2026-09-08-autonomous-work-block-execution.md",
-    "docs/tasklist/WB-2026-09-08-autonomous-work-block-execution.tasklist.md"
-  ],
+  "write_set": [],
   "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
@@ -132,5 +94,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "source work opened by Work Block coordination"
+  "lifecycle_note": "successful closeout: canonical inactive state and stale authority regression protected"
 }
