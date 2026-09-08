@@ -1,14 +1,14 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-2026-09-08-active-work-block-state-recovery",
+  "work_block_id": "",
   "governance_profile": "Controlled",
   "specification": {
-    "path": "docs/specs/WB-2026-09-08-active-work-block-state-recovery.md",
-    "revision": "owner-request-2026-09-08"
+    "path": "",
+    "revision": ""
   },
-  "subject_branch": "fix/active-work-block-state-recovery",
-  "base_commit": "dee06a380481b19a0aeb6539aec3986b0e9e2fd7",
+  "subject_branch": "",
+  "base_commit": "",
   "define_quality": {
     "required": false,
     "status": "PENDING",
@@ -17,76 +17,60 @@
     "consistency_analysis": ""
   },
   "write_gate": {
-    "status": "READY",
-    "opened_at": "2026-09-08T15:20:19.550106+00:00"
+    "status": "BLOCKED",
+    "opened_at": null
   },
   "critic": {
     "required": true,
-    "status": "READY",
-    "verdict": "SUPPLEMENT",
-    "report": "docs/reports/traceability-WB-2026-09-08-active-work-block-state-recovery.md",
-    "isolation": "separate-subagent",
+    "status": "PENDING",
+    "verdict": "PENDING",
+    "report": "",
+    "isolation": "unknown",
     "skip_reason": ""
   },
   "assurance": {
     "review": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/review-WB-2026-09-08-active-work-block-state-recovery.md",
-      "isolation": "independent-readonly-root",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/verification-WB-2026-09-08-active-work-block-state-recovery.md",
-      "isolation": "independent-readonly-root",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     },
     "evaluation": {
       "required": false,
-      "status": "SKIPPED",
+      "status": "PENDING",
       "verdict": "PENDING",
       "plan": "",
       "report": "",
       "rubric_revision": "",
       "benchmark_revision": "",
       "isolation": "unknown",
-      "skip_reason": "not required by deterministic recovery scope"
+      "skip_reason": ""
     },
     "drift": {
       "required": false,
-      "status": "SKIPPED",
+      "status": "PENDING",
       "verdict": "PENDING",
       "report": "",
       "isolation": "unknown",
-      "skip_reason": "not required by deterministic recovery scope"
+      "skip_reason": ""
     }
   },
-  "closeout_mode": "pending",
+  "closeout_mode": "success-closeout",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
-  "write_set": [
-    "FILE_REGISTRY.yml",
-    "PROJECT_MAP.md",
-    "scripts/validate-release-state.py",
-    "scripts/test-release-state-contracts.py",
-    ".codex/scripts/recover-active-work-block.py",
-    "scripts/test-active-work-block-recovery.py",
-    "docs/specs/WB-2026-09-08-active-work-block-state-recovery.md",
-    "docs/plans/WB-2026-09-08-active-work-block-state-recovery.md",
-    "docs/tasklist/WB-2026-09-08-active-work-block-state-recovery.tasklist.md",
-    "docs/reports/requirements-quality-WB-2026-09-08-active-work-block-state-recovery.md",
-    "docs/reports/traceability-WB-2026-09-08-active-work-block-state-recovery.md",
-    "docs/reports/consistency-WB-2026-09-08-active-work-block-state-recovery.md",
-    "docs/reports/review-WB-2026-09-08-active-work-block-state-recovery.md",
-    "docs/reports/verification-WB-2026-09-08-active-work-block-state-recovery.md",
-    "docs/reports/closeout/WB-2026-09-08-active-work-block-state-recovery.md"
-  ],
+  "write_set": [],
   "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
@@ -110,5 +94,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "source work opened by Work Block coordination"
+  "lifecycle_note": "successful closeout: canonical inactive state and stale authority regression protected"
 }
