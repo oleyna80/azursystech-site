@@ -81,13 +81,38 @@ AzurSysTech maps declared runtime isolation to assurance tiers:
 
 A declared isolation level is evidence, not self-authenticating proof.
 
-## External Capability Boundary & Private GitHub Free Mode
+## Autonomous Work Block Execution and Private GitHub Mode
 
-For repositories hosted on GitHub:
-- In the active **AzurSysTech private GitHub Free mode**, normal agent development operates autonomously through local edit, test, stage, and local commit inside the approved Work Block.
-- Normal agent flow **stops before any `git push`**, freezes the exact feature-branch HEAD, and generates the canonical **Owner publication handoff**.
-- Technical credential presence in the runtime does not grant authority to push.
-- The Owner performs or triggers publication of the exact feature branch revision and controls merge to `main`.
+This section is the sole canonical authority source for autonomous execution and
+Owner escalation at AzurSysTech. Workflows, templates, runtime adapters, and
+engineering memory may state operational consequences only and must defer here.
+
+Within one approved, active schema-v3 Work Block, the Orchestrator may complete
+Define, planning, implementation, read-only subagent work, corrective loops,
+tests, documentation, staging, local commits, Review, and Verification without
+routine Owner escalation. Test failures, `CHANGES_REQUIRED`, refactoring, and
+other corrective work remain autonomous while the approved requirement, risk,
+architecture, authority, and write-set boundaries do not change.
+
+Autonomous remote publication requires a `READY` write gate, formal
+Define-quality evidence where the governance profile requires it, a `READY`
+Critic, and `READY` Review and Verification. It is then limited to one normal
+non-force command form: the current `HEAD` must be pushed through `origin` to
+`refs/heads/<subject_branch>`, where the attached non-default branch exactly
+matches the active Work Block `subject_branch`. The push must be the sole shell
+command; it cannot be coupled to a consequential action, wrapper, or shell
+command substitution. Runtime controls fail closed for executable command or
+process substitutions; single-quoted literal prose is not an executable
+substitution. The command is
+explicit so its remote destination cannot be inferred from mutable upstream
+configuration. A successful candidate push is reported to the Owner for the
+final `MERGE / REVISION / REJECT` decision; it is not a merge or deployment
+authorization.
+
+Technical credential presence, a runtime permission prompt, and project-local
+state alone do not create authority. They may enable the narrowly authorized
+operation only when every condition above and the external repository boundary
+also permit it.
 
 Default/protected-branch and production authority are enforced outside mutable project state.
 Project-local text files, hooks, signatures, or approval state are cooperative guardrails and not an independent security boundary.
@@ -120,13 +145,17 @@ If the required role or isolation level is unavailable:
 
 ## Hard Stops
 
-Hard Stops are consequential operations that the normal agent channel must not perform merely by editing project-local state:
-- any remote source publication (`git push`) in the current Owner-controlled Free mode;
+Hard Stops are consequential operations that the normal agent channel must not
+perform merely by editing project-local state. The exact assured subject-branch
+publication described above is the sole exception for ordinary source push:
 - production deployment or live service restart;
 - live database mutation or migration apply;
 - credential, key, or secret changes;
 - destructive version-control/filesystem operations;
-- direct push, deletion, or non-fast-forward update of protected/default branches;
+- direct/default/protected branch push, remote branch deletion, or any
+  force/non-fast-forward/broad/mirror/prune update;
+- tags, releases, or other irreversible publication;
+- merge or direct protected/default-branch mutation;
 - irreversible public/package publish where it changes external state;
 - real client-facing communications;
 - payment, order, stock, CRM, or other live business-data mutation outside an approved application execution path.

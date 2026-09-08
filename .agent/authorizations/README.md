@@ -22,12 +22,14 @@ protected branches/rulesets where the hosting plan supports them, least-privileg
 credentials, GitHub Actions permissions, OS isolation, and separately held
 production/VPS/DB/secrets.
 
-AzurSysTech currently uses the private-repository Free fallback: no standalone
-agent credential with repository `Contents: write`; feature-branch publication
-uses an Owner-controlled GitHub channel; production deployment remains Owner-only
-and manual. If protected-main enforcement is later enabled, the agent credential
-may be widened only to the least privilege required for feature work and must not
-receive GitHub Actions write/dispatch authority or production credentials.
+AzurSysTech may use a constrained repository `Contents: write` capability for
+ordinary non-force publication of an assured candidate to the exact active
+non-default subject branch. That capability is bounded by the active Work Block
+and `governance/authority.md`; it is not a general publication credential. It
+does not permit default/protected-branch pushes, force pushes, remote deletion,
+tags/releases, merge, deployment, GitHub Actions write/dispatch authority, or
+production credentials. The Owner alone reviews the pushed candidate and decides
+`MERGE`, `REVISION`, or `REJECT`.
 
 This directory may remain so historical signed authorization records can be kept
 as audit evidence. Their presence does not grant current authority and schema v3

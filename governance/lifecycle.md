@@ -46,9 +46,13 @@ Required outcome:
 No implementation write may begin while Stage 0 is blocked.
 
 Generated schema-v3 projects may open the local source scope after these Define
-conditions are satisfied. Opening the local scope does not create production,
-credential, live-data, destructive, protected-branch, or external-publish
-authority.
+conditions are satisfied. Managed, Assured, and Distributed Work Blocks must
+record READY requirements-quality review, traceability, and consistency-analysis
+evidence in `define_quality`; Controlled work records whether that aggregate is
+required. Opening local scope does not create production, credential, live-data,
+destructive, protected-branch, or irreversible-publication authority. The one
+autonomous subject-branch candidate push is defined solely by
+`governance/authority.md`.
 
 ### Stage 1 — Execute
 
@@ -69,8 +73,10 @@ Required outcome:
 - implementation concerns and unresolved assumptions are reported.
 
 Within approved scope, ordinary reversible development operations may include
-staging, local commits, normal feature-branch pushes, and pull-request updates.
-They do not require an Owner SSH signature merely because Git state changes.
+staging, local commits, and corrective loops. After required assurance is READY,
+the explicit exact-subject candidate push defined by `governance/authority.md`
+is also autonomous. A `CHANGES_REQUIRED` loop stays autonomous only until the
+next candidate again completes its required assurance.
 
 Direct protected/default-branch mutation, force/history-rewriting operations,
 production/live infrastructure, live data, credentials/secrets, irreversible
@@ -206,17 +212,28 @@ An eligible NDR has one repair record, one Coder implementation pass, and one
 independent read-only combined assurance pass. The repair record names the root
 cause, allowlist, prohibited changes, deterministic commands, and stop condition.
 Combined assurance records logical review, deterministic verification, and its
-final verdict. NDR allows at most one correction round; a failed eligibility
-condition or second correction requires an Owner decision.
+final verdict. NDR allows at most one correction round. If that procedural
+ceiling is exceeded, NDR mode terminates and the Orchestrator reclassifies the
+work under the appropriate broader governance profile or ordinary corrective
+loop within the same approved Work Block. Execution continues autonomously
+when the approved architecture, scope, authority, and risk boundary are
+unchanged. An Owner decision is required only when the reclassification itself
+would change one of those boundaries (including a prohibited-domain change),
+or when another Owner-controlled Hard Stop is reached.
 
 #### Integration Stabilization
 
 Integration Stabilization is a bounded execution envelope, not a profile. It may
 group at most three sequentially discovered eligible NDR items and at most two
 correction rounds. Every item keeps its own exact CI/bootstrap/runtime-validation
-allowlist. Exceeding either ceiling, changing a prohibited domain, or requiring an
-architecture decision stops for Owner decision rather than creating another gate
-cycle.
+allowlist. Exceeding either procedural ceiling terminates the stabilization
+envelope and causes the Orchestrator to reclassify the work under the
+appropriate broader governance profile or ordinary corrective loop within the
+same approved Work Block. It may continue autonomously when architecture,
+scope, authority, and risk boundaries remain unchanged. A prohibited-domain
+change, architecture decision, or other material boundary change requires the
+Owner decision that the reclassification entails; the numeric ceiling alone is
+not a human blocker.
 
 ### Managed
 

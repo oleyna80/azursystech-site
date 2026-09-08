@@ -47,6 +47,7 @@ ASSURANCE_VERDICTS = {
     "evaluation": {"READY", "BLOCKED", "UNVERIFIED"},
     "drift": {"ALIGNED", "ALIGNMENT_REQUIRED", "BLOCKED", "UNVERIFIED"},
 }
+FORMAL_DEFINE_PROFILES = {"Managed", "Assured", "Distributed"}
 
 
 def now() -> str:
@@ -140,6 +141,13 @@ def default_state(reason: str = "coordination") -> dict:
         "specification": {"path": "", "revision": ""},
         "subject_branch": "",
         "base_commit": "",
+        "define_quality": {
+            "required": False,
+            "status": "PENDING",
+            "requirements_review": "",
+            "traceability": "",
+            "consistency_analysis": "",
+        },
         "write_gate": {"status": "BLOCKED", "opened_at": None},
         "critic": {
             "required": True,
@@ -219,6 +227,24 @@ def validate_open(args: argparse.Namespace) -> None:
             raise ValueError("SKIPPED Critic requires --critic-skip-reason")
     elif args.critic_verdict not in {"APPROVE", "SUPPLEMENT"}:
         raise ValueError("resolved Critic requires APPROVE or SUPPLEMENT verdict")
+    if args.governance_profile in FORMAL_DEFINE_PROFILES:
+        if args.define_quality_status != "READY":
+            raise ValueError(
+                f"{args.governance_profile} open requires --define-quality-status READY"
+            )
+        missing = [
+            name
+            for name, value in (
+                ("--requirements-review", args.requirements_review),
+                ("--traceability", args.traceability),
+                ("--consistency-analysis", args.consistency_analysis),
+            )
+            if not value.strip()
+        ]
+        if missing:
+            raise ValueError(
+                f"{args.governance_profile} open requires {' '.join(missing)} evidence"
+            )
 
 
 def open_state(root: Path, args: argparse.Namespace, current: dict) -> dict:
@@ -233,6 +259,13 @@ def open_state(root: Path, args: argparse.Namespace, current: dict) -> dict:
     }
     value["subject_branch"] = branch
     value["base_commit"] = git_head(root)
+    value["define_quality"] = {
+        "required": args.governance_profile in FORMAL_DEFINE_PROFILES,
+        "status": args.define_quality_status,
+        "requirements_review": args.requirements_review.strip(),
+        "traceability": args.traceability.strip(),
+        "consistency_analysis": args.consistency_analysis.strip(),
+    }
     value["write_gate"] = {"status": "READY", "opened_at": now()}
     value["write_set"] = list(dict.fromkeys(v.strip() for v in args.write if v.strip()))
     value["critic"] = {
@@ -289,6 +322,16 @@ def validate_closeout_state(current: dict, mode: str) -> None:
     if mode != "success-closeout":
         return
 
+    define_quality = current.get("define_quality")
+    if current.get("governance_profile") in FORMAL_DEFINE_PROFILES:
+        if not isinstance(define_quality, dict) or define_quality.get("required") is not True:
+            raise ValueError("success-closeout requires formal define_quality state")
+        if define_quality.get("status") != "READY" or not all(
+            isinstance(define_quality.get(name), str) and define_quality[name].strip()
+            for name in ("requirements_review", "traceability", "consistency_analysis")
+        ):
+            raise ValueError("success-closeout requires READY formal define_quality evidence")
+
     required_review, review_status, review_verdict = normalized["review"]
     required_verification, verification_status, verification_verdict = normalized[
         "verification"
@@ -332,6 +375,10 @@ def main() -> int:
     opening.add_argument("--critic-report", default="")
     opening.add_argument("--critic-isolation", default="same_context")
     opening.add_argument("--critic-skip-reason", default="")
+    opening.add_argument("--define-quality-status", choices=("PENDING", "READY"), default="PENDING")
+    opening.add_argument("--requirements-review", default="")
+    opening.add_argument("--traceability", default="")
+    opening.add_argument("--consistency-analysis", default="")
 
     freeze = subparsers.add_parser("freeze")
     freeze.add_argument("--reason", required=True)

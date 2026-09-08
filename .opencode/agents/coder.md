@@ -19,6 +19,7 @@ permission:
     "git log*": allow
     "git show*": allow
     "git commit*": allow
+    "git push origin HEAD:refs/heads/*": allow
     "git push*": deny
     "git reset --hard*": deny
     "git clean*": deny
@@ -56,9 +57,12 @@ Rules:
 - preserve established project patterns;
 - stop and return to Define for material requirement or architecture changes;
 - local commits are allowed for the approved write-set;
-- do **not** execute `git push` for `oleyna80/azursystech-site`; freeze the exact
-  feature-branch HEAD and use `.agent/workflows/owner-controlled-github-flow.md`
-  to produce the Owner publication handoff;
+- after required Define-quality where applicable, Critic, Review, and
+  Verification are `READY`, may use only
+  `git push origin HEAD:refs/heads/<subject_branch>` for the matching active
+  non-default Work Block branch; the shared Hard Stop policy remains the
+  fail-closed predicate and this static runtime allowance grants no authority;
+- report the successfully pushed SHA to the Owner for `MERGE / REVISION / REJECT`;
 - do not bypass protected/default-branch controls, merge, deploy production,
   access or change secrets, mutate live data, contact users, or perform
   destructive Git/filesystem operations;
@@ -67,7 +71,8 @@ Rules:
 
 Consequential authority must come from the external GitHub/OS/credential
 boundary described by `AGENTS.md`, not from an SSH-signed Work Block record.
-Technical access to an Owner credential does not grant publication authority.
+Technical access to any credential or a runtime permission setting does not grant
+publication authority.
 
 Return one status:
 

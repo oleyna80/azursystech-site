@@ -15,7 +15,7 @@ completed_work_blocks:
   - docs/plans/WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation.md
   - docs/plans/WB-2026-09-03-lifecycle-inactive-commit-bypass-correction.md
   - docs/plans/WB-2026-09-03-technical-seo-cwv-entity-audit.md
-active_work_block: null
+active_work_block: docs/plans/WB-2026-09-08-autonomous-work-block-execution.md
 -->
 
 ```yaml
@@ -23,15 +23,15 @@ release_state:
   schema_version: 1
   authority_mode: github_capability
   repository_status: operational
-  active_work_block: null
+  active_work_block: docs/plans/WB-2026-09-08-autonomous-work-block-execution.md
   governance_profile: Managed
-  publication_mode: owner_controlled_github_free
+  publication_mode: autonomous_assured_subject_branch_owner_merge_decision
   last_reconciled_commit: repository_evidence_only
 ```
 
 ## Migration Work
 
-- No active implementation Work Block.
+- Active implementation Work Block: `docs/plans/WB-2026-09-08-autonomous-work-block-execution.md`.
 - The completed migration index is machine-readable in `FILE_REGISTRY.yml:migration_state`.
 
 ## Architecture
@@ -44,7 +44,7 @@ The architecture comprises four separable layers:
 
 1. **Governance Core** — `governance/` (authority, lifecycle, artifacts, define-quality,
    decision provenance, release state, runtime capabilities, evaluation).
-2. **Portable Workflow & Memory** — `.agent/workflows/` (SDD protocol, owner publication flow),
+2. **Portable Workflow & Memory** — `.agent/workflows/` (SDD protocol, subject-branch candidate flow),
    `.agent/ROSTER.md`, `docs/specs/`, `docs/plans/`, `docs/tasklist/`, `docs/reports/`,
    `docs/engineering-memory/`, and `.agent/skills/`.
 3. **Runtime & Tool Surfaces** — `.agent/` control files, `.codex/`, `.claude/`, `.opencode/`,
@@ -62,12 +62,13 @@ When sources conflict, use this exact order:
 ### Product and Delivery Intent
 1. explicit Owner instruction or approved change request;
 2. approved specification (`docs/specs/`);
-3. accepted architecture decisions and external contracts (`docs/architecture/`, `docs/engineering-memory/`);
+3. accepted architecture decisions and external contracts (`docs/architecture/`);
 4. approved implementation and evaluation plans and write-set (`docs/plans/`);
 5. active tasklist (`docs/tasklist/`);
 6. requirements-quality, consistency, review, verification, drift, closeout evidence (`docs/reports/`);
-7. durable engineering memory (`docs/engineering-memory/`);
-8. runtime/integration policy, operational logs, generated output, references.
+7. runtime/integration policy, operational logs, generated output, references.
+
+Engineering memory preserves rationale and lessons; it is not an authority source.
 
 ### Agent Behavior and Permissions
 1. explicit Owner instruction;
@@ -113,7 +114,7 @@ specification draft
 | `governance/` | normative | Runtime-neutral governance core (authority, lifecycle, define-quality, etc.). |
 | `.agent/bootstrap-profile.json` | generated | Resolved installation profile and path contract. |
 | `.agent/workflows/sdd-protocol.md` | normative | Canonical 4-stage SDD lifecycle and gate semantics. |
-| `.agent/workflows/owner-controlled-github-flow.md` | normative | Canonical Owner publication handoff workflow. |
+| `.agent/workflows/owner-controlled-github-flow.md` | operational consequence | Subject-branch candidate publication and Owner decision handoff. |
 | `.agent/ROSTER.md` | normative | Logical roles, skill routing, runtime binding, isolation. |
 | `.agent/active-work-block.json` | operational gate | Active specification, write-set, integrations, assurance. |
 | `.agent/skills/` | normative skills | Project-local portable and operational skills. |
@@ -122,7 +123,7 @@ specification draft
 | `docs/tasklist/` | derived | Active task decomposition and SSOT status. |
 | `docs/reports/` | evidence | Review, verification, requirements, evaluation, closeout evidence. |
 | `docs/templates/` | normative | Reusable Work Block, tasklist, evaluation, report templates. |
-| `docs/engineering-memory/` | normative | Durable engineering decisions and principles. |
+| `docs/engineering-memory/` | durable reference | Rationale and lessons; never an authority source. |
 | `scripts/` | source/tools | Validation scripts, deployment, VPS operations, and CI contracts. |
 | `web/` | source | Production Next.js website and SQL intake flow. |
 | `admin/` | source | Internal admin Next.js application. |

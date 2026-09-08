@@ -7,7 +7,7 @@ agent look first when `azursystech` has conflicting information?
 |---|---|---|---|---|
 | Agent operating contract | `AGENTS.md` | `PROJECT_MAP.md`, `FILE_REGISTRY.yml`, `.agent/ROSTER.md` | Work Block closeouts in `docs/plans/**` | 2026-07-03 |
 | Work Block scope and acceptance | Current `docs/tasklist/**` Work Block (live status) | Approved `docs/plans/**` Work Block, `docs/templates/work-block-template.md`, `AGENTS.md` | Verification evidence in the Work Block or `docs/reports/**` | 2026-07-23 |
-| Durable engineering memory | `docs/engineering-memory/README.md` and related entries | `docs/session-bootstrap.md`, `FILE_REGISTRY.yml` | Closeout classifications in Work Blocks | 2026-07-03 |
+| Durable engineering memory rationale | Current Owner instruction, `AGENTS.md`, and `governance/authority.md` | `docs/engineering-memory/README.md` and related entries | Closeout classifications in Work Blocks | 2026-09-08 |
 | Operational session state | `memory_bank/context.md` after bootstrap creates it | `memory_bank/progress.md`, `memory_bank/decisions.md` | Direct file inspection; promote durable items to `docs/engineering-memory/` | 2026-07-03 |
 | Production website behavior | `web/src/**` and `web/README.md` | `web/package.json`, `Dockerfile`, `docker-compose.vps.yml` | `cd web && npm run check:ci` or scoped checks | 2026-07-03 |
 | Internal admin behavior | `admin/src/**` and `admin/package.json` | `Dockerfile.admin`, admin SQL files | `cd admin && npm run check:ci` or scoped checks | 2026-07-03 |

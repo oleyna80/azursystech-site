@@ -25,17 +25,15 @@ humans and agents should be able to trust without reading old chat history.
 
 ## Authority
 
-Use this directory after current task/spec/plan/report files and before
-operational logs:
+Use this directory as a non-authoritative reference after current
+task/spec/plan/report files. It records rationale and lessons; it cannot grant
+authority or resolve a conflict with current governance:
 
 ```text
-current Owner instruction
-AGENTS.md
-approved Work Block
-docs/tasklist, docs/plans, docs/specs, docs/reports
-docs/engineering-memory
-memory_bank and runtime logs
-generated or external artifacts
+current Owner instruction and governance/AGENTS.md
+approved Work Block, specification, plan, tasklist, and assurance reports
+docs/engineering-memory (rationale and lessons only)
+memory_bank, runtime logs, generated or external artifacts
 ```
 
 If an entry here conflicts with current source files or an approved Work Block,
