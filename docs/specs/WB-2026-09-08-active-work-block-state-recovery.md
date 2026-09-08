@@ -1,7 +1,7 @@
 ---
 artifact_type: specification
 work_block_id: WB-2026-09-08-active-work-block-state-recovery
-revision: amendment-terminal-publication-v1
+revision: amendment-recovery-v2
 status: approved
 ---
 
@@ -9,10 +9,11 @@ status: approved
 
 ## Objective
 
-Prevent a completed Work Block from publishing or closing with stale active
-operational authority. Successful closeout must materialize the canonical
-inactive `.agent/active-work-block.json` and the release projections must agree
-that no Work Block is active.
+Recover missing or corrupt operational Work Block state without making normal
+hooks permissive, and prevent completed Work Blocks from publishing or closing
+with stale active authority. Successful closeout must materialize canonical
+inactive state, while release projections and terminal publication agree that
+no Work Block is active.
 
 ## Requirements
 
@@ -34,6 +35,17 @@ that no Work Block is active.
   coordination-only, and fail-closed for arbitrary inactive state, wrappers,
   chaining, substitutions, default/protected destinations, tags, releases,
   deletion, and source/application mutation.
+- REQ-007: the dedicated recovery command resolves the current repository and
+  worktree from its own cwd/Git identity and exposes no arbitrary root,
+  payload, template, or output-path writer interface.
+- REQ-008: recovery atomically materializes the canonical default state for a
+  missing or malformed/corrupt operational record, refuses valid active state,
+  and leaves valid canonical inactive state unchanged.
+- REQ-009: lifecycle transitions use `.agent/active-work-block.default.json`
+  as their sole canonical producer and persist replacements with file fsync,
+  atomic replacement, and parent-directory fsync.
+- REQ-010: normal hooks remain fail-closed for missing/corrupt state; only the
+  dedicated recovery path may repair that condition.
 
 ## Acceptance criteria
 
@@ -51,10 +63,21 @@ that no Work Block is active.
 - AC-006 [req=REQ-006]: active publication remains allowed and all terminal
   negative regression cases are denied; release-state validation reports an
   inactive terminal candidate as READY.
+- AC-007 [req=REQ-007]: recovery resolves only the current Git worktree;
+  arbitrary root/template/output/payload arguments are absent and wrong-repo
+  execution is denied.
+- AC-008 [req=REQ-008]: the regression matrix passes for missing, malformed,
+  corrupt, active, and canonical inactive records without discarding active
+  authority.
+- AC-009 [req=REQ-009]: template integrity and durability checks prove
+  fsync(file) -> atomic replace -> fsync(parent).
+- AC-010 [req=REQ-010]: normal lifecycle/hook admission denies missing or
+  malformed state, while only the dedicated recovery path repairs it.
 
 ## Boundaries
 
-In scope: lifecycle producer, recovery helper, release-state validator and
-deterministic tests, Work Block documents, assurance evidence, and closeout
-projections. Out of scope: application roots, dependencies, database,
+In scope: lifecycle producer, recovery helper, release-state validator,
+recovery and terminal-publication regression tests, Work Block documents,
+assurance evidence, and closeout projections. Out of scope: application roots,
+dependencies, database,
 deployment, credentials, `main` mutation, merge, and hook bypass.

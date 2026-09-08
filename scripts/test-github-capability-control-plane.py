@@ -151,6 +151,8 @@ def make_repo() -> tuple[tempfile.TemporaryDirectory[str], Path, dict[str, objec
     git(cwd, "commit", "-q", "-m", "fixture base")
     git(cwd, "branch", "-M", "main")
     git(cwd, "switch", "-q", "-c", "feature/capability-test")
+    (cwd / ".agent").mkdir(parents=True, exist_ok=True)
+    shutil.copy2(DEFAULT_GATE, cwd / ".agent/active-work-block.default.json")
     base = json.loads(DEFAULT_GATE.read_text(encoding="utf-8"))
     write_gate(cwd, base)
     return holder, cwd, base

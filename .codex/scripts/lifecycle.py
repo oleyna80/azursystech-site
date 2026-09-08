@@ -11,6 +11,7 @@ import argparse
 import copy
 import datetime as dt
 import json
+import os
 import subprocess
 import tempfile
 from pathlib import Path
@@ -123,84 +124,49 @@ def read(path: Path) -> dict:
 
 def atomic(path: Path, value: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile(
-        "w", encoding="utf-8", dir=path.parent, delete=False
-    ) as out:
-        json.dump(value, out, indent=2, sort_keys=False)
-        out.write("\n")
-        temporary = Path(out.name)
-    temporary.replace(path)
+    temporary: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            "w", encoding="utf-8", dir=path.parent, delete=False
+        ) as out:
+            json.dump(value, out, indent=2, sort_keys=False)
+            out.write("\n")
+            out.flush()
+            os.fsync(out.fileno())
+            temporary = Path(out.name)
+        os.replace(temporary, path)
+        directory = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
+    finally:
+        if temporary is not None and temporary.exists():
+            temporary.unlink()
 
 
-def default_state(reason: str = "coordination") -> dict:
-    return {
-        "schema_version": SCHEMA_VERSION,
-        "authority_mode": AUTHORITY_MODE,
-        "work_block_id": "",
-        "governance_profile": "Controlled",
-        "specification": {"path": "", "revision": ""},
-        "subject_branch": "",
-        "base_commit": "",
-        "define_quality": {
-            "required": False,
-            "status": "PENDING",
-            "requirements_review": "",
-            "traceability": "",
-            "consistency_analysis": "",
-        },
-        "write_gate": {"status": "BLOCKED", "opened_at": None},
-        "critic": {
-            "required": True,
-            "status": "PENDING",
-            "verdict": "PENDING",
-            "report": "",
-            "isolation": "unknown",
-            "skip_reason": "",
-        },
-        "assurance": {
-            "review": {
-                "required": True,
-                "status": "PENDING",
-                "verdict": "PENDING",
-                "report": "",
-                "isolation": "unknown",
-                "skip_reason": "",
-            },
-            "verification": {
-                "required": True,
-                "status": "PENDING",
-                "verdict": "PENDING",
-                "report": "",
-                "isolation": "unknown",
-                "skip_reason": "",
-            },
-            "evaluation": {
-                "required": False,
-                "status": "PENDING",
-                "verdict": "PENDING",
-                "plan": "",
-                "report": "",
-                "rubric_revision": "",
-                "benchmark_revision": "",
-                "isolation": "unknown",
-                "skip_reason": "",
-            },
-            "drift": {
-                "required": False,
-                "status": "PENDING",
-                "verdict": "PENDING",
-                "report": "",
-                "isolation": "unknown",
-                "skip_reason": "",
-            },
-        },
-        "closeout_mode": "pending",
-        "integrations": {"approved": [], "admission_records": []},
-        "write_set": [],
-        "coordination_write_set": DEFAULT_COORDINATION.copy(),
-        "external_hard_stops": EXTERNAL_HARD_STOPS.copy(),
-        "lifecycle_note": reason,
-    }
+def load_default_state(root: Path) -> dict:
+    template = root / ".agent/active-work-block.default.json"
+    try:
+        value = json.loads(template.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"canonical default template is unavailable or malformed: {exc}") from exc
+    if not isinstance(value, dict):
+        raise ValueError("canonical default template must be an object")
+    validate_state(value)
+    if value.get("work_block_id") or value.get("subject_branch") or value.get("base_commit"):
+        raise ValueError("canonical default template must be inactive")
+    if value.get("write_gate") != {"status": "BLOCKED", "opened_at": None}:
+        raise ValueError("canonical default template must have a BLOCKED write gate")
+    if value.get("write_set") != []:
+        raise ValueError("canonical default template must have an empty write set")
+    return value
+
+
+def default_state(root: Path, reason: str = "coordination") -> dict:
+    value = load_default_state(root)
+    value["lifecycle_note"] = reason
+    return value
 
 
 def validate_state(value: dict) -> None:
@@ -250,7 +216,7 @@ def validate_open(args: argparse.Namespace) -> None:
 def open_state(root: Path, args: argparse.Namespace, current: dict) -> dict:
     validate_open(args)
     branch = source_branch(root)
-    value = default_state("source work opened by Work Block coordination")
+    value = default_state(root, "source work opened by Work Block coordination")
     value["work_block_id"] = args.work_block_id.strip()
     value["governance_profile"] = args.governance_profile
     value["specification"] = {
@@ -398,9 +364,9 @@ def main() -> int:
         print(json.dumps(value, sort_keys=True))
         return 0
 
-    current = read(state) if state.exists() else default_state()
+    current = read(state) if state.exists() else default_state(root)
     if args.command == "prepare":
-        value = default_state(args.reason)
+        value = default_state(root, args.reason)
     elif args.command == "open":
         validate_state(current)
         value = open_state(root, args, current)
@@ -411,7 +377,7 @@ def main() -> int:
         # A terminal closeout must not leave a branch-bound active record behind.
         # The inactive record retains only the closeout classification and the
         # coordination note; a subsequent Work Block must explicitly reopen scope.
-        value = default_state(args.reason)
+        value = default_state(root, args.reason)
         value["closeout_mode"] = args.mode
 
     atomic(state, value)

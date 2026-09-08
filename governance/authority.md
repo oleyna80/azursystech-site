@@ -104,8 +104,9 @@ non-default branch exactly matches the active Work Block `subject_branch`.
 A final terminal closeout candidate uses that same literal command form, but is
 admitted only when committed Git ancestry proves one immediate transition from
 that same publication-eligible active parent to a canonical terminal inactive
-child. The parent must carry the matching Work Block, exact subject branch, and
-READY Define-quality/Critic/Review/Verification state. The child must contain
+child. The parent must carry the matching Work Block, exact subject branch,
+READY formal Define-quality evidence where the governance profile requires it,
+and READY Critic/Review/Verification state. The child must contain
 the exact canonical inactive state, the matching `Work-Block:` commit linkage,
 and only the minimal lifecycle/closeout coordination allowlist. Inactive state
 alone never grants publication authority; arbitrary inactive-state publication
