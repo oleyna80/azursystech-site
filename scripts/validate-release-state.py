@@ -315,6 +315,22 @@ def validate_operational_active_work_block(
             raise ReleaseStateError(
                 "operational active Work Block must be inactive when release state has no active Work Block"
             )
+        if specification != {"path": "", "revision": ""}:
+            raise ReleaseStateError(
+                "operational inactive Work Block requires empty specification path and revision"
+            )
+        if operational.get("subject_branch") != "":
+            raise ReleaseStateError("operational inactive Work Block must have empty subject_branch")
+        if operational.get("base_commit") != "":
+            raise ReleaseStateError("operational inactive Work Block must have empty base_commit")
+        if operational.get("write_set") != []:
+            raise ReleaseStateError("operational inactive Work Block must have empty write_set")
+        if operational.get("write_gate") != {"status": "BLOCKED", "opened_at": None}:
+            raise ReleaseStateError(
+                "operational inactive Work Block requires write_gate.status=BLOCKED"
+            )
+        if operational.get("closeout_mode") not in {"pending", "success-closeout", "reporting-only"}:
+            raise ReleaseStateError("operational inactive Work Block has invalid closeout_mode")
         return
 
     if not isinstance(work_block_id, str) or not work_block_id.strip():

@@ -102,6 +102,27 @@ def active_fixture(holder: str) -> Path:
     return fixture
 
 
+def inactive_fixture(holder: str) -> Path:
+    fixture = fixture_root(holder)
+    registry_path = fixture / "FILE_REGISTRY.yml"
+    registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+    active_plan = registry["migration_state"]["active_work_block"]
+    if active_plan is None:
+        return fixture
+    registry["migration_state"]["active_work_block"] = None
+    registry_path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
+    project_map = fixture / "PROJECT_MAP.md"
+    map_text = project_map.read_text(encoding="utf-8").replace(
+        f"active_work_block: {active_plan}", "active_work_block: null"
+    )
+    map_text = map_text.replace(
+        "- Active implementation Work Block: `docs/plans/WB-2026-09-08-active-work-block-state-recovery.md`.\n",
+        "- No active implementation Work Block.\n",
+    )
+    project_map.write_text(map_text, encoding="utf-8")
+    return fixture
+
+
 def require_workflow_active_gate_path(root: Path) -> None:
     workflow = yaml.load(
         (root / ".github/workflows/release-state-contract.yml").read_text(encoding="utf-8"),
@@ -263,7 +284,7 @@ def main() -> int:
         (fixture / ".agent/active-work-block.json").unlink()
         require_failure(fixture, "missing operational active record must fail", "operational active Work Block is missing")
     with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
-        fixture = fixture_root(holder)
+        fixture = inactive_fixture(holder)
         active = fixture / ".agent/active-work-block.json"
         active.write_text("{", encoding="utf-8")
         require_failure(fixture, "malformed operational active record must fail", "operational active Work Block is malformed")
@@ -299,6 +320,36 @@ def main() -> int:
             encoding="utf-8",
         )
         require_failure(fixture, "stale operational active record with no canonical active Work Block must fail", "operational active Work Block must be inactive")
+    with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
+        fixture = inactive_fixture(holder)
+        active = json.loads((fixture / ".agent/active-work-block.json").read_text(encoding="utf-8"))
+        active["work_block_id"] = ""
+        active["specification"] = {"path": "", "revision": ""}
+        active["subject_branch"] = "stale/branch"
+        active["base_commit"] = "stale-sha"
+        active["write_set"] = []
+        active["write_gate"] = {"status": "BLOCKED", "opened_at": None}
+        (fixture / ".agent/active-work-block.json").write_text(json.dumps(active), encoding="utf-8")
+        require_failure(
+            fixture,
+            "stale subject binding in inactive candidate must fail",
+            "operational inactive Work Block must have empty subject_branch",
+        )
+    with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
+        fixture = inactive_fixture(holder)
+        active = json.loads((fixture / ".agent/active-work-block.json").read_text(encoding="utf-8"))
+        active["work_block_id"] = ""
+        active["specification"] = {"path": "", "revision": ""}
+        active["subject_branch"] = ""
+        active["base_commit"] = ""
+        active["write_set"] = ["web/src/app/page.tsx"]
+        active["write_gate"] = {"status": "BLOCKED", "opened_at": None}
+        (fixture / ".agent/active-work-block.json").write_text(json.dumps(active), encoding="utf-8")
+        require_failure(
+            fixture,
+            "source authority in inactive candidate must fail",
+            "operational inactive Work Block must have empty write_set",
+        )
     print("release-state contract regressions: OK")
     return 0
 
