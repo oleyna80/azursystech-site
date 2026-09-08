@@ -156,10 +156,14 @@ def load_default_state(root: Path) -> dict:
     validate_state(value)
     if value.get("work_block_id") or value.get("subject_branch") or value.get("base_commit"):
         raise ValueError("canonical default template must be inactive")
+    if value.get("specification") != {"path": "", "revision": ""}:
+        raise ValueError("canonical default template must have an empty specification identity")
     if value.get("write_gate") != {"status": "BLOCKED", "opened_at": None}:
         raise ValueError("canonical default template must have a BLOCKED write gate")
     if value.get("write_set") != []:
         raise ValueError("canonical default template must have an empty write set")
+    if value.get("integrations") != {"approved": [], "admission_records": []}:
+        raise ValueError("canonical default template must not retain integration admission")
     return value
 
 

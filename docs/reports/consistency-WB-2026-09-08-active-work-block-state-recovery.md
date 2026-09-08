@@ -2,7 +2,7 @@
 artifact_type: consistency_analysis
 work_block_id: WB-2026-09-08-active-work-block-state-recovery
 status: approved
-revision: amendment-recovery-v2
+revision: amendment-recovery-v3
 ---
 
 # Consistency analysis
@@ -18,3 +18,7 @@ handled only by the candidate contract; no direct `main` repair is included.
 - **Corrective consistency:** lifecycle and recovery both consume the repository
   default template; only recovery may repair missing/corrupt state, while all
   ordinary hook admission remains fail-closed.
+- **Focused consistency:** recovery can only target the exact worktree that
+  owns its resolved script, not merely any Git cwd; default-template safety
+  checks include empty specification and integration/admission identity before
+  atomic materialization.

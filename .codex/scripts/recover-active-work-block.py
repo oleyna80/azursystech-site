@@ -15,12 +15,36 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 import lifecycle  # noqa: E402
 
+REQUIRED_REPOSITORY_MARKERS = (
+    "AGENTS.md",
+    "PROJECT_MAP.md",
+    ".agent/bootstrap-profile.json",
+    ".agent/active-work-block.default.json",
+    ".codex/scripts/lifecycle.py",
+)
+
+
+def git_worktree_root(start: Path, context: str) -> Path:
+    result = lifecycle.run_git(start, "rev-parse", "--show-toplevel")
+    if result.returncode != 0 or not result.stdout.strip():
+        raise ValueError(f"{context} must be inside a Git worktree")
+    return Path(result.stdout.strip()).resolve()
+
 
 def repository_root() -> Path:
-    result = lifecycle.run_git(Path.cwd(), "rev-parse", "--show-toplevel")
-    if result.returncode != 0 or not result.stdout.strip():
-        raise ValueError("recovery must run inside the current Git worktree")
-    return Path(result.stdout.strip()).resolve()
+    script_root = SCRIPT_DIR.parents[1]
+    owned_root = git_worktree_root(script_root, "recovery script")
+    if owned_root != script_root:
+        raise ValueError("recovery script must be located in its Git worktree root")
+
+    current_root = git_worktree_root(Path.cwd(), "recovery")
+    if current_root != owned_root:
+        raise ValueError("recovery must run from the script-owned Git worktree")
+
+    missing = [marker for marker in REQUIRED_REPOSITORY_MARKERS if not (current_root / marker).is_file()]
+    if missing:
+        raise ValueError(f"recovery repository lacks required markers: {', '.join(missing)}")
+    return current_root
 
 
 def is_canonical_inactive(value: dict) -> bool:
@@ -31,11 +55,14 @@ def is_canonical_inactive(value: dict) -> bool:
         and value.get("specification") == {"path": "", "revision": ""}
         and value.get("write_set") == []
         and value.get("write_gate") == {"status": "BLOCKED", "opened_at": None}
+        and value.get("integrations") == {"approved": [], "admission_records": []}
     )
 
 
 def main() -> int:
     try:
+        if len(sys.argv) != 1:
+            raise ValueError("recovery accepts no arguments")
         root = repository_root()
         state = root / ".agent/active-work-block.json"
         template = lifecycle.load_default_state(root)

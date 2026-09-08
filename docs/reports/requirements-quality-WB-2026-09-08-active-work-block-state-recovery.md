@@ -2,7 +2,7 @@
 artifact_type: requirements_quality_review
 work_block_id: WB-2026-09-08-active-work-block-state-recovery
 status: approved
-revision: amendment-recovery-v2
+revision: amendment-recovery-v3
 ---
 
 # Requirements-quality review
@@ -19,3 +19,6 @@ dependency, data, deployment, or branch-authority ambiguity remains.
 - **Corrective scope:** missing/corrupt recovery, canonical template loading,
   durable atomic replacement, Git-boundary enforcement, and fail-closed hook
   behavior are explicitly restored and traceable.
+- **Focused revision:** the helper must prove the script-owned worktree and
+  required repository markers, while canonical-template validation must reject
+  syntactically valid residual specification or integration/admission state.

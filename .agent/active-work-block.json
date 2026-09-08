@@ -1,14 +1,14 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "",
+  "work_block_id": "WB-2026-09-08-active-work-block-state-recovery",
   "governance_profile": "Controlled",
   "specification": {
-    "path": "",
-    "revision": ""
+    "path": "docs/specs/2026-09-08-active-work-block-state-recovery.md",
+    "revision": "amendment-recovery-v3"
   },
-  "subject_branch": "",
-  "base_commit": "",
+  "subject_branch": "fix/active-work-block-state-recovery",
+  "base_commit": "4f71dc48c94e35bb47e6723759e243aa4f02d058",
   "define_quality": {
     "required": false,
     "status": "PENDING",
@@ -17,15 +17,15 @@
     "consistency_analysis": ""
   },
   "write_gate": {
-    "status": "BLOCKED",
-    "opened_at": null
+    "status": "READY",
+    "opened_at": "2026-09-08T19:14:32.428365+00:00"
   },
   "critic": {
     "required": true,
-    "status": "PENDING",
-    "verdict": "PENDING",
-    "report": "",
-    "isolation": "unknown",
+    "status": "READY",
+    "verdict": "APPROVE",
+    "report": "docs/reports/2026-09-08-active-work-block-state-recovery-critic.md",
+    "isolation": "independent",
     "skip_reason": ""
   },
   "assurance": {
@@ -65,12 +65,24 @@
       "skip_reason": ""
     }
   },
-  "closeout_mode": "success-closeout",
+  "closeout_mode": "pending",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
-  "write_set": [],
+  "write_set": [
+    ".codex/scripts/recover-active-work-block.py",
+    ".codex/scripts/lifecycle.py",
+    "scripts/test-active-work-block-recovery.py",
+    "docs/specs/2026-09-08-active-work-block-state-recovery.md",
+    "docs/plans/2026-09-08-active-work-block-state-recovery.md",
+    "docs/tasklist/2026-09-08-active-work-block-state-recovery.md",
+    "docs/reports/**",
+    ".agent/active-work-block.json",
+    ".agent/critic-gate.md",
+    ".agent/verification-gate.md",
+    ".codex/write-gate.md"
+  ],
   "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
@@ -94,5 +106,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Final synchronized terminal closeout"
+  "lifecycle_note": "source work opened by Work Block coordination"
 }

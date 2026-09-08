@@ -2,7 +2,7 @@
 artifact_type: work_block
 work_block_id: WB-2026-09-08-active-work-block-state-recovery
 status: completed
-revision: amendment-recovery-v2
+revision: amendment-recovery-v3
 ---
 
 # Plan — active Work Block state recovery
@@ -16,9 +16,10 @@ carry recovery, durable lifecycle persistence, and canonical inactive closeout.
 
 ## Execution
 
-1. Restore missing/corrupt recovery through the dedicated Git-bound helper.
-2. Make the default JSON template the sole producer and add durable atomic
-   replacement.
+1. Bind missing/corrupt recovery to the script-owned Git worktree and required
+   AzurSysTech markers; deny foreign Git repositories.
+2. Make the default JSON template the sole producer, reject residual
+   specification/admission authority, and retain durable atomic replacement.
 3. Run recovery, control-plane, traceability, release-state, syntax, whitespace, and
    secret-safety checks.
 4. Complete read-only Review and Verification, then close and push the exact
@@ -40,7 +41,7 @@ deployment, default-branch, or merge changes are permitted.
 - **Verification verdict:** READY
 - **Drift gate:** ALIGNED
 - **Closeout mode:** success-closeout
-- **Task status:** completed
+- **Task status:** completed after Owner REVISION v3
 
 ## Risks
 

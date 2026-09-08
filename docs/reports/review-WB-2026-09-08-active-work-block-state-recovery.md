@@ -2,7 +2,7 @@
 artifact_type: review_report
 work_block_id: WB-2026-09-08-active-work-block-state-recovery
 status: approved
-revision: amendment-recovery-v2
+revision: amendment-recovery-v3
 ---
 
 # Review — active Work Block state recovery
@@ -27,3 +27,8 @@ revision: amendment-recovery-v2
 - **Durability review:** the canonical producer loads
   `.agent/active-work-block.default.json`, and persistence performs file fsync,
   atomic replace, and parent-directory fsync.
+- **Focused review:** `repository_root()` compares the resolved root of its
+  own script with the resolved cwd worktree and requires AzurSysTech markers;
+  a genuine foreign Git repository cannot become a recovery target. Template
+  validation rejects residual specification and integration/admission identity
+  before recovery can read, create, or replace operational state.

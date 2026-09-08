@@ -32,8 +32,11 @@ def git_fixture(source: Path, destination: Path) -> None:
     run(["git", "commit", "-qm", "fixture"], destination, 0)
 
 
-def invoke(cwd: Path, expected: int) -> subprocess.CompletedProcess[str]:
-    return run([sys.executable, str(RECOVERY)], cwd, expected)
+def invoke(
+    cwd: Path, expected: int, recovery: Path | None = None
+) -> subprocess.CompletedProcess[str]:
+    helper = recovery or cwd / ".codex/scripts/recover-active-work-block.py"
+    return run([sys.executable, str(helper)], cwd, expected)
 
 
 def hook_denies(script: Path, cwd: Path) -> bool:
@@ -90,14 +93,54 @@ def main() -> int:
         assert not state_path.exists()
 
         template_path.write_text(json.dumps(template), encoding="utf-8")
+        for mutation in (
+            lambda value: value["specification"].update({"path": "docs/specs/residual.md"}),
+            lambda value: value["integrations"]["approved"].append("residual-admission"),
+        ):
+            unsafe_template = json.loads(json.dumps(template))
+            mutation(unsafe_template)
+            template_path.write_text(json.dumps(unsafe_template), encoding="utf-8")
+            state_path.write_text("{corrupt-state", encoding="utf-8")
+            before = state_path.read_bytes()
+            invoke(fixture, 2)
+            assert state_path.read_bytes() == before
+        template_path.write_text(json.dumps(template), encoding="utf-8")
+
+        project_map = fixture / "PROJECT_MAP.md"
+        project_map_contents = project_map.read_text(encoding="utf-8")
+        project_map.unlink()
+        state_path.unlink()
+        invoke(fixture, 2)
+        assert not state_path.exists()
+        project_map.write_text(project_map_contents, encoding="utf-8")
+
+        foreign = Path(holder) / "foreign-git-repository"
+        foreign.mkdir()
+        run(["git", "init", "-q"], foreign, 0)
+        for marker in (
+            "AGENTS.md",
+            "PROJECT_MAP.md",
+            ".agent/bootstrap-profile.json",
+            ".agent/active-work-block.default.json",
+            ".codex/scripts/lifecycle.py",
+        ):
+            source = ROOT / marker
+            target = foreign / marker
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+        foreign_state = foreign / ".agent/active-work-block.json"
+        invoke(foreign, 2, RECOVERY)
+        assert not foreign_state.exists()
+
         run([sys.executable, str(LIFECYCLE), "--root", str(fixture), "prepare", "--reason", "durability test"], fixture, 0)
         assert json.loads(state_path.read_text(encoding="utf-8"))["write_gate"]["status"] == "BLOCKED"
 
-        help_result = run([sys.executable, str(RECOVERY), "--help"], fixture)
-        assert help_result.returncode == 0
-        assert "--root" not in help_result.stdout
-        assert "--template" not in help_result.stdout
-        assert "--output" not in help_result.stdout
+        for argument in ("--help", "--root", "--template", "--output", "payload"):
+            result = run(
+                [sys.executable, str(fixture / ".codex/scripts/recover-active-work-block.py"), argument],
+                fixture,
+            )
+            assert result.returncode == 2
         outside = Path(holder) / "outside"
         outside.mkdir()
         invoke(outside, 2)

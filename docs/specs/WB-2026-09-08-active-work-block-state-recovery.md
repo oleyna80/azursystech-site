@@ -1,7 +1,7 @@
 ---
 artifact_type: specification
 work_block_id: WB-2026-09-08-active-work-block-state-recovery
-revision: amendment-recovery-v2
+revision: amendment-recovery-v3
 status: approved
 ---
 
@@ -35,15 +35,17 @@ no Work Block is active.
   coordination-only, and fail-closed for arbitrary inactive state, wrappers,
   chaining, substitutions, default/protected destinations, tags, releases,
   deletion, and source/application mutation.
-- REQ-007: the dedicated recovery command resolves the current repository and
-  worktree from its own cwd/Git identity and exposes no arbitrary root,
+- REQ-007: the dedicated recovery command proves that its cwd resolves to the
+  same Git worktree as the script itself and verifies required AzurSysTech
+  repository markers before it can write. It exposes no arbitrary root,
   payload, template, or output-path writer interface.
 - REQ-008: recovery atomically materializes the canonical default state for a
   missing or malformed/corrupt operational record, refuses valid active state,
   and leaves valid canonical inactive state unchanged.
 - REQ-009: lifecycle transitions use `.agent/active-work-block.default.json`
-  as their sole canonical producer and persist replacements with file fsync,
-  atomic replacement, and parent-directory fsync.
+  as their sole canonical producer, reject syntactically valid templates that
+  retain specification or integration/admission authority, and persist
+  replacements with file fsync, atomic replacement, and parent-directory fsync.
 - REQ-010: normal hooks remain fail-closed for missing/corrupt state; only the
   dedicated recovery path may repair that condition.
 
@@ -63,14 +65,17 @@ no Work Block is active.
 - AC-006 [req=REQ-006]: active publication remains allowed and all terminal
   negative regression cases are denied; release-state validation reports an
   inactive terminal candidate as READY.
-- AC-007 [req=REQ-007]: recovery resolves only the current Git worktree;
-  arbitrary root/template/output/payload arguments are absent and wrong-repo
-  execution is denied.
+- AC-007 [req=REQ-007]: recovery permits only the script-owned current Git
+  worktree with required AzurSysTech markers; arbitrary
+  root/template/output/payload arguments, non-Git cwd, missing markers, and a
+  real foreign Git repository are denied.
 - AC-008 [req=REQ-008]: the regression matrix passes for missing, malformed,
   corrupt, active, and canonical inactive records without discarding active
   authority.
-- AC-009 [req=REQ-009]: template integrity and durability checks prove
-  fsync(file) -> atomic replace -> fsync(parent).
+- AC-009 [req=REQ-009]: template integrity denies malformed and syntactically
+  valid unsafe templates (including residual specification or
+  integration/admission authority) without creating or replacing state, and
+  durability checks prove fsync(file) -> atomic replace -> fsync(parent).
 - AC-010 [req=REQ-010]: normal lifecycle/hook admission denies missing or
   malformed state, while only the dedicated recovery path repairs it.
 
