@@ -8,7 +8,7 @@ revision: amendment-terminal-publication-v1
 # Verification — active Work Block state recovery
 
 - **Verdict:** READY
-- `python3 scripts/validate-define-traceability.py --spec docs/specs/WB-2026-09-08-active-work-block-state-recovery.md --tasks docs/tasklist/WB-2026-09-08-active-work-block-state-recovery.tasklist.md` → READY (4 requirements, 4 acceptance criteria, 3 tasks).
+- `python3 scripts/validate-define-traceability.py --spec docs/specs/WB-2026-09-08-active-work-block-state-recovery.md --tasks docs/tasklist/WB-2026-09-08-active-work-block-state-recovery.tasklist.md` → READY (6 requirements, 6 acceptance criteria, 5 tasks).
 - `python3 scripts/test-release-state-contracts.py` → OK.
 - `python3 scripts/test-active-work-block-recovery.py` → OK; successful close
   materialized empty identities, empty write-set, and blocked gate.
