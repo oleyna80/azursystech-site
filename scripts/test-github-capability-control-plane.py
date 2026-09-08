@@ -453,12 +453,21 @@ def test_hard_stops() -> None:
         git(cwd, "switch", "-q", "feature/capability-test")
         write_gate(cwd, attached_gate)
         assert_allow(hook(HARD_STOP, cwd, "Bash", {"command": "rg 'git push' README.md"}), "quoted publication prose is not a command")
+        assert_allow(hook(HARD_STOP, cwd, "Bash", {"command": "printf %s '$(git push origin HEAD:refs/heads/feature/capability-test)'"}), "single-quoted substitution prose is not a command")
         for command, label in (
             ("git push", "bare push"),
             ("git push origin feature/capability-test", "implicit source ref"),
             ("git push origin HEAD:refs/heads/other", "wrong destination branch"),
             ("/usr/bin/git push origin HEAD:refs/heads/main", "absolute Git default-branch push"),
             ("/usr/bin/git push origin HEAD:refs/heads/feature/capability-test", "absolute Git subject push is not literal allowance"),
+            ("echo $(git push origin HEAD:refs/heads/feature/capability-test)", "command-substitution Git push"),
+            ('echo "$(git push origin HEAD:refs/heads/feature/capability-test)"', "double-quoted command-substitution Git push"),
+            ('echo $(g""it push origin HEAD:refs/heads/feature/capability-test)', "quoted-word Git command-substitution push"),
+            ("echo $(g$'it' push origin HEAD:refs/heads/feature/capability-test)", "ANSI-C-quoted Git command-substitution push"),
+            ("echo `git push origin HEAD:refs/heads/main`", "backtick Git default-branch push"),
+            ("echo <(git push origin HEAD:refs/heads/feature/capability-test)", "process-substitution Git push"),
+            ("cat >(g\\it push origin HEAD:refs/heads/main)", "escaped Git process-substitution default-branch push"),
+            ("printf %s $(date)", "unquoted command substitution is fail-closed"),
             ("git push upstream HEAD:refs/heads/feature/capability-test", "wrong remote"),
             ("git push https://example.invalid/repo HEAD:refs/heads/feature/capability-test", "URL remote"),
             ("git push origin HEAD:refs/heads/feature/capability-test HEAD:refs/heads/second", "multiple refspecs"),

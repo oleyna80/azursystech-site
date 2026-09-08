@@ -56,3 +56,23 @@ portable `agent-browser` skill, and this repository has no dedicated
 `scripts/secret-scan.sh`; a diff-based secret review was used instead.
 Historical completed records may retain superseded push wording, but they are
 not active authority sources.
+
+## Final focused shell-expansion verification
+
+The Verifier independently confirmed the final fail-closed rule after the
+shell-substitution corrective loop. The negative matrix denies command
+substitution, double-quoted substitution, quoted-word construction, ANSI-C
+quoting, backticks, process substitution, and escaped executable construction.
+It also denies a generic unquoted `$(date)` substitution so that the policy
+does not depend on proving arbitrary dynamic Bash constructions harmless.
+Single-quoted literal prose remains allowed because it is not executable.
+
+**Final focused verdict: READY.** The control-plane suite reports `PASS=13
+FAIL=0`; both Codex and Claude wrapper suites report `PASS=13 FAIL=0`; the
+GitHub CLI hard-stop suite reports `FAIL=0`; release-state and Define
+traceability validators report `READY`; and `git diff --check` is clean.
+
+This conservative parser boundary is an intentional operational constraint:
+safe commands that would otherwise use executable substitutions must be
+written as separate literal commands. It neither widens autonomous authority
+nor weakens any Owner-controlled hard stop.

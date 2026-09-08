@@ -43,3 +43,18 @@ compound input and reviewed wrapper forms.
 Project-local hooks are cooperative controls. The Reviewer did not inspect live
 GitHub rulesets, credential scope, or remote branch-protection configuration;
 those are external/platform assurance boundaries.
+
+## Shell-substitution corrective re-review
+
+The final focused review found that a lightweight shell tokenizer must not
+claim to prove Bash command construction safe: command substitutions, process
+substitutions, quoted-word concatenation, and ANSI-C quoting can all create an
+executable command before the outer command is evaluated. The correction is
+deliberately conservative. The shared policy fails closed for every executable
+command or process substitution and preserves only single-quoted literal prose
+as non-executable text. Ordinary autonomous operations, including the exact
+literal subject-branch push, remain available as standalone commands.
+
+**Final focused verdict: READY.** The Reviewer independently rechecked the
+expanded negative matrix and the runtime-neutral policy wording. It found no
+remaining material governance or enforcement issue.

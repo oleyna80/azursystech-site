@@ -230,8 +230,95 @@ def git_push_subcommand_index(arguments: list[str]) -> int | None:
     return None
 
 
+def balanced_substitution(command: str, opening_paren: int) -> tuple[str, int]:
+    """Return the contents and end offset of a shell parenthesized substitution."""
+    depth = 1
+    quote: str | None = None
+    index = opening_paren + 1
+    start = index
+    while index < len(command):
+        character = command[index]
+        if character == "\\" and quote != "'":
+            index += 2
+            continue
+        if quote:
+            if character == quote:
+                quote = None
+            index += 1
+            continue
+        if character in {"'", '"'}:
+            quote = character
+        elif character == "(":
+            depth += 1
+        elif character == ")":
+            depth -= 1
+            if depth == 0:
+                return command[start:index], index + 1
+        index += 1
+    return command[start:], len(command)
+
+
+def unquoted_shell_substitutions(command: str) -> list[str]:
+    """Extract executable command/process substitutions, respecting quotes."""
+    substitutions: list[str] = []
+    quote: str | None = None
+    index = 0
+    while index < len(command):
+        character = command[index]
+        if character == "\\" and quote != "'":
+            index += 2
+            continue
+        if quote:
+            if quote == '"' and command[index:index + 2] == "$(":
+                content, index = balanced_substitution(command, index + 1)
+                substitutions.append(content)
+                continue
+            if quote == '"' and character == "`":
+                end = index + 1
+                while end < len(command) and command[end] != "`":
+                    if command[end] == "\\":
+                        end += 2
+                    else:
+                        end += 1
+                substitutions.append(command[index + 1:end])
+                index = end + 1
+                continue
+            if character == quote:
+                quote = None
+            index += 1
+            continue
+        if character in {"'", '"'}:
+            quote = character
+            index += 1
+            continue
+        if character == "`":
+            end = index + 1
+            while end < len(command) and command[end] != "`":
+                if command[end] == "\\":
+                    end += 2
+                else:
+                    end += 1
+            substitutions.append(command[index + 1:end])
+            index = end + 1
+            continue
+        if command[index:index + 2] == "$(" or (
+            quote is None and command[index:index + 2] in {"<(", ">("}
+        ):
+            content, index = balanced_substitution(command, index + 1)
+            substitutions.append(content)
+            continue
+        index += 1
+    return substitutions
+
+
 def push_segments(command: str) -> list[str]:
     """Return every real Git push argument segment, including wrapped Git invocations."""
+    # A real shell evaluates command and process substitutions before the outer
+    # command. This control plane deliberately denies every executable
+    # substitution (while retaining single-quoted literal prose), rather than
+    # claiming a lightweight parser can prove every Bash expansion harmless.
+    if unquoted_shell_substitutions(command):
+        return ["<shell-substitution>"]
     commands = shell_command_segments(command)
     if commands is None:
         # An invalid shell command cannot qualify for the autonomous allowance.

@@ -100,7 +100,10 @@ Critic, and `READY` Review and Verification. It is then limited to one normal
 non-force command form: the current `HEAD` must be pushed through `origin` to
 `refs/heads/<subject_branch>`, where the attached non-default branch exactly
 matches the active Work Block `subject_branch`. The push must be the sole shell
-command; it cannot be coupled to a consequential action. The command is
+command; it cannot be coupled to a consequential action, wrapper, or shell
+command substitution. Runtime controls fail closed for executable command or
+process substitutions; single-quoted literal prose is not an executable
+substitution. The command is
 explicit so its remote destination cannot be inferred from mutable upstream
 configuration. A successful candidate push is reported to the Owner for the
 final `MERGE / REVISION / REJECT` decision; it is not a merge or deployment
