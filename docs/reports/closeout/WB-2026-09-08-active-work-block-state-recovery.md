@@ -2,7 +2,7 @@
 artifact_type: closeout_report
 work_block_id: WB-2026-09-08-active-work-block-state-recovery
 status: approved
-revision: v1
+revision: amendment-terminal-publication-v1
 ---
 
 # Closeout Report — active Work Block state recovery
@@ -14,6 +14,9 @@ revision: v1
   no generative or rubric-based deliverable.
 - **Drift verdict:** ALIGNED
 - **Closeout classification:** SUCCESS
+- **Amendment:** terminal closeout publication is ancestry-bound: the final
+  candidate is one active-parent to canonical-inactive-child transition and
+  inactive state alone grants no publication authority.
 - **Task status:** completed
 - **Closeout mode:** success-closeout
 - **External VCS state:** non-normative repository ownership boundary.

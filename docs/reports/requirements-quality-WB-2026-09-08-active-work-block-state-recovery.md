@@ -2,7 +2,7 @@
 artifact_type: requirements_quality_review
 work_block_id: WB-2026-09-08-active-work-block-state-recovery
 status: approved
-revision: v1
+revision: amendment-terminal-publication-v1
 ---
 
 # Requirements-quality review
@@ -13,3 +13,6 @@ dependency, data, deployment, or branch-authority ambiguity remains.
 
 - **Verdict:** READY
 - **Scope:** lifecycle and release-state control plane only
+- **Amendment:** terminal publication is constrained by committed ancestry,
+  exact linkage, READY parent assurance, and a six-path coordination allowlist;
+  inactive state alone is explicitly non-authoritative.

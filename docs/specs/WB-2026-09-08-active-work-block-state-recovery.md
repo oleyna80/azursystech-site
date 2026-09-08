@@ -1,7 +1,7 @@
 ---
 artifact_type: specification
 work_block_id: WB-2026-09-08-active-work-block-state-recovery
-revision: owner-request-2026-09-08
+revision: amendment-terminal-publication-v1
 status: approved
 ---
 
@@ -27,6 +27,13 @@ that no Work Block is active.
 - REQ-004: the change is limited to lifecycle/release-state control-plane
   tooling and evidence; no main repair, hook bypass, merge, deploy, or
   application change is allowed.
+- REQ-005: terminal subject publication is admitted only for one immediate
+  Git-ancestry transition from a publication-eligible active parent of this
+  Work Block to a canonical inactive closeout child.
+- REQ-006: terminal publication remains literal, non-force, exact-subject,
+  coordination-only, and fail-closed for arbitrary inactive state, wrappers,
+  chaining, substitutions, default/protected destinations, tags, releases,
+  deletion, and source/application mutation.
 
 ## Acceptance criteria
 
@@ -38,6 +45,12 @@ that no Work Block is active.
   source write-set authority and pass for canonical inactive state.
 - AC-004 [req=REQ-004]: only the approved control-plane write-set changes; no
   default-branch repair or hook bypass occurs.
+- AC-005 [req=REQ-005]: a valid one-commit terminal closeout push is allowed
+  only when parent assurance, subject binding, Work Block linkage, and child
+  canonical inactive state are proven from committed history.
+- AC-006 [req=REQ-006]: active publication remains allowed and all terminal
+  negative regression cases are denied; release-state validation reports an
+  inactive terminal candidate as READY.
 
 ## Boundaries
 

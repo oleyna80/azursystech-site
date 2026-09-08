@@ -33,17 +33,25 @@ repeats the affected assurance.
 The sole autonomous publication form is:
 
 ```text
-git push origin HEAD:refs/heads/<active subject_branch>
+git push origin HEAD:refs/heads/<exact subject_branch>
 ```
 
-It is permitted only when the attached non-default branch matches the active
-Work Block `subject_branch`, the READY write gate and formal Define evidence are
-present, and required Critic, Review, and Verification are `READY`. The exact
-push is the sole shell command: it cannot be coupled to another action. The
-explicit remote and destination prevent an upstream or arbitrary refspec from
-changing the target. A push retry after a transport failure or a corrected
-assured candidate uses the same bounded form; no local "one push" counter is
-authoritative.
+There are two admitted states for this exact command. An active candidate must
+have the attached non-default branch and matching active Work Block
+`subject_branch`, READY write gate/formal Define evidence, and READY Critic,
+Review, and Verification. A terminal candidate must instead be the immediate
+child of that publication-eligible active commit, with the same Work Block and
+subject branch proven from committed parent state and commit trailers; its
+current state must be exact canonical inactive and its commit diff must contain
+only the minimal closeout/coordination allowlist. Inactive state by itself is
+not an allowance. A second commit, source mutation, malformed parent, or any
+missing READY evidence removes terminal eligibility.
+
+The exact push is the sole shell command: it cannot be coupled to another
+action. The explicit remote and destination prevent an upstream or arbitrary
+refspec from changing the target. A push retry after a transport failure or a
+corrected assured candidate uses the same bounded form; no local "one push"
+counter is authoritative.
 
 Do not perform a bare push, alternate-remote/URL push, alternate source or
 destination ref, force/non-fast-forward/delete/mirror/prune/all/tag push,

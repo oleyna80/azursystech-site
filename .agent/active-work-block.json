@@ -1,14 +1,14 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "",
+  "work_block_id": "WB-2026-09-08-active-work-block-state-recovery",
   "governance_profile": "Controlled",
   "specification": {
-    "path": "",
-    "revision": ""
+    "path": "docs/specs/WB-2026-09-08-active-work-block-state-recovery.md",
+    "revision": "amendment-terminal-publication-v1"
   },
-  "subject_branch": "",
-  "base_commit": "",
+  "subject_branch": "fix/active-work-block-state-recovery",
+  "base_commit": "6485a7da7956f5451c52c4331af1b757c86e062f",
   "define_quality": {
     "required": false,
     "status": "PENDING",
@@ -17,15 +17,15 @@
     "consistency_analysis": ""
   },
   "write_gate": {
-    "status": "BLOCKED",
-    "opened_at": null
+    "status": "READY",
+    "opened_at": "2026-09-08T16:01:57.369257+00:00"
   },
   "critic": {
     "required": true,
-    "status": "PENDING",
-    "verdict": "PENDING",
+    "status": "READY",
+    "verdict": "APPROVE",
     "report": "",
-    "isolation": "unknown",
+    "isolation": "same_context",
     "skip_reason": ""
   },
   "assurance": {
@@ -65,12 +65,27 @@
       "skip_reason": ""
     }
   },
-  "closeout_mode": "success-closeout",
+  "closeout_mode": "pending",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
-  "write_set": [],
+  "write_set": [
+    ".agent/hooks/hard_stop_policy.py",
+    "governance/authority.md",
+    "governance/lifecycle.md",
+    ".agent/workflows/owner-controlled-github-flow.md",
+    "scripts/test-github-capability-control-plane.py",
+    "docs/specs/WB-2026-09-08-active-work-block-state-recovery.md",
+    "docs/plans/WB-2026-09-08-active-work-block-state-recovery.md",
+    "docs/tasklist/WB-2026-09-08-active-work-block-state-recovery.tasklist.md",
+    "docs/reports/**",
+    "FILE_REGISTRY.yml",
+    "PROJECT_MAP.md",
+    ".agent/active-work-block.json",
+    ".codex/write-gate.md",
+    ".agent/hooks/__pycache__/hard_stop_policy.cpython-314.pyc"
+  ],
   "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
@@ -94,5 +109,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "successful closeout: canonical inactive state and stale authority regression protected"
+  "lifecycle_note": "source work opened by Work Block coordination"
 }
