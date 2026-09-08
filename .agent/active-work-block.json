@@ -31,18 +31,18 @@
   "assurance": {
     "review": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
-      "isolation": "unknown",
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/review-WB-2026-09-08-active-work-block-state-recovery.md",
+      "isolation": "same-session-degraded",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
-      "isolation": "unknown",
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/verification-WB-2026-09-08-active-work-block-state-recovery.md",
+      "isolation": "same-session-degraded",
       "skip_reason": ""
     },
     "evaluation": {
