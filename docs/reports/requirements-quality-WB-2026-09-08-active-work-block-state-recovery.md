@@ -2,7 +2,7 @@
 artifact_type: requirements_quality_review
 work_block_id: WB-2026-09-08-active-work-block-state-recovery
 status: approved
-revision: amendment-terminal-publication-v1
+revision: amendment-recovery-v2
 ---
 
 # Requirements-quality review
@@ -16,3 +16,6 @@ dependency, data, deployment, or branch-authority ambiguity remains.
 - **Amendment:** terminal publication is constrained by committed ancestry,
   exact linkage, READY parent assurance, and a six-path coordination allowlist;
   inactive state alone is explicitly non-authoritative.
+- **Corrective scope:** missing/corrupt recovery, canonical template loading,
+  durable atomic replacement, Git-boundary enforcement, and fail-closed hook
+  behavior are explicitly restored and traceable.

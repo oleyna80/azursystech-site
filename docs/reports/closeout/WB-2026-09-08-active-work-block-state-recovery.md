@@ -2,7 +2,7 @@
 artifact_type: closeout_report
 work_block_id: WB-2026-09-08-active-work-block-state-recovery
 status: approved
-revision: amendment-terminal-publication-v1
+revision: amendment-recovery-v2
 ---
 
 # Closeout Report — active Work Block state recovery
@@ -17,6 +17,8 @@ revision: amendment-terminal-publication-v1
 - **Amendment:** terminal closeout publication is ancestry-bound: the final
   candidate is one active-parent to canonical-inactive-child transition and
   inactive state alone grants no publication authority.
+- **Corrective revision:** missing/corrupt recovery is Git-bound and dedicated;
+  canonical producer loading and durable atomic replacement are restored.
 - **Task status:** completed
 - **Closeout mode:** success-closeout
 - **External VCS state:** non-normative repository ownership boundary.
@@ -27,6 +29,8 @@ Successful closeout materializes `.agent/active-work-block.json` in canonical
 inactive state. Release-state validation now rejects stale subject binding,
 base commit, source write-set, or non-blocked gate when projections have no
 active Work Block. The assured candidate carries the inactive terminal state.
+Recovery separately repairs missing/malformed/corrupt state from the canonical
+default template and never discards valid active state.
 
 ## Evidence
 

@@ -2,7 +2,7 @@
 artifact_type: consistency_analysis
 work_block_id: WB-2026-09-08-active-work-block-state-recovery
 status: approved
-revision: amendment-terminal-publication-v1
+revision: amendment-recovery-v2
 ---
 
 # Consistency analysis
@@ -15,3 +15,6 @@ handled only by the candidate contract; no direct `main` repair is included.
 - **Amendment consistency:** active assured publication and terminal inactive
   publication are separate predicates; terminal eligibility requires the
   immediate active parent and cannot be obtained from local inactive state.
+- **Corrective consistency:** lifecycle and recovery both consume the repository
+  default template; only recovery may repair missing/corrupt state, while all
+  ordinary hook admission remains fail-closed.

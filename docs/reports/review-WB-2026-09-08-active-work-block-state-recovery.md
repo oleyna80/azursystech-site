@@ -2,7 +2,7 @@
 artifact_type: review_report
 work_block_id: WB-2026-09-08-active-work-block-state-recovery
 status: approved
-revision: amendment-terminal-publication-v1
+revision: amendment-recovery-v2
 ---
 
 # Review — active Work Block state recovery
@@ -21,3 +21,9 @@ revision: amendment-terminal-publication-v1
   branch, merge, or hook-bypass change was found.
 - **Regression quality:** positive closeout materialization and negative stale
   authority cases are deterministic and readable.
+- **Corrective review:** recovery now handles missing, malformed, and corrupt
+  records; refuses valid active state; no-ops canonical inactive state; derives
+  the repository from Git cwd; and exposes no arbitrary writer parameters.
+- **Durability review:** the canonical producer loads
+  `.agent/active-work-block.default.json`, and persistence performs file fsync,
+  atomic replace, and parent-directory fsync.
