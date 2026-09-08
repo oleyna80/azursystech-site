@@ -1,14 +1,14 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-2026-09-08-active-work-block-state-recovery",
+  "work_block_id": "",
   "governance_profile": "Controlled",
   "specification": {
-    "path": "docs/specs/WB-2026-09-08-active-work-block-state-recovery.md",
-    "revision": "amendment-recovery-v2"
+    "path": "",
+    "revision": ""
   },
-  "subject_branch": "fix/active-work-block-state-recovery",
-  "base_commit": "1d6f8234f1d13a12b815a13e64b9ea9f098f2632",
+  "subject_branch": "",
+  "base_commit": "",
   "define_quality": {
     "required": false,
     "status": "PENDING",
@@ -17,64 +17,60 @@
     "consistency_analysis": ""
   },
   "write_gate": {
-    "status": "READY",
-    "opened_at": "2026-09-08T19:05:39.401542+00:00"
+    "status": "BLOCKED",
+    "opened_at": null
   },
   "critic": {
     "required": true,
-    "status": "READY",
-    "verdict": "APPROVE",
+    "status": "PENDING",
+    "verdict": "PENDING",
     "report": "",
-    "isolation": "same_context",
+    "isolation": "unknown",
     "skip_reason": ""
   },
   "assurance": {
     "review": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/review-WB-2026-09-08-active-work-block-state-recovery.md",
-      "isolation": "independent-readonly-root",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/verification-WB-2026-09-08-active-work-block-state-recovery.md",
-      "isolation": "independent-readonly-root",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     },
     "evaluation": {
       "required": false,
-      "status": "SKIPPED",
+      "status": "PENDING",
       "verdict": "PENDING",
       "plan": "",
       "report": "",
       "rubric_revision": "",
       "benchmark_revision": "",
       "isolation": "unknown",
-      "skip_reason": "deterministic control-plane correction; no generative deliverable"
+      "skip_reason": ""
     },
     "drift": {
       "required": false,
-      "status": "SKIPPED",
+      "status": "PENDING",
       "verdict": "PENDING",
       "report": "",
       "isolation": "unknown",
-      "skip_reason": "no separate drift gate required; corrective scope is traceable"
+      "skip_reason": ""
     }
   },
-  "closeout_mode": "pending",
+  "closeout_mode": "success-closeout",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
-  "write_set": [
-    "docs/tasklist/WB-2026-09-08-active-work-block-state-recovery.tasklist.md",
-    ".agent/active-work-block.json",
-    "docs/reports/**"
-  ],
+  "write_set": [],
   "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
@@ -98,5 +94,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "source work opened by Work Block coordination"
+  "lifecycle_note": "Final synchronized terminal closeout"
 }
