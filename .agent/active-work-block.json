@@ -1,14 +1,14 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "",
+  "work_block_id": "WB-2026-09-08-active-work-block-state-recovery",
   "governance_profile": "Controlled",
   "specification": {
-    "path": "",
-    "revision": ""
+    "path": "docs/specs/WB-2026-09-08-active-work-block-state-recovery.md",
+    "revision": "owner-request-2026-09-08"
   },
-  "subject_branch": "",
-  "base_commit": "",
+  "subject_branch": "fix/active-work-block-state-recovery",
+  "base_commit": "dee06a380481b19a0aeb6539aec3986b0e9e2fd7",
   "define_quality": {
     "required": false,
     "status": "PENDING",
@@ -17,60 +17,76 @@
     "consistency_analysis": ""
   },
   "write_gate": {
-    "status": "BLOCKED",
-    "opened_at": null
+    "status": "READY",
+    "opened_at": "2026-09-08T15:20:19.550106+00:00"
   },
   "critic": {
     "required": true,
-    "status": "PENDING",
-    "verdict": "PENDING",
-    "report": "",
-    "isolation": "unknown",
+    "status": "READY",
+    "verdict": "SUPPLEMENT",
+    "report": "docs/reports/traceability-WB-2026-09-08-active-work-block-state-recovery.md",
+    "isolation": "separate-subagent",
     "skip_reason": ""
   },
   "assurance": {
     "review": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
-      "isolation": "unknown",
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/review-WB-2026-09-08-active-work-block-state-recovery.md",
+      "isolation": "independent-readonly-root",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
-      "isolation": "unknown",
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/verification-WB-2026-09-08-active-work-block-state-recovery.md",
+      "isolation": "independent-readonly-root",
       "skip_reason": ""
     },
     "evaluation": {
       "required": false,
-      "status": "PENDING",
+      "status": "SKIPPED",
       "verdict": "PENDING",
       "plan": "",
       "report": "",
       "rubric_revision": "",
       "benchmark_revision": "",
       "isolation": "unknown",
-      "skip_reason": ""
+      "skip_reason": "not required by deterministic recovery scope"
     },
     "drift": {
       "required": false,
-      "status": "PENDING",
+      "status": "SKIPPED",
       "verdict": "PENDING",
       "report": "",
       "isolation": "unknown",
-      "skip_reason": ""
+      "skip_reason": "not required by deterministic recovery scope"
     }
   },
-  "closeout_mode": "success-closeout",
+  "closeout_mode": "pending",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
-  "write_set": [],
+  "write_set": [
+    "FILE_REGISTRY.yml",
+    "PROJECT_MAP.md",
+    "scripts/validate-release-state.py",
+    "scripts/test-release-state-contracts.py",
+    ".codex/scripts/recover-active-work-block.py",
+    "scripts/test-active-work-block-recovery.py",
+    "docs/specs/WB-2026-09-08-active-work-block-state-recovery.md",
+    "docs/plans/WB-2026-09-08-active-work-block-state-recovery.md",
+    "docs/tasklist/WB-2026-09-08-active-work-block-state-recovery.tasklist.md",
+    "docs/reports/requirements-quality-WB-2026-09-08-active-work-block-state-recovery.md",
+    "docs/reports/traceability-WB-2026-09-08-active-work-block-state-recovery.md",
+    "docs/reports/consistency-WB-2026-09-08-active-work-block-state-recovery.md",
+    "docs/reports/review-WB-2026-09-08-active-work-block-state-recovery.md",
+    "docs/reports/verification-WB-2026-09-08-active-work-block-state-recovery.md",
+    "docs/reports/closeout/WB-2026-09-08-active-work-block-state-recovery.md"
+  ],
   "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
@@ -94,5 +110,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "successful closeout: canonical inactive state and stale authority regression protected"
+  "lifecycle_note": "source work opened by Work Block coordination"
 }
