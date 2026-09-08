@@ -58,11 +58,11 @@
     },
     "drift": {
       "required": false,
-      "status": "PENDING",
-      "verdict": "PENDING",
+      "status": "SKIPPED",
+      "verdict": "SKIPPED",
       "report": "",
       "isolation": "unknown",
-      "skip_reason": ""
+      "skip_reason": "no material drift in deterministic control-plane amendment"
     }
   },
   "closeout_mode": "pending",
