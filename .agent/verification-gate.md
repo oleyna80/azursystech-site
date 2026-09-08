@@ -1,14 +1,12 @@
-# Verification Gate Record — inactive after Work Block closeout.
+# Verification Gate Record — WB-2026-09-08-autonomous-work-block-execution
 
-- **Work Block:** none
-- **Status:** `CLOSED`
+- **Status:** `READY`
 - **Verdict:** `READY`
-- **Isolation:** `same-session`
+- **Isolation:** `separate-subagent`
+- **Scope:** independent read-only verification against the approved
+  specification and frozen candidate.
 
-Verification passed for exact refs, traceability, shell syntax, JSON/trailer
-parsing, 32 deterministic sprint-analysis evidence fixture assertions, changed
-paths, and the application boundary. Evidence:
-`docs/reports/verification-WB-2026-09-06-sprint-analysis-hardening.md`.
-
-Canonical lifecycle closeout: success-closeout. Active Work Block: none. No provider/API
-call, shared hook activation, publication, deployment, merge, or deletion occurred.
+Independent Verification completed `READY`; evidence is recorded in
+`docs/reports/WB-2026-09-08-autonomous-work-block-execution-verification.md`.
+The exact subject-branch candidate publication is eligible. No provider/API
+call, publication, deployment, merge, or deletion has occurred at this gate.

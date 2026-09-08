@@ -79,7 +79,7 @@ Codex critic gate:
 Approval rules:
 - Any repository file change requires an approved scope.
 - Do not proceed with production/risky changes without explicit Owner approval.
-- Always stop for approval before: production code changes outside approved scope, architecture changes outside approved scope, database/schema/migration changes, new dependencies, config/secrets/env changes, deploys, payment/checkout/order changes, destructive operations, commit or push (unless explicitly approved).
+- Always stop for approval before: production code changes outside approved scope, architecture changes outside approved scope, database/schema/migration changes, new dependencies, config/secrets/env changes, deploys, payment/checkout/order changes, destructive operations, and every Owner-controlled publication action. An approved Work Block may instead authorize local commits and the sole bounded candidate push defined in `governance/authority.md`.
 
 Autonomous Execution Mode:
 - If the Owner explicitly approves an autonomous execution plan, continue through the approved stages without asking for confirmation after every small subtask.
@@ -90,7 +90,10 @@ Autonomous Execution Mode:
 Git and safety rules:
 - Before Coder/Fix stages, check git status.
 - Do not modify unrelated dirty files.
-- Do not stage, commit, or push without explicit Owner approval.
+- Do not stage, commit, or push without an approved Work Block. Local commits and
+  the exact assured subject-branch candidate push may proceed autonomously only
+  under `governance/authority.md`; every other publication action remains
+  Owner-controlled.
 - Do not commit secrets, .env files, tokens, private keys, credentials, or build artifacts.
 - Destructive operations require explicit approval.
 

@@ -1,12 +1,12 @@
-# Critic Gate Record — inactive after Work Block closeout.
+# Critic Gate Record — WB-2026-09-08-autonomous-work-block-execution
 
-- **Work Block:** none
-- **Status:** `CLOSED`
-- **Verdict:** `APPROVE`
-- **Report:** `docs/reports/critic-WB-2026-09-06-sprint-analysis-hardening.md`
-- **Isolation:** `same-session`
-- **Base commit:** `6b0112ab8bc8fa8fac1de05bf9bc27a05e13ecc2`
+- **Status:** `READY`
+- **Verdict:** `SUPPLEMENT` (accepted into the approved write set)
+- **Report:** `docs/reports/WB-2026-09-08-autonomous-work-block-execution-critic.md`
+- **Isolation:** `separate-subagent`
+- **Base commit:** `4ec6a2236a9d5736ffaee6456cfc4e76bd04ece4`
 
-The Critic approved current-main trailer-first parsing, explicit linkage
-classes, period-end snapshot semantics, deterministic fixtures, false-READY
-protection, and the application/framework/historical boundaries.
+The Critic required a fail-closed exact-subject push predicate, default-branch
+discovery rather than literal-name protection, lifecycle Define-quality parity,
+and aligned legacy/runtime adapters. These requirements are in scope and must
+be verified before candidate publication.

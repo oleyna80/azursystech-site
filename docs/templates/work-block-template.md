@@ -127,15 +127,21 @@ separately from implementation files when applying Quick-Fix and trigger thresho
 - [ ] Live DB migration or live-data mutation
 - [ ] Credential/token/secret change
 - [ ] Destructive git/filesystem/database operation
-- [ ] Commit or push
-- [ ] Push to default branch
+- [ ] Local commit (not a Hard Stop when the approved Work Block permits it)
+- [ ] Ordinary non-force candidate push to the exact non-default subject branch
+- [ ] Force push, branch deletion, tag/release publication, or push to a default/protected branch
 - [ ] Public release/publication
 - [ ] Client/user communication
 - [ ] Payment/order/stock/CRM/external consequential mutation
 - [ ] Material specification, evaluation-plan, or scope expansion
 
 For each checked item, record approval state and evidence. Evaluation cannot open
-or waive a Hard Stop.
+or waive a Hard Stop. The first two entries are autonomous only when the active
+Work Block, `governance/authority.md`, and the runtime policy agree: the branch
+is the active subject branch, the destination is exactly
+`origin HEAD:refs/heads/<subject-branch>`, and all required assurance gates are
+`READY`. They never authorize a merge, deployment, release, force push, remote
+deletion, or publication to another ref.
 
 ## Runtime Capability Snapshot
 

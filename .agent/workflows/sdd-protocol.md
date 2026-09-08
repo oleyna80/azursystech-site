@@ -78,8 +78,12 @@ Only completed required assurance permits successful closeout. Otherwise use
    coordination artifacts to be edited, staged, and locally committed; source
    writes and staged source commits remain denied until a successor Work Block
    explicitly opens a branch-bound write gate.
-4. Promote durable, reusable engineering knowledge to `docs/engineering-memory/`.
-5. For changes ready for publication, generate the canonical **Owner publication handoff** (`.agent/workflows/owner-controlled-github-flow.md`).
+4. Promote durable, reusable rationale and lessons to non-authoritative
+   `docs/engineering-memory/`.
+5. For an assured candidate, use the operational exact-subject push and
+   Owner `MERGE / REVISION / REJECT` report in
+   `.agent/workflows/owner-controlled-github-flow.md`, subject to
+   `governance/authority.md`.
 
 ## Quick-Fix Path
 

@@ -30,7 +30,7 @@ statuses:
   evidence: "requirements-quality, critic, review, verification, evaluation, drift, integration, or closeout evidence"
   runtime_adapter: "runtime-specific execution configuration or guidance"
   integration_adapter: "optional plugin, MCP, external runtime, tool, or transport"
-  durable_reference: "evidence-backed engineering memory"
+  durable_reference: "evidence-backed rationale and lessons; not an authority source"
   operational_log: "current or historical execution state; not normative"
   generated: "tool-generated artifact; verify against current source"
   conditional_generated: "installed only when selected by bootstrap profile"
@@ -46,7 +46,6 @@ authority_order:
     - active_tasklist
     - requirements_quality_review_and_define_consistency_evidence
     - review_verification_evaluation_drift_and_closeout_reports
-    - durable_engineering_memory
     - runtime_integration_operational_logs
     - generated_and_external_reference_artifacts
   agent_behavior:
@@ -100,7 +99,7 @@ migration_state:
     - docs/plans/WB-2026-09-03-lifecycle-inactive-closeout-coordination-reconciliation.md
     - docs/plans/WB-2026-09-03-lifecycle-inactive-commit-bypass-correction.md
     - docs/plans/WB-2026-09-03-technical-seo-cwv-entity-audit.md
-  active_work_block: null
+  active_work_block: docs/plans/WB-2026-09-08-autonomous-work-block-execution.md
 
 release_state:
   contract: governance/release-state.md
@@ -209,8 +208,8 @@ entries:
     owner: architect
 
   .agent/workflows/owner-controlled-github-flow.md:
-    role: owner_controlled_publication_handoff_workflow
-    status: normative
+    role: subject_branch_candidate_publication_operational_workflow
+    status: derived
     owner: architect
 
   .agent/active-work-block.json:

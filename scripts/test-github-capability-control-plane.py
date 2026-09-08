@@ -110,6 +110,26 @@ def ready_gate(base: dict[str, object], cwd: Path) -> dict[str, object]:
         "isolation": "same-session-degraded",
         "skip_reason": "",
     }
+    value["assurance"] = {
+        "review": {
+            "required": True,
+            "status": "READY",
+            "verdict": "READY",
+            "report": "docs/reports/review.md",
+            "isolation": "independent-readonly-root",
+            "skip_reason": "",
+        },
+        "verification": {
+            "required": True,
+            "status": "READY",
+            "verdict": "READY",
+            "report": "docs/reports/verification.md",
+            "isolation": "independent-readonly-root",
+            "skip_reason": "",
+        },
+        "evaluation": value["assurance"]["evaluation"],
+        "drift": value["assurance"]["drift"],
+    }
     value["write_set"] = ["src/**", "tests/**"]
     return value
 
@@ -234,6 +254,47 @@ def test_lifecycle() -> None:
             raise AssertionError(f"lifecycle freeze failed: {result.stdout} {result.stderr}")
         frozen = json.loads((cwd / ".agent/active-work-block.json").read_text())
         assert frozen["write_gate"] == {"status": "BLOCKED", "opened_at": None}
+    finally:
+        holder.cleanup()
+
+
+def test_lifecycle_managed_define_quality() -> None:
+    holder, cwd, _base = make_repo()
+    try:
+        missing = run(
+            [
+                sys.executable, str(LIFECYCLE), "--root", str(cwd), "open",
+                "--work-block-id", "WB-TEST-MANAGED",
+                "--governance-profile", "Managed",
+                "--specification-path", "docs/plans/test.md",
+                "--specification-revision", "test-spec-v1",
+                "--write", "src/**", "--critic-status", "READY",
+                "--critic-verdict", "APPROVE",
+            ],
+            cwd,
+        )
+        if missing.returncode != 2 or "define-quality-status READY" not in (missing.stdout + missing.stderr):
+            raise AssertionError(f"Managed open without Define quality should fail: {missing.stdout} {missing.stderr}")
+        ready = run(
+            [
+                sys.executable, str(LIFECYCLE), "--root", str(cwd), "open",
+                "--work-block-id", "WB-TEST-MANAGED",
+                "--governance-profile", "Managed",
+                "--specification-path", "docs/plans/test.md",
+                "--specification-revision", "test-spec-v1",
+                "--write", "src/**", "--critic-status", "READY",
+                "--critic-verdict", "APPROVE", "--define-quality-status", "READY",
+                "--requirements-review", "docs/reports/requirements.md",
+                "--traceability", "docs/tasklist/test.md",
+                "--consistency-analysis", "docs/reports/consistency.md",
+            ],
+            cwd,
+        )
+        if ready.returncode != 0:
+            raise AssertionError(f"Managed open with Define quality failed: {ready.stdout} {ready.stderr}")
+        gate = json.loads((cwd / ".agent/active-work-block.json").read_text())
+        assert gate["define_quality"]["status"] == "READY"
+        assert gate["define_quality"]["required"] is True
     finally:
         holder.cleanup()
 
@@ -379,11 +440,74 @@ def test_hard_stops() -> None:
     try:
         write_gate(cwd, ready_gate(base, cwd))
         assert_allow(hook(HARD_STOP, cwd, "Bash", {"command": "git commit -m fixture"}), "normal local commit")
-        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push origin feature/capability-test"}), "Owner-controlled feature publication")
+        exact = "git push origin HEAD:refs/heads/feature/capability-test"
+        assert_allow(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "assured exact subject candidate publication")
+        supplementary_critic = ready_gate(base, cwd)
+        supplementary_critic["critic"]["verdict"] = "SUPPLEMENT"
+        write_gate(cwd, supplementary_critic)
+        assert_allow(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "accepted Critic supplement")
+        attached_gate = ready_gate(base, cwd)
+        write_gate(cwd, attached_gate)
+        git(cwd, "switch", "-q", "--detach")
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "detached HEAD")
+        git(cwd, "switch", "-q", "feature/capability-test")
+        write_gate(cwd, attached_gate)
+        assert_allow(hook(HARD_STOP, cwd, "Bash", {"command": "rg 'git push' README.md"}), "quoted publication prose is not a command")
+        for command, label in (
+            ("git push", "bare push"),
+            ("git push origin feature/capability-test", "implicit source ref"),
+            ("git push origin HEAD:refs/heads/other", "wrong destination branch"),
+            ("/usr/bin/git push origin HEAD:refs/heads/main", "absolute Git default-branch push"),
+            ("/usr/bin/git push origin HEAD:refs/heads/feature/capability-test", "absolute Git subject push is not literal allowance"),
+            ("git push upstream HEAD:refs/heads/feature/capability-test", "wrong remote"),
+            ("git push https://example.invalid/repo HEAD:refs/heads/feature/capability-test", "URL remote"),
+            ("git push origin HEAD:refs/heads/feature/capability-test HEAD:refs/heads/second", "multiple refspecs"),
+            ("git push --atomic origin HEAD:refs/heads/feature/capability-test", "atomic push"),
+            ("env GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=remote.origin.pushurl GIT_CONFIG_VALUE_0=https://example.invalid git push origin HEAD:refs/heads/feature/capability-test", "environment-overridden origin push"),
+            ("git -c remote.origin.pushurl=https://example.invalid push origin HEAD:refs/heads/feature/capability-test", "Git global-option origin push"),
+            (f"{exact}; ssh prod.example systemctl restart app", "exact push chained with ssh"),
+            (f"{exact} && gh pr merge 12 --squash", "exact push chained with merge"),
+            (f"{exact}; kubectl apply -f deployment.yml", "exact push chained with deploy"),
+            (f"{exact} && gh api repos/o/r/actions/workflows/x/dispatches --method POST", "exact push chained with GitHub API mutation"),
+        ):
+            assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": command}), label)
+        pending_review = ready_gate(base, cwd)
+        pending_review["assurance"]["review"]["status"] = "PENDING"
+        pending_review["assurance"]["review"]["verdict"] = "PENDING"
+        write_gate(cwd, pending_review)
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "review pending")
+        pending_verification = ready_gate(base, cwd)
+        pending_verification["assurance"]["verification"]["status"] = "PENDING"
+        pending_verification["assurance"]["verification"]["verdict"] = "PENDING"
+        write_gate(cwd, pending_verification)
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "verification pending")
+        pending_critic = ready_gate(base, cwd)
+        pending_critic["critic"]["status"] = "PENDING"
+        pending_critic["critic"]["verdict"] = "PENDING"
+        write_gate(cwd, pending_critic)
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "critic pending")
+        wrong_subject = ready_gate(base, cwd)
+        wrong_subject["subject_branch"] = "feature/other"
+        write_gate(cwd, wrong_subject)
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "subject binding mismatch")
+        missing_subject = ready_gate(base, cwd)
+        missing_subject["subject_branch"] = ""
+        write_gate(cwd, missing_subject)
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "empty subject branch")
+        write_gate(cwd, ready_gate(base, cwd))
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push origin HEAD:main"}), "default branch push")
-        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push --force origin feature/capability-test"}), "force push")
+        git(cwd, "update-ref", "refs/remotes/origin/trunk", "HEAD")
+        git(cwd, "symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/trunk")
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push origin HEAD:refs/heads/trunk"}), "configured default branch push")
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push -f origin HEAD:refs/heads/feature/capability-test"}), "short force push")
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push --force origin HEAD:refs/heads/feature/capability-test"}), "force push")
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push --force-with-lease origin HEAD:refs/heads/feature/capability-test"}), "force-with-lease push")
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push --force-with-lease=refs/heads/feature/capability-test origin HEAD:refs/heads/feature/capability-test"}), "force-with-lease value push")
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push origin +HEAD:refs/heads/feature/capability-test"}), "leading plus refspec push")
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push origin --delete old-branch"}), "remote branch deletion")
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push origin --mirror"}), "mirror push")
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push origin --all"}), "all-branches push")
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push origin --prune"}), "prune push")
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push --tags origin"}), "tag publication")
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "docker push ghcr.io/example/app:tag"}), "image publication")
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "ssh prod.example systemctl restart app"}), "live ssh")
@@ -434,6 +558,8 @@ def test_codex_scope() -> None:
             "complex mutating Bash",
         )
         assert_allow(hook(CODEX_GATE, cwd, "Bash", {"command": "git status --short"}), "read-only Bash")
+        assert_allow(hook(CODEX_GATE, cwd, "Bash", {"command": "chmod +x src/a.txt"}), "in-scope chmod target")
+        assert_allow(hook(CLAUDE_GATE, cwd, "Bash", {"command": "chmod +x src/a.txt"}), "Claude in-scope chmod target")
 
         git(cwd, "add", "src/a.txt")
         assert_allow(hook(CODEX_GATE, cwd, "Bash", {"command": "git commit -m inside"}), "staged in-scope commit")
@@ -761,6 +887,7 @@ def test_opencode_posture() -> None:
     config = json.loads((ROOT / "opencode.json").read_text(encoding="utf-8"))
     bash = config["permission"]["bash"]
     assert bash["git commit*"] == "allow"
+    assert bash["git push origin HEAD:refs/heads/*"] == "allow"
     assert bash["git push*"] == "deny"
     assert bash["git reset --hard*"] == "deny"
     assert bash["git clean*"] == "deny"
@@ -769,6 +896,7 @@ def test_opencode_posture() -> None:
 TESTS = [
     test_default_schema,
     test_lifecycle,
+    test_lifecycle_managed_define_quality,
     test_reporting_only_closeout_inactive_coordination_scope,
     test_lifecycle_rejects_default_and_detached,
     test_hard_stops,

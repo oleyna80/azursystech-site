@@ -46,9 +46,13 @@ Required outcome:
 No implementation write may begin while Stage 0 is blocked.
 
 Generated schema-v3 projects may open the local source scope after these Define
-conditions are satisfied. Opening the local scope does not create production,
-credential, live-data, destructive, protected-branch, or external-publish
-authority.
+conditions are satisfied. Managed, Assured, and Distributed Work Blocks must
+record READY requirements-quality review, traceability, and consistency-analysis
+evidence in `define_quality`; Controlled work records whether that aggregate is
+required. Opening local scope does not create production, credential, live-data,
+destructive, protected-branch, or irreversible-publication authority. The one
+autonomous subject-branch candidate push is defined solely by
+`governance/authority.md`.
 
 ### Stage 1 — Execute
 
@@ -69,8 +73,10 @@ Required outcome:
 - implementation concerns and unresolved assumptions are reported.
 
 Within approved scope, ordinary reversible development operations may include
-staging, local commits, normal feature-branch pushes, and pull-request updates.
-They do not require an Owner SSH signature merely because Git state changes.
+staging, local commits, and corrective loops. After required assurance is READY,
+the explicit exact-subject candidate push defined by `governance/authority.md`
+is also autonomous. A `CHANGES_REQUIRED` loop stays autonomous only until the
+next candidate again completes its required assurance.
 
 Direct protected/default-branch mutation, force/history-rewriting operations,
 production/live infrastructure, live data, credentials/secrets, irreversible

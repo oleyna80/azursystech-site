@@ -38,12 +38,14 @@ Resolve intent and permissions in this order:
 1. explicit Owner instruction or approved change request;
 2. this file and `governance/` (including `governance/authority.md`, `governance/define-quality.md`);
 3. approved specification and acceptance criteria (`docs/specs/`);
-4. accepted architecture decisions and external contracts (`docs/architecture/`, `docs/engineering-memory/`);
+4. accepted architecture decisions and external contracts (`docs/architecture/`);
 5. active Work Block and approved write-set (`.agent/active-work-block.json`, `docs/plans/`);
 6. approved plans and tasklist (`docs/tasklist/`);
 7. frozen subject and assurance/evaluation evidence (`docs/reports/`);
-8. durable engineering memory (`docs/engineering-memory/`);
-9. operational logs and external references.
+8. operational logs and external references.
+
+Engineering memory stores rationale and lessons only; it never grants authority
+or resolves a conflict with the sources above.
 
 ## 4. Engineering Decision Posture
 
@@ -84,17 +86,19 @@ Once a Work Block is approved and its write gate is `READY`, internal lifecycle 
 
 Within approved scope, normal reversible development includes local edits, tests, staging, and local commits.
 
-### Private GitHub Free Mode & Owner Publication Handoff
+### Autonomous Subject-Branch Candidate Publication
 
-`oleyna80/azursystech-site` operates on GitHub Free with Owner-controlled publication:
-- The normal agent flow **stops before any `git push`**, even if credentials are present in the runtime environment.
-- The agent freezes the exact feature-branch HEAD and produces the canonical **Owner publication handoff** (`.agent/workflows/owner-controlled-github-flow.md`).
-- The Owner performs or triggers publication of that exact revision and controls merge to `main`.
+`governance/authority.md` is canonical. Inside an approved Work Block, routine
+delivery and corrective loops do not pause for Owner approval. After required
+assurance is `READY`, the Orchestrator may non-force push the current `HEAD`
+only to its exact non-default Work Block `subject_branch`. Report that exact
+pushed candidate to the Owner for `MERGE / REVISION / REJECT`; do not merge it.
 
 ### External Hard Stops
 
 Consequential operations outside normal agent capability require explicit Owner control:
-- any remote source publication (`git push`) in the current mode;
+- push to a default/protected branch, force/non-fast-forward/broad/mirror/prune
+  push, remote branch deletion, tag/release publication, or merge;
 - production deployment or live service restart;
 - live PostgreSQL database mutation or migration apply;
 - credential, token, key, or secret changes;
@@ -112,7 +116,7 @@ Consequential operations outside normal agent capability require explicit Owner 
 | Active task decomposition | `docs/tasklist/` |
 | Evaluation plans and events | `docs/evals/` |
 | Review, verification, drift, closeout evidence | `docs/reports/` |
-| Reusable engineering decisions and principles | `docs/engineering-memory/` |
+| Reusable rationale and lessons (non-authoritative) | `docs/engineering-memory/` |
 | Operational context and progress | `memory_bank/` |
 | Runtime capability and limitations | `runtimes/` and `.agent/bootstrap-profile.json` |
 | Reusable procedures and skills | `.agent/skills/` |

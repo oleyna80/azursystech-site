@@ -173,18 +173,82 @@ def recursive_rm(command: str) -> bool:
 
 
 def force_push(command: str) -> bool:
-    return bool(
-        re.search(r"\bgit\s+push\b[^\n]*(?:\s-f(?:\s|$)|--force(?:-with-lease)?\b|\s\+[^\s]+)", command, re.I)
-    )
+    for segment in push_segments(command):
+        tokens, positional = parse_push_segment(segment)
+        if any(
+            token in {"-f", "--force", "--force-with-lease"}
+            or token.startswith("--force-with-lease=")
+            for token in tokens
+        ):
+            return True
+        if any(refspec.startswith("+") for refspec in positional[1:]):
+            return True
+    return False
+
+
+def shell_command_segments(command: str) -> list[list[str]] | None:
+    """Parse shell command segments without treating quoted prose as commands."""
+    try:
+        lexer = shlex.shlex(command, posix=True, punctuation_chars=";&|")
+        lexer.whitespace_split = True
+        lexer.commenters = ""
+        tokens = list(lexer)
+    except ValueError:
+        return None
+
+    commands: list[list[str]] = []
+    current: list[str] = []
+    for token in tokens:
+        if token and all(character in ";&|" for character in token):
+            if current:
+                commands.append(current)
+                current = []
+        else:
+            current.append(token)
+    if current:
+        commands.append(current)
+    return commands
+
+
+def git_push_subcommand_index(arguments: list[str]) -> int | None:
+    """Find a literal `push` Git subcommand after supported global options."""
+    options_with_value = {
+        "-c", "-C", "--config-env", "--exec-path", "--git-dir", "--namespace",
+        "--work-tree", "--super-prefix",
+    }
+    index = 0
+    while index < len(arguments):
+        token = arguments[index]
+        if token == "push":
+            return index
+        if not token.startswith("-"):
+            return None
+        if token in options_with_value:
+            index += 2
+            continue
+        index += 1
+    return None
 
 
 def push_segments(command: str) -> list[str]:
-    return [
-        match.group(1).strip()
-        for match in re.finditer(
-            r"(?:^|[;&|\n]\s*)git\s+push\b([^;&|\n]*)", command, re.I
-        )
-    ]
+    """Return every real Git push argument segment, including wrapped Git invocations."""
+    commands = shell_command_segments(command)
+    if commands is None:
+        # An invalid shell command cannot qualify for the autonomous allowance.
+        return ["<unparseable>"]
+
+    pushes: list[str] = []
+    for segment in commands:
+        for index, token in enumerate(segment):
+            # Detection covers absolute-path invocations too.  The allowance
+            # remains stricter and accepts only the literal `git` executable.
+            if Path(token).name == "git":
+                push_index = git_push_subcommand_index(segment[index + 1:])
+                if push_index is None:
+                    continue
+                pushes.append(shlex.join(segment[index + 2 + push_index:]))
+                break
+    return pushes
 
 
 def parse_push_segment(segment: str) -> tuple[list[str], list[str]]:
@@ -194,6 +258,14 @@ def parse_push_segment(segment: str) -> tuple[list[str], list[str]]:
         return [], []
     positional = [token for token in tokens if not token.startswith("-")]
     return tokens, positional
+
+
+def is_single_shell_command(command: str) -> bool:
+    """Reject chaining so an allowed push cannot carry a second action."""
+    commands = shell_command_segments(command)
+    if commands is None:
+        return False
+    return len(commands) == 1 and bool(commands[0])
 
 
 def destructive_or_broad_push(command: str) -> bool:
@@ -236,6 +308,26 @@ def canonical_branch_ref(value: str) -> str:
     return ref
 
 
+def default_branch(root: Path) -> str:
+    """Resolve the locally known default branch; publication fails closed if unknown."""
+    try:
+        remote = subprocess.run(
+            ["git", "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"],
+            cwd=root, check=False, capture_output=True, text=True, timeout=3,
+        )
+    except (OSError, subprocess.SubprocessError):
+        deny("Cannot inspect configured default branch for Hard Stop policy.")
+    if remote.returncode == 0 and remote.stdout.strip():
+        return canonical_branch_ref(remote.stdout.strip())
+    for candidate in ("main", "master"):
+        if subprocess.run(
+            ["git", "show-ref", "--verify", "--quiet", f"refs/heads/{candidate}"],
+            cwd=root, check=False, capture_output=True, text=True, timeout=3,
+        ).returncode == 0:
+            return candidate
+    return ""
+
+
 def refspec_targets_default(refspec: str, current: str) -> bool:
     value = refspec.lstrip("+")
     if ":" in value:
@@ -248,18 +340,104 @@ def refspec_targets_default(refspec: str, current: str) -> bool:
 
 def pushes_default_branch(command: str, root: Path) -> bool:
     branch = current_branch(root)
+    configured_default = default_branch(root)
+    protected = {value for value in (configured_default, "main", "master") if value}
     for segment in push_segments(command):
         tokens, positional = parse_push_segment(segment)
         if not tokens and segment:
-            return branch in {"main", "master"}
+            return branch in protected
         if len(positional) <= 1:
-            if branch in {"main", "master"}:
+            if branch in protected:
                 return True
             continue
         refspecs = positional[1:]
-        if any(refspec_targets_default(refspec, branch) for refspec in refspecs):
+        if any(
+            canonical_branch_ref(
+                refspec.lstrip("+").split(":", 1)[-1]
+                if ":" in refspec.lstrip("+")
+                else (branch if refspec.upper() == "HEAD" else refspec)
+            ) in protected
+            for refspec in refspecs
+        ):
             return True
     return False
+
+
+def required_assurance_ready(gate: dict) -> bool:
+    assurance = gate.get("assurance")
+    if not isinstance(assurance, dict):
+        return False
+    for name in ("review", "verification"):
+        record = assurance.get(name)
+        if not isinstance(record, dict):
+            return False
+        if record.get("required") is not True:
+            return False
+        if record.get("status") != "READY" or record.get("verdict") != "READY":
+            return False
+    return True
+
+
+def required_critic_ready(gate: dict) -> bool:
+    critic = gate.get("critic")
+    return (
+        isinstance(critic, dict)
+        and critic.get("required") is True
+        and critic.get("status") == "READY"
+        and critic.get("verdict") in {"APPROVE", "SUPPLEMENT"}
+    )
+
+
+def define_quality_ready(gate: dict) -> bool:
+    profile = str(gate.get("governance_profile") or "").strip()
+    quality = gate.get("define_quality")
+    if not isinstance(quality, dict):
+        return profile not in {"Managed", "Assured", "Distributed"}
+    if quality.get("required") is not True:
+        return profile not in {"Managed", "Assured", "Distributed"}
+    return quality.get("status") == "READY" and all(
+        isinstance(quality.get(name), str) and quality[name].strip()
+        for name in ("requirements_review", "traceability", "consistency_analysis")
+    )
+
+
+def autonomous_subject_push_allowed(command: str, gate: dict, root: Path) -> bool:
+    """Allow only a fully explicit, assured push of this Work Block's HEAD."""
+    commands = shell_command_segments(command)
+    if commands is None or len(commands) != 1:
+        return False
+    argv = commands[0]
+    if len(argv) != 4 or argv[:3] != ["git", "push", "origin"]:
+        return False
+    segments = push_segments(command)
+    if len(segments) != 1:
+        return False
+    tokens, positional = parse_push_segment(segments[0])
+    if not tokens or any(token.startswith("-") for token in tokens):
+        return False
+    if len(positional) != 2 or positional[0] != "origin":
+        return False
+    if gate.get("schema_version") != 3 or gate.get("authority_mode") != "github_capability":
+        return False
+    if gate.get("write_gate", {}).get("status") != "READY":
+        return False
+    if (
+        not define_quality_ready(gate)
+        or not required_critic_ready(gate)
+        or not required_assurance_ready(gate)
+    ):
+        return False
+    subject = str(gate.get("subject_branch") or "").strip()
+    configured_default = default_branch(root)
+    if not subject or not configured_default or subject == configured_default:
+        return False
+    if current_branch(root) != subject:
+        return False
+    refspec = f"HEAD:refs/heads/{subject}"
+    return (
+        positional[1] == refspec
+        and argv[3] == refspec
+    )
 
 
 def runtime_invocations(command: str) -> set[str]:
@@ -299,12 +477,15 @@ def check_command(command: str, gate: dict, root: Path) -> None:
         deny("Broad or destructive remote push is outside the normal agent capability boundary.")
     if tag_publish(command):
         deny("External tag publication is outside the normal agent capability boundary.")
-    if re.search(r"\bgit\s+push\b", command, re.I):
+    if push_segments(command):
         if pushes_default_branch(command, root):
             deny("Direct default-branch push is outside the normal agent capability boundary.")
+        if autonomous_subject_push_allowed(command, gate, root):
+            return
         deny(
-            "Remote source publication is Owner-controlled for AzurSysTech on GitHub Free; "
-            "stop before git push and use the canonical Owner publication handoff."
+            "Remote source publication is allowed only as an explicit, non-force push of "
+            "HEAD to the active Work Block's exact subject branch after READY Critic, Review, "
+            "and Verification; all other publication remains Owner-controlled."
         )
 
     for pattern, label in CONSEQUENTIAL:

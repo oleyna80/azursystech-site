@@ -12,6 +12,7 @@ import subprocess
 import sys
 
 GATE_PATH = Path(".agent/active-work-block.json")
+FORMAL_DEFINE_PROFILES = {"Managed", "Assured", "Distributed"}
 DEFAULT_COORDINATION = [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
@@ -229,6 +230,15 @@ def validate_source_gate(gate: dict) -> list[str]:
         raise Denied("Active Work Block requires specification.path.")
     if not str(specification.get("revision") or "").strip():
         raise Denied("Active Work Block requires specification.revision.")
+    if str(gate.get("governance_profile") or "") in FORMAL_DEFINE_PROFILES:
+        quality = gate.get("define_quality")
+        if not isinstance(quality, dict) or quality.get("required") is not True:
+            raise Denied("Formal source writes require define_quality evidence.")
+        if quality.get("status") != "READY" or not all(
+            isinstance(quality.get(name), str) and quality[name].strip()
+            for name in ("requirements_review", "traceability", "consistency_analysis")
+        ):
+            raise Denied("Formal source writes require READY define_quality evidence.")
 
     critic = gate.get("critic")
     if not isinstance(critic, dict):
@@ -296,8 +306,10 @@ def shell_paths(command: str, root: Path) -> list[str]:
     name = Path(tokens[0]).name
     args = [value for value in tokens[1:] if not value.startswith("-")]
     targets: list[str] = []
-    if name in {"touch", "mkdir", "rm", "rmdir", "chmod", "chown", "truncate"}:
+    if name in {"touch", "mkdir", "rm", "rmdir", "chown", "truncate"}:
         targets = args
+    elif name == "chmod":
+        targets = args[1:]
     elif name in {"mv", "install", "ln"}:
         targets = args
     elif name == "cp" and args:

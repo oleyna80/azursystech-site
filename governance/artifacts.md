@@ -250,7 +250,9 @@ Resolve conflicts in this order:
 5. Approved implementation and evaluation plans and write set.
 6. Active task decomposition.
 7. Review, verification, evaluation, drift, and closeout evidence.
-8. Durable engineering memory.
-9. Operational memory, runtime logs, and generated context.
+8. Operational memory, runtime logs, and generated context.
+
+Durable engineering memory preserves rationale and lessons. It is not an
+authority layer and cannot override any source above.
 
 Lower layers must not silently override higher layers.

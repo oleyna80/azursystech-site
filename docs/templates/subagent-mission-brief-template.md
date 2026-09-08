@@ -62,7 +62,9 @@ Temporary specialization — narrows focus, does not expand authority.
 - [ ] Live DB migration
 - [ ] Credential rotation
 - [ ] Destructive git ops
-- [ ] Commit or push
+- [ ] Local commit or exact-subject candidate push (only when explicitly granted
+      to the Orchestrator by the active Work Block; never delegated by default)
+- [ ] Force push, branch deletion, tag/release publication, or default/protected-branch push
 - [ ] Public release/publication
 - [ ] Client communications
 
