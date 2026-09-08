@@ -47,14 +47,14 @@
     },
     "evaluation": {
       "required": false,
-      "status": "PENDING",
-      "verdict": "PENDING",
+      "status": "SKIPPED",
+      "verdict": "SKIPPED",
       "plan": "",
       "report": "",
       "rubric_revision": "",
       "benchmark_revision": "",
       "isolation": "unknown",
-      "skip_reason": ""
+      "skip_reason": "not required for deterministic control-plane correction"
     },
     "drift": {
       "required": false,
