@@ -31,7 +31,7 @@ release_state:
 
 ## Migration Work
 
-- Active Work Block: `docs/plans/WB-2026-09-08-autonomous-work-block-execution.md`.
+- Active implementation Work Block: `docs/plans/WB-2026-09-08-autonomous-work-block-execution.md`.
 - The completed migration index is machine-readable in `FILE_REGISTRY.yml:migration_state`.
 
 ## Architecture
