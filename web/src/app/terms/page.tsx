@@ -5,6 +5,8 @@ import Link from "next/link";
 import { LOCALE_COOKIE_KEY, resolveLocale } from "@/i18n";
 import { LEGAL_CONTACT } from "@/lib/legal-content";
 
+const BASE_URL = "https://azursystech.fr";
+
 type TermsLocale = "fr" | "ru" | "en";
 
 type TermsSection = {
@@ -596,7 +598,10 @@ export async function generateMetadata(props: TermsPageProps): Promise<Metadata>
   const searchParams = await props.searchParams;
   const locale = resolveTermsLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
 
-  return TERMS_PAGE[locale].meta;
+  return {
+    ...TERMS_PAGE[locale].meta,
+    alternates: { canonical: `${BASE_URL}/terms` },
+  };
 }
 
 export default async function TermsPage(props: TermsPageProps) {

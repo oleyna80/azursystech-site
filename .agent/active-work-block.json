@@ -1,89 +1,96 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "",
+  "work_block_id": "WB-2026-09-09-crawl-indexation-reconciliation",
   "governance_profile": "Controlled",
   "specification": {
-    "path": "",
-    "revision": ""
+    "path": "docs/specs/WB-2026-09-09-crawl-indexation-reconciliation.md",
+    "revision": "1"
   },
-  "subject_branch": "",
-  "base_commit": "",
+  "subject_branch": "feat/wb-crawl-indexation-reconciliation-025",
+  "base_commit": "d5fc9ed2c64f0d2f62ac46cb294637bac5657793",
   "define_quality": {
-    "required": false,
-    "status": "PENDING",
-    "requirements_review": "",
-    "traceability": "",
-    "consistency_analysis": ""
+    "required": true,
+    "status": "READY",
+    "requirements_review": "docs/reports/requirements/WB-2026-09-09-crawl-indexation-reconciliation.md",
+    "traceability": "python3 scripts/validate-define-traceability.py: READY",
+    "consistency_analysis": "docs/reports/requirements/WB-2026-09-09-crawl-indexation-reconciliation.md"
   },
   "write_gate": {
-    "status": "BLOCKED",
-    "opened_at": null
+    "status": "READY",
+    "opened_at": "2026-09-09T10:52:00Z"
   },
   "critic": {
     "required": true,
-    "status": "PENDING",
-    "verdict": "PENDING",
-    "report": "",
-    "isolation": "unknown",
+    "status": "READY",
+    "verdict": "READY",
+    "report": "docs/reports/critic/WB-2026-09-09-crawl-indexation-reconciliation.md",
+    "isolation": "same-session-read-only",
     "skip_reason": ""
   },
   "assurance": {
     "review": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
-      "isolation": "unknown",
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/reviews/WB-2026-09-09-crawl-indexation-reconciliation.md",
+      "isolation": "same-session-read-only",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
-      "isolation": "unknown",
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/verification/WB-2026-09-09-crawl-indexation-reconciliation.md",
+      "isolation": "same-session-read-only",
       "skip_reason": ""
     },
     "evaluation": {
       "required": false,
       "status": "PENDING",
-      "verdict": "PENDING",
+      "verdict": "NOT_REQUIRED",
       "plan": "",
       "report": "",
       "rubric_revision": "",
       "benchmark_revision": "",
-      "isolation": "unknown",
-      "skip_reason": ""
+      "isolation": "none",
+      "skip_reason": "No nondeterministic product output; route evidence is deterministic."
     },
     "drift": {
-      "required": false,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
-      "isolation": "unknown",
+      "required": true,
+      "status": "READY",
+      "verdict": "ALIGNED",
+      "report": "docs/reports/drift/WB-2026-09-09-crawl-indexation-reconciliation.md",
+      "isolation": "same-session-read-only",
       "skip_reason": ""
     }
   },
-  "closeout_mode": "success-closeout",
-  "integrations": {
-    "approved": [],
-    "admission_records": []
-  },
-  "write_set": [],
-  "coordination_write_set": [
+  "closeout_mode": "reporting-only",
+  "integrations": {"approved": [], "admission_records": []},
+  "write_set": [
+    "docs/specs/WB-2026-09-09-crawl-indexation-reconciliation.md",
+    "docs/plans/WB-2026-09-09-crawl-indexation-reconciliation.md",
+    "docs/tasklist/WB-2026-09-09-crawl-indexation-reconciliation.tasklist.md",
+    "docs/reports/requirements/WB-2026-09-09-crawl-indexation-reconciliation.md",
+    "docs/reports/critic/WB-2026-09-09-crawl-indexation-reconciliation.md",
+    "docs/reports/reviews/WB-2026-09-09-crawl-indexation-reconciliation.md",
+    "docs/reports/verification/WB-2026-09-09-crawl-indexation-reconciliation.md",
+    "docs/reports/drift/WB-2026-09-09-crawl-indexation-reconciliation.md",
+    "docs/reports/closeout/WB-2026-09-09-crawl-indexation-reconciliation.md",
     ".agent/active-work-block.json",
-    ".agent/critic-gate.md",
-    ".agent/verification-gate.md",
-    ".codex/write-gate.md",
     "FILE_REGISTRY.yml",
     "PROJECT_MAP.md",
+    "web/src/app/data-deletion/page.tsx",
+    "web/src/app/legal/page.tsx",
+    "web/src/app/privacy/page.tsx",
+    "web/src/app/terms/page.tsx"
+  ],
+  "coordination_write_set": [
+    ".agent/active-work-block.json",
     "docs/plans/**",
     "docs/specs/**",
     "docs/tasklist/**",
-    "docs/reports/**",
-    "docs/architecture/drafts/**",
-    "memory_bank/**"
+    "docs/reports/**"
   ],
   "external_hard_stops": [
     "protected_default_branch_mutation",
@@ -94,5 +101,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Final terminal inactive closeout after release-state contract correction"
+  "lifecycle_note": "P0 reconciliation; reporting-only if source is correct and production remains stale"
 }

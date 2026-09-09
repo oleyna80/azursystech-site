@@ -5,6 +5,8 @@ import Link from "next/link";
 import { LOCALE_COOKIE_KEY, resolveLocale } from "@/i18n";
 import { LEGAL_CONTACT } from "@/lib/legal-content";
 
+const BASE_URL = "https://azursystech.fr";
+
 type DeletionLocale = "fr" | "ru" | "en";
 
 type DeletionSection = {
@@ -227,7 +229,10 @@ export async function generateMetadata(props: DataDeletionPageProps): Promise<Me
   const searchParams = await props.searchParams;
   const locale = resolveDeletionLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
 
-  return DATA_DELETION_PAGE[locale].meta;
+  return {
+    ...DATA_DELETION_PAGE[locale].meta,
+    alternates: { canonical: `${BASE_URL}/data-deletion` },
+  };
 }
 
 export default async function DataDeletionPage(props: DataDeletionPageProps) {

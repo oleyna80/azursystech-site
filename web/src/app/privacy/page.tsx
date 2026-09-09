@@ -5,6 +5,8 @@ import Link from "next/link";
 import { LOCALE_COOKIE_KEY, resolveLocale } from "@/i18n";
 import { LEGAL_CONTACT } from "@/lib/legal-content";
 
+const BASE_URL = "https://azursystech.fr";
+
 type PrivacyLocale = "fr" | "ru" | "en";
 
 type PrivacySection = {
@@ -443,7 +445,10 @@ export async function generateMetadata(props: PrivacyPageProps): Promise<Metadat
   const searchParams = await props.searchParams;
   const locale = resolvePrivacyLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
 
-  return PRIVACY_PAGE[locale].meta;
+  return {
+    ...PRIVACY_PAGE[locale].meta,
+    alternates: { canonical: `${BASE_URL}/privacy` },
+  };
 }
 
 export default async function PrivacyPage(props: PrivacyPageProps) {

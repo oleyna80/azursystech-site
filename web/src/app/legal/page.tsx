@@ -5,6 +5,8 @@ import Link from "next/link";
 import { LOCALE_COOKIE_KEY, resolveLocale } from "@/i18n";
 import { LEGAL_CONTACT, LEGAL_HOSTING } from "@/lib/legal-content";
 
+const BASE_URL = "https://azursystech.fr";
+
 type LegalLocale = "fr" | "ru" | "en";
 
 type DefinitionItem = {
@@ -341,7 +343,10 @@ export async function generateMetadata(props: LegalPageProps): Promise<Metadata>
   const searchParams = await props.searchParams;
   const locale = resolveLegalLocale(searchParams?.locale || cookieStore.get(LOCALE_COOKIE_KEY)?.value);
 
-  return LEGAL_PAGE[locale].meta;
+  return {
+    ...LEGAL_PAGE[locale].meta,
+    alternates: { canonical: `${BASE_URL}/legal` },
+  };
 }
 
 export default async function LegalPage(props: LegalPageProps) {
