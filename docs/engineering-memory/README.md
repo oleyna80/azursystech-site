@@ -48,6 +48,11 @@ verify the current state and update this directory during closeout.
 - `temporary-decisions.md` - track time-boxed exceptions and revisit triggers.
 - `reproducibility-log.md` - stable commands and evidence needed by future
   agents.
+- `process-feedback-self-improvement-design.md` - parked Owner-approved design
+  for mandatory Closeout process feedback, friction accumulation, anti-laziness
+  checks, triage, and evidence-based SDLC self-improvement.
+- `process-feedback-self-improvement-work-block-brief.md` - bounded implementation
+  brief to activate after current repository reconciliation work is complete.
 - [AI Video Production Operating Instruction](ai-video-production-operating-instruction.md) - canonical, evidence-gated rules for future Veo/Gemini or other AI-video production and release; its readable non-normative Markdown companion is the [AI Video Generation and Publication Policy](../policies/ai-video-generation-and-publication-policy.md).
 
 ## Closeout Rule
@@ -61,3 +66,4 @@ At the end of every non-trivial Work Block, classify reusable knowledge:
 ## Entries
 
 - [OpenCode Runtime Layer](opencode-runtime-layer.md) — 2026-07-03. opencode-native `.opencode/agents/` (8 subagents) and `.opencode/skills/` (36 skill mirrors) layer; canonical sources, model assignment, topology precedent from WB-001.
+- [SDLC Process Feedback and Self-Improvement Design](process-feedback-self-improvement-design.md) — 2026-09-09. Parked design for evidence-based process feedback, anti-laziness controls, friction aggregation, and later systemic improvement through separate Work Blocks.
