@@ -1,102 +1,89 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-2026-09-09-lifecycle-ownership-reconciliation",
-  "governance_profile": "Managed",
+  "work_block_id": "",
+  "governance_profile": "Controlled",
   "specification": {
-    "path": "docs/specs/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
-    "revision": "1"
+    "path": "",
+    "revision": ""
   },
-  "subject_branch": "feat/wb-lifecycle-ownership-reconciliation-027",
-  "base_commit": "ae63875dfb30332afa85790c05c81c9717a357f9",
+  "subject_branch": "",
+  "base_commit": "",
   "define_quality": {
-    "required": true,
-    "status": "READY",
-    "requirements_review": "docs/reports/requirements/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
-    "traceability": "python3 scripts/validate-define-traceability.py --spec docs/specs/WB-2026-09-09-lifecycle-ownership-reconciliation.md --tasks docs/tasklist/WB-2026-09-09-lifecycle-ownership-reconciliation.tasklist.md",
-    "consistency_analysis": "docs/reports/requirements/WB-2026-09-09-lifecycle-ownership-reconciliation.md"
+    "required": false,
+    "status": "PENDING",
+    "requirements_review": "",
+    "traceability": "",
+    "consistency_analysis": ""
   },
   "write_gate": {
-    "status": "READY",
-    "opened_at": "2026-09-09T13:21:45.248434+00:00"
+    "status": "BLOCKED",
+    "opened_at": null
   },
   "critic": {
     "required": true,
-    "status": "READY",
-    "verdict": "APPROVE",
-    "report": "docs/reports/critic/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
-    "isolation": "same-session-read-only",
+    "status": "PENDING",
+    "verdict": "PENDING",
+    "report": "",
+    "isolation": "unknown",
     "skip_reason": ""
   },
   "assurance": {
     "review": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/reviews/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
-      "isolation": "same-session-read-only",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/verification/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
-      "isolation": "same-session-read-only",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     },
     "evaluation": {
       "required": false,
-      "status": "SKIPPED",
-      "verdict": "SKIPPED",
+      "status": "PENDING",
+      "verdict": "PENDING",
       "plan": "",
       "report": "",
       "rubric_revision": "",
       "benchmark_revision": "",
-      "isolation": "same-session-read-only",
-      "skip_reason": "Deterministic lifecycle reconciliation has no generative or rubric-based deliverable"
+      "isolation": "unknown",
+      "skip_reason": ""
     },
     "drift": {
       "required": false,
-      "status": "READY",
-      "verdict": "ALIGNED",
-      "report": "docs/reports/drift/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
-      "isolation": "same-session-read-only",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     }
   },
-  "closeout_mode": "pending",
+  "closeout_mode": "success-closeout",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
-  "write_set": [
-    "docs/specs/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
-    "docs/plans/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
-    "docs/tasklist/WB-2026-09-09-lifecycle-ownership-reconciliation.tasklist.md",
-    "docs/reports/requirements/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
-    "docs/reports/critic/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
-    "docs/reports/reviews/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
-    "docs/reports/verification/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
-    "docs/reports/drift/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
-    "docs/reports/closeout/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
-    "docs/plans/WB-2026-09-09-crawl-indexation-reconciliation.md",
-    "docs/plans/WB-2026-09-09-release-state-fixture-isolation.md",
-    "docs/reports/closeout/WB-2026-09-09-crawl-indexation-reconciliation.md",
-    "docs/reports/closeout/WB-2026-09-09-release-state-fixture-isolation.md",
+  "write_set": [],
+  "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
     ".agent/verification-gate.md",
     ".codex/write-gate.md",
     "FILE_REGISTRY.yml",
-    "PROJECT_MAP.md"
-  ],
-  "coordination_write_set": [
-    ".agent/active-work-block.json",
+    "PROJECT_MAP.md",
     "docs/plans/**",
     "docs/specs/**",
     "docs/tasklist/**",
-    "docs/reports/**"
+    "docs/reports/**",
+    "docs/architecture/drafts/**",
+    "memory_bank/**"
   ],
   "external_hard_stops": [
     "protected_default_branch_mutation",
@@ -107,5 +94,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "source work opened by Work Block coordination"
+  "lifecycle_note": "completed lifecycle ownership reconciliation"
 }

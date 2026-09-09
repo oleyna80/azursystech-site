@@ -102,7 +102,8 @@ migration_state:
     - docs/plans/WB-2026-09-08-active-work-block-state-recovery.md
     - docs/plans/WB-2026-09-09-crawl-indexation-reconciliation.md
     - docs/plans/WB-2026-09-09-release-state-fixture-isolation.md
-  active_work_block: docs/plans/WB-2026-09-09-lifecycle-ownership-reconciliation.md
+    - docs/plans/WB-2026-09-09-lifecycle-ownership-reconciliation.md
+  active_work_block: null
 
 release_state:
   contract: governance/release-state.md
@@ -111,8 +112,8 @@ release_state:
   workflow: .github/workflows/release-state-contract.yml
   authority: assurance_only
   external_vcs_state: non_normative
-  latest_completed_work_block: docs/plans/WB-2026-09-09-release-state-fixture-isolation.md
-  closeout_report: docs/reports/closeout/WB-2026-09-09-release-state-fixture-isolation.md
+  latest_completed_work_block: docs/plans/WB-2026-09-09-lifecycle-ownership-reconciliation.md
+  closeout_report: docs/reports/closeout/WB-2026-09-09-lifecycle-ownership-reconciliation.md
 
 entries:
   AGENTS.md:
