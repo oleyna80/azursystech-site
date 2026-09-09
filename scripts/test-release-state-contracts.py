@@ -109,15 +109,27 @@ def inactive_fixture(holder: str) -> Path:
     active_plan = registry["migration_state"]["active_work_block"]
     if active_plan is None:
         return fixture
+    operational = json.loads(
+        (fixture / ".agent/active-work-block.json").read_text(encoding="utf-8")
+    )
+    work_block_id = operational["work_block_id"]
     registry["migration_state"]["active_work_block"] = None
     registry_path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
     project_map = fixture / "PROJECT_MAP.md"
     map_text = project_map.read_text(encoding="utf-8").replace(
         f"active_work_block: {active_plan}", "active_work_block: null"
     )
+    migration_marker = (
+        f"- Active Work Block: `{active_plan}` (`{work_block_id}`).\n"
+    )
+    if migration_marker not in map_text:
+        raise AssertionError(
+            "inactive fixture could not isolate the current PROJECT_MAP Migration Work projection"
+        )
     map_text = map_text.replace(
-        "- Active implementation Work Block: `docs/plans/WB-2026-09-08-active-work-block-state-recovery.md`.\n",
+        migration_marker,
         "- No active implementation Work Block.\n",
+        1,
     )
     project_map.write_text(map_text, encoding="utf-8")
     return fixture
@@ -312,6 +324,11 @@ def main() -> int:
         )
         map_text = map_text.replace(
             f"- Active implementation Work Block: `{plan}`.",
+            "- No active implementation Work Block.",
+            1,
+        )
+        map_text = map_text.replace(
+            f"- Active Work Block: `{plan}` (`{active_id}`).",
             "- No active implementation Work Block.",
             1,
         )

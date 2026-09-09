@@ -1,20 +1,20 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-2026-09-09-crawl-indexation-reconciliation",
-  "governance_profile": "Controlled",
+  "work_block_id": "WB-2026-09-09-release-state-fixture-isolation",
+  "governance_profile": "Managed",
   "specification": {
-    "path": "docs/specs/WB-2026-09-09-crawl-indexation-reconciliation.md",
+    "path": "docs/specs/WB-2026-09-09-release-state-fixture-isolation.md",
     "revision": "1"
   },
-  "subject_branch": "feat/wb-crawl-indexation-reconciliation-025",
-  "base_commit": "d5fc9ed2c64f0d2f62ac46cb294637bac5657793",
+  "subject_branch": "feat/wb-release-state-fixture-isolation-026",
+  "base_commit": "1d389df343ad259409231ed948a139973995ae8f",
   "define_quality": {
     "required": true,
     "status": "READY",
-    "requirements_review": "docs/reports/requirements/WB-2026-09-09-crawl-indexation-reconciliation.md",
+    "requirements_review": "docs/reports/requirements/WB-2026-09-09-release-state-fixture-isolation.md",
     "traceability": "python3 scripts/validate-define-traceability.py: READY",
-    "consistency_analysis": "docs/reports/requirements/WB-2026-09-09-crawl-indexation-reconciliation.md"
+    "consistency_analysis": "docs/reports/requirements/WB-2026-09-09-release-state-fixture-isolation.md"
   },
   "write_gate": {
     "status": "READY",
@@ -24,7 +24,7 @@
     "required": true,
     "status": "READY",
     "verdict": "READY",
-    "report": "docs/reports/critic/WB-2026-09-09-crawl-indexation-reconciliation.md",
+    "report": "docs/reports/critic/WB-2026-09-09-release-state-fixture-isolation.md",
     "isolation": "same-session-read-only",
     "skip_reason": ""
   },
@@ -33,7 +33,7 @@
       "required": true,
       "status": "READY",
       "verdict": "READY",
-      "report": "docs/reports/reviews/WB-2026-09-09-crawl-indexation-reconciliation.md",
+      "report": "docs/reports/reviews/WB-2026-09-09-release-state-fixture-isolation.md",
       "isolation": "same-session-read-only",
       "skip_reason": ""
     },
@@ -41,7 +41,7 @@
       "required": true,
       "status": "READY",
       "verdict": "READY",
-      "report": "docs/reports/verification/WB-2026-09-09-crawl-indexation-reconciliation.md",
+      "report": "docs/reports/verification/WB-2026-09-09-release-state-fixture-isolation.md",
       "isolation": "same-session-read-only",
       "skip_reason": ""
     },
@@ -60,7 +60,7 @@
       "required": true,
       "status": "READY",
       "verdict": "ALIGNED",
-      "report": "docs/reports/drift/WB-2026-09-09-crawl-indexation-reconciliation.md",
+      "report": "docs/reports/drift/WB-2026-09-09-release-state-fixture-isolation.md",
       "isolation": "same-session-read-only",
       "skip_reason": ""
     }
@@ -68,15 +68,16 @@
   "closeout_mode": "reporting-only",
   "integrations": {"approved": [], "admission_records": []},
   "write_set": [
-    "docs/specs/WB-2026-09-09-crawl-indexation-reconciliation.md",
-    "docs/plans/WB-2026-09-09-crawl-indexation-reconciliation.md",
-    "docs/tasklist/WB-2026-09-09-crawl-indexation-reconciliation.tasklist.md",
-    "docs/reports/requirements/WB-2026-09-09-crawl-indexation-reconciliation.md",
-    "docs/reports/critic/WB-2026-09-09-crawl-indexation-reconciliation.md",
-    "docs/reports/reviews/WB-2026-09-09-crawl-indexation-reconciliation.md",
-    "docs/reports/verification/WB-2026-09-09-crawl-indexation-reconciliation.md",
-    "docs/reports/drift/WB-2026-09-09-crawl-indexation-reconciliation.md",
-    "docs/reports/closeout/WB-2026-09-09-crawl-indexation-reconciliation.md",
+    "docs/specs/WB-2026-09-09-release-state-fixture-isolation.md",
+    "docs/plans/WB-2026-09-09-release-state-fixture-isolation.md",
+    "docs/tasklist/WB-2026-09-09-release-state-fixture-isolation.tasklist.md",
+    "docs/reports/requirements/WB-2026-09-09-release-state-fixture-isolation.md",
+    "docs/reports/critic/WB-2026-09-09-release-state-fixture-isolation.md",
+    "docs/reports/reviews/WB-2026-09-09-release-state-fixture-isolation.md",
+    "docs/reports/verification/WB-2026-09-09-release-state-fixture-isolation.md",
+    "docs/reports/drift/WB-2026-09-09-release-state-fixture-isolation.md",
+    "docs/reports/closeout/WB-2026-09-09-release-state-fixture-isolation.md",
+    "scripts/test-release-state-contracts.py",
     ".agent/active-work-block.json",
     "FILE_REGISTRY.yml",
     "PROJECT_MAP.md",
@@ -101,5 +102,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "P0 reconciliation; reporting-only if source is correct and production remains stale"
+  "lifecycle_note": "Bounded fixture isolation correction; stop at Owner integration boundary"
 }

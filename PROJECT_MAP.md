@@ -16,7 +16,7 @@ completed_work_blocks:
   - docs/plans/WB-2026-09-03-lifecycle-inactive-commit-bypass-correction.md
   - docs/plans/WB-2026-09-03-technical-seo-cwv-entity-audit.md
   - docs/plans/WB-2026-09-08-active-work-block-state-recovery.md
-active_work_block: docs/plans/WB-2026-09-09-crawl-indexation-reconciliation.md
+active_work_block: docs/plans/WB-2026-09-09-release-state-fixture-isolation.md
 -->
 
 ```yaml
@@ -24,7 +24,7 @@ release_state:
   schema_version: 1
   authority_mode: github_capability
   repository_status: operational
-  active_work_block: docs/plans/WB-2026-09-09-crawl-indexation-reconciliation.md
+  active_work_block: docs/plans/WB-2026-09-09-release-state-fixture-isolation.md
   governance_profile: Managed
   publication_mode: autonomous_assured_subject_branch_owner_merge_decision
   last_reconciled_commit: repository_evidence_only
@@ -32,7 +32,7 @@ release_state:
 
 ## Migration Work
 
-- Active Work Block: `docs/plans/WB-2026-09-09-crawl-indexation-reconciliation.md` (`WB-2026-09-09-crawl-indexation-reconciliation`).
+- Active Work Block: `docs/plans/WB-2026-09-09-release-state-fixture-isolation.md` (`WB-2026-09-09-release-state-fixture-isolation`).
 - The completed migration index is machine-readable in `FILE_REGISTRY.yml:migration_state`.
 
 ## Architecture

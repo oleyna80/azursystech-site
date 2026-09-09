@@ -100,7 +100,7 @@ migration_state:
     - docs/plans/WB-2026-09-03-lifecycle-inactive-commit-bypass-correction.md
     - docs/plans/WB-2026-09-03-technical-seo-cwv-entity-audit.md
     - docs/plans/WB-2026-09-08-active-work-block-state-recovery.md
-  active_work_block: docs/plans/WB-2026-09-09-crawl-indexation-reconciliation.md
+  active_work_block: docs/plans/WB-2026-09-09-release-state-fixture-isolation.md
 
 release_state:
   contract: governance/release-state.md
