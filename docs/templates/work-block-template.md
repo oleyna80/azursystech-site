@@ -13,6 +13,7 @@
 - **Execution Mode:** [conductor | orchestrator | staged approval | read-only review | advisory]
 - **Verification Tier:** [lite | standard | full]
 - **Evaluation Required:** [yes | no; risk/non-determinism reason]
+- **Process Feedback Contract:** [required-v1 for every non-trivial Work Block]
 
 ## Lifecycle State
 
@@ -55,6 +56,17 @@ repository/runtime state, evidence, documentation, and what must remain clean.]
 - [ ] [Measurable outcome]
 - [ ] [Required deterministic, output, and trajectory evidence exists]
 - [ ] [Repository/runtime state is clean or documented]
+- [ ] [Process Feedback closeout block completed: `NONE — checked` with eight dimension evidence or registry observation IDs]
+
+## Process Feedback Closeout
+
+At Close, complete the structured Process Feedback block from
+`docs/templates/closeout-report-template.md`. Review documentation,
+contracts/invariants, tooling/skills, context/memory, governance/authority,
+environment/setup, validation/tests, and process overhead/repeated work.
+`NONE — checked` is not a reason-free opt-out. Material observations go only
+to `docs/engineering-memory/process-feedback-registry.yml`; observations are
+advisory and never grant authority for systemic change.
 
 ## Normative Baseline
 

@@ -1,0 +1,7 @@
+schema_version: 1
+sink: docs/engineering-memory/process-feedback-registry.yml
+authority_boundary:
+  mode: advisory_only
+  systemic_change_requires: separate_improvement_work_block
+  direct_governance_mutation: forbidden
+observations: []

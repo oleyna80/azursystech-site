@@ -48,6 +48,9 @@ verify the current state and update this directory during closeout.
 - `temporary-decisions.md` - track time-boxed exceptions and revisit triggers.
 - `reproducibility-log.md` - stable commands and evidence needed by future
   agents.
+- `process-feedback-registry.yml` - the single structured sink for evidence-backed
+  Work Block process observations; it is advisory and cannot grant systemic
+  change authority.
 - [AI Video Production Operating Instruction](ai-video-production-operating-instruction.md) - canonical, evidence-gated rules for future Veo/Gemini or other AI-video production and release; its readable non-normative Markdown companion is the [AI Video Generation and Publication Policy](../policies/ai-video-generation-and-publication-policy.md).
 
 ## Closeout Rule
@@ -57,6 +60,12 @@ At the end of every non-trivial Work Block, classify reusable knowledge:
 - `promoted`: update this directory.
 - `operational-only`: keep it in `memory_bank/` or reports.
 - `not-applicable`: no reusable durable memory was created.
+
+Process Feedback has a separate required closeout classification. Use the
+canonical registry for material observations and record `NONE — checked` only
+when all eight mandatory review dimensions are explicitly checked. Reviewers
+and Verifiers may flag missed, unsupported, misclassified, or duplicate
+feedback, but their reports remain read-only assurance.
 
 ## Entries
 

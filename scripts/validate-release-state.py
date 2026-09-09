@@ -11,6 +11,8 @@ from typing import Any
 
 import yaml
 
+from process_feedback import ProcessFeedbackError, validate_closeout_file
+
 ACTIVE_STATUSES = {"draft", "planned", "in_progress", "blocked"}
 MAP_BLOCK_RE = re.compile(r"<!--\s*release-state\s*\n(?P<body>.*?)\n-->\s*", re.DOTALL)
 MIGRATION_SECTION_RE = re.compile(
@@ -278,6 +280,10 @@ def validate_active_work_block(root: Path, relative: str) -> dict[str, Any]:
     frontmatter, _, _ = parse_frontmatter(path, f"active Work Block {normalized}")
     if frontmatter.get("artifact_type") != "work_block":
         raise ReleaseStateError(f"active path is not a Work Block: {normalized}")
+    if frontmatter.get("process_feedback_required") is not True:
+        raise ReleaseStateError(
+            "active Work Block requires process_feedback_required=true"
+        )
     status = frontmatter.get("status")
     if status not in ACTIVE_STATUSES:
         raise ReleaseStateError(
@@ -492,6 +498,18 @@ def validate_completed_closeout_reports(
         if relative == canonical_closeout:
             continue
 
+        if completed_by_id[str(work_block_id)]["frontmatter"].get(
+            "process_feedback_required"
+        ) is True:
+            try:
+                validate_closeout_file(
+                    path,
+                    root / "docs/engineering-memory/process-feedback-registry.yml",
+                    str(work_block_id),
+                )
+            except ProcessFeedbackError as exc:
+                raise ReleaseStateError(str(exc)) from exc
+
         if frontmatter.get("status") != "approved":
             raise ReleaseStateError(f"{label} must be approved")
 
@@ -578,6 +596,16 @@ def validate_closeout(
     expected_work_block_id = latest_record["frontmatter"].get("work_block_id")
     if frontmatter.get("work_block_id") != expected_work_block_id:
         raise ReleaseStateError("closeout work_block_id does not exactly match latest Work Block")
+
+    if latest_record["frontmatter"].get("process_feedback_required") is True:
+        try:
+            validate_closeout_file(
+                closeout_path,
+                root / "docs/engineering-memory/process-feedback-registry.yml",
+                str(expected_work_block_id),
+            )
+        except ProcessFeedbackError as exc:
+            raise ReleaseStateError(str(exc)) from exc
 
     markers = parse_markers(body, "closeout")
     required_exact = {

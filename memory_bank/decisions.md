@@ -20,3 +20,13 @@
   individual files are already intentionally tracked.
 - Run the shared-context regression fixture and validator in the existing
   control-plane workflow to enforce the P1 environment-file boundary.
+
+## 2026-09-09 Process Feedback
+
+- Select `docs/engineering-memory/process-feedback-registry.yml` as the single
+  canonical Process Feedback sink. It is structured for aggregation, while
+  systemic SDLC/governance change remains advisory and requires a separate
+  improvement Work Block.
+- Require every new non-trivial Work Block to record an explicit closeout result
+  with all eight reviewed dimensions; clean work may use only the evidence-backed
+  `NONE — checked` form.

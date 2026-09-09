@@ -59,3 +59,16 @@
 
 Broader business priority outside the committed repository evidence is not
 available in this shared record and is intentionally not inferred.
+
+## 2026-09-09
+
+- Closed WB-2026-09-09-process-feedback-self-improvement from canonical main
+  `efb2d4e0f09150d2a6b0b573b821673004a734b6` in isolated branch
+  `feat/process-feedback-self-improvement-025`.
+- Added the repository-native Process Feedback contract, canonical structured
+  registry, validator, read-only aggregate command, templates, and assurance
+  integration. The closeout records `NONE — checked` with all eight mandatory
+  dimensions and zero avoidable friction.
+- Repository-side Review and Verification are READY; Drift is ALIGNED. The
+  installation profile retains a pre-existing missing `agent-browser` skill as
+  an explicit residual risk. No historical observations were seeded.

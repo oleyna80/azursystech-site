@@ -89,6 +89,15 @@ repair_assurance:
   limits: {implementation_passes: 1, ndr_corrections: 1, stabilization_items: 3, stabilization_corrections: 2}
   authority: none
 
+process_feedback:
+  sink: docs/engineering-memory/process-feedback-registry.yml
+  schema: scripts/process_feedback.py
+  validator: scripts/validate-process-feedback.py
+  aggregator: scripts/aggregate-process-feedback.py
+  authority: advisory_only
+  systemic_change_requires: separate_improvement_work_block
+  direct_governance_mutation: forbidden
+
 migration_state:
   completed_work_blocks:
     - docs/plans/WB-2026-08-25-shared-analysis-surface.md
@@ -103,6 +112,7 @@ migration_state:
     - docs/plans/WB-2026-09-09-crawl-indexation-reconciliation.md
     - docs/plans/WB-2026-09-09-release-state-fixture-isolation.md
     - docs/plans/WB-2026-09-09-lifecycle-ownership-reconciliation.md
+    - docs/plans/WB-2026-09-09-process-feedback-self-improvement.md
   active_work_block: null
 
 release_state:
@@ -112,8 +122,8 @@ release_state:
   workflow: .github/workflows/release-state-contract.yml
   authority: assurance_only
   external_vcs_state: non_normative
-  latest_completed_work_block: docs/plans/WB-2026-09-09-lifecycle-ownership-reconciliation.md
-  closeout_report: docs/reports/closeout/WB-2026-09-09-lifecycle-ownership-reconciliation.md
+  latest_completed_work_block: docs/plans/WB-2026-09-09-process-feedback-self-improvement.md
+  closeout_report: docs/reports/closeout/WB-2026-09-09-process-feedback-self-improvement.md
 
 entries:
   AGENTS.md:
@@ -265,6 +275,12 @@ entries:
     role: durable_engineering_decisions_and_principles
     status: durable_reference
     owner: architect
+
+  docs/engineering-memory/process-feedback-registry.yml:
+    role: canonical_structured_process_feedback_sink
+    status: durable_reference
+    owner: orchestrator
+    authority: advisory_only
 
   docs/templates/**:
     role: reusable_artifact_templates

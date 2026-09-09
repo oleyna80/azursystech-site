@@ -19,6 +19,7 @@ completed_work_blocks:
   - docs/plans/WB-2026-09-09-crawl-indexation-reconciliation.md
   - docs/plans/WB-2026-09-09-release-state-fixture-isolation.md
   - docs/plans/WB-2026-09-09-lifecycle-ownership-reconciliation.md
+  - docs/plans/WB-2026-09-09-process-feedback-self-improvement.md
 active_work_block: null
 -->
 

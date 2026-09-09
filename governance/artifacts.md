@@ -210,6 +210,12 @@ Successful closeout requires:
 - recorded residual risks;
 - promoted durable knowledge when applicable.
 
+Every non-trivial Work Block also records a Process Feedback closeout result.
+The result is either an evidence-backed `NONE — checked` review of all eight
+mandatory dimensions or structured observations in the canonical process
+feedback registry. Process Feedback is advisory evidence: it never grants
+authority for a systemic implementation or governance mutation.
+
 Otherwise use reporting-only closeout and keep the Work Block blocked.
 
 After either terminal closeout mode, the operational active Work Block record must be

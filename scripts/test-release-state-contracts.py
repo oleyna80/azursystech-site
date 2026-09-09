@@ -66,6 +66,7 @@ def active_fixture(holder: str) -> Path:
         "artifact_type: work_block\n"
         f"work_block_id: {work_block_id}\n"
         "status: in_progress\n"
+        "process_feedback_required: true\n"
         "revision: v1\n"
         "---\n\n"
         "# Disposable active Work Block\n",
@@ -120,7 +121,8 @@ def inactive_fixture(holder: str) -> Path:
         f"active_work_block: {active_plan}", "active_work_block: null"
     )
     migration_marker = (
-        f"- Active Work Block: `{active_plan}` (`{work_block_id}`).\n"
+        f"- Active implementation Work Block: `{work_block_id}`\n"
+        f"  at `{active_plan}`.\n"
     )
     if migration_marker not in map_text:
         raise AssertionError(

@@ -80,7 +80,11 @@ Only completed required assurance permits successful closeout. Otherwise use
    explicitly opens a branch-bound write gate.
 4. Promote durable, reusable rationale and lessons to non-authoritative
    `docs/engineering-memory/`.
-5. For an assured candidate, use the operational exact-subject push and
+5. Record the required Process Feedback closeout result, including an explicit
+   all-dimensions `NONE — checked` result or evidence-backed observations in
+   the canonical registry. Process Feedback remains advisory and cannot grant
+   systemic change authority.
+6. For an assured candidate, use the operational exact-subject push and
    Owner `MERGE / REVISION / REJECT` report in
    `.agent/workflows/owner-controlled-github-flow.md`, subject to
    `governance/authority.md`.

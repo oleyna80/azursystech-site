@@ -22,6 +22,16 @@
 ### Blockers or Missing Evidence
 - [none | concrete blocker, attempted check, missing dependency, and risk]
 
+### Process Feedback Review
+
+- **Missed Process Feedback:** [none observed after checking all eight dimensions | concrete concern with evidence]
+- **Unsupported Feedback:** [none observed | observation ID and missing evidence]
+- **Classification Concerns:** [none observed | observation ID and category/severity concern]
+- **Duplicate/Recurring Candidate:** [none observed | observation ID and duplicate or recurrence evidence]
+
+This verification remains read-only and cannot promote an observation into a
+systemic change or authorize a governance mutation.
+
 ### Required Next Action
 - [success-closeout | corrective action | resolve dependency and rerun]
 

@@ -35,6 +35,16 @@
 | Decision | Issue | Recommendation |
 |---|---|---|
 
+### Process Feedback Review
+
+- **Missed Process Feedback:** [none observed after checking all eight dimensions | concrete concern with evidence]
+- **Unsupported Feedback:** [none observed | observation ID and missing evidence]
+- **Classification Concerns:** [none observed | observation ID and category/severity concern]
+- **Duplicate/Recurring Candidate:** [none observed | observation ID and duplicate or recurrence evidence]
+
+This review is read-only assurance. It may identify missed or unsupported
+feedback, but it does not authorize implementation or governance changes.
+
 ### Optional GPT Critic Merge
 
 > Complete this section only when the GPT critic trigger fires. This is Stage 0
