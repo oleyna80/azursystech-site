@@ -1,30 +1,30 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-2026-09-09-release-state-fixture-isolation",
+  "work_block_id": "WB-2026-09-09-lifecycle-ownership-reconciliation",
   "governance_profile": "Managed",
   "specification": {
-    "path": "docs/specs/WB-2026-09-09-release-state-fixture-isolation.md",
+    "path": "docs/specs/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
     "revision": "1"
   },
-  "subject_branch": "feat/wb-release-state-fixture-isolation-026",
-  "base_commit": "1d389df343ad259409231ed948a139973995ae8f",
+  "subject_branch": "feat/wb-lifecycle-ownership-reconciliation-027",
+  "base_commit": "ae63875dfb30332afa85790c05c81c9717a357f9",
   "define_quality": {
     "required": true,
     "status": "READY",
-    "requirements_review": "docs/reports/requirements/WB-2026-09-09-release-state-fixture-isolation.md",
-    "traceability": "python3 scripts/validate-define-traceability.py: READY",
-    "consistency_analysis": "docs/reports/requirements/WB-2026-09-09-release-state-fixture-isolation.md"
+    "requirements_review": "docs/reports/requirements/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
+    "traceability": "python3 scripts/validate-define-traceability.py --spec docs/specs/WB-2026-09-09-lifecycle-ownership-reconciliation.md --tasks docs/tasklist/WB-2026-09-09-lifecycle-ownership-reconciliation.tasklist.md",
+    "consistency_analysis": "docs/reports/requirements/WB-2026-09-09-lifecycle-ownership-reconciliation.md"
   },
   "write_gate": {
     "status": "READY",
-    "opened_at": "2026-09-09T10:52:00Z"
+    "opened_at": "2026-09-09T13:21:45.248434+00:00"
   },
   "critic": {
     "required": true,
     "status": "READY",
-    "verdict": "READY",
-    "report": "docs/reports/critic/WB-2026-09-09-release-state-fixture-isolation.md",
+    "verdict": "APPROVE",
+    "report": "docs/reports/critic/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
     "isolation": "same-session-read-only",
     "skip_reason": ""
   },
@@ -33,7 +33,7 @@
       "required": true,
       "status": "READY",
       "verdict": "READY",
-      "report": "docs/reports/reviews/WB-2026-09-09-release-state-fixture-isolation.md",
+      "report": "docs/reports/reviews/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
       "isolation": "same-session-read-only",
       "skip_reason": ""
     },
@@ -41,50 +41,55 @@
       "required": true,
       "status": "READY",
       "verdict": "READY",
-      "report": "docs/reports/verification/WB-2026-09-09-release-state-fixture-isolation.md",
+      "report": "docs/reports/verification/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
       "isolation": "same-session-read-only",
       "skip_reason": ""
     },
     "evaluation": {
       "required": false,
-      "status": "PENDING",
-      "verdict": "NOT_REQUIRED",
+      "status": "SKIPPED",
+      "verdict": "SKIPPED",
       "plan": "",
       "report": "",
       "rubric_revision": "",
       "benchmark_revision": "",
-      "isolation": "none",
-      "skip_reason": "No nondeterministic product output; route evidence is deterministic."
+      "isolation": "same-session-read-only",
+      "skip_reason": "Deterministic lifecycle reconciliation has no generative or rubric-based deliverable"
     },
     "drift": {
-      "required": true,
+      "required": false,
       "status": "READY",
       "verdict": "ALIGNED",
-      "report": "docs/reports/drift/WB-2026-09-09-release-state-fixture-isolation.md",
+      "report": "docs/reports/drift/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
       "isolation": "same-session-read-only",
       "skip_reason": ""
     }
   },
-  "closeout_mode": "reporting-only",
-  "integrations": {"approved": [], "admission_records": []},
+  "closeout_mode": "pending",
+  "integrations": {
+    "approved": [],
+    "admission_records": []
+  },
   "write_set": [
-    "docs/specs/WB-2026-09-09-release-state-fixture-isolation.md",
+    "docs/specs/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
+    "docs/plans/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
+    "docs/tasklist/WB-2026-09-09-lifecycle-ownership-reconciliation.tasklist.md",
+    "docs/reports/requirements/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
+    "docs/reports/critic/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
+    "docs/reports/reviews/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
+    "docs/reports/verification/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
+    "docs/reports/drift/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
+    "docs/reports/closeout/WB-2026-09-09-lifecycle-ownership-reconciliation.md",
+    "docs/plans/WB-2026-09-09-crawl-indexation-reconciliation.md",
     "docs/plans/WB-2026-09-09-release-state-fixture-isolation.md",
-    "docs/tasklist/WB-2026-09-09-release-state-fixture-isolation.tasklist.md",
-    "docs/reports/requirements/WB-2026-09-09-release-state-fixture-isolation.md",
-    "docs/reports/critic/WB-2026-09-09-release-state-fixture-isolation.md",
-    "docs/reports/reviews/WB-2026-09-09-release-state-fixture-isolation.md",
-    "docs/reports/verification/WB-2026-09-09-release-state-fixture-isolation.md",
-    "docs/reports/drift/WB-2026-09-09-release-state-fixture-isolation.md",
+    "docs/reports/closeout/WB-2026-09-09-crawl-indexation-reconciliation.md",
     "docs/reports/closeout/WB-2026-09-09-release-state-fixture-isolation.md",
-    "scripts/test-release-state-contracts.py",
     ".agent/active-work-block.json",
+    ".agent/critic-gate.md",
+    ".agent/verification-gate.md",
+    ".codex/write-gate.md",
     "FILE_REGISTRY.yml",
-    "PROJECT_MAP.md",
-    "web/src/app/data-deletion/page.tsx",
-    "web/src/app/legal/page.tsx",
-    "web/src/app/privacy/page.tsx",
-    "web/src/app/terms/page.tsx"
+    "PROJECT_MAP.md"
   ],
   "coordination_write_set": [
     ".agent/active-work-block.json",
@@ -102,5 +107,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Bounded fixture isolation correction; stop at Owner integration boundary"
+  "lifecycle_note": "source work opened by Work Block coordination"
 }

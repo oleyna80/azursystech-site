@@ -9,36 +9,33 @@ revision: 1
 
 - **Stage execution state:** completed
 - **Review verdict:** READY
-- **Verification verdict:** READY for the source candidate; production remains `UNVERIFIED_PENDING_OWNER_DEPLOY`
-- **Evaluation verdict:** NOT_REQUIRED — deterministic route and sitemap evidence
-- **Drift verdict:** ALIGNED for source/spec/task/evidence; production release drift remains documented
-- **Closeout classification:** REPORTING-ONLY
+- **Verification verdict:** READY
+- **Evaluation verdict:** SKIPPED — deterministic route and sitemap evidence has no generative or rubric-based deliverable
+- **Drift verdict:** ALIGNED
+- **Closeout classification:** SUCCESS
 - **Task status:** completed
-- **Closeout mode:** reporting-only
+- **Closeout mode:** success-closeout
 - **External VCS state:** non-normative repository ownership boundary.
 
 ## Result
 
-The September 3 P0 route and sitemap drift is still observable in production,
-but its current root cause is deployment provenance: the latest successful
-production workflow evidence points to `d647f6ab1bf6dc40cdcde09d7e4cc554ad31882d`,
-while canonical `origin/main` is `d5fc9ed2c64f0d2f62ac46cb294637bac5657793` and
-contains the localized route/sitemap reconciliation. The bounded source
-candidate additionally adds self-canonical metadata to the four sitemap-listed
-legal/information pages that lacked it. No `/brief` policy decision or
-showcase-route change was made.
+The integrated and deployed revision `ae63875dfb30332afa85790c05c81c9717a357f9`
+is the current canonical main and production revision according to the
+successful immutable VPS workflow. The live sitemap contains 38 URLs, the
+localized routes return 200, legacy routes redirect with 308 to their intended
+localized canonical routes, and the four legal/information pages emit
+self-canonicals. `/demo/health` remains a functional intentional showcase
+route and `/brief` policy remains unchanged.
 
 ## Residual Risks and Limitations
 
-Public production must be redeployed through the existing immutable-image
-workflow before the production crawl can be marked reconciled. The public
-`/health` endpoint exposes no revision identifier, so post-deploy route,
-sitemap, redirect, and canonical assertions are required. `/brief` remains a
-separate P1 product-policy decision.
+The public `/health` endpoint exposes no revision identifier, so the exact
+revision binding is established by the successful deployment workflow and
+corroborated by the live route/sitemap assertions. `/brief` remains a separate
+P1 product-policy decision.
 
 ## Follow-Up Work
 
-Owner-controlled action: deploy the assured subject revision through the normal
-VPS workflow, then rerun the production crawl and record the observed revision
-and all P0 route assertions. Merge and default-branch publication remain
-outside this Work Block.
+No further action is required for the Crawl Work Block. Any later changes to
+the `/brief` product policy or branch/worktree cleanup remain separate Owner
+decisions.

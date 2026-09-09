@@ -10,11 +10,12 @@ revision: 1
 - **Stage execution state:** completed
 - **Review verdict:** READY
 - **Verification verdict:** READY
-- **Evaluation verdict:** NOT_REQUIRED — deterministic contract tests only
+- **Evaluation verdict:** SKIPPED — deterministic contract tests have no generative or rubric-based deliverable
 - **Drift verdict:** ALIGNED
-- **Closeout classification:** REPORTING-ONLY candidate handoff
+- **Closeout classification:** SUCCESS
 - **Task status:** completed
-- **External state:** no merge, deploy, default-branch mutation, or production mutation
+- **Closeout mode:** success-closeout
+- **External VCS state:** non-normative repository ownership boundary.
 
 ## Result
 
@@ -32,6 +33,19 @@ from this repository revision; neither is touched by this candidate.
 
 ## Owner boundary
 
-The assured non-default subject candidate is ready for Owner integration review.
-Owner action is `MERGE` or `REVISION`; deployment remains neither requested nor
-authorized by this Work Block.
+The exact candidate was integrated into `main`, and the resulting integrated
+revision passed the release-state contract and control-plane checks before the
+authorized production deployment. No release-state semantics were changed.
+
+## Residual Risks and Limitations
+
+The fixture suite remains coupled to the current human-readable
+`PROJECT_MAP.md` projection format by design; an intentional format change must
+update the fixture helper in the same bounded change. No production or release
+state semantics are inferred from this test-only correction.
+
+## Follow-Up Work
+
+No follow-up implementation is required. Future fixture changes must preserve
+the intended malformed-operational-state assertion and independent negative
+cases.

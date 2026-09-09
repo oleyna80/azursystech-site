@@ -2,7 +2,7 @@
 schema_version: 1
 artifact_type: work_block
 work_block_id: WB-2026-09-09-crawl-indexation-reconciliation
-status: in_progress
+status: completed
 specification: docs/specs/WB-2026-09-09-crawl-indexation-reconciliation.md
 ---
 
@@ -45,3 +45,13 @@ Application source is limited to the four sitemap-listed pages proven to lack
 self-canonical metadata. Deployment files, lessons, database, secrets, and the
 separate control-plane branch are outside the write-set. Registry/map edits are
 limited to active/completed lifecycle projection fields.
+
+## Final State
+
+- **Stage state:** completed
+- **Review gate:** READY
+- **Verification verdict:** READY
+- **Evaluation verdict:** SKIPPED — deterministic route and sitemap evidence has no generative or rubric-based deliverable
+- **Drift gate:** ALIGNED
+- **Task status:** completed
+- **Closeout mode:** success-closeout

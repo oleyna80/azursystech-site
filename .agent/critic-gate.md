@@ -1,12 +1,12 @@
-# Critic Gate Record — WB-2026-09-08-autonomous-work-block-execution
+# Critic Gate Record — WB-2026-09-09-lifecycle-ownership-reconciliation
 
 - **Status:** `READY`
-- **Verdict:** `SUPPLEMENT` (accepted into the approved write set)
-- **Report:** `docs/reports/WB-2026-09-08-autonomous-work-block-execution-critic.md`
-- **Isolation:** `separate-subagent`
-- **Base commit:** `4ec6a2236a9d5736ffaee6456cfc4e76bd04ece4`
+- **Verdict:** `APPROVE`
+- **Report:** `docs/reports/critic/WB-2026-09-09-lifecycle-ownership-reconciliation.md`
+- **Isolation:** `same-session-read-only` (fallback; no installed critic skill resource)
+- **Base commit:** `ae63875dfb30332afa85790c05c81c9717a357f9`
 
-The Critic required a fail-closed exact-subject push predicate, default-branch
-discovery rather than literal-name protection, lifecycle Define-quality parity,
-and aligned legacy/runtime adapters. These requirements are in scope and must
-be verified before candidate publication.
+The Critic confirms that the candidate is limited to lifecycle projections,
+assurance evidence, and non-authorizing branch/worktree classifications. No
+cleanup, default-branch mutation, multilingual implementation, or semantic
+contract change is admitted.

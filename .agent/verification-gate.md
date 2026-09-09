@@ -1,13 +1,13 @@
-# Verification Gate Record — WB-2026-09-08-autonomous-work-block-execution
+# Verification Gate Record — WB-2026-09-09-lifecycle-ownership-reconciliation
 
 - **Status:** `READY`
 - **Verdict:** `READY`
-- **Isolation:** `separate-subagent`
+- **Isolation:** `same-session-read-only`
 - **Scope:** independent read-only verification against the approved
   specification and frozen candidate.
 
-The focused Reviewer and Verifier re-assurance is complete after the shell
-command-substitution hard-stop correction. Both returned `READY`; the
-canonical evidence is recorded in
-`docs/reports/WB-2026-09-08-autonomous-work-block-execution-verification.md`.
-No merge, deployment, tag, or deletion has occurred at this gate.
+The focused Reviewer and Verifier checks are complete for the bounded
+reconciliation. The canonical evidence is recorded in
+`docs/reports/verification/WB-2026-09-09-lifecycle-ownership-reconciliation.md`.
+No cleanup, merge, deployment, tag, or deletion has occurred in this Work
+Block.
