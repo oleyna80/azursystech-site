@@ -2,7 +2,7 @@
 artifact_type: specification
 work_block_id: WB-2026-09-09-process-feedback-self-improvement
 status: approved
-revision: v1
+revision: v2
 baseline: efb2d4e0f09150d2a6b0b573b821673004a734b6
 process_feedback_required: true
 ---
@@ -30,7 +30,7 @@ must be proposed and executed by a separate approved Work Block.
 ## Requirements
 
 - REQ-001: Every new non-trivial Work Block must declare and complete a structured Process Feedback closeout review covering all eight mandatory dimensions.
-- REQ-002: A clean review must use `NONE — checked` with non-empty dimension evidence, while material friction must use the canonical evidence-backed observation schema.
+- REQ-002: A clean review must use `NONE — checked` only when each dimension is explicitly `CLEAR` with non-empty evidence; observed friction must use the canonical evidence-backed observation schema.
 - REQ-003: The registry and validator must enforce stable categories, severities, lifecycle values, required evidence fields, and the advisory-only authority boundary.
 - REQ-004: Reviewers and Verifiers must have an explicit read-only surface for missed, unsupported, misclassified, duplicate, and recurring feedback.
 - REQ-005: A read-only aggregation command must expose frequency, severity, recurrence, avoidable friction, deduplication, and candidate improvement signals without implementing changes.
@@ -39,13 +39,13 @@ must be proposed and executed by a separate approved Work Block.
 
 ## Acceptance criteria
 
-- AC-001 [req=REQ-001,REQ-002]: The closeout contract requires `process_feedback_required: true`, an exact Process Feedback block, all eight dimensions, and either an evidenced `NONE — checked` result or referenced registry observations.
-- AC-002 [req=REQ-002,REQ-003]: The validator rejects bare/empty `NONE`, malformed observations, unknown category/severity/status values, duplicate IDs, missing evidence, and non-advisory authority metadata.
+- AC-001 [req=REQ-001,REQ-002]: The closeout contract requires `process_feedback_required: true`, an exact Process Feedback block, all eight dimensions with explicit `state` and `evidence`, and either all `CLEAR` plus `NONE — checked` or `FRICTION_OBSERVED` plus referenced registry observations.
+- AC-002 [req=REQ-002,REQ-003]: The validator rejects bare/empty `NONE`, state/result mismatches, unlinked observed friction, malformed observations, unknown category/severity/status values, duplicate IDs, missing evidence, and non-advisory authority metadata.
 - AC-003 [req=REQ-003,REQ-006]: The registry is documented as the only canonical sink, and release-state validation applies the new contract to opted-in Work Blocks while preserving historical closeout compatibility.
 - AC-004 [req=REQ-004]: Critic/Reviewer/Verifier report templates contain explicit fields for missed, unsupported, classification, duplicate, and recurring feedback concerns, without write authority.
 - AC-005 [req=REQ-005]: The aggregate command produces deterministic JSON or text summaries for counts, categories, severities, lifecycle, recurrence, and candidate improvements.
 - AC-006 [req=REQ-006]: Existing release-state and focused control-plane validator suites remain green, and no application, route, sitemap, multilingual, deployment, or branch-cleanup files are changed.
-- AC-007 [req=REQ-007]: A valid clean review is represented by eight concise dimension entries plus `avoidable_friction_count: 0` and no observation records.
+- AC-007 [req=REQ-007]: A valid clean review is represented by eight concise `{state: CLEAR, evidence: ...}` dimension entries plus `avoidable_friction_count: 0` and no observation records.
 
 ## Observation contract
 
@@ -66,12 +66,20 @@ Severity is one of `LOW`, `MEDIUM`, `HIGH`, or `SYSTEMIC`. Status follows
 Evidence is an observable file, command, test, runtime symptom, or report
 reference. Private chain-of-thought is out of scope.
 
+Each mandatory dimension is an object with exactly `state` and `evidence`.
+`state` is either `CLEAR` or `FRICTION_OBSERVED`; the latter requires
+`result: OBSERVATIONS_RECORDED` and at least one linked observation ID from
+the canonical registry. A non-blocking, pre-existing, or out-of-scope issue
+may still be recorded and remains advisory only.
+
 ## Anti-laziness and assurance semantics
 
-`NONE — checked` is valid only when all dimensions have concise evidence text.
-Reviewers and Verifiers may record concerns in their read-only reports.
-Repeated `NONE` results that conflict with assurance evidence are themselves
-observable process-quality evidence. `avoidable_friction_count` counts only
+`NONE — checked` is valid only when all eight dimensions explicitly have
+`state: CLEAR` and concise evidence. Reviewers and Verifiers compare these
+states with assurance evidence and must identify a structurally available
+mismatch as missed feedback. Repeated `NONE` results that conflict with
+assurance evidence are themselves observable process-quality evidence.
+`avoidable_friction_count` counts only
 referenced observations explicitly marked `avoidable_friction: true`; it does
 not require agents to invent a problem. Unsupported complaints fail validation
 because the evidence field is mandatory and are reportable as unsupported.

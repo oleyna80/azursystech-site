@@ -17,10 +17,11 @@
 
 ### Process Feedback
 
-Every non-trivial Work Block must include exactly one structured block. Use
-`NONE — checked` only after concise evidence has been recorded for every
-dimension; otherwise record evidence-backed observations in the canonical
-registry and reference their IDs here. The registry is advisory only.
+Every non-trivial Work Block must include exactly one structured block. Each
+dimension has an explicit `state` (`CLEAR` or `FRICTION_OBSERVED`) and concise
+`evidence`. Use `NONE — checked` only when all eight states are `CLEAR`; any
+observed friction requires `OBSERVATIONS_RECORDED` and at least one
+evidence-backed registry ID. The registry is advisory only.
 
 ```yaml process-feedback
 contract_version: 1
@@ -28,14 +29,30 @@ work_block_id: [Work Block ID]
 date: "[YYYY-MM-DD]"
 result: NONE — checked
 dimensions:
-  documentation: "checked: no material documentation gap observed"
-  contracts_invariants: "checked: no material contract mismatch observed"
-  tooling_skills: "checked: no material tooling friction observed"
-  context_memory: "checked: no material context or memory gap observed"
-  governance_authority: "checked: no material authority ambiguity observed"
-  environment_setup: "checked: no material environment issue observed"
-  validation_tests: "checked: no material validation or test issue observed"
-  process_overhead_repeated_work: "checked: no material repeated work observed"
+  documentation:
+    state: CLEAR
+    evidence: "no material documentation gap observed"
+  contracts_invariants:
+    state: CLEAR
+    evidence: "no material contract mismatch observed"
+  tooling_skills:
+    state: CLEAR
+    evidence: "no material tooling friction observed"
+  context_memory:
+    state: CLEAR
+    evidence: "no material context or memory gap observed"
+  governance_authority:
+    state: CLEAR
+    evidence: "no material authority ambiguity observed"
+  environment_setup:
+    state: CLEAR
+    evidence: "no material environment issue observed"
+  validation_tests:
+    state: CLEAR
+    evidence: "no material validation or test issue observed"
+  process_overhead_repeated_work:
+    state: CLEAR
+    evidence: "no material repeated work observed"
 avoidable_friction_count: 0
 observation_ids: []
 registry: docs/engineering-memory/process-feedback-registry.yml

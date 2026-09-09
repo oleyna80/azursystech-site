@@ -81,9 +81,10 @@ Only completed required assurance permits successful closeout. Otherwise use
 4. Promote durable, reusable rationale and lessons to non-authoritative
    `docs/engineering-memory/`.
 5. Record the required Process Feedback closeout result, including an explicit
-   all-dimensions `NONE — checked` result or evidence-backed observations in
-   the canonical registry. Process Feedback remains advisory and cannot grant
-   systemic change authority.
+   `CLEAR`/`FRICTION_OBSERVED` state and evidence for every dimension. Use
+   `NONE — checked` only when all dimensions are clear; observed friction must
+   link evidence-backed observations in the canonical registry. Process
+   Feedback remains advisory and cannot grant systemic change authority.
 6. For an assured candidate, use the operational exact-subject push and
    Owner `MERGE / REVISION / REJECT` report in
    `.agent/workflows/owner-controlled-github-flow.md`, subject to

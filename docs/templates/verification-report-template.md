@@ -24,6 +24,8 @@
 
 ### Process Feedback Review
 
+- Compare each explicit closeout dimension `state` with available assurance
+  evidence; a structurally available mismatch is a missed finding.
 - **Missed Process Feedback:** [none observed after checking all eight dimensions | concrete concern with evidence]
 - **Unsupported Feedback:** [none observed | observation ID and missing evidence]
 - **Classification Concerns:** [none observed | observation ID and category/severity concern]

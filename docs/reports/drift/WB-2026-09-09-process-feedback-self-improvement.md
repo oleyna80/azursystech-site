@@ -8,16 +8,16 @@ verdict: ALIGNED
 # Drift report — Process Feedback / Self-Improvement
 
 - The approved specification, plan, tasklist, implementation, tests, and
-  assurance reports agree on the single registry, eight-dimension closeout,
-  observation lifecycle, deterministic aggregation, and advisory authority
-  boundary.
+  assurance reports agree on the single registry, eight explicit
+  `CLEAR`/`FRICTION_OBSERVED` dimensions, observation lifecycle, deterministic
+  aggregation, and advisory authority boundary.
 - Templates and lifecycle routing require an explicit Process Feedback result;
   the release-state validator checks opted-in completed closeouts while
   preserving historical closeouts without retrofit.
-- The registry is empty by design. The three supplied recent examples were
-  used as contract-design test considerations only; none was seeded because
-  this Work Block did not independently establish a complete current
-  observation record for them.
+- The registry contains only the current, evidence-backed installation-profile
+  observation. The three supplied recent examples were otherwise used as
+  contract-design test considerations only; none was seeded without complete
+  current evidence.
 - Existing release-state, lifecycle, authority, control-plane, and shared
   context contracts remain aligned. No application or production surface was
   changed.

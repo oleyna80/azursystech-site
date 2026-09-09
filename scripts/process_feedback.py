@@ -17,6 +17,7 @@ REQUIRED_DIMENSIONS = (
     "governance_authority", "environment_setup", "validation_tests",
     "process_overhead_repeated_work",
 )
+DIMENSION_STATES = ("CLEAR", "FRICTION_OBSERVED")
 CATEGORIES = (
     "DOCUMENTATION_GAP", "CONTRACT_MISMATCH", "TOOLING_FRICTION",
     "VALIDATOR_OR_TEST_ISSUE", "CONTEXT_OR_MEMORY_GAP", "GOVERNANCE_AMBIGUITY",
@@ -57,6 +58,20 @@ def _nonempty(value: Any, field: str, label: str) -> str:
     if "[placeholder]" in value.lower():
         raise ProcessFeedbackError(f"{label}: {field} contains a placeholder")
     return value.strip()
+
+
+def _validate_dimension(value: Any, dimension: str, label: str) -> str:
+    if not isinstance(value, dict) or set(value) != {"state", "evidence"}:
+        raise ProcessFeedbackError(
+            f"{label}: {dimension} must contain exactly state and evidence"
+        )
+    state = value.get("state")
+    if state not in DIMENSION_STATES:
+        raise ProcessFeedbackError(f"{label}: {dimension} has invalid state {state!r}")
+    evidence = _nonempty(value.get("evidence"), "evidence", f"{label} {dimension}")
+    if len(evidence) < 8:
+        raise ProcessFeedbackError(f"{label}: {dimension} evidence is too short")
+    return state
 
 
 def _load_yaml(path: Path, label: str) -> dict[str, Any]:
@@ -192,14 +207,13 @@ def validate_closeout_file(closeout_path: Path, registry_path: Path, expected_wo
     dimensions = block.get("dimensions")
     if not isinstance(dimensions, dict) or set(dimensions) != set(REQUIRED_DIMENSIONS):
         raise ProcessFeedbackError(f"{label}: all eight mandatory dimensions are required")
-    for dimension in REQUIRED_DIMENSIONS:
-        evidence = dimensions[dimension]
-        if not isinstance(evidence, str) or not evidence.startswith("checked:"):
-            raise ProcessFeedbackError(f"{label}: {dimension} must contain checked: evidence")
-        if len(evidence.removeprefix("checked:").strip()) < 8:
-            raise ProcessFeedbackError(f"{label}: {dimension} evidence is too short")
-        if "[placeholder]" in evidence.lower():
-            raise ProcessFeedbackError(f"{label}: {dimension} contains a placeholder")
+    states = {
+        dimension: _validate_dimension(dimensions[dimension], dimension, label)
+        for dimension in REQUIRED_DIMENSIONS
+    }
+    friction_dimensions = [
+        dimension for dimension, state in states.items() if state == "FRICTION_OBSERVED"
+    ]
     ids = block.get("observation_ids")
     if not isinstance(ids, list) or any(not isinstance(item, str) for item in ids):
         raise ProcessFeedbackError(f"{label}: observation_ids must be a list of strings")
@@ -219,10 +233,21 @@ def validate_closeout_file(closeout_path: Path, registry_path: Path, expected_wo
     actual_avoidable = sum(1 for item in selected if item.get("avoidable_friction", False))
     if count != actual_avoidable:
         raise ProcessFeedbackError(f"{label}: avoidable_friction_count does not match referenced observations")
+    if result == "NONE — checked" and friction_dimensions:
+        raise ProcessFeedbackError(
+            f"{label}: NONE — checked requires all eight dimensions to be CLEAR; "
+            f"friction observed in {', '.join(friction_dimensions)}"
+        )
     if result == "NONE — checked" and (ids or count != 0):
         raise ProcessFeedbackError(f"{label}: NONE — checked cannot reference observations or friction")
-    if result == "OBSERVATIONS_RECORDED" and not ids:
-        raise ProcessFeedbackError(f"{label}: OBSERVATIONS_RECORDED requires observation_ids")
+    if result == "OBSERVATIONS_RECORDED" and not friction_dimensions:
+        raise ProcessFeedbackError(
+            f"{label}: OBSERVATIONS_RECORDED requires at least one FRICTION_OBSERVED dimension"
+        )
+    if friction_dimensions and not ids:
+        raise ProcessFeedbackError(
+            f"{label}: FRICTION_OBSERVED requires at least one linked canonical observation"
+        )
     return block
 
 

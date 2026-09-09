@@ -2,7 +2,7 @@
 artifact_type: closeout_report
 work_block_id: WB-2026-09-09-process-feedback-self-improvement
 status: approved
-revision: 1
+revision: 2
 process_feedback_required: true
 process_feedback_contract: 1
 ---
@@ -27,10 +27,11 @@ memory zone, fail-closed validation, read-only aggregation, and assurance
 fields for missed or unsupported feedback. The mechanism preserves the loop
 `Execute → Observe → Record → Aggregate → Analyze → Decide → Improve → Verify`.
 
-The registry is intentionally empty. The three supplied recent examples were
-used as validation-design cases only and were not rewritten into historical
-Work Block records because this candidate did not independently establish
-complete current observations for them.
+The registry contains one current, evidence-backed environment observation
+from this Work Block. The three supplied recent examples were otherwise used
+as validation-design cases only and were not rewritten into historical Work
+Block records because this candidate did not independently establish complete
+current observations for them.
 
 ## Process Feedback
 
@@ -38,35 +39,52 @@ complete current observations for them.
 contract_version: 1
 work_block_id: WB-2026-09-09-process-feedback-self-improvement
 date: "2026-09-09"
-result: NONE — checked
+result: OBSERVATIONS_RECORDED
 dimensions:
-  documentation: "checked: templates and lifecycle documentation cover the contract"
-  contracts_invariants: "checked: schema and advisory boundary are explicit"
-  tooling_skills: "checked: focused validator and aggregate commands are documented"
-  context_memory: "checked: canonical sink and historical non-retrofit rule are recorded"
-  governance_authority: "checked: observations cannot grant systemic change authority"
-  environment_setup: "checked: environment limitation is recorded in verification evidence"
-  validation_tests: "checked: focused and existing repository contract suites pass"
-  process_overhead_repeated_work: "checked: clean path is one compact block with zero observations"
+  documentation:
+    state: CLEAR
+    evidence: "templates and lifecycle documentation cover the contract"
+  contracts_invariants:
+    state: CLEAR
+    evidence: "schema and advisory boundary are explicit"
+  tooling_skills:
+    state: CLEAR
+    evidence: "focused validator and aggregate commands are documented"
+  context_memory:
+    state: CLEAR
+    evidence: "canonical sink and historical non-retrofit rule are recorded"
+  governance_authority:
+    state: CLEAR
+    evidence: "observations cannot grant systemic change authority"
+  environment_setup:
+    state: FRICTION_OBSERVED
+    evidence: "installation-profile validation is UNVERIFIED because portable agent-browser is missing"
+  validation_tests:
+    state: CLEAR
+    evidence: "focused and existing repository contract suites pass"
+  process_overhead_repeated_work:
+    state: CLEAR
+    evidence: "clean path remains one compact block with zero avoidable observations"
 avoidable_friction_count: 0
-observation_ids: []
+observation_ids:
+  - PF-2026-09-09-agent-browser-capability
 registry: docs/engineering-memory/process-feedback-registry.yml
 ```
 
-`NONE — checked` is used only after all eight mandatory dimensions were
-reviewed with concise evidence. Any material future observation must be added
-to the registry with its evidence and lifecycle status. Registry observations
-remain advisory; systemic implementation requires a separate approved
-improvement Work Block.
+The explicit `FRICTION_OBSERVED` environment state is linked to the registry
+observation above. The issue is non-blocking, pre-existing, and outside this
+write set; recording it does not authorize installing the missing skill or
+changing governance. `NONE — checked` remains reserved for a closeout in which
+all eight states are explicitly `CLEAR`.
 
 ## Residual Risks and Limitations
 
 The installation-profile validator remains unverified because the repository
 environment reports a missing portable skill, `agent-browser`. This pre-existing
-environment issue is outside the approved write set and was not changed. The
-registry is intentionally empty, so recurrence and avoidable-friction analysis
-will become meaningful after future Work Blocks record evidence-backed
-observations. Historical closeouts remain compatible and are not retrofitted.
+environment issue is outside the approved write set and was not changed. It is
+recorded as `PF-2026-09-09-agent-browser-capability` with `LOW` severity,
+`NEW` status, `avoidable_friction: false`, and `advisory_only` authority.
+Historical closeouts remain compatible and are not retrofitted.
 
 ## Follow-Up Work
 

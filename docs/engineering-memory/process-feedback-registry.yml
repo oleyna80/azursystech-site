@@ -4,4 +4,18 @@ authority_boundary:
   mode: advisory_only
   systemic_change_requires: separate_improvement_work_block
   direct_governance_mutation: forbidden
-observations: []
+observations:
+  - id: PF-2026-09-09-agent-browser-capability
+    work_block_id: WB-2026-09-09-process-feedback-self-improvement
+    date: "2026-09-09"
+    category: ENVIRONMENT_ISSUE
+    observation: Installation-profile validation is UNVERIFIED because the portable agent-browser skill is missing.
+    evidence: "python3 scripts/validate-installation-profile.py -> FAIL: installation profile validation: missing portable skill: agent-browser"
+    likely_systemic_cause: The repository environment does not provide the portable agent-browser capability expected by the installation profile.
+    impact: Installation-profile assurance cannot be completed; repository contract validation remains available.
+    suggested_improvement: Investigate and restore the expected portable installation-profile capability in a separate approved improvement action if triage accepts it.
+    severity: LOW
+    status: NEW
+    authority: advisory_only
+    avoidable_friction: false
+    related_work_blocks: []

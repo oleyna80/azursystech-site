@@ -2,7 +2,7 @@
 artifact_type: work_block
 work_block_id: WB-2026-09-09-process-feedback-self-improvement
 status: completed
-revision: v1
+revision: v2
 specification: docs/specs/WB-2026-09-09-process-feedback-self-improvement.md
 base_commit: efb2d4e0f09150d2a6b0b573b821673004a734b6
 subject_branch: feat/process-feedback-self-improvement-025
@@ -46,7 +46,9 @@ verification, and closeout.
 
 - Validator drift: use one Python library for registry and closeout parsing and add focused tests.
 - Historical incompatibility: opt in new Work Blocks through `process_feedback_required: true`; do not rewrite old closeouts.
-- Formal `NONE`: require all eight named dimensions with non-empty evidence and expose reviewer/verifier concern fields.
+- Formal `NONE`: require all eight named dimensions to use explicit
+  `CLEAR`/`FRICTION_OBSERVED` state plus evidence; friction must link a
+  canonical observation, and expose reviewer/verifier concern fields.
 - Authority escalation: validate a fixed `advisory_only` authority field and document separate improvement Work Blocks.
 - Overhead: keep the clean path to one compact block and zero observation IDs.
 
@@ -67,3 +69,13 @@ Merge and deploy remain Owner decisions.
 - **Drift Gate:** ALIGNED
 - **Closeout Mode:** success-closeout
 - **Task Status:** completed
+
+## Owner Integration Correction
+
+Owner review identified a mismatch between the former clean result and the
+installation-profile assurance residual. The existing Work Block was revised
+in place: explicit dimension states now make the environment friction
+structurally visible, the closeout links `PF-2026-09-09-agent-browser-capability`,
+and the validator rejects both a clean result with observed friction and
+unlinked observed friction. This correction does not install the missing
+capability or grant authority for a systemic change.

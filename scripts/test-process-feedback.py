@@ -51,15 +51,24 @@ def observation(**overrides: object) -> dict[str, object]:
     return value
 
 
-def closeout_text(result: str = "NONE — checked", ids: list[str] | None = None, count: int = 0) -> str:
+DIMENSIONS = (
+    "documentation", "contracts_invariants", "tooling_skills", "context_memory",
+    "governance_authority", "environment_setup", "validation_tests",
+    "process_overhead_repeated_work",
+)
+
+
+def closeout_text(
+    result: str = "NONE — checked",
+    ids: list[str] | None = None,
+    count: int = 0,
+    states: dict[str, str] | None = None,
+) -> str:
     ids = ids or []
     dimensions = "\n".join(
-        f'  {name}: "checked: no material friction observed in this dimension"'
-        for name in (
-            "documentation", "contracts_invariants", "tooling_skills", "context_memory",
-            "governance_authority", "environment_setup", "validation_tests",
-            "process_overhead_repeated_work",
-        )
+        f'  {name}:\n    state: {((states or {}).get(name, "CLEAR"))}\n'
+        f'    evidence: "no material friction observed in this dimension"'
+        for name in DIMENSIONS
     )
     block = f"""contract_version: 1
 work_block_id: {WB}
@@ -113,9 +122,33 @@ def main() -> int:
         validate_registry(registry_path)
         validate_closeout_file(closeout_path, registry_path, WB)
 
+        closeout_path.write_text(
+            closeout_text(states={"environment_setup": "FRICTION_OBSERVED"}),
+            encoding="utf-8",
+        )
+        assert_rejected(
+            lambda: validate_closeout_file(closeout_path, registry_path, WB),
+            "all eight dimensions to be CLEAR",
+        )
+
+        closeout_path.write_text(
+            closeout_text("OBSERVATIONS_RECORDED", [], 0, {"environment_setup": "FRICTION_OBSERVED"}),
+            encoding="utf-8",
+        )
+        assert_rejected(
+            lambda: validate_closeout_file(closeout_path, registry_path, WB),
+            "linked canonical observation",
+        )
+
         reviewed = registry_document([observation()])
         registry_path.write_text(yaml.safe_dump(reviewed, sort_keys=False), encoding="utf-8")
-        closeout_path.write_text(closeout_text("OBSERVATIONS_RECORDED", ["PF-test-001"], 1), encoding="utf-8")
+        closeout_path.write_text(
+            closeout_text(
+                "OBSERVATIONS_RECORDED", ["PF-test-001"], 1,
+                {"environment_setup": "FRICTION_OBSERVED"},
+            ),
+            encoding="utf-8",
+        )
         validate_closeout_file(closeout_path, registry_path, WB)
         summary = aggregate(registry_path)
         assert summary["total"] == 1

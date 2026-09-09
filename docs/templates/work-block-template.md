@@ -56,7 +56,7 @@ repository/runtime state, evidence, documentation, and what must remain clean.]
 - [ ] [Measurable outcome]
 - [ ] [Required deterministic, output, and trajectory evidence exists]
 - [ ] [Repository/runtime state is clean or documented]
-- [ ] [Process Feedback closeout block completed: `NONE — checked` with eight dimension evidence or registry observation IDs]
+- [ ] [Process Feedback closeout block completed: eight explicit `CLEAR`/`FRICTION_OBSERVED` states with evidence, and `NONE — checked` or linked registry observations]
 
 ## Process Feedback Closeout
 
@@ -64,7 +64,9 @@ At Close, complete the structured Process Feedback block from
 `docs/templates/closeout-report-template.md`. Review documentation,
 contracts/invariants, tooling/skills, context/memory, governance/authority,
 environment/setup, validation/tests, and process overhead/repeated work.
-`NONE — checked` is not a reason-free opt-out. Material observations go only
+Each dimension must explicitly use `CLEAR` or `FRICTION_OBSERVED` with concise
+evidence. `NONE — checked` is valid only when all eight dimensions are `CLEAR`.
+Material observations go only
 to `docs/engineering-memory/process-feedback-registry.yml`; observations are
 advisory and never grant authority for systemic change.
 

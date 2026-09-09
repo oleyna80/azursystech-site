@@ -62,8 +62,9 @@ At the end of every non-trivial Work Block, classify reusable knowledge:
 - `not-applicable`: no reusable durable memory was created.
 
 Process Feedback has a separate required closeout classification. Use the
-canonical registry for material observations and record `NONE — checked` only
-when all eight mandatory review dimensions are explicitly checked. Reviewers
+canonical registry for material observations. Each mandatory review dimension
+records an explicit `CLEAR` or `FRICTION_OBSERVED` state with evidence; record
+`NONE — checked` only when all eight dimensions are `CLEAR`. Reviewers
 and Verifiers may flag missed, unsupported, misclassified, or duplicate
 feedback, but their reports remain read-only assurance.
 
