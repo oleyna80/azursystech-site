@@ -13,7 +13,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / ".codex" / "scripts"))
 from subagent_topology import TopologyError, _utc, validate
-from lifecycle import candidate_content_identity, validate_closeout_state
+from lifecycle import (
+    candidate_content_identity,
+    finalize_verifier_execution,
+    prepare_verifier_execution,
+    validate_closeout_state,
+)
 
 
 NOW = dt.datetime(2026, 9, 9, 21, 30, tzinfo=dt.timezone.utc)
@@ -103,7 +108,10 @@ def state(root: Path) -> dict:
         report = f"docs/reports/{role}.md"
         target = root / report
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text("evidence\n", encoding="utf-8")
+        content = "evidence\n"
+        if role == "verifier":
+            content += "verification_result: execution_id=assurance-verifier verdict=READY\n"
+        target.write_text(content, encoding="utf-8")
         execution_id = f"assurance-{role}"
         bindings.append({"work_block_id": "WB-test", "role": role, "execution_id": execution_id, "context_id": execution_id, "context_id_source": "execution_id", "runtime": "codex", "adapter": "codex", "adapter_version": "1", "source_revision": "abc123", "repository_root": str(root), "branch": "feat/test", "readonly_boundary": "runtime-readonly", "launch_mechanism": "native", "topology_tier": "native-separate-context", "probe_event_ref": f"native_dispatch:{execution_id}", "report": report, "status": "READY", "observed_at": timestamp})
     write_set = ["docs/reports/**"]
@@ -152,6 +160,101 @@ def denied_closeout_source_revision(value: dict, root: Path, role: str) -> None:
             ) from exc
     else:
         raise AssertionError(f"{role} source revision: expected success-closeout denial")
+
+
+def verifier_sequencing_matrix(root: Path, valid: dict) -> None:
+    """Prove dispatch, independent verdict, and Orchestrator finalization are distinct."""
+    provisional = copy.deepcopy(valid)
+    provisional["subagent_topology"]["role_bindings"] = provisional["subagent_topology"]["role_bindings"][:2]
+    provisional["assurance"]["verification"] = {
+        "required": True,
+        "status": "PENDING",
+        "verdict": "PENDING",
+        "report": "",
+        "execution_id": "",
+        "isolation": "unknown",
+        "skip_reason": "",
+    }
+    provisional["write_gate"] = {"status": "BLOCKED", "opened_at": None}
+    report = root / "docs/reports/verifier.md"
+    report.write_text(
+        "evidence\nverification_result: execution_id=dispatch-verifier verdict=READY\n",
+        encoding="utf-8",
+    )
+    frozen = candidate_content_identity(root, provisional["write_set"])
+    provisional["frozen_revision"] = frozen
+    provisional["subagent_topology"]["role_bindings"][1]["source_revision"] = frozen
+    capability = provisional["subagent_topology"]["capability"]
+    binding = {
+        "work_block_id": provisional["work_block_id"],
+        "role": "verifier",
+        "execution_id": "dispatch-verifier",
+        "dispatch_id": "dispatch-verifier",
+        "context_id": "dispatch-verifier",
+        "context_id_source": "execution_id",
+        "runtime": capability["runtime"],
+        "adapter": capability["adapter"],
+        "adapter_version": capability["adapter_version"],
+        "source_revision": frozen,
+        "repository_root": str(root),
+        "branch": provisional["subject_branch"],
+        "readonly_boundary": "read-only",
+        "launch_mechanism": "native",
+        "topology_tier": "native-separate-context",
+        "probe_event_ref": "native_dispatch:dispatch-verifier",
+        "report": "docs/reports/verifier.md",
+        "status": "PENDING",
+        "observed_at": NOW.isoformat().replace("+00:00", "Z"),
+    }
+    prepared = prepare_verifier_execution(provisional, root, binding)
+    validate(prepared, phase="verifier-execution", root=root, now=NOW)
+    denied_closeout(prepared, root, "closeout before Verifier finalization")
+
+    try:
+        finalize_verifier_execution(
+            prepared, root, actor="verifier", execution_id="dispatch-verifier", verdict="READY"
+        )
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("Verifier must not self-promote its own binding")
+    for field in ("execution_id", "context_id", "runtime", "adapter", "adapter_version", "source_revision", "repository_root", "branch", "report"):
+        invalid = copy.deepcopy(prepared)
+        verifier = next(item for item in invalid["subagent_topology"]["role_bindings"] if item["role"] == "verifier")
+        verifier[field] = "mismatch"
+        denied(invalid, root, "verifier-execution", f"provisional Verifier {field} mismatch")
+    historical = copy.deepcopy(prepared)
+    historical["subagent_topology"]["role_bindings"][-1]["source_revision"] = "content-sha256:" + "0" * 64
+    denied(historical, root, "verifier-execution", "historical Verifier evidence")
+
+    finalized = finalize_verifier_execution(
+        prepared, root, actor="orchestrator", execution_id="dispatch-verifier", verdict="READY"
+    )
+    validate(finalized, phase="closeout", root=root, now=NOW)
+    validate_closeout_state(finalized, "success-closeout", root)
+    assert finalized["assurance"]["verification"]["isolation"] == "native-separate-context"
+
+    blocked = copy.deepcopy(prepared)
+    blocked_report = root / "docs/reports/verifier.md"
+    blocked_report.write_text(
+        "evidence\nverification_result: execution_id=dispatch-verifier verdict=BLOCKED\n",
+        encoding="utf-8",
+    )
+    blocked_revision = candidate_content_identity(root, blocked["write_set"])
+    blocked["frozen_revision"] = blocked_revision
+    blocked["subagent_topology"]["role_bindings"][-1]["source_revision"] = blocked_revision
+    try:
+        finalize_verifier_execution(
+            blocked, root, actor="orchestrator", execution_id="dispatch-verifier", verdict="READY"
+        )
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("BLOCKED Verifier report must not be finalized as READY")
+    blocked_final = finalize_verifier_execution(
+        blocked, root, actor="orchestrator", execution_id="dispatch-verifier", verdict="BLOCKED"
+    )
+    denied_closeout(blocked_final, root, "BLOCKED Verifier closeout")
 
 
 def denied_pretool_source_write(value: dict, root: Path) -> None:
@@ -290,6 +393,7 @@ def main() -> int:
         denied_closeout(frozen, root, "mismatched frozen revision")
         assurance_report = copy.deepcopy(valid); assurance_report["assurance"]["review"]["report"] = "docs/reports/wrong.md"; denied_closeout(assurance_report, root, "review report mismatch")
         assurance_execution = copy.deepcopy(valid); assurance_execution["assurance"]["verification"]["execution_id"] = "execution-other"; denied_closeout(assurance_execution, root, "verification execution mismatch")
+        verifier_sequencing_matrix(root, valid)
     print("subagent topology matrix: OK")
     return 0
 

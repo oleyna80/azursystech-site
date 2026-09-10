@@ -126,6 +126,26 @@ Required outcome:
 - residual risks and inspection gaps;
 - corrective action for blocking findings.
 
+For an applicable non-trivial `Managed`/`Assured` Work Block with available
+native capability, Verifier assurance is a three-step control transition:
+
+1. the Orchestrator records the dispatched native execution as a provisional
+   `PENDING` binding after admission and prior required evidence pass;
+2. the separate read-only Verifier independently evaluates the frozen subject
+   and returns `READY` or `BLOCKED` without requiring, self-promoting, or
+   mutating its own completed binding; and
+3. the Orchestrator finalizes the immutable binding only when the execution ID,
+   context, native dispatch reference, runtime tuple, recovery root, branch,
+   frozen revision, and authoritative report all match the actual execution.
+
+Final closeout then validates the completed native Critic, Reviewer, and
+Verifier bindings. A provisional, missing, mismatched, historical, or
+`BLOCKED` Verifier result never satisfies closeout, and main-thread or
+same-session substitution is not required assurance when native capability is
+available. The local `prepare-verifier` and `finalize-verifier` lifecycle
+transitions are Orchestrator-owned coordination operations; they do not grant
+the Verifier authority to promote itself.
+
 Passing local assurance does not grant an external Hard Stop capability. For
 example, a `READY` verification may prove a deployable artifact while the actual
 production deploy remains unavailable until the external Owner-controlled

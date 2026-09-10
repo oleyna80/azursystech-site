@@ -137,7 +137,7 @@ def _authoritative_report(state: dict[str, Any], role: str, phase: str) -> str:
         assurance = state.get("assurance")
         evidence = assurance.get("review") if isinstance(assurance, dict) else None
         label = "assurance.review"
-    elif phase == "closeout" and role == "verifier":
+    elif phase in {"closeout", "verifier-execution"} and role == "verifier":
         assurance = state.get("assurance")
         evidence = assurance.get("verification") if isinstance(assurance, dict) else None
         label = "assurance.verification"
@@ -191,8 +191,11 @@ def _bindings(
         for key in ("runtime", "adapter", "adapter_version"):
             if binding[key] != capability[key]:
                 raise TopologyError(f"role binding {role}.{key} does not match capability evidence")
-        if binding["status"] != "READY" or binding["launch_mechanism"] != "native":
-            raise TopologyError(f"role binding {role} is not a READY native execution")
+        expected_status = "PENDING" if phase == "verifier-execution" else "READY"
+        if binding["status"] != expected_status or binding["launch_mechanism"] != "native":
+            raise TopologyError(
+                f"role binding {role} is not a {expected_status} native execution"
+            )
         if binding["topology_tier"] != "native-separate-context":
             raise TopologyError(f"role binding {role} has invalid topology tier")
         if binding["context_id_source"] not in {"platform_context_id", "execution_id"}:
@@ -207,7 +210,7 @@ def _bindings(
         if binding["report"] != _authoritative_report(state, role, phase):
             raise TopologyError(f"role binding {role}.report does not match its authoritative report")
         report_path = _report_path(binding["report"], root, f"role binding {role}")
-        if report_path is not None and not report_path.is_file():
+        if phase != "verifier-execution" and report_path is not None and not report_path.is_file():
             raise TopologyError(f"role binding {role}.report is missing")
         observed = _utc(binding.get("observed_at"), f"role binding {role}.observed_at")
         if now - observed > FRESHNESS or observed > now + dt.timedelta(minutes=5):
@@ -217,12 +220,22 @@ def _bindings(
         executions.add(binding["execution_id"])
         contexts.add(binding["context_id"])
 
+    if phase == "verifier-execution":
+        verifier = selected[0]
+        for binding in bindings:
+            if not isinstance(binding, dict) or binding is verifier:
+                continue
+            if binding.get("execution_id") == verifier["execution_id"]:
+                raise TopologyError("native execution IDs must not be reused by the provisional Verifier")
+            if binding.get("context_id") == verifier["context_id"]:
+                raise TopologyError("native context IDs must not be reused by the provisional Verifier")
+
 
 def validate(state: dict[str, Any], *, phase: str, root: Path | None = None, now: dt.datetime | None = None) -> None:
-    """Validate applicable admission or closeout evidence, otherwise do nothing."""
+    """Validate admission, provisional Verifier execution, or final closeout evidence."""
     if not applicable(state):
         return
-    if phase not in {"admission", "closeout"}:
+    if phase not in {"admission", "verifier-execution", "closeout"}:
         raise TopologyError("topology validation phase is invalid")
     current = now or dt.datetime.now(dt.timezone.utc)
     capability, status = _capability(state, current)
@@ -233,9 +246,9 @@ def validate(state: dict[str, Any], *, phase: str, root: Path | None = None, now
         raise TopologyError(f"native subagent capability is {status}; promotion is blocked")
     if record.get("policy") != "native-separate-context-required" or record.get("status") != "READY":
         raise TopologyError("available native capability requires READY native-separate-context-required topology")
-    if phase == "closeout" and not isinstance(state.get("frozen_revision"), str):
+    if phase in {"verifier-execution", "closeout"} and not isinstance(state.get("frozen_revision"), str):
         raise TopologyError("success-closeout requires frozen_revision")
-    if phase == "closeout" and not state["frozen_revision"].strip():
+    if phase in {"verifier-execution", "closeout"} and not state["frozen_revision"].strip():
         raise TopologyError("success-closeout requires frozen_revision")
     if capability.get("repository_root") != (str(root.resolve()) if root else capability.get("repository_root")):
         raise TopologyError("capability repository_root does not match active repository")
@@ -246,9 +259,16 @@ def validate(state: dict[str, Any], *, phase: str, root: Path | None = None, now
         report = critic.get("report")
         if not isinstance(report, str) or not report.startswith("docs/reports/"):
             raise TopologyError("native topology admission requires a linked Critic report")
+    if phase == "verifier-execution":
+        assurance = state.get("assurance")
+        verification = assurance.get("verification") if isinstance(assurance, dict) else None
+        if not isinstance(verification, dict):
+            raise TopologyError("provisional Verifier execution requires assurance.verification")
+        if verification.get("status") != "PENDING" or verification.get("verdict") != "PENDING":
+            raise TopologyError("provisional Verifier execution requires assurance.verification PENDING/PENDING")
     _bindings(
         state,
-        ("critic",) if phase == "admission" else REQUIRED_ROLES,
+        ("critic",) if phase == "admission" else (("verifier",) if phase == "verifier-execution" else REQUIRED_ROLES),
         current,
         root,
         phase,
@@ -259,7 +279,9 @@ def validate(state: dict[str, Any], *, phase: str, root: Path | None = None, now
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--state", type=Path, default=Path(".agent/active-work-block.json"))
-    parser.add_argument("--phase", choices=("admission", "closeout"), required=True)
+    parser.add_argument(
+        "--phase", choices=("admission", "verifier-execution", "closeout"), required=True
+    )
     args = parser.parse_args()
     try:
         state = json.loads(args.state.read_text(encoding="utf-8"))
