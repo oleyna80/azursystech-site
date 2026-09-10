@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import datetime as dt
 import json
 import os
 from pathlib import Path
@@ -95,6 +96,7 @@ def assert_diagnostic(
 def ready_gate(base: dict[str, object], cwd: Path) -> dict[str, object]:
     value = copy.deepcopy(base)
     value["work_block_id"] = "WB-TEST-GITHUB-CAPABILITY"
+    value["governance_profile"] = "Assured"
     value["specification"] = {
         "path": "docs/plans/test.md",
         "revision": "test-spec-v1",
@@ -102,6 +104,7 @@ def ready_gate(base: dict[str, object], cwd: Path) -> dict[str, object]:
     value["subject_branch"] = git(cwd, "branch", "--show-current")
     value["base_commit"] = git(cwd, "rev-parse", "HEAD")
     value["write_gate"] = {"status": "READY", "opened_at": "2026-08-12T00:00:00+00:00"}
+    value["non_trivial"] = True
     value["critic"] = {
         "required": True,
         "status": "READY",
@@ -131,6 +134,63 @@ def ready_gate(base: dict[str, object], cwd: Path) -> dict[str, object]:
         "drift": value["assurance"]["drift"],
     }
     value["write_set"] = ["src/**", "tests/**"]
+    value["define_quality"] = {
+        "required": True,
+        "status": "READY",
+        "requirements_review": "docs/reports/requirements.md",
+        "traceability": "docs/reports/traceability.md",
+        "consistency_analysis": "docs/reports/consistency.md",
+    }
+    observed_at = dt.datetime.now(dt.timezone.utc).isoformat()
+    capability = {
+        "runtime": "codex",
+        "adapter": "fixture_adapter",
+        "adapter_version": "fixture-v1",
+        "status": "available",
+        "repository_root": str(cwd.resolve()),
+        "probe_event_ref": (
+            "native_dispatch:fixture-probe-critic,"
+            "native_dispatch:fixture-probe-reviewer,"
+            "native_dispatch:fixture-probe-verifier"
+        ),
+        "verified_at": observed_at,
+    }
+    role_reports = {
+        "critic": value["critic"]["report"],
+        "reviewer": value["assurance"]["review"]["report"],
+        "verifier": value["assurance"]["verification"]["report"],
+    }
+    role_bindings = []
+    for role in ("critic", "reviewer", "verifier"):
+        execution_id = f"fixture-{role}-execution"
+        role_bindings.append(
+            {
+                "role": role,
+                "work_block_id": value["work_block_id"],
+                "execution_id": execution_id,
+                "context_id": execution_id,
+                "context_id_source": "execution_id",
+                "runtime": capability["runtime"],
+                "adapter": capability["adapter"],
+                "adapter_version": capability["adapter_version"],
+                "source_revision": value["base_commit"],
+                "repository_root": str(cwd.resolve()),
+                "branch": value["subject_branch"],
+                "readonly_boundary": "read-only",
+                "launch_mechanism": "native",
+                "topology_tier": "native-separate-context",
+                "probe_event_ref": f"native_dispatch:{execution_id}",
+                "report": role_reports[role],
+                "status": "READY",
+                "observed_at": observed_at,
+            }
+        )
+    value["subagent_topology"] = {
+        "policy": "native-separate-context-required",
+        "status": "READY",
+        "capability": capability,
+        "role_bindings": role_bindings,
+    }
     return value
 
 
@@ -152,6 +212,15 @@ def make_repo() -> tuple[tempfile.TemporaryDirectory[str], Path, dict[str, objec
     git(cwd, "branch", "-M", "main")
     git(cwd, "switch", "-q", "-c", "feature/capability-test")
     (cwd / ".agent").mkdir(parents=True, exist_ok=True)
+    (cwd / "scripts").mkdir()
+    (cwd / "scripts/subagent_topology.py").write_text(
+        git(ROOT, "show", "HEAD:scripts/subagent_topology.py") + "\n",
+        encoding="utf-8",
+    )
+    reports = cwd / "docs/reports"
+    reports.mkdir(parents=True)
+    for report in ("critic.md", "review.md", "verification.md"):
+        (reports / report).write_text("fixture report\n", encoding="utf-8")
     shutil.copy2(DEFAULT_GATE, cwd / ".agent/active-work-block.default.json")
     base = json.loads(DEFAULT_GATE.read_text(encoding="utf-8"))
     write_gate(cwd, base)
@@ -264,11 +333,23 @@ def make_parallel_worktrees() -> tuple[
     git(primary, "switch", "-q", "feature/worktree-one")
     git(primary, "worktree", "add", "-q", str(secondary), "feature/worktree-two")
 
+    committed_topology = git(ROOT, "show", "HEAD:scripts/subagent_topology.py") + "\n"
+    for cwd in (primary, secondary):
+        (cwd / "scripts").mkdir()
+        (cwd / "scripts/subagent_topology.py").write_text(committed_topology, encoding="utf-8")
+        reports = cwd / "docs/reports"
+        reports.mkdir(parents=True)
+        for report in ("critic.md", "review.md", "verification.md"):
+            (reports / report).write_text("fixture report\n", encoding="utf-8")
+
     base = json.loads(DEFAULT_GATE.read_text(encoding="utf-8"))
     gate_one = ready_gate(base, primary)
     gate_one["work_block_id"] = "WB-TEST-WORKTREE-ONE"
     gate_two = ready_gate(base, secondary)
     gate_two["work_block_id"] = "WB-TEST-WORKTREE-TWO"
+    for gate in (gate_one, gate_two):
+        for binding in gate["subagent_topology"]["role_bindings"]:
+            binding["work_block_id"] = gate["work_block_id"]
     write_gate(primary, gate_one)
     write_gate(secondary, gate_two)
     for cwd in (primary, secondary):
@@ -278,6 +359,8 @@ def make_parallel_worktrees() -> tuple[
 
 
 def lifecycle_open(cwd: Path) -> subprocess.CompletedProcess[str]:
+    gate = ready_gate(json.loads(DEFAULT_GATE.read_text(encoding="utf-8")), cwd)
+    topology = gate["subagent_topology"]
     return run(
         [
             sys.executable,
@@ -287,16 +370,33 @@ def lifecycle_open(cwd: Path) -> subprocess.CompletedProcess[str]:
             "open",
             "--work-block-id",
             "WB-TEST-GITHUB-CAPABILITY",
+            "--governance-profile",
+            "Assured",
             "--specification-path",
             "docs/plans/test.md",
             "--specification-revision",
             "test-spec-v1",
             "--write",
             "src/**",
+            "--non-trivial",
+            "--topology-evidence",
+            json.dumps(topology),
             "--critic-status",
             "READY",
             "--critic-verdict",
             "APPROVE",
+            "--critic-report",
+            "docs/reports/critic.md",
+            "--critic-isolation",
+            "native-separate-context",
+            "--define-quality-status",
+            "READY",
+            "--requirements-review",
+            "docs/reports/requirements.md",
+            "--traceability",
+            "docs/reports/traceability.md",
+            "--consistency-analysis",
+            "docs/reports/consistency.md",
         ],
         cwd,
     )
@@ -324,8 +424,13 @@ def test_lifecycle() -> None:
         assert opened["authority_mode"] == "github_capability"
         assert opened["subject_branch"] == "feature/capability-test"
         assert opened["write_gate"]["status"] == "READY"
+        assert opened["non_trivial"] is True
+        assert opened["subagent_topology"]["status"] == "READY"
         assert "authorization" not in opened
         assert "hard_stop_approvals" not in opened
+
+        (cwd / "src").mkdir()
+        (cwd / "src/fixture.py").write_text("fixture source\n", encoding="utf-8")
 
         result = run(
             [
@@ -886,10 +991,10 @@ def test_claude_scope_and_closeout() -> None:
             work_block_id="WB-TEST-GITHUB-CAPABILITY",
         )
 
-        (cwd / "docs/reports").mkdir(parents=True)
+        (cwd / "docs/reports").mkdir(parents=True, exist_ok=True)
         (cwd / "docs/reports/review.md").write_text("review\n")
         (cwd / "docs/reports/verification.md").write_text("verification\n")
-        (cwd / "scripts").mkdir()
+        (cwd / "scripts").mkdir(exist_ok=True)
         shutil.copy2(EVAL_VALIDATOR, cwd / "scripts/validate-evaluation.py")
 
         gate["write_gate"] = {"status": "BLOCKED", "opened_at": None}

@@ -266,15 +266,18 @@ enabled by default.
 
 ## Validation
 
-Framework CI runs:
+The `control-plane-contracts.yml` workflow first compiles its listed Python
+control-plane files and validates the blocked-default schema contract. It then
+runs these fixture and validation commands:
 
 ```bash
-bash scripts/test-sdd-contract.sh
-python scripts/test-integration-contracts.py
-python scripts/test-codex-adapter.py
-python scripts/test-codex-hard-stops.py
-bash scripts/validate-governance.sh
-bash scripts/validate-publication.sh
+python scripts/test-github-capability-control-plane.py
+python scripts/test-github-capability-github-cli-hard-stops.py
+python scripts/test-validate-shared-context.py
+python scripts/validate-shared-context.py
+bash .codex/hooks/tests/apply-patch-fixtures.sh
+bash .githooks/tests/commit-msg-fixtures.sh
+bash .agent/skills/sprint-analysis/tests/commit-linkage-fixtures.sh
 ```
 
 The disposable scaffold verifies agents, shared/Codex hooks, machine gate,
