@@ -214,10 +214,36 @@ def verifier_sequencing_matrix(root: Path, valid: dict) -> None:
         finalize_verifier_execution(
             prepared, root, actor="verifier", execution_id="dispatch-verifier", verdict="READY"
         )
-    except ValueError:
+    except TypeError:
         pass
     else:
-        raise AssertionError("Verifier must not self-promote its own binding")
+        raise AssertionError("finalization must not accept a caller role label")
+    state_path = root / ".agent" / "active-work-block.json"
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    state_path.write_text(json.dumps(prepared), encoding="utf-8")
+    impersonation = subprocess.run(
+        [
+            sys.executable,
+            str(Path(__file__).resolve().parents[1] / ".codex" / "scripts" / "lifecycle.py"),
+            "--root",
+            str(root),
+            "--state",
+            str(state_path),
+            "finalize-verifier",
+            "--actor",
+            "orchestrator",
+            "--execution-id",
+            "dispatch-verifier",
+            "--verdict",
+            "READY",
+        ],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if impersonation.returncode == 0:
+        raise AssertionError("a Verifier-side CLI may not self-promote with an Orchestrator label")
     for field in ("execution_id", "context_id", "runtime", "adapter", "adapter_version", "source_revision", "repository_root", "branch", "report"):
         invalid = copy.deepcopy(prepared)
         verifier = next(item for item in invalid["subagent_topology"]["role_bindings"] if item["role"] == "verifier")
@@ -228,7 +254,7 @@ def verifier_sequencing_matrix(root: Path, valid: dict) -> None:
     denied(historical, root, "verifier-execution", "historical Verifier evidence")
 
     finalized = finalize_verifier_execution(
-        prepared, root, actor="orchestrator", execution_id="dispatch-verifier", verdict="READY"
+        prepared, root, execution_id="dispatch-verifier", verdict="READY"
     )
     validate(finalized, phase="closeout", root=root, now=NOW)
     validate_closeout_state(finalized, "success-closeout", root)
@@ -236,6 +262,31 @@ def verifier_sequencing_matrix(root: Path, valid: dict) -> None:
 
     blocked = copy.deepcopy(prepared)
     blocked_report = root / "docs/reports/verifier.md"
+    for content, label in (
+        (
+            "evidence\nverification_result: execution_id=dispatch-verifier verdict=READY-forged\n",
+            "suffix result record",
+        ),
+        (
+            "evidence\nverification_result: execution_id=dispatch-verifier verdict=READY\n"
+            "verification_result: execution_id=dispatch-verifier verdict=READY\n",
+            "duplicate result records",
+        ),
+        (
+            "evidence\nverification_result: execution_id=dispatch-verifier verdict=READY\n"
+            "verification_result: execution_id=dispatch-verifier verdict=BLOCKED\n",
+            "conflicting result records",
+        ),
+    ):
+        blocked_report.write_text(content, encoding="utf-8")
+        try:
+            finalize_verifier_execution(
+                prepared, root, execution_id="dispatch-verifier", verdict="READY"
+            )
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"{label} must be rejected")
     blocked_report.write_text(
         "evidence\nverification_result: execution_id=dispatch-verifier verdict=BLOCKED\n",
         encoding="utf-8",
@@ -245,14 +296,14 @@ def verifier_sequencing_matrix(root: Path, valid: dict) -> None:
     blocked["subagent_topology"]["role_bindings"][-1]["source_revision"] = blocked_revision
     try:
         finalize_verifier_execution(
-            blocked, root, actor="orchestrator", execution_id="dispatch-verifier", verdict="READY"
+            blocked, root, execution_id="dispatch-verifier", verdict="READY"
         )
     except ValueError:
         pass
     else:
         raise AssertionError("BLOCKED Verifier report must not be finalized as READY")
     blocked_final = finalize_verifier_execution(
-        blocked, root, actor="orchestrator", execution_id="dispatch-verifier", verdict="BLOCKED"
+        blocked, root, execution_id="dispatch-verifier", verdict="BLOCKED"
     )
     denied_closeout(blocked_final, root, "BLOCKED Verifier closeout")
 

@@ -449,9 +449,17 @@ def _report_file(root: Path, report: str) -> Path:
 def _report_result(root: Path, report: str, execution_id: str, verdict: str) -> None:
     """Require the authoritative report to bind this execution to its verdict."""
     path = _report_file(root, report)
-    marker = f"verification_result: execution_id={execution_id} verdict={verdict}"
-    if marker not in path.read_text(encoding="utf-8"):
-        raise ValueError("authoritative verification report does not bind the execution ID to the requested verdict")
+    expected = f"verification_result: execution_id={execution_id} verdict={verdict}"
+    records = [
+        line.strip()
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip().startswith("verification_result:")
+    ]
+    if records != [expected]:
+        raise ValueError(
+            "authoritative verification report must contain exactly one result "
+            "record matching the execution ID and requested verdict"
+        )
 
 
 def prepare_verifier_execution(current: dict, root: Path, binding: dict) -> dict:
@@ -507,11 +515,16 @@ def prepare_verifier_execution(current: dict, root: Path, binding: dict) -> dict
     return value
 
 
-def finalize_verifier_execution(current: dict, root: Path, *, actor: str, execution_id: str, verdict: str) -> dict:
-    """Finalize only the Orchestrator-owned result of a completed dispatch."""
+def finalize_verifier_execution(current: dict, root: Path, *, execution_id: str, verdict: str) -> dict:
+    """Finalize a completed dispatch from the Orchestrator coordination path.
+
+    This cooperative project-local helper deliberately accepts no caller role
+    label: a string supplied by a Verifier cannot establish Orchestrator
+    authority. Runtime role separation and external controls remain the actual
+    authority boundary; the helper only validates the completed dispatch
+    provenance and result before applying the coordination transition.
+    """
     validate_state(current)
-    if actor != "orchestrator":
-        raise ValueError("only the Orchestrator may finalize Verifier evidence")
     if verdict not in {"READY", "BLOCKED"}:
         raise ValueError("Verifier finalization verdict must be READY or BLOCKED")
     _require_frozen_candidate(current, root)
@@ -644,7 +657,6 @@ def main() -> int:
     prepare_verifier.add_argument("--report", required=True)
     prepare_verifier.add_argument("--observed-at", default="")
     finalize_verifier = subparsers.add_parser("finalize-verifier")
-    finalize_verifier.add_argument("--actor", required=True)
     finalize_verifier.add_argument("--execution-id", required=True)
     finalize_verifier.add_argument("--verdict", choices=("READY", "BLOCKED"), required=True)
     close = subparsers.add_parser("close")
@@ -705,7 +717,6 @@ def main() -> int:
         value = finalize_verifier_execution(
             current,
             root,
-            actor=args.actor.strip(),
             execution_id=args.execution_id.strip(),
             verdict=args.verdict,
         )

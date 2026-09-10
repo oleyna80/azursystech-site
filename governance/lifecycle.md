@@ -143,8 +143,12 @@ Verifier bindings. A provisional, missing, mismatched, historical, or
 `BLOCKED` Verifier result never satisfies closeout, and main-thread or
 same-session substitution is not required assurance when native capability is
 available. The local `prepare-verifier` and `finalize-verifier` lifecycle
-transitions are Orchestrator-owned coordination operations; they do not grant
-the Verifier authority to promote itself.
+transitions are Orchestrator-owned coordination operations. The finalization
+interface accepts no caller-supplied role label: a Verifier cannot establish
+Orchestrator authority by passing a string. The project-local helper remains a
+cooperative process-control mechanism, while runtime role separation and
+external controls provide the actual authority boundary; it does not grant the
+Verifier authority to promote itself.
 
 Passing local assurance does not grant an external Hard Stop capability. For
 example, a `READY` verification may prove a deployable artifact while the actual
