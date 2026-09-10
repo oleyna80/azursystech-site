@@ -24,6 +24,19 @@ def require(result: subprocess.CompletedProcess[str], expected: int, label: str)
 def fixture_root(holder: str) -> Path:
     fixture = Path(holder) / "repo"
     shutil.copytree(ROOT, fixture, ignore=shutil.ignore_patterns(".git", ".next", "node_modules"))
+    active_path = fixture / ".agent" / "active-work-block.json"
+    active = json.loads(active_path.read_text(encoding="utf-8"))
+    topology = active.get("subagent_topology")
+    if isinstance(topology, dict):
+        capability = topology.get("capability")
+        if isinstance(capability, dict):
+            capability["repository_root"] = str(fixture.resolve())
+        bindings = topology.get("role_bindings")
+        if isinstance(bindings, list):
+            for binding in bindings:
+                if isinstance(binding, dict):
+                    binding["repository_root"] = str(fixture.resolve())
+        active_path.write_text(json.dumps(active), encoding="utf-8")
     return fixture
 
 
@@ -124,6 +137,12 @@ def inactive_fixture(holder: str) -> Path:
         f"- Active implementation Work Block: `{work_block_id}`\n"
         f"  at `{active_plan}`.\n"
     )
+    parenthesized_migration_marker = (
+        f"- Active implementation Work Block: `{work_block_id}`\n"
+        f"  (`{active_plan}`).\n"
+    )
+    if migration_marker not in map_text and parenthesized_migration_marker in map_text:
+        migration_marker = parenthesized_migration_marker
     if migration_marker not in map_text:
         raise AssertionError(
             "inactive fixture could not isolate the current PROJECT_MAP Migration Work projection"
@@ -181,11 +200,63 @@ def require_workflow_path_contract(paths: list[str], trigger: str) -> None:
     if workflow_runs_for_paths(paths, ["docs/specifications/WB-unrelated.md"]):
         raise AssertionError(f"{trigger} docs/specs/** matcher overmatches docs/specifications")
 
+
+def require_project_map_governance_profile(root: Path) -> None:
+    """Keep the human-readable release projection aligned with the active gate."""
+    active = json.loads(
+        (root / ".agent" / "active-work-block.json").read_text(encoding="utf-8")
+    )
+    expected = active.get("governance_profile")
+    if not isinstance(expected, str) or not expected:
+        raise AssertionError("active Work Block must declare governance_profile")
+    text = (root / "PROJECT_MAP.md").read_text(encoding="utf-8")
+    try:
+        block = text.split("```yaml", 1)[1].split("```", 1)[0]
+        projected = yaml.safe_load(block)
+    except (IndexError, yaml.YAMLError) as exc:
+        raise AssertionError(f"PROJECT_MAP release-state projection is malformed: {exc}") from exc
+    actual = projected.get("release_state", {}).get("governance_profile")
+    if actual != expected:
+        raise AssertionError(
+            "PROJECT_MAP governance_profile does not match active Work Block: "
+            f"projected={actual!r}, active={expected!r}"
+        )
+
+
+def require_verification_gate_dimension_contract(root: Path) -> None:
+    """Topology role separation must not be conflated with isolation tier."""
+    text = (root / ".codex" / "hooks" / "verification-gate.sh").read_text(encoding="utf-8")
+    if "same-session native subagent verification is advisory" in text:
+        raise AssertionError(
+            "verification gate must not categorically reject same-session-degraded native subagents"
+        )
+    if "python3 scripts/subagent_topology.py --phase closeout" not in text:
+        raise AssertionError("verification gate must delegate native topology to the topology validator")
+    if "Sensitive Domains" not in text or "independent-readonly-root" not in text:
+        raise AssertionError("verification gate must retain sensitive-domain isolation checks")
+
 def main() -> int:
     require(run(ROOT), 0, "repository release-state contract")
     require_workflow_active_gate_path(ROOT)
+    require_project_map_governance_profile(ROOT)
+    require_verification_gate_dimension_contract(ROOT)
     with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
         require(run(fixture_root(holder)), 0, "matching release and operational active state must pass")
+    with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
+        fixture = fixture_root(holder)
+        active_path = fixture / ".agent" / "active-work-block.json"
+        active = json.loads(active_path.read_text(encoding="utf-8"))
+        topology = active.get("subagent_topology")
+        if isinstance(topology, dict):
+            capability = topology.get("capability")
+            if isinstance(capability, dict):
+                capability["repository_root"] = str(fixture.parent / "different-root")
+            active_path.write_text(json.dumps(active), encoding="utf-8")
+            require_failure(
+                fixture,
+                "native topology capability root mismatch must fail",
+                "operational native topology is invalid",
+            )
     with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
         fixture = active_fixture(holder)
         registry = fixture / "FILE_REGISTRY.yml"
@@ -314,6 +385,12 @@ def main() -> int:
         map_text = map_text.replace(
             f"- Active implementation Work Block: `{active_id}`\n"
             f"  at `{plan}`.",
+            "- No active implementation Work Block.",
+            1,
+        )
+        map_text = map_text.replace(
+            f"- Active implementation Work Block: `{active_id}`\n"
+            f"  (`{plan}`).",
             "- No active implementation Work Block.",
             1,
         )

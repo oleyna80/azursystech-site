@@ -45,6 +45,21 @@ From weakest to strongest:
 
 The Work Block chooses the minimum sufficient level and records the actual boundary.
 
+### Native topology admission vocabulary
+
+For a non-trivial `Managed` or `Assured` Work Block, native capability is
+admission evidence, not an implied runtime feature. A capability state is one
+of `available`, `unavailable`, `conditional`, `unknown`, or `launch_failed`.
+Only `available` may promote the required native topology. The admission
+binding is `native-separate-context-required` and requires distinct native
+execution and context identifiers for `critic`, `reviewer`, and `verifier`.
+
+`same-session-degraded` is an explicit degraded or blocked result and never a
+main-thread substitution for required assurance. `independent-readonly-root`
+and `os-isolated` remain stronger, separately evidenced boundaries; distinct
+role execution identifiers do not claim filesystem or operating-system
+isolation.
+
 For the AzurSysTech assurance contract:
 - `same-context` and `separate-subagent` map to `same-session-degraded` (advisory only for sensitive work) unless an independently read-only root is evidenced;
 - `separate-session` satisfies `independent-readonly-root` only when that root and its access boundary are evidenced;

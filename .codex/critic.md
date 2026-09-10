@@ -61,6 +61,17 @@ Every skip must be recorded in:
 The fallback mode must be named honestly. Do not describe a same-session review
 as an independent subagent.
 
+For non-trivial `Managed` and `Assured` Work Blocks, native capability must be
+observed as `available` before `Codex Critic: READY` can admit the topology.
+The Critic binding uses policy `native-separate-context-required` and records
+distinct native execution/context identifiers plus runtime, adapter version,
+source revision, repository root, branch, read-only boundary, launch
+mechanism, probe event, report, status, topology tier, and observation time.
+Capability states `unknown`, `conditional`, `unavailable`, and `launch_failed`
+are explicit `DEGRADED`/`BLOCKED` outcomes; they do not permit main-thread
+substitution. The binding is role separation evidence, not proof of an
+independent read-only root or OS isolation.
+
 ## Inputs
 
 The critic receives:

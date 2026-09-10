@@ -44,6 +44,15 @@ For Managed work, a read-only Critic challenges this record after the applicable
 requirements-quality and consistency checks. `READY` means its challenge found no
 unresolved blocker; `BLOCKED` returns to Define. A Critic result does not itself open a write gate.
 
+For non-trivial `Managed` or `Assured` work, Stage 0/1 admission also records
+the runtime capability probe and a `native-separate-context-required` topology
+binding. When native capability is `available`, the Critic admission binding
+and the later Reviewer/Verifier bindings must carry distinct native execution
+and context identifiers. `unknown`, `conditional`, `unavailable`, and
+`launch_failed` capability states are fail-closed for promotion; they may be
+reported explicitly as `DEGRADED` or `BLOCKED`, but may not be represented by
+main-thread substitution.
+
 ## Stage 1 — Execute
 
 One write-capable Coder edits only its approved exclusive write-set after the Critic
@@ -52,6 +61,13 @@ gate is resolved and the write gate is `READY`.
 - Parallel Coders require distinct isolated worktrees or clones; their worker-path intersection must remain empty.
 - Inspect Git state first, preserve unrelated work, run scoped checks, and stop for any scope, authority, risk, or acceptance change.
 - Freeze each worker handoff at its named revision and report `DONE`, `DONE_WITH_CONCERNS`, `NEEDS_CONTEXT`, or `BLOCKED`.
+- Freeze records an immutable `frozen_revision` content identity over the
+  approved candidate write-set; Git HEAD remains only the base anchor until a
+  candidate commit is materialized. An applicable successful closeout requires
+  matching frozen-revision evidence for all three native role bindings.
+- Native role-context separation and security-isolation tier are independent:
+  the topology validator proves the former, while the verification hook only
+  applies stronger isolation requirements where sensitive domains require it.
 - When integration is required, the Integration Coder cleanly merges frozen worker revisions and verifies the integrated subject before Stage 2.
 
 ## Stage 2 — Assure

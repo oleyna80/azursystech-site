@@ -1,31 +1,67 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "",
-  "governance_profile": "Controlled",
+  "work_block_id": "WB-2026-09-09-subagent-topology-reconciliation",
+  "governance_profile": "Assured",
   "specification": {
-    "path": "",
-    "revision": ""
+    "path": "docs/specs/WB-2026-09-09-subagent-topology-reconciliation.md",
+    "revision": "v1"
   },
-  "subject_branch": "",
-  "base_commit": "",
+  "subject_branch": "feat/subagent-topology-reconciliation-026",
+  "base_commit": "cafd2733e489d0d2a91553e70294d99d243046c0",
+  "non_trivial": true,
+  "subagent_topology": {
+    "policy": "native-separate-context-required",
+    "status": "READY",
+    "capability": {
+      "status": "available",
+      "runtime": "codex",
+      "adapter": "multi_agent_v1",
+      "adapter_version": "runtime-provided",
+      "repository_root": "/tmp/azursystech-wb-subagent-topology-reconciliation-026",
+      "probe_event_ref": "native_dispatch:01a087d5-b5c7-7e60-aa27-c00b2f98df1c,native_dispatch:01a087df-18c4-7ba0-8093-df520c8ce8c9,native_dispatch:01a087df-1795-75f2-97ae-4b301ecbceaa",
+      "verified_at": "2026-09-09T20:46:09Z"
+    },
+    "role_bindings": [
+      {
+        "work_block_id": "WB-2026-09-09-subagent-topology-reconciliation",
+        "role": "critic",
+        "execution_id": "01a087fe-80ba-7741-91a2-297fa04294ec",
+        "context_id": "01a087fe-80ba-7741-91a2-297fa04294ec",
+        "context_id_source": "execution_id",
+        "runtime": "codex",
+        "adapter": "multi_agent_v1",
+        "adapter_version": "runtime-provided",
+        "source_revision": "cafd2733e489d0d2a91553e70294d99d243046c0",
+        "repository_root": "/tmp/azursystech-wb-subagent-topology-reconciliation-026",
+        "branch": "feat/subagent-topology-reconciliation-026",
+        "readonly_boundary": "runtime-readonly",
+        "launch_mechanism": "native",
+        "topology_tier": "native-separate-context",
+        "probe_event_ref": "native_dispatch:01a087fe-80ba-7741-91a2-297fa04294ec",
+        "report": "docs/reports/critic/WB-2026-09-09-subagent-topology-reconciliation.md",
+        "status": "READY",
+        "observed_at": "2026-09-09T21:20:00Z"
+      }
+    ]
+  },
   "define_quality": {
-    "required": false,
-    "status": "PENDING",
-    "requirements_review": "",
-    "traceability": "",
-    "consistency_analysis": ""
+    "required": true,
+    "status": "READY",
+    "requirements_review": "docs/reports/requirements-quality-WB-2026-09-09-subagent-topology-reconciliation.md",
+    "traceability": "docs/reports/traceability-WB-2026-09-09-subagent-topology-reconciliation.md",
+    "consistency_analysis": "docs/reports/consistency-WB-2026-09-09-subagent-topology-reconciliation.md"
   },
   "write_gate": {
-    "status": "BLOCKED",
-    "opened_at": null
+    "status": "READY",
+    "opened_at": "2026-09-10T00:00:00Z"
   },
   "critic": {
     "required": true,
-    "status": "PENDING",
-    "verdict": "PENDING",
-    "report": "",
-    "isolation": "unknown",
+    "status": "READY",
+    "verdict": "APPROVE",
+    "report": "docs/reports/critic/WB-2026-09-09-subagent-topology-reconciliation.md",
+    "isolation": "separate_subagent",
     "skip_reason": ""
   },
   "assurance": {
@@ -65,12 +101,29 @@
       "skip_reason": ""
     }
   },
-  "closeout_mode": "success-closeout",
+  "closeout_mode": "pending",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
-  "write_set": [],
+  "write_set": [
+    ".agent/ROSTER.md",
+    ".agent/active-work-block.default.json",
+    ".agent/workflows/sdd-protocol.md",
+    "governance/authority.md",
+    "governance/lifecycle.md",
+    "governance/runtime-capabilities.md",
+    "runtimes/codex/README.md",
+    ".codex/critic.md",
+    ".codex/hooks/pre_tool_use_policy.py",
+    ".codex/hooks/subagent_context.py",
+    ".codex/hooks/verification-gate.sh",
+    ".codex/scripts/lifecycle.py",
+    "scripts/validate-release-state.py",
+    "scripts/subagent_topology.py",
+    "scripts/test-subagent-topology.py",
+    "scripts/test-release-state-contracts.py"
+  ],
   "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
@@ -82,6 +135,7 @@
     "docs/specs/**",
     "docs/tasklist/**",
     "docs/reports/**",
+    "docs/engineering-memory/process-feedback-registry.yml",
     "docs/architecture/drafts/**",
     "memory_bank/**"
   ],
@@ -94,5 +148,6 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "successful closeout; Process Feedback contract recorded and candidate ready for publication"
+  "lifecycle_note": "corrective source loop reopened; requested Process Feedback registry entry is explicitly coordinated",
+  "frozen_revision": "cafd2733e489d0d2a91553e70294d99d243046c0"
 }

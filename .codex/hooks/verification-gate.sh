@@ -101,6 +101,10 @@ verifier_isolation=$(field "Verifier Isolation" | tr '[:upper:]' '[:lower:]')
 
 [ -n "$wb_id" ] || deny "Verification gate: Work Block is required before closeout."
 
+if ! topology_output=$(python3 scripts/subagent_topology.py --phase closeout 2>&1); then
+  deny "Verification gate: ${topology_output}"
+fi
+
 # Verifier identity and declared isolation (AGENTS.md Hook-Enforced Gate Rules).
 # This validates a closed-vocabulary attestation; a hook cannot prove process,
 # credential, or filesystem isolation.
@@ -129,8 +133,9 @@ require_verifier_isolation() {
 
   case "$verifier" in
     subagent)
-      [ "$verifier_isolation" != "same-session-degraded" ] \
-        || deny "Verification gate: same-session native subagent verification is advisory and cannot close READY. Use an independent readonly root or OS isolation."
+      # Native role separation is validated above by subagent_topology.py.
+      # Isolation remains an independent, security-sensitive dimension: a
+      # non-sensitive Work Block may truthfully retain same-session-degraded.
       ;;
     ct-inline)
       [ "$sensitive_domains" = "none" ] \

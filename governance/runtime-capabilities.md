@@ -44,8 +44,24 @@ Allowed capability values:
 - `false` — known unavailable;
 - `conditional` — available only with named configuration or environment;
 - `unknown` — not yet verified.
+- `launch_failed` — the requested native execution was attempted but did not
+  produce valid evidence.
 
 `unknown` must not be treated as `true`.
+
+For non-trivial `Managed` or `Assured` Work Blocks, `available` is the only
+capability state that permits native topology promotion. The canonical policy
+is `native-separate-context-required`; it binds distinct native execution and
+context identifiers for `critic`, `reviewer`, and `verifier`, together with
+the Work Block, runtime/adapter/version, source or frozen revision, root,
+branch, read-only boundary, launch mechanism, topology tier, probe event,
+report, status, and observed time. Every required identifier and report link
+must be present, unique, current, and bound to the active Work Block.
+
+Other capability states may be recorded as explicit `DEGRADED` or `BLOCKED`
+outcomes, but do not permit promotion or main-thread substitution. Native role
+separation is distinct from `independent-readonly-root` and `os-isolated`;
+those stronger isolation claims require their own evidence.
 
 ## Topology Inputs
 

@@ -56,6 +56,16 @@ class Denied(Exception):
     pass
 
 
+def validate_topology_admission(root: Path, gate: dict) -> None:
+    """Apply the role-context admission dimension without claiming OS isolation."""
+    sys.path.insert(0, str(root / "scripts"))
+    try:
+        from subagent_topology import TopologyError, validate
+        validate(gate, phase="admission", root=root)
+    except (ImportError, TopologyError) as exc:
+        raise Denied(f"Native subagent topology admission failed: {exc}") from exc
+
+
 def block(reason: str) -> None:
     print(
         json.dumps(
@@ -213,7 +223,7 @@ def canonical_inactive(gate: dict) -> bool:
     )
 
 
-def validate_source_gate(gate: dict) -> list[str]:
+def validate_source_gate(gate: dict, root: Path) -> list[str]:
     if gate.get("schema_version") != 3:
         raise Denied("Source writes require active-work-block schema_version=3.")
     if gate.get("authority_mode") != "github_capability":
@@ -249,6 +259,7 @@ def validate_source_gate(gate: dict) -> list[str]:
             raise Denied("Required Critic verdict must be APPROVE or SUPPLEMENT.")
         if status == "SKIPPED" and not str(critic.get("skip_reason") or "").strip():
             raise Denied("Skipped Critic requires skip_reason.")
+    validate_topology_admission(root, gate)
     write_set = gate.get("write_set")
     if not isinstance(write_set, list) or not any(str(v).strip() for v in write_set):
         raise Denied("Active Work Block requires a non-empty write_set.")
@@ -279,7 +290,7 @@ def check_paths(paths: list[str], gate: dict, root: Path) -> None:
     if not source:
         require_scope(scoped, coordination_paths, "Coordination write")
         return
-    require_scope(source, validate_source_gate(gate), "Source write")
+    require_scope(source, validate_source_gate(gate, root), "Source write")
 
 
 def patch_paths(command: str, root: Path) -> list[str]:
@@ -549,7 +560,7 @@ def check_bash(event: dict, gate: dict, root: Path) -> None:
         if not source:
             require_scope(staged, coordination_paths, "Coordination commit")
             return
-        allowed = validate_source_gate(gate) + coordination_paths
+        allowed = validate_source_gate(gate, root) + coordination_paths
         require_scope(staged, allowed, "Staged commit")
         return
 

@@ -1,12 +1,14 @@
-# Critic Gate Record — WB-2026-09-09-lifecycle-ownership-reconciliation
+# Critic Gate Record — WB-2026-09-09-subagent-topology-reconciliation
 
 - **Status:** `READY`
 - **Verdict:** `APPROVE`
-- **Report:** `docs/reports/critic/WB-2026-09-09-lifecycle-ownership-reconciliation.md`
-- **Isolation:** `same-session-read-only` (fallback; no installed critic skill resource)
-- **Base commit:** `ae63875dfb30332afa85790c05c81c9717a357f9`
+- **Execution ID:** `01a087fe-80ba-7741-91a2-297fa04294ec`
+- **Report:** `docs/reports/critic/WB-2026-09-09-subagent-topology-reconciliation.md`
+- **Topology:** `native-separate-context`
+- **Repository root:** `/tmp/azursystech-wb-subagent-topology-reconciliation-026`
+- **Branch:** `feat/subagent-topology-reconciliation-026`
+- **Source revision:** `cafd2733e489d0d2a91553e70294d99d243046c0`
 
-The Critic confirms that the candidate is limited to lifecycle projections,
-assurance evidence, and non-authorizing branch/worktree classifications. No
-cleanup, default-branch mutation, multilingual implementation, or semantic
-contract change is admitted.
+The Critic approved the Define package after the first-session SUPPLEMENT was
+resolved. The binding records native execution-context separation only; it does
+not claim stronger process, filesystem, credential, or OS isolation.

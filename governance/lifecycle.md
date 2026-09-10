@@ -248,12 +248,17 @@ not a human blocker.
 - Approved specification and plan.
 - Critic before execution.
 - Reviewer and Verifier contracts after execution.
+- For non-trivial work, available native capability with distinct native Critic,
+  Reviewer, and Verifier role bindings; unavailable capability is explicitly
+  degraded/blocked and cannot be replaced by the main thread.
 - Approved evaluation plan for non-deterministic outputs, agent behavior, or consequential automation.
 - Evidence-based closeout.
 
 ### Assured
 
 - Independent review and verification.
+- For non-trivial work, the native topology admission and all three distinct
+  role bindings must match the frozen revision at successful closeout.
 - Independent output and observable trajectory evaluation when applicable.
 - Fixed rubric and benchmark revisions.
 - Drift audit.

@@ -11,6 +11,8 @@ from typing import Any
 
 import yaml
 
+from subagent_topology import TopologyError, applicable, validate as validate_topology
+
 from process_feedback import ProcessFeedbackError, validate_closeout_file
 
 ACTIVE_STATUSES = {"draft", "planned", "in_progress", "blocked"}
@@ -369,6 +371,11 @@ def validate_operational_active_work_block(
             "operational active Work Block specification Work Block ID does not match "
             "release-state active Work Block"
         )
+    if applicable(operational):
+        try:
+            validate_topology(operational, phase="admission", root=root)
+        except TopologyError as exc:
+            raise ReleaseStateError(f"operational native topology is invalid: {exc}") from exc
 
 
 def validate_release_assets(root: Path, release_state: dict[str, Any]) -> None:

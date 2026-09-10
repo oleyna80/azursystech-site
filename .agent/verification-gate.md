@@ -1,13 +1,19 @@
-# Verification Gate Record — WB-2026-09-09-lifecycle-ownership-reconciliation
+# Verification Gate Record — WB-2026-09-09-subagent-topology-reconciliation
 
-- **Status:** `READY`
-- **Verdict:** `READY`
-- **Isolation:** `same-session-read-only`
-- **Scope:** independent read-only verification against the approved
-  specification and frozen candidate.
+- **Status:** `PENDING`
+- **Verifier:** `subagent`
+- **Verification Tier:** `full`
+- **Claude Verifier Verdict:** `PENDING`
+- **GPT Verifier Status:** `NOT_REQUIRED`
+- **GPT Verifier Reason:** `No external GPT verifier is required by the approved plan.`
+- **New Domain:** `false`
+- **Sensitive Domains:** `none`
+- **Required Verifier Isolation:** `same-session-degraded`
+- **Verifier Isolation:** `same-session-degraded`
+- **Quick-Fix:** `false`
 
-The focused Reviewer and Verifier checks are complete for the bounded
-reconciliation. The canonical evidence is recorded in
-`docs/reports/verification/WB-2026-09-09-lifecycle-ownership-reconciliation.md`.
-No cleanup, merge, deployment, tag, or deletion has occurred in this Work
-Block.
+Post-freeze native Reviewer and Verifier evidence must be recorded against the
+immutable candidate content identity before this gate becomes `READY`. Native
+role separation and stronger security isolation are independent dimensions;
+the topology validator enforces the former and sensitive-domain policy governs
+the latter.

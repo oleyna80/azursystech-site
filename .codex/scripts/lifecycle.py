@@ -10,11 +10,17 @@ from __future__ import annotations
 import argparse
 import copy
 import datetime as dt
+import fnmatch
+import hashlib
 import json
 import os
 import subprocess
 import tempfile
 from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+from subagent_topology import TopologyError, applicable, validate as validate_topology
 
 SCHEMA_VERSION = 3
 AUTHORITY_MODE = "github_capability"
@@ -49,6 +55,8 @@ ASSURANCE_VERDICTS = {
     "drift": {"ALIGNED", "ALIGNMENT_REQUIRED", "BLOCKED", "UNVERIFIED"},
 }
 FORMAL_DEFINE_PROFILES = {"Managed", "Assured", "Distributed"}
+CANDIDATE_IDENTITY_PREFIX = "content-sha256:"
+MUTABLE_CANDIDATE_PATHS = {".agent/active-work-block.json"}
 
 
 def now() -> str:
@@ -74,6 +82,93 @@ def git_head(root: Path) -> str:
     if result.returncode != 0 or not result.stdout.strip():
         raise ValueError("cannot resolve git HEAD")
     return result.stdout.strip()
+
+
+def _candidate_path_matches(relative: str, write_set: list[str]) -> bool:
+    for raw_pattern in write_set:
+        pattern = str(raw_pattern).strip().replace("\\", "/").lstrip("./")
+        if not pattern:
+            continue
+        if pattern.endswith("/**"):
+            prefix = pattern[:-3].rstrip("/")
+            if relative == prefix or relative.startswith(f"{prefix}/"):
+                return True
+        elif relative == pattern or fnmatch.fnmatchcase(relative, pattern):
+            return True
+    return False
+
+
+def candidate_content_identity(root: Path, write_set: list[str] | None) -> str:
+    """Return the immutable identity of the approved source candidate.
+
+    Freeze runs before assurance while the worktree may be dirty, so Git HEAD
+    is only the base anchor.  The identity covers the current filesystem
+    content selected by the approved write-set and excludes only the mutable
+    active-state record that freeze itself rewrites.
+    """
+    if not isinstance(write_set, list) or not write_set:
+        raise ValueError("candidate content identity requires a non-empty write set")
+
+    entries: list[tuple[str, bytes, bytes]] = []
+    for current, directories, files in os.walk(root, topdown=True, followlinks=False):
+        current_path = Path(current)
+        directories[:] = [name for name in directories if name != ".git"]
+        symlink_directories = [
+            name for name in directories if (current_path / name).is_symlink()
+        ]
+        for name in files + symlink_directories:
+            path = current_path / name
+            relative = path.relative_to(root).as_posix()
+            if relative in MUTABLE_CANDIDATE_PATHS or not _candidate_path_matches(
+                relative, write_set
+            ):
+                continue
+            try:
+                if path.is_symlink():
+                    kind = b"symlink"
+                    content = os.readlink(path).encode("utf-8", errors="surrogateescape")
+                elif path.is_file():
+                    kind = b"file"
+                    content = path.read_bytes()
+                else:
+                    continue
+            except OSError as exc:
+                raise ValueError(f"cannot read candidate path {relative}: {exc}") from exc
+            entries.append((relative, kind, content))
+
+    if not entries:
+        raise ValueError("candidate content identity found no write-set files")
+
+    digest = hashlib.sha256()
+    for relative, kind, content in sorted(entries):
+        path_bytes = relative.encode("utf-8", errors="surrogateescape")
+        digest.update(len(path_bytes).to_bytes(8, "big"))
+        digest.update(path_bytes)
+        digest.update(len(kind).to_bytes(8, "big"))
+        digest.update(kind)
+        digest.update(len(content).to_bytes(8, "big"))
+        digest.update(content)
+    return f"{CANDIDATE_IDENTITY_PREFIX}{digest.hexdigest()}"
+
+
+def validate_candidate_identity(current: dict, root: Path | None) -> None:
+    frozen = current.get("frozen_revision")
+    if (
+        not isinstance(frozen, str)
+        or not frozen.startswith(CANDIDATE_IDENTITY_PREFIX)
+        or len(frozen) != len(CANDIDATE_IDENTITY_PREFIX) + 64
+        or any(character not in "0123456789abcdef" for character in frozen[len(CANDIDATE_IDENTITY_PREFIX) :])
+    ):
+        raise ValueError(
+            "success-closeout requires frozen_revision to be an immutable content-sha256 identity"
+        )
+    if root is None:
+        raise ValueError("success-closeout requires repository root for candidate identity")
+    current_identity = candidate_content_identity(root, current.get("write_set"))
+    if current_identity != frozen:
+        raise ValueError(
+            "success-closeout candidate content identity does not match frozen_revision"
+        )
 
 
 def git_branch(root: Path) -> str:
@@ -217,6 +312,18 @@ def validate_open(args: argparse.Namespace) -> None:
             )
 
 
+def topology_evidence(args: argparse.Namespace) -> dict | None:
+    if not args.non_trivial:
+        return None
+    try:
+        value = json.loads(args.topology_evidence)
+    except json.JSONDecodeError as exc:
+        raise ValueError("non-trivial open requires valid --topology-evidence JSON") from exc
+    if not isinstance(value, dict):
+        raise ValueError("non-trivial open requires object --topology-evidence JSON")
+    return value
+
+
 def open_state(root: Path, args: argparse.Namespace, current: dict) -> dict:
     validate_open(args)
     branch = source_branch(root)
@@ -238,6 +345,10 @@ def open_state(root: Path, args: argparse.Namespace, current: dict) -> dict:
     }
     value["write_gate"] = {"status": "READY", "opened_at": now()}
     value["write_set"] = list(dict.fromkeys(v.strip() for v in args.write if v.strip()))
+    value["non_trivial"] = args.non_trivial
+    evidence = topology_evidence(args)
+    if evidence is not None:
+        value["subagent_topology"] = evidence
     value["critic"] = {
         "required": True,
         "status": args.critic_status,
@@ -250,18 +361,48 @@ def open_state(root: Path, args: argparse.Namespace, current: dict) -> dict:
         value["integrations"] = copy.deepcopy(current["integrations"])
     if isinstance(current.get("coordination_write_set"), list):
         value["coordination_write_set"] = list(current["coordination_write_set"])
+    try:
+        validate_topology(value, phase="admission", root=root)
+    except TopologyError as exc:
+        raise ValueError(f"open requires valid native topology evidence: {exc}") from exc
     return value
 
 
-def blocked_copy(current: dict, reason: str) -> dict:
+def blocked_copy(current: dict, reason: str, root: Path) -> dict:
     validate_state(current)
     value = copy.deepcopy(current)
     value["write_gate"] = {"status": "BLOCKED", "opened_at": None}
     value["lifecycle_note"] = reason
+    value["frozen_revision"] = candidate_content_identity(root, value.get("write_set"))
     return value
 
 
-def validate_closeout_state(current: dict, mode: str) -> None:
+def validate_assurance_role_bindings(current: dict) -> None:
+    topology = current.get("subagent_topology")
+    assurance = current.get("assurance")
+    bindings = topology.get("role_bindings") if isinstance(topology, dict) else None
+    if not isinstance(bindings, list) or not isinstance(assurance, dict):
+        raise ValueError("success-closeout requires assurance role-binding evidence")
+    by_role = {
+        item.get("role"): item
+        for item in bindings
+        if isinstance(item, dict) and isinstance(item.get("role"), str)
+    }
+    for assurance_name, role in (("review", "reviewer"), ("verification", "verifier")):
+        evidence = assurance.get(assurance_name)
+        binding = by_role.get(role)
+        if not isinstance(evidence, dict) or not isinstance(binding, dict):
+            raise ValueError(f"success-closeout requires assurance.{assurance_name} binding")
+        for key in ("report", "execution_id"):
+            if not isinstance(evidence.get(key), str) or not evidence[key].strip():
+                raise ValueError(f"assurance.{assurance_name}.{key} is required")
+            if evidence[key] != binding[key]:
+                raise ValueError(
+                    f"assurance.{assurance_name}.{key} does not match native {role} binding"
+                )
+
+
+def validate_closeout_state(current: dict, mode: str, root: Path | None = None) -> None:
     validate_state(current)
     assurance = current.get("assurance")
     if not isinstance(assurance, dict):
@@ -291,6 +432,14 @@ def validate_closeout_state(current: dict, mode: str) -> None:
 
     if mode != "success-closeout":
         return
+
+    validate_candidate_identity(current, root)
+    try:
+        validate_topology(current, phase="closeout", root=root)
+    except TopologyError as exc:
+        raise ValueError(f"success-closeout requires valid native topology evidence: {exc}") from exc
+    if applicable(current):
+        validate_assurance_role_bindings(current)
 
     define_quality = current.get("define_quality")
     if current.get("governance_profile") in FORMAL_DEFINE_PROFILES:
@@ -349,6 +498,8 @@ def main() -> int:
     opening.add_argument("--requirements-review", default="")
     opening.add_argument("--traceability", default="")
     opening.add_argument("--consistency-analysis", default="")
+    opening.add_argument("--non-trivial", action="store_true")
+    opening.add_argument("--topology-evidence", default="")
 
     freeze = subparsers.add_parser("freeze")
     freeze.add_argument("--reason", required=True)
@@ -375,9 +526,9 @@ def main() -> int:
         validate_state(current)
         value = open_state(root, args, current)
     elif args.command == "freeze":
-        value = blocked_copy(current, args.reason)
+        value = blocked_copy(current, args.reason, root)
     else:
-        validate_closeout_state(current, args.mode)
+        validate_closeout_state(current, args.mode, root)
         # A terminal closeout must not leave a branch-bound active record behind.
         # The inactive record retains only the closeout classification and the
         # coordination note; a subsequent Work Block must explicitly reopen scope.

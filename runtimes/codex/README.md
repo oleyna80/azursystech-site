@@ -107,11 +107,24 @@ other external capabilities require separate admission and runtime permission.
 - Hard Stop approvals;
 - approved integration IDs and admission-record paths;
 - Review, Verification, and Drift state/evidence;
+- non-trivial flag and native subagent topology capability/admission evidence;
+- distinct native Critic/Reviewer/Verifier execution and context bindings,
+  including source/frozen revision and report linkage;
 - closeout mode.
+
+For non-trivial `Managed` and `Assured` Work Blocks, the Codex adapter exposes
+the observed native execution identifier, context identifier and identifier
+source, runtime/adapter/version, repository root, branch, launch mechanism,
+topology tier, probe event, status, report, and observation time. The required
+policy is `native-separate-context-required`; duplicate, missing, stale,
+reused, or mismatched evidence is denied. `unknown`, `conditional`,
+`unavailable`, and `launch_failed` are reported as explicit degraded/blocked
+states and never silently substituted with the main thread. These bindings do
+not by themselves claim `independent-readonly-root` or `os-isolated`.
 
 Source writes require:
 
-- schema version 2 and Work Block ID;
+- schema version 3 and Work Block ID;
 - approved specification path/revision;
 - `write_gate.status: READY`;
 - timezone-aware unexpired gate;

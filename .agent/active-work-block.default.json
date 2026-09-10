@@ -9,6 +9,8 @@
   },
   "subject_branch": "",
   "base_commit": "",
+  "non_trivial": false,
+  "subagent_topology": null,
   "define_quality": {
     "required": false,
     "status": "PENDING",

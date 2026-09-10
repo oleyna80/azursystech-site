@@ -80,6 +80,9 @@ def main() -> int:
     gate, error = load_gate(root)
     agent_type = str(event.get("agent_type") or "default")
     permission_mode = str(event.get("permission_mode") or "unknown")
+    execution_id = str(event.get("execution_id") or event.get("agent_id") or "UNEXPOSED")
+    context_id = str(event.get("context_id") or execution_id)
+    context_id_source = "platform_context_id" if event.get("context_id") else "execution_id"
     role = agent_type.lower().replace("-", "_")
     authority = ROLE_AUTHORITY.get(
         role,
@@ -108,6 +111,10 @@ def main() -> int:
                 f"Planning baseline: {gate.get('base_commit') or 'UNSET'}",
                 f"Local source write gate: {str(write_gate.get('status') or 'BLOCKED').upper()}",
                 f"Critic: {str(critic.get('status') or 'PENDING').upper()} / {str(critic.get('verdict') or 'PENDING').upper()}",
+                f"Native execution ID: {execution_id}",
+                f"Native context ID: {context_id} ({context_id_source})",
+                f"Observed repository root: {root}",
+                "These identifiers are observable context metadata, not evidence of OS or root isolation.",
                 f"Approved write-set: {compact_list(gate.get('write_set'))}",
                 f"Coordination paths: {compact_list(gate.get('coordination_write_set'))}",
                 f"External Hard Stops: {compact_list(gate.get('external_hard_stops'))}",

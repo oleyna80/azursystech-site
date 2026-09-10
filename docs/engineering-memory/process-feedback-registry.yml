@@ -19,3 +19,17 @@ observations:
     authority: advisory_only
     avoidable_friction: false
     related_work_blocks: []
+  - id: PF-2026-09-09-subagent-topology-root-inheritance
+    work_block_id: WB-2026-09-09-subagent-topology-reconciliation
+    date: "2026-09-09"
+    category: ENVIRONMENT_ISSUE
+    observation: Session-root inheritance prevented the scoped Coder from mutating the intended isolated Work Block worktree during the first execution attempt.
+    evidence: "Owner resume evidence and docs/reports/capability/WB-2026-09-09-subagent-topology-reconciliation.md record parent and child execution bound to the canonical checkout; the session-root/write guard correctly blocked mutation and no project files changed."
+    likely_systemic_cause: Native child-session launch inherited the canonical checkout root instead of the requested Work Block root.
+    impact: The approved implementation was delayed and required a fresh correctly rooted session; bypassing the guard would have violated worktree isolation and was not attempted.
+    suggested_improvement: Add a pre-dispatch root assertion and surface the effective child session root before admitting a write-capable Coder; do not weaken the existing guard.
+    severity: LOW
+    status: NEW
+    authority: advisory_only
+    avoidable_friction: true
+    related_work_blocks: []

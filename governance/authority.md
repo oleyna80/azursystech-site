@@ -81,6 +81,23 @@ AzurSysTech maps declared runtime isolation to assurance tiers:
 
 A declared isolation level is evidence, not self-authenticating proof.
 
+### Native subagent topology contract
+
+For non-trivial `Managed` and `Assured` Work Blocks, a native capability probe
+must be `available` before topology promotion. The required policy is
+`native-separate-context-required`: admission binds a distinct native Critic
+execution, and successful closeout binds distinct native Critic, Reviewer, and
+Verifier executions. Each binding records the Work Block, role, execution and
+context identifiers, runtime/adapter/version, source or frozen revision,
+repository root, branch, read-only boundary, launch mechanism, topology tier,
+probe event, report, status, and observation time.
+
+Capability states `unknown`, `conditional`, `unavailable`, and `launch_failed`
+remain explicit degraded/blocked outcomes. They never authorize a main-thread
+substitution. Native role separation also does not satisfy
+`independent-readonly-root` or `os-isolated`; those stronger root and OS
+boundaries remain separately evidenced where required.
+
 ## Autonomous Work Block Execution and Private GitHub Mode
 
 This section is the sole canonical authority source for autonomous execution and
