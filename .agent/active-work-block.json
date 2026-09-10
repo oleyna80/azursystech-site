@@ -148,11 +148,22 @@
     "admission_records": []
   },
   "write_set": [
+    ".agent/active-work-block.default.json",
     ".agent/ROSTER.md",
     ".agent/workflows/sdd-protocol.md",
+    "governance/authority.md",
     "governance/lifecycle.md",
+    "governance/runtime-capabilities.md",
+    "runtimes/codex/README.md",
+    ".codex/critic.md",
+    ".codex/hooks/pre_tool_use_policy.py",
+    ".codex/hooks/subagent_context.py",
+    ".codex/hooks/verification-gate.sh",
+    ".codex/scripts/lifecycle.py",
+    "scripts/validate-release-state.py",
     "scripts/subagent_topology.py",
-    "scripts/test-subagent-topology.py"
+    "scripts/test-subagent-topology.py",
+    "scripts/test-release-state-contracts.py"
   ],
   "coordination_write_set": [
     ".agent/active-work-block.json",
