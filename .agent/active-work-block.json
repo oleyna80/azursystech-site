@@ -110,6 +110,7 @@
       "required": true,
       "status": "READY",
       "verdict": "READY",
+      "execution_id": "01a08b42-aa05-7b73-b9ce-a4a146ce20a6",
       "report": "docs/reports/reviews/WB-2026-09-09-subagent-topology-reconciliation.md",
       "isolation": "native-separate-context-required",
       "skip_reason": ""
@@ -118,6 +119,7 @@
       "required": true,
       "status": "READY",
       "verdict": "READY",
+      "execution_id": "01a08b47-9d95-7d42-a76b-e5b471b25640",
       "report": "docs/reports/verification/WB-2026-09-09-subagent-topology-reconciliation.md",
       "isolation": "native-separate-context-required",
       "skip_reason": ""
