@@ -113,7 +113,8 @@ migration_state:
     - docs/plans/WB-2026-09-09-release-state-fixture-isolation.md
     - docs/plans/WB-2026-09-09-lifecycle-ownership-reconciliation.md
     - docs/plans/WB-2026-09-09-process-feedback-self-improvement.md
-  active_work_block: docs/plans/WB-2026-09-09-subagent-topology-reconciliation.md
+    - docs/plans/WB-2026-09-09-subagent-topology-reconciliation.md
+  active_work_block: null
 
 release_state:
   contract: governance/release-state.md
@@ -122,8 +123,8 @@ release_state:
   workflow: .github/workflows/release-state-contract.yml
   authority: assurance_only
   external_vcs_state: non_normative
-  latest_completed_work_block: docs/plans/WB-2026-09-09-process-feedback-self-improvement.md
-  closeout_report: docs/reports/closeout/WB-2026-09-09-process-feedback-self-improvement.md
+  latest_completed_work_block: docs/plans/WB-2026-09-09-subagent-topology-reconciliation.md
+  closeout_report: docs/reports/closeout/WB-2026-09-09-subagent-topology-reconciliation.md
 
 entries:
   AGENTS.md:

@@ -9,6 +9,7 @@ from __future__ import annotations
 import datetime as dt
 import argparse
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +17,10 @@ FORMAL_PROFILES = {"Managed", "Assured"}
 REQUIRED_ROLES = ("critic", "reviewer", "verifier")
 CAPABILITY_STATES = {"available", "unavailable", "conditional", "unknown", "launch_failed"}
 FRESHNESS = dt.timedelta(hours=24)
+NATIVE_DISPATCH_REF = re.compile(r"native_dispatch:([A-Za-z0-9][A-Za-z0-9._-]*)\Z")
+RFC3339_UTC = re.compile(
+    r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|\+00:00)\Z"
+)
 
 
 class TopologyError(ValueError):
@@ -29,11 +34,13 @@ def applicable(state: dict[str, Any]) -> bool:
 def _utc(value: object, label: str) -> dt.datetime:
     if not isinstance(value, str) or not value.strip():
         raise TopologyError(f"{label} is required")
+    if RFC3339_UTC.fullmatch(value) is None:
+        raise TopologyError(f"{label} must be RFC3339 UTC")
     try:
-        parsed = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
+        parsed = dt.datetime.fromisoformat(value[:-1] + "+00:00" if value.endswith("Z") else value)
     except ValueError as exc:
         raise TopologyError(f"{label} must be RFC3339 UTC") from exc
-    if parsed.tzinfo is None or parsed.utcoffset() is None:
+    if parsed.tzinfo is None or parsed.utcoffset() != dt.timedelta(0):
         raise TopologyError(f"{label} must be RFC3339 UTC")
     return parsed.astimezone(dt.timezone.utc)
 
@@ -59,12 +66,39 @@ def _capability(state: dict[str, Any], now: dt.datetime) -> tuple[dict[str, Any]
     verified = _utc(capability.get("verified_at"), "subagent_topology.capability.verified_at")
     if now - verified > FRESHNESS or verified > now + dt.timedelta(minutes=5):
         raise TopologyError("subagent_topology.capability evidence is stale")
+    _capability_probe_ids(capability)
     return capability, status
 
 
 def _expect(value: dict[str, Any], key: str, expected: object, label: str) -> None:
     if value.get(key) != expected:
         raise TopologyError(f"{label}.{key} does not match active Work Block")
+
+
+def _native_dispatch_id(value: object, label: str) -> str:
+    """Return the sole native dispatch ID encoded by an evidence reference."""
+    if not isinstance(value, str):
+        raise TopologyError(f"{label} must be one native_dispatch:<execution_id> reference")
+    match = NATIVE_DISPATCH_REF.fullmatch(value)
+    if match is None:
+        raise TopologyError(f"{label} must be one native_dispatch:<execution_id> reference")
+    return match.group(1)
+
+
+def _capability_probe_ids(capability: dict[str, Any]) -> set[str]:
+    """Validate the aggregate comma-separated native capability probe ledger."""
+    ledger = capability.get("probe_event_ref")
+    if not isinstance(ledger, str) or not ledger:
+        raise TopologyError("subagent_topology.capability.probe_event_ref is required")
+    probe_ids = [
+        _native_dispatch_id(reference, "subagent_topology.capability.probe_event_ref")
+        for reference in ledger.split(",")
+    ]
+    if len(probe_ids) != len(REQUIRED_ROLES):
+        raise TopologyError("subagent_topology.capability.probe_event_ref must contain exactly three native dispatch IDs")
+    if len(probe_ids) != len(set(probe_ids)):
+        raise TopologyError("subagent_topology.capability.probe_event_ref must contain distinct native dispatch IDs")
+    return set(probe_ids)
 
 
 def _report_path(report: str, root: Path | None, label: str) -> Path | None:
@@ -95,7 +129,34 @@ def _report_path(report: str, root: Path | None, label: str) -> Path | None:
     return candidate
 
 
-def _bindings(state: dict[str, Any], roles: tuple[str, ...], now: dt.datetime, root: Path | None) -> None:
+def _authoritative_report(state: dict[str, Any], role: str, phase: str) -> str:
+    if role == "critic":
+        evidence = state.get("critic")
+        label = "critic"
+    elif phase == "closeout" and role == "reviewer":
+        assurance = state.get("assurance")
+        evidence = assurance.get("review") if isinstance(assurance, dict) else None
+        label = "assurance.review"
+    elif phase == "closeout" and role == "verifier":
+        assurance = state.get("assurance")
+        evidence = assurance.get("verification") if isinstance(assurance, dict) else None
+        label = "assurance.verification"
+    else:
+        raise TopologyError(f"role binding {role} has no authoritative report for {phase}")
+    report = evidence.get("report") if isinstance(evidence, dict) else None
+    if not isinstance(report, str) or not report.strip():
+        raise TopologyError(f"{label}.report is required")
+    return report
+
+
+def _bindings(
+    state: dict[str, Any],
+    roles: tuple[str, ...],
+    now: dt.datetime,
+    root: Path | None,
+    phase: str,
+    capability: dict[str, Any],
+) -> None:
     record = _record(state)
     bindings = record.get("role_bindings")
     if not isinstance(bindings, list):
@@ -107,9 +168,15 @@ def _bindings(state: dict[str, Any], roles: tuple[str, ...], now: dt.datetime, r
         raise TopologyError("required native role bindings are missing or duplicated")
     executions: set[str] = set()
     contexts: set[str] = set()
-    expected_revision = state.get("frozen_revision") or state.get("base_commit")
+    probe_ids = _capability_probe_ids(capability)
     for binding in selected:
         role = str(binding["role"])
+        if phase == "admission":
+            expected_revision = state.get("base_commit")
+        elif role in {"reviewer", "verifier"}:
+            expected_revision = state.get("frozen_revision")
+        else:
+            expected_revision = state.get("base_commit")
         for key in (
             "work_block_id", "execution_id", "context_id", "context_id_source", "runtime", "adapter",
             "adapter_version", "source_revision", "repository_root", "branch", "readonly_boundary",
@@ -121,6 +188,9 @@ def _bindings(state: dict[str, Any], roles: tuple[str, ...], now: dt.datetime, r
         _expect(binding, "branch", state.get("subject_branch"), f"role binding {role}")
         _expect(binding, "repository_root", str(root.resolve()) if root else binding["repository_root"], f"role binding {role}")
         _expect(binding, "source_revision", expected_revision, f"role binding {role}")
+        for key in ("runtime", "adapter", "adapter_version"):
+            if binding[key] != capability[key]:
+                raise TopologyError(f"role binding {role}.{key} does not match capability evidence")
         if binding["status"] != "READY" or binding["launch_mechanism"] != "native":
             raise TopologyError(f"role binding {role} is not a READY native execution")
         if binding["topology_tier"] != "native-separate-context":
@@ -129,6 +199,13 @@ def _bindings(state: dict[str, Any], roles: tuple[str, ...], now: dt.datetime, r
             raise TopologyError(f"role binding {role}.context_id_source is invalid")
         if binding["context_id_source"] == "execution_id" and binding["context_id"] != binding["execution_id"]:
             raise TopologyError(f"role binding {role} execution-id context alias is invalid")
+        dispatch_id = _native_dispatch_id(binding["probe_event_ref"], f"role binding {role}.probe_event_ref")
+        if binding["execution_id"] != dispatch_id:
+            raise TopologyError(f"role binding {role}.execution_id does not match its native dispatch reference")
+        if dispatch_id in probe_ids:
+            raise TopologyError(f"role binding {role} reuses a capability probe execution ID")
+        if binding["report"] != _authoritative_report(state, role, phase):
+            raise TopologyError(f"role binding {role}.report does not match its authoritative report")
         report_path = _report_path(binding["report"], root, f"role binding {role}")
         if report_path is not None and not report_path.is_file():
             raise TopologyError(f"role binding {role}.report is missing")
@@ -169,7 +246,14 @@ def validate(state: dict[str, Any], *, phase: str, root: Path | None = None, now
         report = critic.get("report")
         if not isinstance(report, str) or not report.startswith("docs/reports/"):
             raise TopologyError("native topology admission requires a linked Critic report")
-    _bindings(state, ("critic",) if phase == "admission" else REQUIRED_ROLES, current, root)
+    _bindings(
+        state,
+        ("critic",) if phase == "admission" else REQUIRED_ROLES,
+        current,
+        root,
+        phase,
+        capability,
+    )
 
 
 def main() -> int:

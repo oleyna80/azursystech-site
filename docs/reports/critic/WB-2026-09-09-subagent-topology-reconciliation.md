@@ -2,8 +2,63 @@
 artifact_type: critic_report
 work_block_id: WB-2026-09-09-subagent-topology-reconciliation
 status: advisory
-revision: v1
+revision: v2-recovery
 ---
+
+## Recovery attempt — final Define approval
+
+Native read-only Critic execution: `01a08a80-9bf4-7dc3-bc2b-7d77211f9e41`.
+The child observed the exact recovery root
+`/tmp/azursystech-wb-subagent-topology-reconciliation-026-r1`, branch
+`feat/subagent-topology-reconciliation-026-r1`, and baseline
+`39a059394aacf70c0c6cb68e3dc947891788f112`, and made no repository changes.
+The advisory verdict was `APPROVE`.
+
+The Critic confirmed that all prior supplements are resolved: current
+projections and frontmatter are valid; role-labelled capability probes are
+distinct from assurance IDs; exact capability tuple equality, structural
+single-dispatch references, capability-probe non-reuse, exact report linkage,
+and the individually enumerated adversarial fixtures are explicit. The
+package remains control-plane-only and preserves the distinction between
+native role separation and stronger process/filesystem/OS isolation. This
+execution is the current Define approval and is eligible for the ordered
+Critic-binding/open transition.
+
+## Recovery attempt — final Define supplement
+
+Native read-only Critic execution: `01a08a7a-944d-7902-9423-5befcb6815d1`.
+The child observed the exact recovery root
+`/tmp/azursystech-wb-subagent-topology-reconciliation-026-r1`, branch
+`feat/subagent-topology-reconciliation-026-r1`, and baseline
+`39a059394aacf70c0c6cb68e3dc947891788f112`, and made no repository changes.
+The advisory verdict was `SUPPLEMENT`.
+
+The remaining Define requirement was to enumerate recovery-specific negative
+fixtures individually: capability tuple mismatch; malformed, non-native,
+empty, or multi-value role dispatch references; malformed, duplicate, or
+non-native aggregate probe ledgers; aggregate-probe reuse as assurance;
+Critic binding/report mismatch; and Reviewer/Verifier binding/report mismatch.
+Those requirements are now explicit in REQ-005, AC-003, and the plan's exact
+assurance checks. This entry remains historical advisory evidence until the
+next fresh Critic confirms the repaired package.
+
+## Recovery attempt — fresh Critic reconsideration
+
+Native read-only Critic execution: `01a08a56-cfb7-7ba0-84ed-6791b49feccb`.
+The child observed the exact recovery root
+`/tmp/azursystech-wb-subagent-topology-reconciliation-026-r1`, branch
+`feat/subagent-topology-reconciliation-026-r1`, and baseline
+`39a059394aacf70c0c6cb68e3dc947891788f112`, and made no repository changes.
+The advisory verdict was `RECONSIDER`.
+
+Material findings were: current Define and gate artifacts still named the
+original baseline/root; capability evidence needed fresh distinct role-labeled
+probes; the capability report had malformed frontmatter and retained stale
+current evidence; the validator lacked runtime/adapter/adapter-version tuple
+equality, structural single-dispatch references, capability-probe non-reuse,
+and exact role-report linkage. Implementation admission remained closed. This
+entry is the current recovery Critic evidence; all entries below are
+historical original-worktree evidence.
 
 # Critic evidence — Subagent topology reconciliation
 

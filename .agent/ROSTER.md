@@ -50,9 +50,11 @@ The Work Block chooses the minimum sufficient level and records the actual bound
 For a non-trivial `Managed` or `Assured` Work Block, native capability is
 admission evidence, not an implied runtime feature. A capability state is one
 of `available`, `unavailable`, `conditional`, `unknown`, or `launch_failed`.
-Only `available` may promote the required native topology. The admission
-binding is `native-separate-context-required` and requires distinct native
-execution and context identifiers for `critic`, `reviewer`, and `verifier`.
+Only `available` may promote the required native topology. Admission requires
+the native Critic binding against `base_commit`. Successful closeout requires
+the native Critic, Reviewer, and Verifier bindings, with Reviewer and Verifier
+bound against `frozen_revision`; all required bindings have distinct native
+execution and context identifiers.
 
 `same-session-degraded` is an explicit degraded or blocked result and never a
 main-thread substitution for required assurance. `independent-readonly-root`

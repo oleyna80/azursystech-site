@@ -257,8 +257,9 @@ not a human blocker.
 ### Assured
 
 - Independent review and verification.
-- For non-trivial work, the native topology admission and all three distinct
-  role bindings must match the frozen revision at successful closeout.
+- For non-trivial work, Critic admission evidence must match `base_commit`, and
+  Reviewer and Verifier closeout evidence must match `frozen_revision` at
+  successful closeout.
 - Independent output and observable trajectory evaluation when applicable.
 - Fixed rubric and benchmark revisions.
 - Drift audit.

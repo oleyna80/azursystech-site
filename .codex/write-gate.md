@@ -2,15 +2,14 @@
 
 - **Work Block:** `WB-2026-09-09-subagent-topology-reconciliation`
 - **Write Gate Status:** `READY`
-- **Subject branch:** `feat/subagent-topology-reconciliation-026`
-- **Baseline:** `cafd2733e489d0d2a91553e70294d99d243046c0`
-- **Repository root:** `/tmp/azursystech-wb-subagent-topology-reconciliation-026`
+- **Subject branch:** `feat/subagent-topology-reconciliation-026-r1`
+- **Baseline:** `39a059394aacf70c0c6cb68e3dc947891788f112`
+- **Repository root:** `/tmp/azursystech-wb-subagent-topology-reconciliation-026-r1`
 
-The approved local candidate may be edited and committed within the declared
-source and coordination write-sets. Freeze records an immutable content
-identity over the approved source write-set. After required assurance is
-`READY`, publish only the exact non-default subject refspec:
-`git push origin HEAD:refs/heads/feat/subagent-topology-reconciliation-026`.
+The Work Block is admitted for the final candidate commit within the declared
+source and coordination write-sets. After required assurance reached `READY`, publish
+only the exact non-default subject refspec:
+`git push origin HEAD:refs/heads/feat/subagent-topology-reconciliation-026-r1`.
 
 This record does not authorize force push, default/protected-branch mutation,
 remote deletion, tags/releases, merge, deployment, secret changes, database

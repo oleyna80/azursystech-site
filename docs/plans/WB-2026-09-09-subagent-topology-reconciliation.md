@@ -3,7 +3,7 @@ artifact_type: work_block
 work_block_id: WB-2026-09-09-subagent-topology-reconciliation
 status: in_progress
 revision: v1
-baseline: cafd2733e489d0d2a91553e70294d99d243046c0
+baseline: 39a059394aacf70c0c6cb68e3dc947891788f112
 governance_profile: Assured
 process_feedback_required: true
 ---
@@ -12,17 +12,20 @@ process_feedback_required: true
 
 ## Stage 0 — Define
 
-Reconstruct the target Work Block package in the isolated worktree, record the
-first-session `SUPPLEMENT`, and obtain a fresh native Critic verdict against
-this package. No implementation source is changed before the fresh Critic
-resolves the material findings.
+Rebind the target Work Block package to the `-r1` recovery worktree and
+baseline, record the first-session `SUPPLEMENT` and recovery friction, and
+obtain a fresh native Critic verdict against this package. No implementation
+source is changed before the fresh Critic resolves the material findings.
 
 ## Stage 1 — Execute
 
 One scoped Coder updates only the topology contract, lifecycle admission and
 closeout validation, active runtime context evidence, focused deterministic
 tests, and the explicitly listed governance/template/index artifacts. The
-Coder must report its actual root, branch, revision, and changed paths.
+Coder must report its actual root, branch, revision, and changed paths. The
+correction must enforce capability-tuple equality, structural single-dispatch
+references, non-reuse of capability probes as assurance bindings, and exact
+role-report linkage.
 
 ## Stage 2 — Assure
 
@@ -117,7 +120,7 @@ Coder, Reviewer, and Verifier mission briefs are:
 
 | Role | Inputs | Scope | Out of scope / side effects | Dependency / parallel group | Required checks and evidence | Expected output / acceptance owner | File-change permission / handoff |
 | Critic | Approved spec, plan, tasklist, Define reports, capability report, baseline identity | Define package, topology, capability, risk, task ordering | All source edits, lifecycle mutation, DB action; no side effects | None; serial before open | Identity probe, traceability, consistency, capability freshness, profile matrix, exact write-set | Advisory `APPROVE`, `SUPPLEMENT`, or `RECONSIDER` with evidence; Orchestrator accepts | Read-only; handoff is approval or bounded findings |
-| Coder | Approved Define package, active state, approved write-set, Critic approval | Exact control-plane/runtime/test write-set listed above | Application, DB, dependencies, secrets, deploy, merge, destructive actions; no external side effects | TASK-002 prerequisite; sole writer, serial | Focused topology tests, release-state tests, syntax, traceability; report root/branch/HEAD and paths | Changed paths, checks, concerns, root evidence; Orchestrator owns acceptance | One writer; handoff is frozen candidate |
+| Coder | Approved Define package, active state, approved write-set, Critic approval | Exact control-plane/runtime/test write-set listed above | Application, DB, dependencies, secrets, deploy, merge, destructive actions; no external side effects | TASK-002 prerequisite; sole writer, serial | Focused topology tests including tuple, structural dispatch, probe non-reuse, and report-linkage denials; release-state tests, syntax, traceability; report root/branch/HEAD and paths | Changed paths, checks, concerns, root evidence; Orchestrator owns acceptance | One writer; handoff is frozen candidate |
 | Reviewer | Frozen candidate, active state, capability and Critic evidence, Coder report | Frozen diff, security/fail-open paths, docs↔code drift | Any edit, stage transition, DB action, or verdict mutation | After freeze; serial with Verifier only if read-only | Focused tests, adversarial admission/closeout review, root/revision/report linkage | Read-only report and `READY`/`CHANGES_REQUIRED`/`BLOCKED`; Orchestrator accepts | Read-only; handoff is review binding |
 | Verifier | Frozen candidate, tasklist, acceptance criteria, Reviewer-independent view | Frozen revision, positive/negative fixtures, lifecycle/release evidence | Any edit, main-thread substitution, DB action, merge/deploy | After freeze; read-only parallel group with Reviewer | Reproducible focused tests, release validation, Drift inputs, exact fixture results | Verification report and `READY`/`BLOCKED`; Orchestrator accepts | Read-only; handoff is verification binding |
 
@@ -282,9 +285,13 @@ tests. After freeze, Reviewer and Verifier independently run the focused
 topology tests and release-state validator. The focused test must show one
 valid admission and denials for missing/unknown/failed capability, stale state,
 duplicate role, reused execution/context ID, same-session overclaim, wrong
-Work Block, wrong root/branch, frozen-revision mismatch, and missing report.
-Any failed required role launch is recorded as `DEGRADED` with its actual error;
-the closeout remains blocked/reporting-only.
+Work Block, wrong root/branch, frozen-revision mismatch, missing report,
+capability tuple mismatch, malformed/multi-value role dispatch, malformed,
+duplicate, or non-native aggregate probe ledgers, aggregate-probe reuse,
+Critic binding/report mismatch at admission, and Reviewer/Verifier
+binding/report mismatch at closeout. Any failed required role launch is
+recorded as `DEGRADED` with its actual error; the closeout remains
+blocked/reporting-only.
 
 ## Out of scope
 
@@ -301,3 +308,15 @@ database, deployment, authority change, broader write-set, or a weaker guard.
 If native role launch fails after implementation, record the actual degraded
 state and leave the assurance verdict blocked rather than substituting
 main-thread assurance.
+
+## Final State
+
+- **Stage State:** completed
+- **Review Gate:** READY
+- **Verification Verdict:** READY
+- **Drift Gate:** ALIGNED
+- **Evaluation Verdict:** SKIPPED — no generative or rubric-based deliverable is in scope
+- **Task Status:** completed
+- **Closeout Mode:** success-closeout
+- **Final Candidate:** recorded after the approved subject-branch commit and publication
+- **Owner Handoff:** integration review required; no merge or deployment

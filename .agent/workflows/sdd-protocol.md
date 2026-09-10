@@ -63,8 +63,9 @@ gate is resolved and the write gate is `READY`.
 - Freeze each worker handoff at its named revision and report `DONE`, `DONE_WITH_CONCERNS`, `NEEDS_CONTEXT`, or `BLOCKED`.
 - Freeze records an immutable `frozen_revision` content identity over the
   approved candidate write-set; Git HEAD remains only the base anchor until a
-  candidate commit is materialized. An applicable successful closeout requires
-  matching frozen-revision evidence for all three native role bindings.
+  candidate commit is materialized. Critic admission evidence must match
+  `base_commit`; applicable successful closeout requires Reviewer and Verifier
+  evidence matching `frozen_revision`.
 - Native role-context separation and security-isolation tier are independent:
   the topology validator proves the former, while the verification hook only
   applies stronger isolation requirements where sensitive domains require it.

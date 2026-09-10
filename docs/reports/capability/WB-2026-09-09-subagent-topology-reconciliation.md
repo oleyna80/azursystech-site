@@ -2,82 +2,74 @@
 artifact_type: runtime_capability_evidence
 work_block_id: WB-2026-09-09-subagent-topology-reconciliation
 status: available
-revision: v1
-verified_at: 2026-09-09T20:46:09Z
+revision: v2-recovery
+verified_at: 2026-09-10T08:11:04Z
 runtime: codex
 adapter: multi_agent_v1
 adapter_version: runtime-provided
-probe_event_ref: native_dispatch:01a087d5-b5c7-7e60-aa27-c00b2f98df1c,native_dispatch:01a087df-18c4-7ba0-8093-df520c8ce8c9,native_dispatch:01a087df-1795-75f2-97ae-4b301ecbceaa
-critic_probe_event_ref: native_dispatch:01a087d5-b5c7-7e60-aa27-c00b2f98df1c
-reviewer_probe_event_ref: native_dispatch:01a087df-18c4-7ba0-8093-df520c8ce8c9
-verifier_probe_event_ref: native_dispatch:01a087df-1795-75f2-97ae-4b301ecbceaa
+probe_event_ref: native_dispatch:01a08a55-ba9c-7ea3-9835-6d5e77386b8f,native_dispatch:01a08a5b-23ae-7013-9316-f3628692c02b,native_dispatch:01a08a5d-ec97-7cc1-a885-05b5291a4a69
+critic_probe_event_ref: native_dispatch:01a08a55-ba9c-7ea3-9835-6d5e77386b8f
+reviewer_probe_event_ref: native_dispatch:01a08a5d-ec97-7cc1-a885-05b5291a4a69
+verifier_probe_event_ref: native_dispatch:01a08a5b-23ae-7013-9316-f3628692c02b
+repository_root: /tmp/azursystech-wb-subagent-topology-reconciliation-026-r1
+branch: feat/subagent-topology-reconciliation-026-r1
+baseline: 39a059394aacf70c0c6cb68e3dc947891788f112
 ---
 
 # Capability preflight — Subagent topology reconciliation
 
-## Bounded probe result
+## Recovery result
 
-`native_subagents: available`. The native dispatch facility successfully
-launched separate read-only Critic executions in this continuation. The first
-execution ID is `01a087c3-9548-7ba0-b368-cd33a4090b93`; the fresh Define Critic
-execution ID is `01a087cc-e1cc-7ff3-bc2a-48ab02c90bf6`; and the latest Define
-Critic execution ID is `01a087d5-b5c7-7e60-aa27-c00b2f98df1c`. These are the
-actual identifiers returned by the native dispatch tool.
+The fresh recovery capability probes report `native_subagents: available`.
+Each probe observed the exact recovery session root
+`/tmp/azursystech-wb-subagent-topology-reconciliation-026-r1`, branch
+`feat/subagent-topology-reconciliation-026-r1`, and baseline
+`39a059394aacf70c0c6cb68e3dc947891788f112` without a shell-local rebind or
+repository mutation.
 
-The bounded role-capability probe is tracked separately from assurance
-bindings. Its current event ledger is:
+The current role-labeled capability ledger is:
 
 | Role | Probe event / execution ID | Status | Reusable as assurance binding |
 |---|---|---|---|
-| Critic | `native_dispatch:01a087d5-b5c7-7e60-aa27-c00b2f98df1c` | observed | No |
-| Reviewer | `native_dispatch:01a087df-18c4-7ba0-8093-df520c8ce8c9` | observed | No |
-| Verifier | `native_dispatch:01a087df-1795-75f2-97ae-4b301ecbceaa` | observed | No |
+| Critic | `native_dispatch:01a08a55-ba9c-7ea3-9835-6d5e77386b8f` | observed | No |
+| Reviewer | `native_dispatch:01a08a5d-ec97-7cc1-a885-05b5291a4a69` | observed | No |
+| Verifier | `native_dispatch:01a08a5b-23ae-7013-9316-f3628692c02b` | observed | No |
 
-All three required role probes returned from the native dispatch event source,
-so the facility is available for the role-context matrix. The three probe IDs
-are distinct and are explicitly prohibited from reuse as assurance bindings.
+The three probe IDs are distinct and are not assurance bindings. Probe status
+observed a dirty tree only because the Orchestrator had already made the
+approved recovery coordination edits to `.agent/active-work-block.json` and
+this report; the probes themselves changed no files.
 
-The Critic, Reviewer, and Verifier probe executions each reported the actual repository root as
-`/tmp/azursystech-wb-subagent-topology-reconciliation-026`, branch
-`feat/subagent-topology-reconciliation-026`, and the expected baseline
-`cafd2733e489d0d2a91553e70294d99d243046c0`. They reported no project-file
-changes. The native tool exposes agent execution IDs but no separate platform
-session identifier. Evidence records therefore use `context_id_source:
-execution_id` when no second platform identifier is exposed; this report does
-not invent one. The Orchestrator-visible dispatch IDs are the authoritative
-execution IDs. Reviewer and Verifier child reports observed only shell PID 2,
-which is not promoted to a platform identity.
+The native tool exposes execution IDs but no separate platform session ID.
+Evidence therefore uses `context_id_source: execution_id` and does not promote
+shell PIDs or requested model settings to identity evidence. The probes prove
+native dispatch availability and inherited root correctness; they do not prove
+OS, process, user, mount, or independent-filesystem isolation.
 
-The model/reasoning values in the mission briefs are requested role-profile
-defaults from the dispatch contract, not runtime-observed effective-model
-evidence. The adapter did not expose an effective model field, so none is
-claimed here.
+## Required separation
 
-## Selected policy
-
-`native-separate-context-required` for non-trivial `Managed`/`Assured` Work
-Blocks. Required bindings: `critic`, `reviewer`, `verifier`. The observed
-native contexts are distinct at the execution boundary, while their repository
-root is the same approved worktree. This proves role-context separation only;
-it does not prove `independent-readonly-root`, process, user, mount, or OS
-isolation.
+The selected policy is `native-separate-context-required` for the required
+`critic`, `reviewer`, and `verifier` roles. Capability probes are aggregate
+availability evidence and remain separate from role assurance bindings. Every
+assurance binding must carry its own single `native_dispatch:<execution_id>`
+reference and must not reuse one of the three probe references above.
 
 ## Evidence limits and freshness
 
-The probe is runtime dispatch evidence, not a self-authored role claim. The
-24-hour freshness window, UTC clock, and invalidation on adapter/runtime/root
-change, failed launch, Work Block reopen, or revision mismatch are defined by
-the specification. A missing or unknown capability result is not promoted to
-available. A failed required launch must be recorded as `DEGRADED` and cannot
-be replaced by main-thread assurance. A capability probe execution is never
-reused as a Critic, Reviewer, or Verifier assurance binding.
+The capability evidence is valid only for the recorded runtime, adapter,
+adapter version, repository root, branch, baseline, and freshness window. Any
+runtime, adapter, root, branch, Work Block, or revision change invalidates the
+record. A failed required launch is `DEGRADED` and cannot be replaced by
+main-thread assurance.
 
-## Prior failed-session evidence
+## Historical original execution evidence
 
-The resume instruction supplies the prior attempt’s observed condition:
-session-root inheritance left parent/child execution bound to the canonical
-checkout, so the scoped Coder could not mutate this intended worktree; the
-guard correctly blocked the mutation. No raw prior event artifact is present
-in this repository, so the observation is retained as Owner-supplied resume
-evidence and classified conservatively in Process Feedback; it is not treated
-as independently replayed runtime proof.
+The original worktree `/tmp/azursystech-wb-subagent-topology-reconciliation-026`
+and branch `feat/subagent-topology-reconciliation-026` are blocked execution
+evidence only. Earlier probe IDs and reports rooted there are historical and
+are not current recovery capability or assurance evidence. The recovery
+baseline is the exact commit recorded in the frontmatter above.
+
+The prior session-root inheritance failure and the partial-validator
+fail-closed recovery deadlock remain recorded in Process Feedback. This
+recovery does not introduce a generic recovery lane or weaken any guard.

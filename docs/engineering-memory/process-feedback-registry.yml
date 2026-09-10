@@ -33,3 +33,45 @@ observations:
     authority: advisory_only
     avoidable_friction: true
     related_work_blocks: []
+  - id: PF-2026-09-10-subagent-topology-validator-recovery-deadlock
+    work_block_id: WB-2026-09-09-subagent-topology-reconciliation
+    date: "2026-09-10"
+    category: TOOLING_FRICTION
+    observation: A partial validator edit in the blocked first execution left recovery coordination fail-closed and unable to advance through the normal gate.
+    evidence: "Owner resume instruction and recovery review record the partial validator edit and resulting fail-closed recovery deadlock; the malformed dirty validator was not copied into the recovery worktree."
+    likely_systemic_cause: An interrupted source-level validator change was left inconsistent with the lifecycle evidence contract before the execution surface became unusable.
+    impact: Recovery required a fresh correctly rooted session and reconstruction from committed-good source plus review findings; no guard was bypassed.
+    suggested_improvement: Add a separate approved process-improvement Work Block for interrupted-edit detection and operator-visible recovery diagnostics; do not add a generic recovery lane or weaken fail-closed guards here.
+    severity: LOW
+    status: NEW
+    authority: advisory_only
+    avoidable_friction: true
+    related_work_blocks: []
+  - id: PF-2026-09-10-native-completed-context-capacity
+    work_block_id: WB-2026-09-09-subagent-topology-reconciliation
+    date: "2026-09-10"
+    category: TOOLING_FRICTION
+    observation: Completed native child contexts continued to consume the available orchestration slots until explicitly closed, briefly delaying the next fresh probe/Coder transition.
+    evidence: "The recovery execution had to close completed Critic and Coder contexts before the next native stage could proceed; no source or guard bypass was used."
+    likely_systemic_cause: Native context lifecycle capacity is retained after completion until explicit shutdown.
+    impact: Stage transitions incur explicit context cleanup overhead and can appear blocked despite no running child work.
+    suggested_improvement: Surface completed-context capacity consumption and provide operator-visible cleanup guidance in a separate approved improvement action; do not weaken topology or write guards here.
+    severity: LOW
+    status: NEW
+    authority: advisory_only
+    avoidable_friction: true
+    related_work_blocks: []
+  - id: PF-2026-09-10-subagent-topology-readonly-command-guard
+    work_block_id: WB-2026-09-09-subagent-topology-reconciliation
+    date: "2026-09-10"
+    category: TOOLING_FRICTION
+    observation: A compound read-only validation command was rejected by the source-write guard while the frozen candidate correctly kept write_gate BLOCKED; equivalent checks succeeded when issued as separate commands.
+    evidence: "The recovery session recorded a PreToolUse rejection for a compound command containing python3 -m json.tool; separate topology, regression, release-state, and diff checks then passed without changing the guard or opening the write gate."
+    likely_systemic_cause: The command classifier conservatively treats a compound validation invocation as a possible source-write operation when the frozen candidate write gate is BLOCKED.
+    impact: Compound read-only validation required decomposition into individually admitted commands, adding orchestration overhead without weakening fail-closed behavior.
+    suggested_improvement: Improve operator-visible classification or document the split-command procedure in a separate approved improvement action; do not weaken the write guard in this Work Block.
+    severity: LOW
+    status: NEW
+    authority: advisory_only
+    avoidable_friction: true
+    related_work_blocks: []

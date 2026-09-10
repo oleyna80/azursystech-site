@@ -3,7 +3,7 @@ artifact_type: specification
 work_block_id: WB-2026-09-09-subagent-topology-reconciliation
 status: approved
 revision: v1
-baseline: cafd2733e489d0d2a91553e70294d99d243046c0
+baseline: 39a059394aacf70c0c6cb68e3dc947891788f112
 ---
 
 # Specification — Subagent topology reconciliation
@@ -79,6 +79,16 @@ The capability report and role-binding records are coordination evidence. The
 active lifecycle validator is the admission authority for the cooperative
 repository gate; it cannot prove a host-level security boundary.
 
+The evidence schema has three non-interchangeable references. Aggregate
+capability evidence is a comma-separated ledger of distinct
+`native_dispatch:<execution_id>` probe references. Each role binding contains
+exactly one structurally valid `native_dispatch:<execution_id>` assurance
+reference, and that execution ID must differ from every capability probe ID and
+from every other role binding ID. A binding's runtime, adapter, and
+adapter-version tuple must equal the capability tuple, and the binding's
+report path must equal the report path recorded for that role. These checks are
+required at admission and closeout; a non-empty string alone is not evidence.
+
 ## Requirements
 
 - REQ-001: Applicability and topology selection
@@ -125,7 +135,14 @@ isolation.
 Deterministic tests must prove both positive admission and denial of: absent
 capability evidence, unknown capability, launch failure, reused execution or
 context IDs, duplicate roles, same-session overclaim, stale Work Block,
-mismatched frozen revision, and missing report linkage.
+mismatched frozen revision, and missing report linkage. The recovery-specific
+negative fixtures are explicit and mandatory: capability/runtime/adapter/
+adapter-version tuple mismatch; malformed, non-native, empty, or multi-value
+role dispatch references; malformed, duplicate, or non-native aggregate probe
+ledgers; reuse of an aggregate probe ID as an assurance execution ID; Critic
+binding/report mismatch at admission; and Reviewer/Verifier binding/report
+mismatch at closeout. The valid path must use distinct capability probes and
+distinct assurance dispatch IDs.
 
 - REQ-006: Process Feedback
 
@@ -145,7 +162,7 @@ is included in this Work Block.
 
 - AC-001 [req=REQ-001,REQ-007]: The specification, active state, lifecycle, authority, roster, and runtime capability documents use one topology vocabulary and applicability rule.
 - AC-002 [req=REQ-001,REQ-002,REQ-003]: A native capability probe and three distinct role executions are represented with complete, matching, non-reused evidence.
-- AC-003 [req=REQ-002,REQ-004,REQ-005]: The active write gate and closeout path reject all listed adversarial fixtures and accept the valid path.
+- AC-003 [req=REQ-002,REQ-004,REQ-005]: The active write gate and closeout path reject every listed generic and recovery-specific adversarial fixture and accept the valid path with distinct capability and assurance evidence.
 - AC-004 [req=REQ-003,REQ-004]: The runtime context adapter records observable root/identity metadata and does not overclaim process or OS isolation.
 - AC-005 [req=REQ-004,REQ-005]: Focused contract tests, release-state validation, Drift, Reviewer, and Verifier all pass for the frozen candidate.
 - AC-006 [req=REQ-006,REQ-007]: Process Feedback contains the bounded failed-session observation and no unrelated historical artifact is changed.
@@ -157,8 +174,12 @@ is included in this Work Block.
   rule.
 - AC-002: A native capability probe and three distinct role executions are
   represented with complete, matching, non-reused evidence.
-- AC-003: The active write gate and closeout path reject all listed adversarial
-  fixtures and accept the valid path.
+- AC-003: The active write gate and closeout path reject every listed generic
+  and recovery-specific adversarial fixture and accept the valid path with
+  distinct capability and assurance evidence. Coverage includes tuple
+  mismatch, malformed or multi-value dispatch references, malformed/duplicate
+  aggregate probe ledgers, aggregate-probe reuse, Critic report mismatch, and
+  Reviewer/Verifier report mismatch.
 - AC-004: The runtime context adapter records observable root/identity metadata
   and does not overclaim process or OS isolation.
 - AC-005: Focused contract tests, release-state validation, Drift, Reviewer,
