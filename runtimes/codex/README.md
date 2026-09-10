@@ -13,14 +13,17 @@ source-of-truth order, Hard Stops, artifact verdicts, or closeout.
 | Logical role | Codex implementation | Default sandbox |
 |---|---|---|
 | Orchestrator | main Codex thread | parent session policy |
-| Architect | `.codex/agents/architect.toml` | read-only |
-| Critic | `.codex/agents/critic.toml` | read-only |
-| Coder | `.codex/agents/coder.toml` | workspace-write |
-| Reviewer | `.codex/agents/reviewer.toml` | read-only |
-| Verifier | `.codex/agents/verifier.toml` | read-only |
+| Architect | native dispatch or optional user/global runtime profile | read-only intent |
+| Critic | native dispatch or optional user/global runtime profile | read-only intent |
+| Coder | native dispatch or optional user/global runtime profile | workspace-write intent |
+| Reviewer | native dispatch or optional user/global runtime profile | read-only intent |
+| Verifier | native dispatch or optional user/global runtime profile | read-only intent |
 
 The built-in explorer may support read-heavy discovery. Temporary
-specializations change focus, not authority.
+specializations change focus, not authority. Optional user/global runtime
+profiles may describe role defaults, but no `.codex/agents/*.toml` profiles are
+installed by this project and profile values do not pin models, reasoning, or
+providers in repository governance.
 
 ## Installed Files
 
@@ -32,14 +35,11 @@ specializations change focus, not authority.
     └── hard_stop_policy.py
 
 .codex/
+├── AGENTS.md
 ├── config.toml.template
+├── critic.md
 ├── hooks.json
-├── agents/
-│   ├── architect.toml
-│   ├── critic.toml
-│   ├── coder.toml
-│   ├── reviewer.toml
-│   └── verifier.toml
+├── instructions.md
 └── hooks/
     ├── hard_stop_policy.py
     ├── pre_tool_use_policy.py
@@ -253,7 +253,9 @@ enabled by default.
 
 1. Bootstrap the project.
 2. Read `AGENTS.md`, Governance Core, and this adapter.
-3. Review `.codex/agents/`, `.codex/hooks.json`, and shared/Codex hooks.
+3. Review `.codex/hooks.json` and shared/Codex hooks. Optional user/global
+   role profiles, if configured outside this project, are runtime evidence
+   rather than installed project files.
 4. Copy `.codex/config.toml.template` to `.codex/config.toml` only when desired.
 5. Create the human Work Block and populate the machine gate while blocked.
 6. Record capability/runtime/model/isolation evidence.
@@ -287,6 +289,13 @@ When custom agents/hooks are unavailable:
 - keep source blocked unless another approved guardrail enforces scope;
 - label same-context assurance degraded;
 - do not upgrade `BLOCKED`/`UNVERIFIED` evidence.
+
+For applicable non-trivial `Managed` or `Assured` topology, capability
+`unavailable`, `conditional`, `unknown`, or `launch_failed` remains an explicit
+`DEGRADED`/`BLOCKED` outcome. Same-context, manual, and inline passes may be
+recorded as advisory evidence, but never satisfy required assurance or
+successful closeout. They do not upgrade the required native topology or the
+separate `independent-readonly-root`/`os-isolated` isolation tier.
 
 ## Official References
 

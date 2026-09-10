@@ -17,23 +17,28 @@ context isolation, or expected work size. Do not run large/non-trivial pipelines
 entirely in the main thread.
 
 Owner approval of a Work Block is explicit authorization to launch scoped
-sub-agents automatically when the Work Block is `Subagent-Required` under
-`AGENTS.md -> Multi-Agent Default`. This authorization is limited to the
-approved scope. It does not expand write authority, side-effect authority,
-DB authority, or Hard Stop authority.
+sub-agents automatically when the approved topology requires them. This
+authorization is limited to the approved scope. It does not expand write
+authority, side-effect authority, DB authority, or Hard Stop authority.
 
 Before any non-trivial edit/write action, the first visible Work Block output
 must include `Stage 0 Routing Preflight` with Skill Routing Gate, Subagent
 Topology, side-effect class, DB action mode, Hard Stops, and
 `Write gate: READY` or `Write gate: BLOCKED`. It must also state the Codex
-Critic status: `required`, `ready`, `fallback`, or `skipped`.
+Critic status: `required-ready`, `degraded`, or `skipped`; `fallback` is never
+an admission-equivalent status.
 
 After Stage 0 and before Stage 1, run Stage 0.5 Codex Critic Review whenever
 `.codex/critic.md` mandatory triggers match. This is automatic under Work Block
-approval; do not wait for the Owner to ask for the critic separately. Preferred
-mode is a read-only native Codex subagent. If that is unavailable, run a
-same-session fallback critic pass and label it explicitly in `.codex/write-gate.md`,
-`memory_bank/orchestrator-log.md`, and `memory_bank/review-log.md`.
+approval; do not wait for the Owner to ask for the critic separately. For a
+non-trivial `Managed` or `Assured` Work Block with native capability
+`available`, use a separate native read-only Critic. The canonical topology
+also requires separate native read-only Reviewer and Verifier contexts after
+freeze. A same-session Critic, Reviewer, or Verifier pass is advisory/degraded
+only and never satisfies required assurance or admission. If capability is
+`unavailable`, `conditional`, `unknown`, or `launch_failed`, record the
+canonical explicit `DEGRADED`/`BLOCKED` result and do not promote or close
+successfully on a main-thread substitution.
 
 ### When to spawn sub-agents
 
@@ -70,9 +75,9 @@ When spawning a sub-agent, always include:
 
 ```
 Stage 0 · Plan & Discover  →  Main thread (you)
-Stage 0.5 · Critic Review  →  Read-only Codex critic subagent or labeled fallback
+Stage 0.5 · Critic Review  →  Separate native Critic when required; advisory/degraded fallback otherwise
 Stage 1 · Implement         →  Spawn sub-agent(s) per task from write-set
-Stage 2 · Verify            →  Spawn verifier agent OR run inline for Lite tier
+Stage 2 · Verify            →  Separate native Reviewer and Verifier when required; inline only for genuinely trivial Lite work
 Stage 3 · Sync & Report     →  Main thread (you)
 ```
 
@@ -101,7 +106,7 @@ multi-file external-team results.
 
 | Tier | Verifier approach |
 |---|---|
-| Lite | Run `git diff --check` inline, no sub-agent needed |
+| Lite | Genuinely trivial work only: run `git diff --check` inline; it never overrides non-trivial `Managed`/`Assured` topology |
 | Standard | Spawn one verifier agent: types + lint + build |
 | Full | Spawn one verifier agent: full check suite |
 

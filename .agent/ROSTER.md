@@ -10,7 +10,7 @@
 |---|---|---|---|
 | Orchestrator | Frame Work Blocks, select profiles/evaluation posture, manage scope, route functions, consolidate evidence, enforce gates, close out | Workflow artifacts and approved coordination paths | task-decomposition, ssot-sync-closeout, memory-ops, subagent-mission-brief, orchestrator-log, sprint-analysis, spec-drift-audit |
 | Architect | Discover constraints, propose architecture, draft specifications and implementation/evaluation plans | Read-only by default; approved draft paths | discovery, architecture-discovery, technical-discovery, project-estimation, requirements-clarification |
-| Critic | Challenge scope, assumptions, risk, routing, verification, and evaluation design before implementation | Read-only; critic report path only | critic-review, requirements-quality-review, spec-consistency-analysis |
+| Critic | Challenge scope, assumptions, risk, routing, verification, and evaluation design before implementation | Read-only; critic report path only | native Critic role (capability-dependent), requirements-quality-review, spec-consistency-analysis |
 | Coder | Implement the approved plan inside one explicit write-set | Approved source write-set only | scoped-coder, git-safety, scoped-commit-guard, shell-context-guard, systematic-debugging, design-direction |
 | Reviewer | Inspect the frozen diff for defects, regressions, security, architecture, and maintainability | Read-only; review report path only | reviewer, security-pass, security-audit-triage, media-rights-compliance |
 | Verifier | Test acceptance criteria and synthesize deterministic/output/trajectory evidence | Read-only for source/runtime; verification/evaluation artifacts only | verifier, webapp-testing, security-verification-gate, video-quality-control |
@@ -68,6 +68,11 @@ For the AzurSysTech assurance contract:
 - `os-isolated` maps to `os-isolated` (required for credentials, live DB, live infra, and production deployment).
 
 ## Core Skill and Contract Routing
+
+`critic-review` is not an assumed installed project skill. When that optional
+skill is absent, route Critic work through the native Critic role and the
+available requirements/consistency contracts; the role's authority and the
+native-topology requirement do not depend on a skill file.
 
 | Skill / contract | Route when |
 |---|---|

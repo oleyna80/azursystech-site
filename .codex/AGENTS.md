@@ -44,9 +44,17 @@ Role rules:
 - Subagents are read-only by default unless explicitly approved for write-capable work.
 
 Subagent rules:
-- The Orchestrator may assign read-only scoped subagents within an approved objective.
+- For work other than applicable non-trivial `Managed` or `Assured` Work
+  Blocks, the Orchestrator may assign read-only scoped subagents within an
+  approved objective.
+- For an applicable non-trivial `Managed` or `Assured` Work Block with native
+  capability `available`, the Orchestrator MUST assign required separate native
+  read-only Critic, Reviewer, and Verifier contexts: Critic before Stage 1,
+  then Reviewer and Verifier after freeze.
 - Each subagent assignment must define: role, scope, out of scope, expected output, file-change permission.
-- If native subagent/fork workflow is limited or unavailable, use scoped explorer tasks as fallback.
+- If native subagent/fork workflow is limited or unavailable, scoped explorer
+  tasks may provide advisory discovery only; they never satisfy required
+  Critic, Reviewer, or Verifier assurance.
 - Subagents inherit the parent session's effective sandbox and approval policy.
   A role profile can express intended defaults, but it is not a technical
   read-only boundary. For formal isolated verification, use a separate
@@ -58,20 +66,26 @@ Subagent rules:
   owns external-team delegation through `handoff/`.
 
 Codex critic gate:
-- For non-trivial Work Blocks, run Stage 0.5 Codex Critic Review after Stage 0
-  and before Stage 1. Use `.codex/critic.md` and the installed
-  `.agent/skills/critic-review/SKILL.md` skill.
+- For a non-trivial `Managed` or `Assured` Work Block with native capability
+  `available`, Stage 0.5 requires a separate native read-only Critic context
+  after Stage 0 and before Stage 1. The canonical topology also requires
+  separate native read-only Reviewer and Verifier contexts after freeze.
+  Consult `.codex/critic.md`; `critic-review` is optional and is not assumed
+  to exist at `.agent/skills/critic-review/SKILL.md`.
 - Owner approval of the Work Block authorizes the Codex-Orchestrator to launch
   the critic automatically when the mandatory triggers in `.codex/critic.md`
   match. Do not wait for a separate user request.
-- Preferred mode is a read-only native Codex subagent. If native subagents are
-  unavailable, run a same-session fallback critic pass and label it
-  `Codex Critic: FALLBACK` in `.codex/write-gate.md` and logs.
+- A main-thread or same-session fallback is advisory/degraded only and never
+  satisfies required assurance or admission. When capability is `unavailable`,
+  `conditional`, `unknown`, or `launch_failed`, record the canonical explicit
+  `DEGRADED`/`BLOCKED` result and defer promotion or successful closeout.
 - Critic findings go to `memory_bank/review-log.md`. Orchestrator decisions and
   responses to critic findings go to `memory_bank/orchestrator-log.md`.
 - Skip only for valid skip conditions in `.codex/critic.md` or explicit Owner
   approval, and record the skip reason in both `.codex/write-gate.md` and
-  `memory_bank/orchestrator-log.md`.
+  `memory_bank/orchestrator-log.md`. A skip never overrides the required
+  native topology for an applicable non-trivial `Managed` or `Assured` Work
+  Block with capability `available`.
 - The critic is advisory. The Orchestrator owns final decisions, but every
   SUPPLEMENT or RECONSIDER verdict requires an explicit logged response before
   writes begin.

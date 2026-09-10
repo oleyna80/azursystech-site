@@ -53,24 +53,28 @@ Every skip must be recorded in:
 
 | Mode | When to use | Required label |
 |---|---|---|
-| Native Codex subagent | Preferred for non-trivial Work Blocks when subagents are available | `Codex Critic: READY` |
-| Same-session fallback | Native subagent/fork is unavailable, but critique is still required | `Codex Critic: FALLBACK` |
-| External critic | High-risk WB benefits from Claude Code, MCP, or another reviewer | `Codex Critic: READY` plus report path |
+| Native Codex subagent | Required for applicable non-trivial `Managed`/`Assured` Work Blocks when capability is `available` | `Codex Critic: READY` |
+| Same-session fallback | Advisory critique only when native capability is unavailable or not required | `Codex Critic: FALLBACK` / `DEGRADED` |
+| External critic | Supplementary review for a high-risk WB; it does not replace a required native Critic | `Codex Critic: SUPPLEMENTAL` plus report path |
 | Skipped | Skip condition is valid and recorded | `Codex Critic: SKIPPED` |
 
 The fallback mode must be named honestly. Do not describe a same-session review
-as an independent subagent.
+as an independent subagent, `READY` assurance, or admission evidence.
 
-For non-trivial `Managed` and `Assured` Work Blocks, native capability must be
-observed as `available` before `Codex Critic: READY` can admit the topology.
-The Critic binding uses policy `native-separate-context-required` and records
-distinct native execution/context identifiers plus runtime, adapter version,
-source revision, repository root, branch, read-only boundary, launch
-mechanism, probe event, report, status, topology tier, and observation time.
-Capability states `unknown`, `conditional`, `unavailable`, and `launch_failed`
-are explicit `DEGRADED`/`BLOCKED` outcomes; they do not permit main-thread
-substitution. The binding is role separation evidence, not proof of an
-independent read-only root or OS isolation.
+For applicable non-trivial `Managed` and `Assured` Work Blocks, a separate
+native Critic is required when native capability is observed as `available`.
+The canonical topology also requires separate native Reviewer and Verifier
+bindings at closeout; main-thread or same-session work never satisfies those
+required roles. The Critic binding uses policy
+`native-separate-context-required` and records distinct native
+execution/context identifiers plus runtime, adapter version, source revision,
+repository root, branch, read-only boundary, launch mechanism, probe event,
+report, status, topology tier, and observation time. Capability states
+`unknown`, `conditional`, `unavailable`, and `launch_failed` are explicit
+`DEGRADED`/`BLOCKED` outcomes; they defer to canonical degraded/blocked
+semantics and do not permit main-thread substitution. The binding is role
+separation evidence, not proof of an independent read-only root or OS
+isolation.
 
 ## Inputs
 

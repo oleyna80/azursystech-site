@@ -19,6 +19,82 @@ from lifecycle import candidate_content_identity, validate_closeout_state
 NOW = dt.datetime(2026, 9, 9, 21, 30, tzinfo=dt.timezone.utc)
 
 
+def contract_documents(root: Path) -> None:
+    """Reject stale topology prose without rejecting explicit degraded fallback."""
+    paths = {
+        "roster": root / ".agent/ROSTER.md",
+        "agents": root / ".codex/AGENTS.md",
+        "instructions": root / ".codex/instructions.md",
+        "critic": root / ".codex/critic.md",
+        "runtime": root / "runtimes/codex/README.md",
+    }
+    text = {name: path.read_text(encoding="utf-8") for name, path in paths.items()}
+
+    forbidden = {
+        "instructions": ("AGENTS.md -> Multi-Agent Default",),
+        "agents": (
+            "the installed\n  `.agent/skills/critic-review/SKILL.md`",
+            "The Orchestrator may assign read-only scoped subagents within an approved objective.",
+        ),
+        "critic": ("Preferred for non-trivial Work Blocks when subagents are available",),
+        "runtime": (
+            "| Critic | `.codex/agents/critic.toml`",
+            "├── agents/",
+            "3. Review `.codex/agents/`,",
+        ),
+    }
+    for name, phrases in forbidden.items():
+        for phrase in phrases:
+            if phrase in text[name]:
+                raise AssertionError(f"{name} retains stale topology prose: {phrase}")
+
+    required = {
+        "roster": (
+            "`critic-review` is not an assumed installed project skill.",
+            "native Critic, Reviewer, and Verifier bindings",
+        ),
+        "agents": (
+            "separate native read-only Critic context",
+            "separate native read-only Reviewer and Verifier contexts",
+            "never\n  satisfies required assurance or admission",
+            "`unavailable`,\n  `conditional`, `unknown`, or `launch_failed`",
+            "A skip never overrides the required\n  native topology",
+            "the Orchestrator MUST assign required separate native\n  read-only Critic, Reviewer, and Verifier contexts",
+        ),
+        "instructions": (
+            "separate native read-only Critic",
+            "separate native read-only Reviewer and Verifier contexts",
+            "never satisfies required assurance or admission",
+            "Genuinely trivial work only:",
+            "never overrides non-trivial `Managed`/`Assured` topology",
+        ),
+        "critic": (
+            "Required for applicable non-trivial `Managed`/`Assured` Work Blocks",
+            "same-session review",
+            "`READY` assurance, or admission evidence",
+            "The canonical topology also requires separate native Reviewer and Verifier",
+            "defer to canonical degraded/blocked",
+            "does not replace a required native Critic",
+        ),
+        "runtime": (
+            "optional user/global runtime profile",
+            "no `.codex/agents/*.toml` profiles are",
+            "installed by this project",
+            "do not pin models, reasoning, or",
+            "providers in repository governance",
+            "`unavailable`, `conditional`, `unknown`, or `launch_failed` remains an explicit",
+            "`DEGRADED`/`BLOCKED` outcome. Same-context, manual, and inline passes may be",
+            "recorded as advisory evidence, but never satisfy required assurance or",
+            "successful closeout. They do not upgrade the required native topology",
+            "`independent-readonly-root`/`os-isolated` isolation tier",
+        ),
+    }
+    for name, phrases in required.items():
+        for phrase in phrases:
+            if phrase not in text[name]:
+                raise AssertionError(f"{name} is missing required topology prose: {phrase}")
+
+
 def state(root: Path) -> dict:
     timestamp = NOW.isoformat().replace("+00:00", "Z")
     capability = {"status": "available", "runtime": "codex", "adapter": "codex", "adapter_version": "1", "repository_root": str(root), "probe_event_ref": "native_dispatch:probe-critic,native_dispatch:probe-reviewer,native_dispatch:probe-verifier", "verified_at": timestamp}
@@ -128,6 +204,7 @@ def denied_pretool_source_write(value: dict, root: Path) -> None:
 
 
 def main() -> int:
+    contract_documents(Path(__file__).resolve().parents[1])
     for timestamp, expected in (
         ("2026-09-09T21:30:00Z", NOW),
         ("2026-09-09T21:30:00+00:00", NOW),
