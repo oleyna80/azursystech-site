@@ -1,172 +1,78 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-2026-09-09-subagent-topology-reconciliation",
-  "governance_profile": "Assured",
+  "work_block_id": "",
+  "governance_profile": "Controlled",
   "specification": {
-    "path": "docs/specs/WB-2026-09-09-subagent-topology-reconciliation.md",
-    "revision": "v1"
+    "path": "",
+    "revision": ""
   },
-  "subject_branch": "feat/subagent-topology-reconciliation-026-r1",
-  "base_commit": "39a059394aacf70c0c6cb68e3dc947891788f112",
-  "frozen_revision": "content-sha256:9238673b4d030a1c96922114ad1f3df03404e6492537444badb2addf9dfcb791",
-  "non_trivial": true,
-  "subagent_topology": {
-    "status": "READY",
-    "policy": "native-separate-context-required",
-    "capability": {
-      "status": "available",
-      "runtime": "codex",
-      "adapter": "multi_agent_v1",
-      "adapter_version": "runtime-provided",
-      "verified_at": "2026-09-10T08:11:04Z",
-      "repository_root": "/tmp/azursystech-wb-subagent-topology-reconciliation-026-r1",
-      "probe_event_ref": "native_dispatch:01a08a55-ba9c-7ea3-9835-6d5e77386b8f,native_dispatch:01a08a5b-23ae-7013-9316-f3628692c02b,native_dispatch:01a08a5d-ec97-7cc1-a885-05b5291a4a69"
-    },
-    "role_bindings": [
-      {
-        "work_block_id": "WB-2026-09-09-subagent-topology-reconciliation",
-        "role": "critic",
-        "execution_id": "01a08a80-9bf4-7dc3-bc2b-7d77211f9e41",
-        "context_id": "01a08a80-9bf4-7dc3-bc2b-7d77211f9e41",
-        "context_id_source": "execution_id",
-        "runtime": "codex",
-        "adapter": "multi_agent_v1",
-        "adapter_version": "runtime-provided",
-        "source_revision": "39a059394aacf70c0c6cb68e3dc947891788f112",
-        "repository_root": "/tmp/azursystech-wb-subagent-topology-reconciliation-026-r1",
-        "branch": "feat/subagent-topology-reconciliation-026-r1",
-        "readonly_boundary": "native read-only role; no repository mutation",
-        "launch_mechanism": "native",
-        "topology_tier": "native-separate-context",
-        "probe_event_ref": "native_dispatch:01a08a80-9bf4-7dc3-bc2b-7d77211f9e41",
-        "report": "docs/reports/critic/WB-2026-09-09-subagent-topology-reconciliation.md",
-        "status": "READY",
-        "observed_at": "2026-09-10T12:30:53Z"
-      },
-      {
-        "work_block_id": "WB-2026-09-09-subagent-topology-reconciliation",
-        "role": "reviewer",
-        "execution_id": "01a08b42-aa05-7b73-b9ce-a4a146ce20a6",
-        "context_id": "01a08b42-aa05-7b73-b9ce-a4a146ce20a6",
-        "context_id_source": "execution_id",
-        "runtime": "codex",
-        "adapter": "multi_agent_v1",
-        "adapter_version": "runtime-provided",
-        "source_revision": "content-sha256:9238673b4d030a1c96922114ad1f3df03404e6492537444badb2addf9dfcb791",
-        "repository_root": "/tmp/azursystech-wb-subagent-topology-reconciliation-026-r1",
-        "branch": "feat/subagent-topology-reconciliation-026-r1",
-        "readonly_boundary": "native read-only role; no repository mutation",
-        "launch_mechanism": "native",
-        "topology_tier": "native-separate-context",
-        "probe_event_ref": "native_dispatch:01a08b42-aa05-7b73-b9ce-a4a146ce20a6",
-        "report": "docs/reports/reviews/WB-2026-09-09-subagent-topology-reconciliation.md",
-        "status": "READY",
-        "observed_at": "2026-09-10T12:30:53Z"
-      },
-      {
-        "work_block_id": "WB-2026-09-09-subagent-topology-reconciliation",
-        "role": "verifier",
-        "execution_id": "01a08b47-9d95-7d42-a76b-e5b471b25640",
-        "context_id": "01a08b47-9d95-7d42-a76b-e5b471b25640",
-        "context_id_source": "execution_id",
-        "runtime": "codex",
-        "adapter": "multi_agent_v1",
-        "adapter_version": "runtime-provided",
-        "source_revision": "content-sha256:9238673b4d030a1c96922114ad1f3df03404e6492537444badb2addf9dfcb791",
-        "repository_root": "/tmp/azursystech-wb-subagent-topology-reconciliation-026-r1",
-        "branch": "feat/subagent-topology-reconciliation-026-r1",
-        "readonly_boundary": "native read-only role; no repository mutation",
-        "launch_mechanism": "native",
-        "topology_tier": "native-separate-context",
-        "probe_event_ref": "native_dispatch:01a08b47-9d95-7d42-a76b-e5b471b25640",
-        "report": "docs/reports/verification/WB-2026-09-09-subagent-topology-reconciliation.md",
-        "status": "READY",
-        "observed_at": "2026-09-10T12:30:53Z"
-      }
-    ]
-  },
+  "subject_branch": "",
+  "base_commit": "",
+  "non_trivial": false,
+  "subagent_topology": null,
   "define_quality": {
-    "required": true,
-    "status": "READY",
-    "requirements_review": "docs/reports/requirements-quality-WB-2026-09-09-subagent-topology-reconciliation.md",
-    "traceability": "docs/reports/traceability-WB-2026-09-09-subagent-topology-reconciliation.md",
-    "consistency_analysis": "docs/reports/consistency-WB-2026-09-09-subagent-topology-reconciliation.md"
+    "required": false,
+    "status": "PENDING",
+    "requirements_review": "",
+    "traceability": "",
+    "consistency_analysis": ""
   },
   "write_gate": {
-    "status": "READY",
-    "opened_at": "2026-09-10T13:31:22.970661+00:00"
+    "status": "BLOCKED",
+    "opened_at": null
   },
   "critic": {
     "required": true,
-    "status": "READY",
-    "verdict": "APPROVE",
-    "report": "docs/reports/critic/WB-2026-09-09-subagent-topology-reconciliation.md",
-    "isolation": "native-separate-context-required",
+    "status": "PENDING",
+    "verdict": "PENDING",
+    "report": "",
+    "isolation": "unknown",
     "skip_reason": ""
   },
   "assurance": {
     "review": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "execution_id": "01a08b42-aa05-7b73-b9ce-a4a146ce20a6",
-      "report": "docs/reports/reviews/WB-2026-09-09-subagent-topology-reconciliation.md",
-      "isolation": "native-separate-context-required",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "execution_id": "01a08b47-9d95-7d42-a76b-e5b471b25640",
-      "report": "docs/reports/verification/WB-2026-09-09-subagent-topology-reconciliation.md",
-      "isolation": "native-separate-context-required",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     },
     "evaluation": {
       "required": false,
-      "status": "SKIPPED",
+      "status": "PENDING",
       "verdict": "PENDING",
       "plan": "",
       "report": "",
       "rubric_revision": "",
       "benchmark_revision": "",
       "isolation": "unknown",
-      "skip_reason": "No generative or rubric-based deliverable is in scope for this deterministic control-plane Work Block"
+      "skip_reason": ""
     },
     "drift": {
-      "required": true,
-      "status": "READY",
-      "verdict": "ALIGNED",
-      "report": "docs/reports/drift/WB-2026-09-09-subagent-topology-reconciliation.md",
-      "isolation": "runtime-readonly",
+      "required": false,
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     }
   },
-  "closeout_mode": "pending",
+  "closeout_mode": "success-closeout",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
-  "write_set": [
-    ".agent/active-work-block.default.json",
-    ".agent/ROSTER.md",
-    ".agent/workflows/sdd-protocol.md",
-    "governance/authority.md",
-    "governance/lifecycle.md",
-    "governance/runtime-capabilities.md",
-    "runtimes/codex/README.md",
-    ".codex/critic.md",
-    ".codex/hooks/pre_tool_use_policy.py",
-    ".codex/hooks/subagent_context.py",
-    ".codex/hooks/verification-gate.sh",
-    ".codex/scripts/lifecycle.py",
-    "scripts/validate-release-state.py",
-    "scripts/subagent_topology.py",
-    "scripts/test-subagent-topology.py",
-    "scripts/test-release-state-contracts.py"
-  ],
+  "write_set": [],
   "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
@@ -178,7 +84,6 @@
     "docs/specs/**",
     "docs/tasklist/**",
     "docs/reports/**",
-    "docs/engineering-memory/process-feedback-registry.yml",
     "docs/architecture/drafts/**",
     "memory_bank/**"
   ],
@@ -191,5 +96,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "source work opened by Work Block coordination"
+  "lifecycle_note": "READY Reviewer, Verifier, Drift, and Process Feedback complete"
 }
