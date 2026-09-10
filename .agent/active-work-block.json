@@ -96,5 +96,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "READY Reviewer, Verifier, Drift, and Process Feedback complete"
+  "lifecycle_note": "final native Reviewer and Verifier assurance READY; finalized exact binding; release-state and Process Feedback closeout complete"
 }

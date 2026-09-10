@@ -5,6 +5,101 @@ status: advisory
 revision: v2-recovery
 ---
 
+## Corrective sequencing review — SUPPLEMENT
+
+- **Stage:** Stage 2 -> bounded Corrective Execute admission
+- **Role:** Fresh native read-only Critic
+- **Execution ID:** `01a08cb2-2ab8-7c03-9e1a-d2203a03d22a`
+- **Effective root:** `/tmp/azursystech-wb-subagent-topology-reconciliation-026-r1`
+- **Branch:** `feat/subagent-topology-reconciliation-026-r1`
+- **Observed HEAD:** `a7a05249a52e3916ef7f34a07f2a21c6007189fd`
+- **Verdict:** `SUPPLEMENT`
+- **Files changed:** none
+
+The Critic independently confirmed the sequencing cycle: the existing topology
+validator has only admission and closeout phases, while the provisional Verifier
+binding cannot pass the strict closeout predicate needed to issue its independent
+verdict. The bounded correction is admitted within the existing TASK-003
+topology/runtime/control-plane envelope, not TASK-007's narrower two-file scope.
+
+The required correction is a third, purpose-specific Verifier execution phase.
+It must validate the exact frozen candidate identity and provisional native
+read-only provenance without requiring the Verifier's own binding or assurance
+record to be READY. The Orchestrator must then finalize the unchanged execution,
+context, native dispatch, runtime tuple, root, branch, frozen revision, and
+authoritative report linkage. Strict `closeout` remains unchanged in principle:
+it accepts only a completed native READY Verifier binding and matching READY
+assurance, and rejects blocked, historical, mismatched, or self-promoted records.
+
+The Critic also required adversarial phase-transition coverage and explicit
+baseline terminology. The canonical original baseline remains
+`cafd2733e489d0d2a91553e70294d99d243046c0`; the `-r1` recovery baseline remains
+`39a059394aacf70c0c6cb68e3dc947891788f112`; `7e99555051ef7b020861d08bab48335fb5a94e84`
+is retained only as an evidenced intermediate recovery base; `c163a980321e66e8cf9d63781ba830d6185c83ea`
+is the prior candidate; and `a7a05249a52e3916ef7f34a07f2a21c6007189fd` is the
+current source candidate. Native topology must remain distinct from any weaker
+security-isolation dimension; stale `same-session-degraded` verification
+projection must be removed when native finalized evidence is recorded.
+
+No source gate was opened by this advisory result. The Orchestrator must resolve
+these supplements in the bounded corrective implementation before Coder
+admission.
+
+## Current corrective admission review — approval
+
+- **Stage:** Stage 0.5 corrective admission review
+- **Role:** Native read-only Critic
+- **Verdict:** `APPROVE`
+- **Execution ID:** `01a08c28-09e6-7850-9e93-9602a8fda68c`
+- **Context ID:** `01a08c28-09e6-7850-9e93-9602a8fda68c`
+- **Context ID source:** `execution_id`
+- **Runtime / adapter / adapter version:** `codex` / `multi_agent_v1` / `runtime-provided`
+- **Repository root:** `/tmp/azursystech-wb-subagent-topology-reconciliation-026-r1`
+- **Branch:** `feat/subagent-topology-reconciliation-026-r1`
+- **Observed HEAD:** `a7a05249a52e3916ef7f34a07f2a21c6007189fd`
+- **Bound recovery baseline:** `7e99555051ef7b020861d08bab48335fb5a94e84`
+- **Frozen source identity:** `content-sha256:660be2f364e798d12c34eb0eb43c13660f5437acab0eb5299401ea0a2085c1c7`
+- **Dispatch evidence:** `native_dispatch:01a08c28-09e6-7850-9e93-9602a8fda68c`
+- **Files changed by Critic:** none
+
+The fresh Critic found the focused two-file correction sufficient for a
+truthful current admission binding. The former projection mismatch was
+resolved before this review: the stale current approval was marked `PENDING`,
+and this execution is now the sole current Critic binding. The Critic
+confirmed that the topology validator is unchanged, the committed source
+diff is exactly the approved two-file write-set, the frozen identity matches,
+and focused topology/control-plane checks pass. The binding records native
+execution-context separation only; it does not claim process, filesystem,
+credential, or OS isolation. Reviewer and Verifier assurance remain required
+and fresh.
+
+## Current corrective admission review — supplement
+
+- **Stage:** Stage 0.5 corrective admission review
+- **Role:** Native read-only Critic
+- **Verdict:** `SUPPLEMENT`
+- **Execution ID:** `01a08c20-d867-7f51-8d90-deea6d73b793`
+- **Context ID:** `01a08c20-d867-7f51-8d90-deea6d73b793`
+- **Context ID source:** `execution_id`
+- **Runtime / adapter / adapter version:** `codex` / `multi_agent_v1` / `runtime-provided`
+- **Repository root:** `/tmp/azursystech-wb-subagent-topology-reconciliation-026-r1`
+- **Branch:** `feat/subagent-topology-reconciliation-026-r1`
+- **Observed HEAD:** `a7a05249a52e3916ef7f34a07f2a21c6007189fd`
+- **Bound recovery baseline:** `7e99555051ef7b020861d08bab48335fb5a94e84`
+- **Frozen source identity:** `content-sha256:660be2f364e798d12c34eb0eb43c13660f5437acab0eb5299401ea0a2085c1c7`
+- **Dispatch evidence:** `native_dispatch:01a08c20-d867-7f51-8d90-deea6d73b793`
+- **Files changed by Critic:** none
+
+The Critic found the committed two-file correction sound and within scope. It
+did not approve current admission because the active state still projected
+`READY/APPROVE` for `01a08c00-c38c-7cd1-92c5-01c0d1244b9a`, whose report is
+`SUPPLEMENT`, while `.agent/critic-gate.md` still named the historical
+pre-correction execution `01a08a80-9bf4-7dc3-bc2b-7d77211f9e41` and baseline
+`39a059394aacf70c0c6cb68e3dc947891788f112`. The Orchestrator has now marked
+that projection `PENDING`; this advisory supplement remains historical until a
+fresh Critic supplies a current `APPROVE` binding. The write gate remains
+blocked and no implementation or assurance admission is implied.
+
 ## Recovery attempt — final Define approval
 
 Native read-only Critic execution: `01a08a80-9bf4-7dc3-bc2b-7d77211f9e41`.
@@ -168,3 +263,53 @@ Checks reported by the Critic: exact identity, traceability validator `READY`
 files, and unchanged project files during review. No material blocker remains;
 the recommendation is to bind this fresh Critic evidence in the target
 authoritative state rather than reusing stale gate records.
+
+## Corrective-loop Critic — fixture and runtime inventory
+
+- Stage: Define corrective loop
+- Role: Native Critic (read-only)
+- Verdict: `SUPPLEMENT`
+- Execution ID: `01a08c00-c38c-7cd1-92c5-01c0d1244b9a`
+- Context ID: `01a08c00-c38c-7cd1-92c5-01c0d1244b9a` (`execution_id` alias)
+- Repository root: `/tmp/azursystech-wb-subagent-topology-reconciliation-026-r1`
+- Branch: `feat/subagent-topology-reconciliation-026-r1`
+- Observed HEAD: `7e99555051ef7b020861d08bab48335fb5a94e84`
+- Files changed by Critic: none
+
+The proposed correction is within the same Work Block and is limited to
+`scripts/test-github-capability-control-plane.py` and
+`runtimes/codex/README.md`. Before Coder admission, the write-set and tasklist
+must include both paths. The isolated positive fixture must copy the
+committed-good `scripts/subagent_topology.py`, exercise applicable
+`Assured`/`non_trivial` topology evidence, and create an in-scope `src/**`
+file before the lifecycle freeze assertion. The README must list only current
+commands that exist and run in the workflow; the topology validator itself is
+not to be redesigned.
+
+Required focused result: `python3 -B
+scripts/test-github-capability-control-plane.py` returns `PASS=14 FAIL=0`.
+
+## Fresh corrective admission Critic — finalization and report grammar
+
+- Stage: Stage 2 — Assure / admission
+- Role: Native Critic (read-only)
+- Verdict: `SUPPLEMENT`
+- Execution ID: `01a08cde-53c2-7aa2-8b7d-93afba2e198f`
+- Context ID: `01a08cde-53c2-7aa2-8b7d-93afba2e198f` (`execution_id` alias)
+- Repository root: `/tmp/azursystech-wb-subagent-topology-reconciliation-026-r1`
+- Branch: `feat/subagent-topology-reconciliation-026-r1`
+- HEAD: `c237bff965709bf53c7673ff311a1366ca281118`
+- Frozen identity: `content-sha256:cdf9d99a84c056f96fffe723a22dd8f8d7d2b1a19845724189b60735abaafc04`
+- Runtime / adapter / adapter-version: `codex` / `multi_agent_v1` / `runtime-provided`
+- Native dispatch: `native_dispatch:01a08cde-53c2-7aa2-8b7d-93afba2e198f`
+- Files changed by Critic: none
+
+The Critic confirmed that removing the caller-supplied finalization role
+label and enforcing one exact line-anchored verification result record are
+coherent with the three-phase lifecycle and remain within the approved
+TASK-008 scope. Both are required before final Verifier assurance. The
+repository-local lifecycle helper is cooperative and cannot itself create an
+external OS/process security boundary; it must not represent a literal CLI
+label as proof of authority. The optional suggestion to expand Reviewer
+prerequisite validation is deferred because strict closeout remains
+fail-closed and the focused correction does not require it.

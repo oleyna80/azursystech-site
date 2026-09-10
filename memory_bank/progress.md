@@ -72,3 +72,13 @@ available in this shared record and is intentionally not inferred.
 - Repository-side Review and Verification are READY; Drift is ALIGNED. The
   installation profile retains a pre-existing missing `agent-browser` skill as
   an explicit residual risk. No historical observations were seeded.
+
+## 2026-09-10
+
+- WB-2026-09-09-subagent-topology-reconciliation: corrected a proven
+  `CONTRACT_MISMATCH` in which Verifier execution required its own finalized
+  READY binding before issuing an independent verdict. The lifecycle now uses
+  provisional admission, independent Verifier execution, Orchestrator-only
+  finalization, and strict completed-binding closeout. Fresh native Reviewer and
+  Verifier assurance are READY for the frozen recovery candidate; the mismatch
+  remains advisory-only and does not weaken fail-closed semantics.

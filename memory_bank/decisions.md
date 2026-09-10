@@ -30,3 +30,11 @@
 - Require every new non-trivial Work Block to record an explicit closeout result
   with all eight reviewed dimensions; clean work may use only the evidence-backed
   `NONE — checked` form.
+
+## 2026-09-10 Subagent topology reconciliation
+
+- Keep Verifier dispatch provenance, independent verdict, and final closeout
+  admission as separate lifecycle phases. A Verifier cannot self-promote or
+  require its own completed binding to issue a verdict; the Orchestrator
+  finalizes only exact matching completed native evidence, and closeout remains
+  fail-closed otherwise. The sequencing mismatch is advisory Process Feedback.

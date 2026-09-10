@@ -25,6 +25,15 @@ multilingual successor package, preservation worktrees, and
 production, database, secret/config, or application behavior change is part of
 this candidate.
 
+## 2026-09-10 — verifier sequencing correction
+
+The native Verifier sequencing cycle was corrected in the recovery candidate:
+Verifier execution may independently return a verdict while its exact binding
+is provisional; only the Orchestrator may then finalize the immutable binding,
+after which strict closeout validates it. Fresh native Reviewer and Verifier
+assurance is READY for the frozen candidate; publication remains limited to the
+exact subject branch pending terminal closeout and Owner integration review.
+
 ## Source of truth
 
 Read AGENTS.md, governance/, .agent/active-work-block.json, the Work Block

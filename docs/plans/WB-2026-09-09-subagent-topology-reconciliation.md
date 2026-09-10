@@ -2,7 +2,7 @@
 artifact_type: work_block
 work_block_id: WB-2026-09-09-subagent-topology-reconciliation
 status: completed
-revision: v1
+revision: v3-verifier-sequencing-closeout
 baseline: 39a059394aacf70c0c6cb68e3dc947891788f112
 governance_profile: Assured
 process_feedback_required: true
@@ -72,6 +72,7 @@ Reviewer/Verifier bindings in the active state before closeout.
 
 ### Deterministic implementation and tests
 
+- `scripts/test-github-capability-control-plane.py`
 - `scripts/subagent_topology.py`
 - `scripts/test-subagent-topology.py`
 - `scripts/test-release-state-contracts.py`
@@ -164,12 +165,12 @@ index.
 - **Mission Role:** Backend Coder / QA Analyst
 - **Skills:** `security-pass`, `systematic-debugging`, `git-safety`, `subagent-mission-brief`
 - **Objective:** Implement the approved topology evidence contract and its deterministic enforcement tests within the exact source write-set.
-- **In Scope:** Only the source and test paths listed under TASK-003, including lifecycle admission/closeout, context metadata, policy reconciliation, and adversarial fixtures.
+- **In Scope:** Only the source and test paths listed under TASK-003 and the focused corrective TASK-007, including lifecycle admission/closeout, context metadata, policy reconciliation, and adversarial fixtures.
 - **Out of Scope:** Application code, routes, database/schema, dependencies, config/secrets, deploy, merge, destructive operations, and Define/assurance report authorship.
 - **Inputs / Files:** `AGENTS.md`, active Work Block state, approved v1 spec/plan/tasklist, Critic report/binding, and existing source files named by TASK-003.
 - **Allowed Tools / MCP:** Repository read/edit tools, `apply_patch`, `git diff/status`, Python syntax/test runners, and project validators; no external MCP required.
 - **Effective Runtime Policy:** Parent live policy is the inherited managed sandbox with session-root guards; requested agent profile default is `gpt-5.6-terra`, medium reasoning, managed sandbox, with no override. The runtime's effective model is not asserted unless exposed by the adapter. Exactly one scoped Coder; local control-plane edits only. Technical isolation required: no stronger root isolation was authorized; session-root binding remains mandatory.
-- **Approved Write-Set:** Exactly the TASK-003 path list in the tasklist; no other path.
+- **Approved Write-Set:** Exactly the TASK-003 and TASK-007 path lists in the tasklist; no other path.
 - **Side-Effect Class:** local-control-plane.
 - **DB Action Mode:** none.
 - **Parallel Group / Siblings:** Serial after the Orchestrator-only projection/open transition; no parallel writer.
@@ -309,6 +310,21 @@ If native role launch fails after implementation, record the actual degraded
 state and leave the assurance verdict blocked rather than substituting
 main-thread assurance.
 
+## Focused corrective loop — fixture and runtime inventory
+
+The fresh native Critic (`01a08c00-c38c-7cd1-92c5-01c0d1244b9a`) returned
+`SUPPLEMENT`, and the fresh Reviewer (`01a08bf8-0be8-7d40-9c57-d3991913c039`)
+returned `CHANGES_REQUIRED` against frozen candidate
+`7e99555051ef7b020861d08bab48335fb5a94e84`. The findings are limited to the
+CI integration fixture and the runtime README inventory. The corrective
+Coder may change only `scripts/test-github-capability-control-plane.py` and
+`runtimes/codex/README.md`: the fixture must copy the committed-good
+`scripts/subagent_topology.py`, exercise applicable `Assured`/`non_trivial`
+topology evidence, and create an in-scope `src/**` file before lifecycle
+freeze; the README must list only current, existing CI commands. The topology
+validator itself remains unchanged. A new freeze and separate native
+Reviewer/Verifier assurance are mandatory after the correction.
+
 ## Final State
 
 - **Stage State:** completed
@@ -318,5 +334,29 @@ main-thread assurance.
 - **Evaluation Verdict:** SKIPPED — no generative or rubric-based deliverable is in scope
 - **Task Status:** completed
 - **Closeout Mode:** success-closeout
-- **Final Candidate:** recorded after the approved subject-branch commit and publication
+- **Final Candidate:** `89e76cbfd02994d6f225bac1354fbdebe6478672`, frozen under the identity above
 - **Owner Handoff:** integration review required; no merge or deployment
+
+## Corrective loop — Verifier sequencing contract
+
+The fresh native Critic `01a08cb2-2ab8-7c03-9e1a-d2203a03d22a` recorded a
+`SUPPLEMENT` for a real lifecycle sequencing defect: the frozen candidate can
+be dispatched to a native Verifier with a provisional `PENDING` binding, but the
+same strict closeout validation was also being treated as a prerequisite for
+that Verifier's independent verdict. This cycle is resolved inside the existing
+Work Block and approved TASK-003 topology/runtime/control-plane envelope.
+
+The correction has three explicit phases:
+
+1. admission/pre-assurance validates capability, Critic evidence, and frozen
+   subject prerequisites;
+2. verifier execution validates exact provisional native provenance and actual
+   frozen content identity while the Verifier binding remains `PENDING`; and
+3. Orchestrator finalization records the unchanged completed binding and READY
+   assurance, after which strict closeout validates all finalized bindings.
+
+The execution phase never permits self-promotion, accepts no BLOCKED or
+historical evidence, and does not weaken final closeout. The corrective Coder
+may change only the already approved TASK-003 paths needed for this contract,
+with focused topology and lifecycle adversarial tests. A fresh Critic,
+Reviewer, and Verifier are required after the corrected source is frozen.

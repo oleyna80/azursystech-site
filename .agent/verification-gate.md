@@ -1,5 +1,6 @@
 # Verification Gate Record — WB-2026-09-09-subagent-topology-reconciliation
 
+- **Work Block:** `WB-2026-09-09-subagent-topology-reconciliation`
 - **Status:** `READY`
 - **Verifier:** `subagent`
 - **Verification Tier:** `full`
@@ -12,18 +13,22 @@
 - **Verifier Isolation:** `native-separate-context`
 - **Quick-Fix:** `false`
 
-Post-freeze native Reviewer and Verifier evidence must be recorded against the
-immutable candidate content identity before this gate becomes `READY`. Native
-role separation and stronger security isolation are independent dimensions;
-the topology validator enforces the former and sensitive-domain policy governs
-the latter.
+Post-freeze native Reviewer and Verifier evidence are recorded against the
+immutable candidate content identity. Native role separation and security-
+isolation tier are independent dimensions; this gate records the required
+native separate-context assurance and does not claim stronger OS, filesystem,
+credential, or independent-root isolation.
 
-## Final native verification binding
+## Current assurance cycle
 
-- Execution / context: `01a08b47-9d95-7d42-a76b-e5b471b25640`
-- Dispatch: `native_dispatch:01a08b47-9d95-7d42-a76b-e5b471b25640`
+- Fresh native Reviewer evidence is READY and the fresh native Verifier
+  independently returned READY while its binding was provisional. The
+  Orchestrator then finalized the exact completed binding. Historical blocked
+  attempts and the external usage-limit launch remain historical evidence only;
+  no main-thread, same-session, or synthetic assurance is substituted.
 - Root: `/tmp/azursystech-wb-subagent-topology-reconciliation-026-r1`
 - Branch: `feat/subagent-topology-reconciliation-026-r1`
-- Frozen revision: `content-sha256:9238673b4d030a1c96922114ad1f3df03404e6492537444badb2addf9dfcb791`
+- Frozen revision: `content-sha256:ece3a5ae5eebfd6daedc4ad01b62675ee06b88f5bbd9951d94a7f0eb732c62ab`
 - Capability tuple: `codex` / `multi_agent_v1` / `runtime-provided`
-- Report: `docs/reports/verification/WB-2026-09-09-subagent-topology-reconciliation.md`
+- Report: `docs/reports/verification/WB-2026-09-09-subagent-topology-reconciliation-verifier-01a08ced-0cff-7831-b6ed-a4cc09718f2d.md`
+- Latest fresh native dispatch: `native_dispatch:01a08ced-0cff-7831-b6ed-a4cc09718f2d`
