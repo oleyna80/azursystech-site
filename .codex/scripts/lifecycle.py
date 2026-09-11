@@ -462,13 +462,19 @@ def _report_result(root: Path, report: str, execution_id: str, verdict: str) -> 
         )
 
 
-def prepare_verifier_execution(current: dict, root: Path, binding: dict) -> dict:
+def prepare_verifier_execution(
+    current: dict,
+    root: Path,
+    binding: dict,
+    *,
+    now: dt.datetime | None = None,
+) -> dict:
     """Record native dispatch provenance while the Verifier remains PENDING."""
     validate_state(current)
     if not applicable(current):
         raise ValueError("Verifier execution preparation is only required for applicable Work Blocks")
     _require_frozen_candidate(current, root)
-    validate_topology(current, phase="admission", root=root)
+    validate_topology(current, phase="admission", root=root, now=now)
     _review_ready_prerequisite(current)
     topology = current.get("subagent_topology")
     capability = topology.get("capability") if isinstance(topology, dict) else None
@@ -511,11 +517,18 @@ def prepare_verifier_execution(current: dict, root: Path, binding: dict) -> dict
         "isolation": "native-separate-context",
     })
     value["subagent_topology"]["role_bindings"].append(copy.deepcopy(binding))
-    validate_topology(value, phase="verifier-execution", root=root)
+    validate_topology(value, phase="verifier-execution", root=root, now=now)
     return value
 
 
-def finalize_verifier_execution(current: dict, root: Path, *, execution_id: str, verdict: str) -> dict:
+def finalize_verifier_execution(
+    current: dict,
+    root: Path,
+    *,
+    execution_id: str,
+    verdict: str,
+    now: dt.datetime | None = None,
+) -> dict:
     """Finalize a completed dispatch from the Orchestrator coordination path.
 
     This cooperative project-local helper deliberately accepts no caller role
@@ -528,7 +541,7 @@ def finalize_verifier_execution(current: dict, root: Path, *, execution_id: str,
     if verdict not in {"READY", "BLOCKED"}:
         raise ValueError("Verifier finalization verdict must be READY or BLOCKED")
     _require_frozen_candidate(current, root)
-    validate_topology(current, phase="verifier-execution", root=root)
+    validate_topology(current, phase="verifier-execution", root=root, now=now)
     bindings = current["subagent_topology"]["role_bindings"]
     verifier = next(item for item in bindings if item.get("role") == "verifier")
     if verifier.get("execution_id") != execution_id:
@@ -543,11 +556,17 @@ def finalize_verifier_execution(current: dict, root: Path, *, execution_id: str,
     verification["isolation"] = "native-separate-context"
     validate_assurance_role_bindings(value)
     if verdict == "READY":
-        validate_topology(value, phase="closeout", root=root)
+        validate_topology(value, phase="closeout", root=root, now=now)
     return value
 
 
-def validate_closeout_state(current: dict, mode: str, root: Path | None = None) -> None:
+def validate_closeout_state(
+    current: dict,
+    mode: str,
+    root: Path | None = None,
+    *,
+    now: dt.datetime | None = None,
+) -> None:
     validate_state(current)
     assurance = current.get("assurance")
     if not isinstance(assurance, dict):
@@ -580,7 +599,7 @@ def validate_closeout_state(current: dict, mode: str, root: Path | None = None) 
 
     validate_candidate_identity(current, root)
     try:
-        validate_topology(current, phase="closeout", root=root)
+        validate_topology(current, phase="closeout", root=root, now=now)
     except TopologyError as exc:
         raise ValueError(f"success-closeout requires valid native topology evidence: {exc}") from exc
     if applicable(current):

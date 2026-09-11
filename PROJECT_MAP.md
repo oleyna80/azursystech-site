@@ -20,8 +20,7 @@ completed_work_blocks:
   - docs/plans/WB-2026-09-09-release-state-fixture-isolation.md
   - docs/plans/WB-2026-09-09-lifecycle-ownership-reconciliation.md
   - docs/plans/WB-2026-09-09-process-feedback-self-improvement.md
-  - docs/plans/WB-2026-09-09-subagent-topology-reconciliation.md
-active_work_block: null
+active_work_block: docs/plans/WB-2026-09-09-subagent-topology-reconciliation-corrective-publication.md
 -->
 
 ```yaml
@@ -29,15 +28,16 @@ release_state:
   schema_version: 1
   authority_mode: github_capability
   repository_status: operational
-  active_work_block: null
-  governance_profile: Controlled
+  active_work_block: docs/plans/WB-2026-09-09-subagent-topology-reconciliation-corrective-publication.md
+  governance_profile: Assured
   publication_mode: autonomous_assured_subject_branch_owner_merge_decision
   last_reconciled_commit: repository_evidence_only
 ```
 
 ## Migration Work
 
-- No active implementation Work Block.
+- Active implementation Work Block: `WB-2026-09-09-subagent-topology-reconciliation`
+  at `docs/plans/WB-2026-09-09-subagent-topology-reconciliation-corrective-publication.md`.
 - The completed migration index and active path are machine-readable in
   `FILE_REGISTRY.yml:migration_state`.
 

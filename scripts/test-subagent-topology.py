@@ -132,7 +132,7 @@ def denied(value: dict, root: Path, phase: str, label: str) -> None:
 
 def denied_closeout(value: dict, root: Path, label: str) -> None:
     try:
-        validate_closeout_state(value, "success-closeout", root)
+        validate_closeout_state(value, "success-closeout", root, now=NOW)
     except ValueError:
         return
     raise AssertionError(f"{label}: expected denial")
@@ -151,7 +151,7 @@ def denied_closeout_source_revision(value: dict, root: Path, role: str) -> None:
     else:
         raise AssertionError(f"{role} source revision: expected direct closeout denial")
     try:
-        validate_closeout_state(value, "success-closeout", root)
+        validate_closeout_state(value, "success-closeout", root, now=NOW)
     except ValueError as exc:
         expected_closeout = f"success-closeout requires valid native topology evidence: {expected}"
         if str(exc) != expected_closeout:
@@ -206,7 +206,7 @@ def verifier_sequencing_matrix(root: Path, valid: dict) -> None:
         "status": "PENDING",
         "observed_at": NOW.isoformat().replace("+00:00", "Z"),
     }
-    prepared = prepare_verifier_execution(provisional, root, binding)
+    prepared = prepare_verifier_execution(provisional, root, binding, now=NOW)
     validate(prepared, phase="verifier-execution", root=root, now=NOW)
     denied_closeout(prepared, root, "closeout before Verifier finalization")
 
@@ -254,10 +254,10 @@ def verifier_sequencing_matrix(root: Path, valid: dict) -> None:
     denied(historical, root, "verifier-execution", "historical Verifier evidence")
 
     finalized = finalize_verifier_execution(
-        prepared, root, execution_id="dispatch-verifier", verdict="READY"
+        prepared, root, execution_id="dispatch-verifier", verdict="READY", now=NOW
     )
     validate(finalized, phase="closeout", root=root, now=NOW)
-    validate_closeout_state(finalized, "success-closeout", root)
+    validate_closeout_state(finalized, "success-closeout", root, now=NOW)
     assert finalized["assurance"]["verification"]["isolation"] == "native-separate-context"
 
     blocked = copy.deepcopy(prepared)
@@ -281,7 +281,7 @@ def verifier_sequencing_matrix(root: Path, valid: dict) -> None:
         blocked_report.write_text(content, encoding="utf-8")
         try:
             finalize_verifier_execution(
-                prepared, root, execution_id="dispatch-verifier", verdict="READY"
+                prepared, root, execution_id="dispatch-verifier", verdict="READY", now=NOW
             )
         except ValueError:
             pass
@@ -296,14 +296,14 @@ def verifier_sequencing_matrix(root: Path, valid: dict) -> None:
     blocked["subagent_topology"]["role_bindings"][-1]["source_revision"] = blocked_revision
     try:
         finalize_verifier_execution(
-            blocked, root, execution_id="dispatch-verifier", verdict="READY"
+            blocked, root, execution_id="dispatch-verifier", verdict="READY", now=NOW
         )
     except ValueError:
         pass
     else:
         raise AssertionError("BLOCKED Verifier report must not be finalized as READY")
     blocked_final = finalize_verifier_execution(
-        blocked, root, execution_id="dispatch-verifier", verdict="BLOCKED"
+        blocked, root, execution_id="dispatch-verifier", verdict="BLOCKED", now=NOW
     )
     denied_closeout(blocked_final, root, "BLOCKED Verifier closeout")
 
@@ -387,7 +387,7 @@ def main() -> int:
         valid = state(root)
         validate(valid, phase="admission", root=root, now=NOW)
         validate(valid, phase="closeout", root=root, now=NOW)
-        validate_closeout_state(valid, "success-closeout", root)
+        validate_closeout_state(valid, "success-closeout", root, now=NOW)
         hook_invalid = copy.deepcopy(valid)
         hook_invalid["write_gate"] = {"status": "READY", "opened_at": NOW.isoformat()}
         hook_invalid["specification"] = {"path": "docs/specs/WB-test.md", "revision": "v1"}

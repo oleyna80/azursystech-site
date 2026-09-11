@@ -1,51 +1,128 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "",
-  "governance_profile": "Controlled",
+  "work_block_id": "WB-2026-09-09-subagent-topology-reconciliation",
+  "governance_profile": "Assured",
   "specification": {
-    "path": "",
-    "revision": ""
+    "path": "docs/specs/WB-2026-09-09-subagent-topology-reconciliation-corrective.md",
+    "revision": "corrective-v1"
   },
-  "subject_branch": "",
-  "base_commit": "",
-  "non_trivial": false,
-  "subagent_topology": null,
+  "subject_branch": "feat/subagent-topology-reconciliation-026-r1",
+  "base_commit": "c8b8954cee3218b7a670aa1049ac326ef98d390a",
+  "non_trivial": true,
+  "subagent_topology": {
+    "status": "READY",
+    "policy": "native-separate-context-required",
+    "capability": {
+      "status": "available",
+      "runtime": "codex",
+      "adapter": "multi_agent_v1",
+      "adapter_version": "runtime-provided",
+      "verified_at": "2026-09-11T10:43:10Z",
+      "repository_root": "/tmp/azursystech-wb-subagent-topology-reconciliation-026-r1",
+      "probe_event_ref": "native_dispatch:01a09010-2668-7691-aa58-be2b08899db9,native_dispatch:01a09010-26dd-7ef3-a635-d8c582ffab28,native_dispatch:01a09010-2753-7a33-ba28-3a94e0c6a6b0"
+    },
+    "role_bindings": [
+      {
+        "work_block_id": "WB-2026-09-09-subagent-topology-reconciliation",
+        "role": "critic",
+        "execution_id": "01a090f6-e674-77f3-84d5-f2bf3973f361",
+        "context_id": "01a090f6-e674-77f3-84d5-f2bf3973f361",
+        "context_id_source": "execution_id",
+        "runtime": "codex",
+        "adapter": "multi_agent_v1",
+        "adapter_version": "runtime-provided",
+        "source_revision": "c8b8954cee3218b7a670aa1049ac326ef98d390a",
+        "repository_root": "/tmp/azursystech-wb-subagent-topology-reconciliation-026-r1",
+        "branch": "feat/subagent-topology-reconciliation-026-r1",
+        "readonly_boundary": "native-read-only",
+        "launch_mechanism": "native",
+        "topology_tier": "native-separate-context",
+        "probe_event_ref": "native_dispatch:01a090f6-e674-77f3-84d5-f2bf3973f361",
+        "report": "docs/reports/critic/WB-2026-09-09-subagent-topology-reconciliation-corrective.md",
+        "status": "READY",
+        "observed_at": "2026-09-11T15:04:21Z"
+      },
+      {
+        "work_block_id": "WB-2026-09-09-subagent-topology-reconciliation",
+        "role": "reviewer",
+        "execution_id": "01a09119-37ba-78a3-8fe0-1595548d9e35",
+        "context_id": "01a09119-37ba-78a3-8fe0-1595548d9e35",
+        "context_id_source": "execution_id",
+        "runtime": "codex",
+        "adapter": "multi_agent_v1",
+        "adapter_version": "runtime-provided",
+        "source_revision": "content-sha256:846c8927b4f315cde092cbae9b01bea52b080ab01e2d70486c6c4aced515188e",
+        "repository_root": "/tmp/azursystech-wb-subagent-topology-reconciliation-026-r1",
+        "branch": "feat/subagent-topology-reconciliation-026-r1",
+        "readonly_boundary": "native-read-only",
+        "launch_mechanism": "native",
+        "topology_tier": "native-separate-context",
+        "probe_event_ref": "native_dispatch:01a09119-37ba-78a3-8fe0-1595548d9e35",
+        "report": "docs/reports/reviews/WB-2026-09-09-subagent-topology-reconciliation-corrective-reviewer-final.md",
+        "status": "READY",
+        "observed_at": "2026-09-11T15:35:14Z"
+      },
+      {
+        "execution_id": "01a0911f-3724-7703-983a-abb3729ef2b2",
+        "dispatch_id": "01a0911f-3724-7703-983a-abb3729ef2b2",
+        "context_id": "01a0911f-3724-7703-983a-abb3729ef2b2",
+        "context_id_source": "execution_id",
+        "report": "docs/reports/verification/WB-2026-09-09-subagent-topology-reconciliation-corrective-verifier-final.md",
+        "observed_at": "2026-09-11T15:44:40Z",
+        "work_block_id": "WB-2026-09-09-subagent-topology-reconciliation",
+        "role": "verifier",
+        "source_revision": "content-sha256:846c8927b4f315cde092cbae9b01bea52b080ab01e2d70486c6c4aced515188e",
+        "repository_root": "/tmp/azursystech-wb-subagent-topology-reconciliation-026-r1",
+        "branch": "feat/subagent-topology-reconciliation-026-r1",
+        "runtime": "codex",
+        "adapter": "multi_agent_v1",
+        "adapter_version": "runtime-provided",
+        "readonly_boundary": "read-only",
+        "launch_mechanism": "native",
+        "topology_tier": "native-separate-context",
+        "probe_event_ref": "native_dispatch:01a0911f-3724-7703-983a-abb3729ef2b2",
+        "status": "READY"
+      }
+    ]
+  },
   "define_quality": {
-    "required": false,
-    "status": "PENDING",
-    "requirements_review": "",
-    "traceability": "",
-    "consistency_analysis": ""
+    "required": true,
+    "status": "READY",
+    "requirements_review": "docs/reports/requirements-quality-WB-2026-09-09-subagent-topology-reconciliation-corrective.md",
+    "traceability": "docs/reports/traceability-WB-2026-09-09-subagent-topology-reconciliation-corrective.md",
+    "consistency_analysis": "docs/reports/consistency-WB-2026-09-09-subagent-topology-reconciliation-corrective.md"
   },
   "write_gate": {
-    "status": "BLOCKED",
-    "opened_at": null
+    "status": "READY",
+    "opened_at": "2026-09-11T15:48:39Z"
   },
   "critic": {
     "required": true,
-    "status": "PENDING",
-    "verdict": "PENDING",
-    "report": "",
-    "isolation": "unknown",
+    "status": "READY",
+    "verdict": "APPROVE",
+    "report": "docs/reports/critic/WB-2026-09-09-subagent-topology-reconciliation-corrective.md",
+    "isolation": "native-separate-context-required",
     "skip_reason": ""
   },
   "assurance": {
     "review": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
-      "isolation": "unknown",
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/reviews/WB-2026-09-09-subagent-topology-reconciliation-corrective-reviewer-final.md",
+      "execution_id": "01a09119-37ba-78a3-8fe0-1595548d9e35",
+      "isolation": "native-separate-context",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
-      "isolation": "unknown",
-      "skip_reason": ""
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/verification/WB-2026-09-09-subagent-topology-reconciliation-corrective-verifier-final.md",
+      "isolation": "native-separate-context",
+      "skip_reason": "",
+      "execution_id": "01a0911f-3724-7703-983a-abb3729ef2b2"
     },
     "evaluation": {
       "required": false,
@@ -67,12 +144,15 @@
       "skip_reason": ""
     }
   },
-  "closeout_mode": "success-closeout",
+  "closeout_mode": "pending",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
-  "write_set": [],
+  "write_set": [
+    ".codex/scripts/lifecycle.py",
+    "scripts/test-subagent-topology.py"
+  ],
   "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
@@ -96,5 +176,6 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "final native Reviewer and Verifier assurance READY; finalized exact binding; release-state and Process Feedback closeout complete"
+  "lifecycle_note": "freeze corrective topology freshness and cooperative-finalization candidate",
+  "frozen_revision": "content-sha256:846c8927b4f315cde092cbae9b01bea52b080ab01e2d70486c6c4aced515188e"
 }
