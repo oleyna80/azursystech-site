@@ -3,7 +3,7 @@ artifact_type: work_block
 work_block_id: WB-2026-09-11-control-plane-recovery-hardening-027
 revision: terminal-publication-reconciliation-r2
 specification: docs/specs/WB-2026-09-11-control-plane-recovery-hardening-027.md
-status: in_progress
+status: completed
 process_feedback_required: true
 ---
 

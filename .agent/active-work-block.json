@@ -1,158 +1,78 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-2026-09-11-control-plane-recovery-hardening-027",
-  "governance_profile": "Assured",
+  "work_block_id": "",
+  "governance_profile": "Controlled",
   "specification": {
-    "path": "docs/specs/WB-2026-09-11-control-plane-recovery-hardening-027.md",
-    "revision": "terminal-publication-reconciliation-r2"
+    "path": "",
+    "revision": ""
   },
-  "subject_branch": "feat/control-plane-recovery-hardening-027-r1",
-  "base_commit": "3b4e04ad9f28d4715e4327f9d6a960bed23da3f7",
-  "non_trivial": true,
-  "subagent_topology": {
-    "policy": "native-separate-context-required",
-    "status": "READY",
-    "capability": {
-      "status": "available",
-      "runtime": "runtime-provided",
-      "adapter": "multi_agent_v1",
-      "adapter_version": "runtime-provided",
-      "repository_root": "/tmp/azursystech-wb-control-plane-recovery-hardening-027-r1",
-      "probe_event_ref": "native_dispatch:01a09510-2125-77b1-a59e-f39f9d2c0842,native_dispatch:01a09510-21b3-7160-a1e3-f7cd03647704,native_dispatch:01a09510-2241-7cf1-96e7-3f0d28ba8db8",
-      "verified_at": "2026-09-12T10:03:22Z"
-    },
-    "role_bindings": [
-      {
-        "work_block_id": "WB-2026-09-11-control-plane-recovery-hardening-027",
-        "role": "critic",
-        "execution_id": "01a09701-65e4-7ac0-bcf0-d1116049e363",
-        "context_id": "01a09701-65e4-7ac0-bcf0-d1116049e363",
-        "context_id_source": "execution_id",
-        "runtime": "runtime-provided",
-        "adapter": "multi_agent_v1",
-        "adapter_version": "runtime-provided",
-        "source_revision": "3b4e04ad9f28d4715e4327f9d6a960bed23da3f7",
-        "repository_root": "/tmp/azursystech-wb-control-plane-recovery-hardening-027-r1",
-        "branch": "feat/control-plane-recovery-hardening-027-r1",
-        "readonly_boundary": "read-only",
-        "launch_mechanism": "native",
-        "topology_tier": "native-separate-context",
-        "probe_event_ref": "native_dispatch:01a09701-65e4-7ac0-bcf0-d1116049e363",
-        "report": "docs/reports/critic-WB-2026-09-11-control-plane-recovery-hardening-027-inactive-governance-final.md",
-        "status": "READY",
-        "observed_at": "2026-09-12T19:20:00Z"
-      },
-      {
-        "work_block_id": "WB-2026-09-11-control-plane-recovery-hardening-027",
-        "role": "reviewer",
-        "execution_id": "01a09735-eef2-7c33-a90d-5a95ad0bbced",
-        "context_id": "01a09735-eef2-7c33-a90d-5a95ad0bbced",
-        "context_id_source": "execution_id",
-        "runtime": "runtime-provided",
-        "adapter": "multi_agent_v1",
-        "adapter_version": "runtime-provided",
-        "source_revision": "content-sha256:090c6f2d3e46520c181366b088d85b4dec826d29b0fb43d1f2fadc34535539a2",
-        "repository_root": "/tmp/azursystech-wb-control-plane-recovery-hardening-027-r1",
-        "branch": "feat/control-plane-recovery-hardening-027-r1",
-        "readonly_boundary": "read-only",
-        "launch_mechanism": "native",
-        "topology_tier": "native-separate-context",
-        "probe_event_ref": "native_dispatch:01a09735-eef2-7c33-a90d-5a95ad0bbced",
-        "report": "docs/reports/review-WB-2026-09-11-control-plane-recovery-hardening-027-inactive-governance-r5.md",
-        "status": "READY",
-        "observed_at": "2026-09-12T20:06:00Z"
-      },
-      {
-        "execution_id": "01a09757-5aff-70d2-b832-43ad63353b02",
-        "dispatch_id": "01a09757-5aff-70d2-b832-43ad63353b02",
-        "context_id": "01a09757-5aff-70d2-b832-43ad63353b02",
-        "context_id_source": "execution_id",
-        "report": "docs/reports/verification-WB-2026-09-11-control-plane-recovery-hardening-027-inactive-governance-r4.md",
-        "observed_at": "2026-09-12T20:46:18.698026+00:00",
-        "work_block_id": "WB-2026-09-11-control-plane-recovery-hardening-027",
-        "role": "verifier",
-        "source_revision": "content-sha256:090c6f2d3e46520c181366b088d85b4dec826d29b0fb43d1f2fadc34535539a2",
-        "repository_root": "/tmp/azursystech-wb-control-plane-recovery-hardening-027-r1",
-        "branch": "feat/control-plane-recovery-hardening-027-r1",
-        "runtime": "runtime-provided",
-        "adapter": "multi_agent_v1",
-        "adapter_version": "runtime-provided",
-        "readonly_boundary": "read-only",
-        "launch_mechanism": "native",
-        "topology_tier": "native-separate-context",
-        "probe_event_ref": "native_dispatch:01a09757-5aff-70d2-b832-43ad63353b02",
-        "status": "READY"
-      }
-    ]
-  },
+  "subject_branch": "",
+  "base_commit": "",
+  "non_trivial": false,
+  "subagent_topology": null,
   "define_quality": {
-    "required": true,
-    "status": "READY",
-    "requirements_review": "docs/reports/requirements-quality-WB-2026-09-11-control-plane-recovery-hardening-027.md",
-    "traceability": "docs/reports/traceability-WB-2026-09-11-control-plane-recovery-hardening-027.md",
-    "consistency_analysis": "docs/reports/consistency-WB-2026-09-11-control-plane-recovery-hardening-027.md"
+    "required": false,
+    "status": "PENDING",
+    "requirements_review": "",
+    "traceability": "",
+    "consistency_analysis": ""
   },
   "write_gate": {
-    "status": "READY",
-    "opened_at": "2026-09-12T20:54:34.703044+00:00"
+    "status": "BLOCKED",
+    "opened_at": null
   },
   "critic": {
     "required": true,
-    "status": "READY",
-    "verdict": "APPROVE",
-    "report": "docs/reports/critic-WB-2026-09-11-control-plane-recovery-hardening-027-inactive-governance-final.md",
-    "isolation": "native-separate-context",
+    "status": "PENDING",
+    "verdict": "PENDING",
+    "report": "",
+    "isolation": "unknown",
     "skip_reason": ""
   },
   "assurance": {
     "review": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/review-WB-2026-09-11-control-plane-recovery-hardening-027-inactive-governance-r5.md",
-      "execution_id": "01a09735-eef2-7c33-a90d-5a95ad0bbced",
-      "isolation": "native-separate-context",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/verification-WB-2026-09-11-control-plane-recovery-hardening-027-inactive-governance-r4.md",
-      "isolation": "native-separate-context",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
-      ,"execution_id": "01a09757-5aff-70d2-b832-43ad63353b02"
     },
     "evaluation": {
       "required": false,
-      "status": "SKIPPED",
-      "verdict": "UNVERIFIED",
+      "status": "PENDING",
+      "verdict": "PENDING",
       "plan": "",
       "report": "",
       "rubric_revision": "",
       "benchmark_revision": "",
       "isolation": "unknown",
-      "skip_reason": "no generative or rubric-based deliverable is in scope"
+      "skip_reason": ""
     },
     "drift": {
       "required": false,
-      "status": "READY",
-      "verdict": "ALIGNED",
-      "report": "docs/reports/drift-WB-2026-09-11-control-plane-recovery-hardening-027-inactive-governance-r3.md",
-      "isolation": "same-session-degraded",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     }
   },
-  "closeout_mode": "pending",
+  "closeout_mode": "success-closeout",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
-  "write_set": [
-    ".gitignore",
-    ".codex/scripts/lifecycle.py"
-  ],
+  "write_set": [],
   "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
@@ -164,7 +84,6 @@
     "docs/specs/**",
     "docs/tasklist/**",
     "docs/reports/**",
-    "docs/engineering-memory/process-feedback-registry.yml",
     "docs/architecture/drafts/**",
     "memory_bank/**"
   ],
@@ -177,6 +96,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "rebound fresh assurance to unchanged frozen candidate for active parent commit",
-  "frozen_revision": "content-sha256:090c6f2d3e46520c181366b088d85b4dec826d29b0fb43d1f2fadc34535539a2"
+  "lifecycle_note": "canonical success closeout after corrected inactive projection and bytecode ignore precedence"
 }
