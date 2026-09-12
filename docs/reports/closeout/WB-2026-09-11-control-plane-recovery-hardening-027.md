@@ -17,7 +17,7 @@ process_feedback_contract: 1
 - **Closeout classification:** SUCCESS
 - **Task status:** completed
 - **Closeout mode:** success-closeout
-- **External VCS state:** exact subject publication eligible after terminal predicate; Owner integration review remains required
+- **External VCS state:** non-normative
 
 ## Result
 
