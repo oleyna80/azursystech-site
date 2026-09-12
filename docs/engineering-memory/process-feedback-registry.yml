@@ -33,6 +33,30 @@ observations:
     authority: advisory_only
     avoidable_friction: true
     related_work_blocks: []
+  - id: PF-2026-09-12-codex-hook-json-contract-mismatch
+    work_block_id: WB-2026-09-11-control-plane-recovery-hardening-027
+    date: "2026-09-12"
+    category: CONTRACT_MISMATCH
+    observation: The active Codex runtime repeatedly rejected lifecycle-hook output from the globally enabled security-guidance plugin during SessionStart, PostToolUse, and Stop.
+    evidence: >-
+      The runtime reported "hook returned invalid session start JSON output",
+      "hook returned invalid post-tool-use JSON output", and "hook returned
+      invalid stop hook JSON output". Direct, non-mutating handler probes
+      captured PostToolUse stdout containing a top-level metrics object and Stop
+      stdout containing top-level metrics and rewakeSummary fields. The
+      SessionStart handler source emits an async handshake and a metrics object.
+      The installed Codex command-hook schemas use additionalProperties: false
+      and do not allow those fields. The historical event payload itself was
+      not present in the persisted local session log; the handler source and
+      direct outputs are the reproducible evidence.
+    likely_systemic_cause: The external security-guidance@claude-plugins-official plugin v2.0.8 is registered for lifecycle phases at the user Codex runtime boundary but emits Claude Code SyncHookJSONOutput and async-protocol fields that are not valid Codex command-hook output.
+    impact: The affected plugin events are rejected, so security guidance, metrics, and lifecycle diagnostics from that integration are unreliable; repository-local admission, recovery, and fail-closed semantics are unaffected.
+    suggested_improvement: The plugin or runtime integration owner should gate Claude-specific hook registration by runtime or add a Codex serializer that emits only the documented Codex schema, with diagnostics and metrics kept off protocol stdout. Do not weaken normal guards or change global configuration in this Work Block.
+    severity: LOW
+    status: TRIAGED
+    authority: advisory_only
+    avoidable_friction: true
+    related_work_blocks: []
   - id: PF-2026-09-10-subagent-topology-validator-recovery-deadlock
     work_block_id: WB-2026-09-09-subagent-topology-reconciliation
     date: "2026-09-10"
