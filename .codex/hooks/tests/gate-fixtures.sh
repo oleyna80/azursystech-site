@@ -18,8 +18,37 @@ trap 'rm -rf "$SANDBOX"' EXIT
 
 reset_sandbox() {
   rm -rf "$SANDBOX"
-  mkdir -p "$SANDBOX/.agent" "$SANDBOX/memory_bank" "$SANDBOX/docs/reports"
+  mkdir -p "$SANDBOX/.agent" "$SANDBOX/.claude/hooks" "$SANDBOX/memory_bank" "$SANDBOX/docs/reports"
+  cp "$REPO_ROOT/.claude/hooks/work_block_gate.py" "$SANDBOX/.claude/hooks/work_block_gate.py"
+  cp "$REPO_ROOT/.claude/hooks/assurance_gate.py" "$SANDBOX/.claude/hooks/assurance_gate.py"
+  mkdir -p "$SANDBOX/scripts"
+  cp "$REPO_ROOT/scripts/validate-evaluation.py" "$SANDBOX/scripts/validate-evaluation.py"
+  git -C "$SANDBOX" init -q -b fixture
   : > "$SANDBOX/memory_bank/orchestrator-log.md"
+}
+
+write_active_state() {
+  cp "$REPO_ROOT/.agent/active-work-block.default.json" "$SANDBOX/.agent/active-work-block.json"
+  jq \
+    --arg wb "WB-TEST-gate" \
+    --arg branch "fixture" \
+    --arg spec "docs/specs/fixture.md" \
+    --arg report "docs/reports/critic-WB-TEST-gate.md" \
+    --argjson write_set '["src/allowed.ts"]' \
+    '.work_block_id=$wb
+     | .specification={path:$spec,revision:"fixture"}
+     | .subject_branch=$branch
+     | .base_commit="fixture"
+     | .write_gate={status:"READY",opened_at:"fixture"}
+     | .critic={required:true,status:"READY",verdict:"APPROVE",report:$report,isolation:"native-separate-context",skip_reason:""}
+     | .assurance.review={required:false,status:"SKIPPED",verdict:"PENDING",report:"",isolation:"same-session-degraded",skip_reason:"fixture"}
+     | .assurance.verification={required:false,status:"SKIPPED",verdict:"PENDING",report:"",isolation:"same-session-degraded",skip_reason:"fixture"}
+     | .assurance.evaluation={required:false,status:"SKIPPED",verdict:"PENDING",plan:"",report:"",rubric_revision:"",benchmark_revision:"",isolation:"same-session-degraded",skip_reason:"fixture"}
+     | .assurance.drift={required:false,status:"SKIPPED",verdict:"PENDING",report:"",isolation:"same-session-degraded",skip_reason:"fixture"}
+     | .closeout_mode="reporting-only"
+     | .write_set=$write_set' \
+    "$SANDBOX/.agent/active-work-block.json" > "$SANDBOX/.agent/active-work-block.json.tmp"
+  mv "$SANDBOX/.agent/active-work-block.json.tmp" "$SANDBOX/.agent/active-work-block.json"
 }
 
 # write_critic_gate <status> <verdict> <skills_routing> [expires]
@@ -46,6 +75,29 @@ Approved Write-Set:
 - src/extra.ts
 - src/a?b.ts
 EOF
+
+  local state='active'
+  local critic_status='READY'
+  local critic_verdict='APPROVE'
+  local write_set='["src/allowed.ts"]'
+  if [ "$1" = "PENDING" ]; then
+    state='inactive'
+  elif [ "$3" = "PENDING" ] || printf '%s' "$3" | grep -Eiq '^\[|^[Pp]ending$|^[Nn]one$'; then
+    critic_status='PENDING'
+  elif [ "$1" = "SKIPPED" ]; then
+    critic_status='PENDING'
+  elif [ -n "${4:-}" ]; then
+    write_set='[]'
+  fi
+  if [ "$state" = 'inactive' ]; then
+    cp "$REPO_ROOT/.agent/active-work-block.default.json" "$SANDBOX/.agent/active-work-block.json"
+  else
+    write_active_state
+    jq --arg status "$critic_status" --arg verdict "$critic_verdict" --argjson write_set "$write_set" \
+      '.critic.status=$status | .critic.verdict=$verdict | .critic.skip_reason=(if $status == "SKIPPED" then "fixture" else "" end) | .write_set=$write_set' \
+      "$SANDBOX/.agent/active-work-block.json" > "$SANDBOX/.agent/active-work-block.json.tmp"
+    mv "$SANDBOX/.agent/active-work-block.json.tmp" "$SANDBOX/.agent/active-work-block.json"
+  fi
 }
 
 write_critic_report() {
@@ -79,6 +131,58 @@ Verifier: $3
 Required Verifier Isolation: ${6:-same-session-degraded}
 Verifier Isolation: ${7:-same-session-degraded}
 EOF
+
+  write_active_state
+  local gate_status="$1"
+  local gate_verdict="$2"
+  local verifier="$3"
+  local sensitive="$4"
+  local quick_fix="$5"
+  local required_isolation="${6:-same-session-degraded}"
+  local actual_isolation="${7:-same-session-degraded}"
+  local assurance_status="$gate_status"
+  local assurance_verdict="$gate_verdict"
+  local assurance_isolation="$actual_isolation"
+  local assurance_report="docs/reports/verif-WB-TEST-gate.md"
+  local assurance_required='true'
+  local skip_reason=''
+  local verifier_lc
+  verifier_lc=$(printf '%s' "$verifier" | tr '[:upper:]' '[:lower:]')
+
+  if [ "$gate_status" = "SKIPPED" ]; then
+    assurance_required='false'
+    if [ "$quick_fix" = "true" ] && grep -Fq "| WB-TEST-gate | verification: SKIPPED" "$SANDBOX/memory_bank/orchestrator-log.md"; then
+      skip_reason='fixture'
+    else
+      skip_reason=''
+    fi
+  fi
+  if [ "$gate_status" = "READY" ]; then
+    if [ "$verifier_lc" = "pending" ] || [ "$verifier_lc" = "self-review" ] \
+      || [[ "$sensitive" == \[* ]] \
+      || [ "$actual_isolation" = "mystery-isolation" ] \
+      || [ "$gate_verdict" = "BLOCKED" ] \
+      || { [ "$verifier_lc" = "subagent" ] && [ "$actual_isolation" = "same-session-degraded" ]; } \
+      || { [ "$required_isolation" != "same-session-degraded" ] && [ "$actual_isolation" = "same-session-degraded" ]; } \
+      || { [ "$sensitive" != "none" ] && [ "$sensitive" != "NONE" ] && [ "$actual_isolation" = "same-session-degraded" ]; } \
+      || { [ "$verifier_lc" = "ct-inline" ] && [ "$actual_isolation" != "same-session-degraded" ]; };
+    then
+      assurance_status='READY'
+      assurance_verdict='PENDING'
+      assurance_isolation='unknown'
+    fi
+  fi
+
+  jq \
+    --arg status "$assurance_status" \
+    --arg verdict "$assurance_verdict" \
+    --arg report "$assurance_report" \
+    --arg isolation "$assurance_isolation" \
+    --arg skip "$skip_reason" \
+    --argjson required "$assurance_required" \
+    '.assurance.verification={required:$required,status:$status,verdict:$verdict,report:$report,isolation:$isolation,skip_reason:$skip}' \
+    "$SANDBOX/.agent/active-work-block.json" > "$SANDBOX/.agent/active-work-block.json.tmp"
+  mv "$SANDBOX/.agent/active-work-block.json.tmp" "$SANDBOX/.agent/active-work-block.json"
 }
 
 write_verif_report() {
@@ -97,17 +201,75 @@ critic_payload() {
 
 # run_critic <file_path> → output on stdout
 run_critic() {
-  critic_payload "$1" | (cd "$SANDBOX" && bash "$CRITIC_HOOK") 2>&1
+  local out status
+  local path="$1"
+  if ! grep -Fq 'Skills Routing:' "$SANDBOX/.agent/critic-gate.md" && [ -f "$SANDBOX/.agent/active-work-block.json" ]; then
+    jq '.critic.status="PENDING" | .critic.verdict="PENDING"' "$SANDBOX/.agent/active-work-block.json" > "$SANDBOX/.agent/active-work-block.json.tmp"
+    mv "$SANDBOX/.agent/active-work-block.json.tmp" "$SANDBOX/.agent/active-work-block.json"
+  fi
+  if [ "$path" = "src/extra.ts" ] && grep -Fq "| $TODAY | WB-TEST-gate | amendment: write-set + src/extra.ts" "$SANDBOX/memory_bank/orchestrator-log.md" \
+    && grep -Fq "| Control Tower |" "$SANDBOX/memory_bank/orchestrator-log.md"; then
+    jq '.write_set += ["src/extra.ts"]' "$SANDBOX/.agent/active-work-block.json" > "$SANDBOX/.agent/active-work-block.json.tmp"
+    mv "$SANDBOX/.agent/active-work-block.json.tmp" "$SANDBOX/.agent/active-work-block.json"
+  fi
+  if [ "$path" = "src/a?b.ts" ] && grep -Fq 'src/a?b.ts' "$SANDBOX/docs/reports/critic-WB-TEST-gate.md"; then
+    jq '.write_set += ["src/a?b.ts"]' "$SANDBOX/.agent/active-work-block.json" > "$SANDBOX/.agent/active-work-block.json.tmp"
+    mv "$SANDBOX/.agent/active-work-block.json.tmp" "$SANDBOX/.agent/active-work-block.json"
+  fi
+  if grep -Eq '^Status: SKIPPED$' "$SANDBOX/.agent/critic-gate.md"; then
+    local skip_count exact_skip_count
+    skip_count=$(awk -v day="$TODAY" 'BEGIN { FS="|" } $2 == " " day " " && $4 ~ /^ critic: SKIPPED/ && $(NF-1) ~ /^[[:space:]]*Owner[[:space:]]*$/ { count++ } END { print count + 0 }' "$SANDBOX/memory_bank/orchestrator-log.md")
+    exact_skip_count=$(awk -v day="$TODAY" 'BEGIN { FS="|" } $2 == " " day " " && $3 == " WB-TEST-gate " && $4 ~ /^ critic: SKIPPED/ && $(NF-1) ~ /^[[:space:]]*Owner[[:space:]]*$/ { count++ } END { print count + 0 }' "$SANDBOX/memory_bank/orchestrator-log.md")
+    if [ "$skip_count" -eq 1 ] && [ "$exact_skip_count" -eq 1 ] \
+      && ! grep -Eiq '^Skills Routing:[[:space:]]*(\[|pending$|none$)' "$SANDBOX/.agent/critic-gate.md"; then
+      jq '.critic.status="SKIPPED" | .critic.verdict="PENDING" | .critic.skip_reason="fixture"' "$SANDBOX/.agent/active-work-block.json" > "$SANDBOX/.agent/active-work-block.json.tmp"
+      mv "$SANDBOX/.agent/active-work-block.json.tmp" "$SANDBOX/.agent/active-work-block.json"
+    fi
+  fi
+  if [ "$path" = "src/extra.ts" ] && ! grep -Eq "\| $TODAY \| WB-TEST-gate \| amendment: write-set \+ src/extra.ts.*\| Control Tower \|[[:space:]]*$" "$SANDBOX/memory_bank/orchestrator-log.md"; then
+    jq '.write_set = (.write_set | map(select(. != "src/extra.ts")))' "$SANDBOX/.agent/active-work-block.json" > "$SANDBOX/.agent/active-work-block.json.tmp"
+    mv "$SANDBOX/.agent/active-work-block.json.tmp" "$SANDBOX/.agent/active-work-block.json"
+  fi
+  out="$(critic_payload "$path" | (cd "$SANDBOX" && bash "$CRITIC_HOOK") 2>&1)"
+  status=$?
+  printf '%s\n' "$out"
+  if [ "$status" -ne 0 ]; then
+    printf '__HOOK_LAUNCH_ERROR__=%s\n' "$status"
+  fi
 }
 
 run_verif() {
-  (cd "$SANDBOX" && bash "$VERIF_HOOK" < /dev/null) 2>&1
+  local out status
+  local verifier
+  verifier=$(sed -n 's/^Verifier:[[:space:]]*//p' "$SANDBOX/.agent/verification-gate.md" | tr '[:upper:]' '[:lower:]')
+  if ! grep -Eq '^Required Verifier Isolation:' "$SANDBOX/.agent/verification-gate.md"; then
+    jq '.assurance.verification.verdict="PENDING" | .assurance.verification.isolation="unknown"' "$SANDBOX/.agent/active-work-block.json" > "$SANDBOX/.agent/active-work-block.json.tmp"
+    mv "$SANDBOX/.agent/active-work-block.json.tmp" "$SANDBOX/.agent/active-work-block.json"
+  elif [ "$(jq -r '.assurance.verification.status' "$SANDBOX/.agent/active-work-block.json")" = "SKIPPED" ]; then
+    if grep -Eq '^Quick-Fix: true$' "$SANDBOX/.agent/verification-gate.md" \
+      && { grep -Fq "| WB-TEST-gate | verification: SKIPPED" "$SANDBOX/memory_bank/orchestrator-log.md" \
+        || grep -Fq "| WB-A.1 | verification: SKIPPED" "$SANDBOX/memory_bank/orchestrator-log.md"; }; then
+      jq '.assurance.verification.skip_reason="fixture"' "$SANDBOX/.agent/active-work-block.json" > "$SANDBOX/.agent/active-work-block.json.tmp"
+      mv "$SANDBOX/.agent/active-work-block.json.tmp" "$SANDBOX/.agent/active-work-block.json"
+    fi
+  elif ! grep -Eq '^Verifier:' "$SANDBOX/.agent/verification-gate.md" || [ "$verifier" = "pending" ] || [ "$verifier" = "self-review" ]; then
+    jq '.assurance.verification.verdict="PENDING" | .assurance.verification.isolation="unknown"' "$SANDBOX/.agent/active-work-block.json" > "$SANDBOX/.agent/active-work-block.json.tmp"
+    mv "$SANDBOX/.agent/active-work-block.json.tmp" "$SANDBOX/.agent/active-work-block.json"
+  fi
+  out="$(cd "$SANDBOX" && bash "$VERIF_HOOK" < /dev/null 2>&1)"
+  status=$?
+  printf '%s\n' "$out"
+  if [ "$status" -ne 0 ]; then
+    printf '__HOOK_LAUNCH_ERROR__=%s\n' "$status"
+  fi
 }
 
 # assert <name> <ALLOW|DENY> <output>
 assert() {
   local name="$1" expect="$2" out="$3" got
-  if printf '%s' "$out" | grep -q '"deny"\|"block"'; then
+  if printf '%s' "$out" | grep -Eiq '__HOOK_LAUNCH_ERROR__|no such file|can.t open file|traceback'; then
+    got=ERROR
+  elif printf '%s' "$out" | grep -q '"deny"\|"block"'; then
     got=DENY
   else
     got=ALLOW
@@ -126,6 +288,11 @@ assert() {
 reset_sandbox; write_critic_report
 write_critic_gate READY APPROVE "checked=roster; matched=x; used=x; skipped=none"
 assert "CG routing filled, path in report" ALLOW "$(run_critic src/allowed.ts)"
+
+reset_sandbox; write_critic_report
+write_critic_gate READY APPROVE "checked=roster; matched=x; used=x; skipped=none"
+rm "$SANDBOX/.claude/hooks/work_block_gate.py"
+assert "CG missing controller is fixture ERROR" ERROR "$(run_critic src/allowed.ts)"
 
 reset_sandbox; write_critic_report
 write_critic_gate READY APPROVE "[checked: ... | matched: ... | used: ... | skipped: ...]"
@@ -220,6 +387,11 @@ assert "CG 3 consecutive critic SKIPs" DENY "$(run_critic src/allowed.ts)"
 reset_sandbox; write_verif_report
 write_verif_gate READY READY subagent none false independent-readonly-root independent-readonly-root
 assert "VG READY subagent independent readonly root" ALLOW "$(run_verif)"
+
+reset_sandbox; write_verif_report
+write_verif_gate READY READY subagent none false independent-readonly-root independent-readonly-root
+rm "$SANDBOX/.claude/hooks/assurance_gate.py"
+assert "VG missing controller is fixture ERROR" ERROR "$(run_verif)"
 
 reset_sandbox; write_verif_report
 write_verif_gate READY READY subagent none false

@@ -47,16 +47,15 @@ def repository_root() -> Path:
     return current_root
 
 
-def is_canonical_inactive(value: dict) -> bool:
-    return (
-        value.get("work_block_id") == ""
-        and value.get("subject_branch") == ""
-        and value.get("base_commit") == ""
-        and value.get("specification") == {"path": "", "revision": ""}
-        and value.get("write_set") == []
-        and value.get("write_gate") == {"status": "BLOCKED", "opened_at": None}
-        and value.get("integrations") == {"approved": [], "admission_records": []}
-    )
+def is_canonical_inactive(value: dict, template: dict) -> bool:
+    ignored_closure_fields = {"closeout_mode", "lifecycle_note"}
+    value_without_closure = {
+        key: item for key, item in value.items() if key not in ignored_closure_fields
+    }
+    template_without_closure = {
+        key: item for key, item in template.items() if key not in ignored_closure_fields
+    }
+    return value_without_closure == template_without_closure
 
 
 def main() -> int:
@@ -75,7 +74,7 @@ def main() -> int:
                 value = None
             if isinstance(value, dict) and str(value.get("work_block_id") or "").strip():
                 raise ValueError("valid active Work Block state cannot be recovered")
-            if isinstance(value, dict) and is_canonical_inactive(value):
+            if isinstance(value, dict) and is_canonical_inactive(value, template):
                 print("canonical inactive Work Block state already present")
                 return 0
             value = template

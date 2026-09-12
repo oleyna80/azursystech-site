@@ -83,6 +83,28 @@ def main() -> int:
         invoke(fixture, 0)
         assert state_path.read_bytes() == before
 
+        closure_only = json.loads(json.dumps(template))
+        closure_only["closeout_mode"] = "reporting-only"
+        closure_only["lifecycle_note"] = "historical closure note"
+        state_path.write_text(json.dumps(closure_only), encoding="utf-8")
+        before = state_path.read_bytes()
+        invoke(fixture, 0)
+        assert state_path.read_bytes() == before
+
+        inactive_like = json.loads(json.dumps(template))
+        inactive_like["closeout_mode"] = "reporting-only"
+        inactive_like["lifecycle_note"] = "historical closure note"
+        inactive_like.pop("assurance", None)
+        state_path.write_text(json.dumps(inactive_like), encoding="utf-8")
+        invoke(fixture, 0)
+        assert json.loads(state_path.read_text(encoding="utf-8")) == template
+
+        unknown_key = json.loads(json.dumps(template))
+        unknown_key["unexpected_recovery_field"] = True
+        state_path.write_text(json.dumps(unknown_key), encoding="utf-8")
+        invoke(fixture, 0)
+        assert json.loads(state_path.read_text(encoding="utf-8")) == template
+
         state_path.write_text(json.dumps({"schema_version": 3}), encoding="utf-8")
         invoke(fixture, 0)
         assert json.loads(state_path.read_text(encoding="utf-8")) == template
