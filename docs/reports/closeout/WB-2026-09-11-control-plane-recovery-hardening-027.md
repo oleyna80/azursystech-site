@@ -2,7 +2,7 @@
 artifact_type: closeout_report
 work_block_id: WB-2026-09-11-control-plane-recovery-hardening-027
 status: approved
-revision: corrective-pf-r1
+revision: terminal-publication-reconciliation-r2
 process_feedback_required: true
 process_feedback_contract: 1
 ---
@@ -17,7 +17,7 @@ process_feedback_contract: 1
 - **Closeout classification:** SUCCESS
 - **Task status:** completed
 - **Closeout mode:** success-closeout
-- **External VCS state:** non-normative; no publication or integration action authorized
+- **External VCS state:** exact subject publication eligible after terminal predicate; Owner integration review remains required
 
 ## Result
 
@@ -31,24 +31,26 @@ uses the existing durable atomic replacement path. Normal hooks remain
 fail-closed.
 
 This corrective closeout also reconciles a previously inaccurate Process
-Feedback result. The investigation found one new, separately evidenced
-`CONTRACT_MISMATCH`: the globally enabled external Claude security-guidance
-plugin emits Claude-specific lifecycle-hook fields at the Codex runtime
-boundary. The repository's Codex hook declarations and local Claude handlers
-were not the emitters, and no repository hook or recovery source was changed.
+Feedback result. The investigation found two separately evidenced
+`CONTRACT_MISMATCH` observations with different ownership: the external
+Claude/Codex lifecycle-hook JSON mismatch, and the repository-local terminal
+publication mismatch that failed to admit the exact lifecycle-bound plan and
+tasklist. They remain separate observations. The terminal contract correction
+preserves the static allowlist and adds only exact active-parent-derived plan
+and tasklist bindings.
 
 ## Assurance
 
-- Fresh Critic admission: native execution/context `01a0952f-20c5-7b01-b110-f651bfc62be1`, raw disposition `SUPPLEMENT`, admission recommendation `APPROVE`.
-- Fresh Reviewer: native execution/context `01a09542-9a3d-7800-9215-f4c88cac06d8`, `READY`, no material findings.
-- Fresh Verifier: native execution/context `01a09548-63e0-7712-b91e-ca9984a0f429`, `READY`, standard tier.
+- Fresh Critic: native execution/context `01a09697-6695-7eb2-a805-68ad9f993ac1`, `APPROVE`, no findings.
+- Fresh Reviewer: native execution/context `01a096a1-31ee-7c33-89f6-50a87366c37f`, `READY`, no material findings.
+- Fresh Verifier: native execution/context `01a096a9-8b70-7003-998a-9c71e2b330ad`, `READY`, no blocking findings; dispatch requested as Luna High/high reasoning.
 - Drift: `ALIGNED`; no implementation, contract, documentation, topology, or release-state drift remains in scope.
 - Coordination-only PF reconciliation: the accepted source candidate remains
-  byte-identical (`content-sha256:3323b9cddbdf9eba6061a488f92ec77135568c8655eba31599ad28abeb6e25b0`),
+  byte-identical (`content-sha256:f805d881ba4c77d7da71b8b707cbe8b8adda337c27b3b7855c822ffbfa16a423`),
   so the existing native assurance bindings remain bound to the same frozen
   identity and current root/branch. The lifecycle contract admits a committed
-  active parent with READY assurance followed by one minimal coordination-only
-  terminal child; no assurance was reused for a changed source.
+  active parent with READY assurance followed by one minimal terminal child; no
+  assurance was reused for a changed source.
 
 ## Process Feedback
 
@@ -82,9 +84,10 @@ dimensions:
   process_overhead_repeated_work:
     state: FRICTION_OBSERVED
     evidence: "The repeated rejected hook outputs created avoidable diagnostic and lifecycle friction across SessionStart, PostToolUse, and Stop."
-avoidable_friction_count: 1
+avoidable_friction_count: 2
 observation_ids:
-  - PF-2026-09-12-codex-hook-json-contract-mismatch
+- PF-2026-09-12-codex-hook-json-contract-mismatch
+- PF-2026-09-12-terminal-plan-tasklist-publication-mismatch
 registry: docs/engineering-memory/process-feedback-registry.yml
 ```
 
@@ -101,6 +104,8 @@ changed.
 
 ## Follow-Up Work
 
-Owner integration review is required for the local candidate. No push, merge,
+Owner integration review is required for the local candidate. No merge,
 deployment, PR, tag publication, predecessor-worktree repair, branch cleanup,
-or destructive cleanup is part of this closeout.
+or destructive cleanup is part of this closeout. The only permitted
+publication action is the exact non-force subject refspec after all terminal
+predicates are READY.

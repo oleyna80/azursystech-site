@@ -42,6 +42,46 @@
         "report": "docs/reports/critic-WB-2026-09-11-control-plane-recovery-hardening-027-terminal-publication.md",
         "status": "READY",
         "observed_at": "2026-09-12T17:14:50Z"
+      },
+      {
+        "work_block_id": "WB-2026-09-11-control-plane-recovery-hardening-027",
+        "role": "reviewer",
+        "execution_id": "01a096a1-31ee-7c33-89f6-50a87366c37f",
+        "context_id": "01a096a1-31ee-7c33-89f6-50a87366c37f",
+        "context_id_source": "execution_id",
+        "runtime": "runtime-provided",
+        "adapter": "multi_agent_v1",
+        "adapter_version": "runtime-provided",
+        "source_revision": "content-sha256:f805d881ba4c77d7da71b8b707cbe8b8adda337c27b3b7855c822ffbfa16a423",
+        "repository_root": "/tmp/azursystech-wb-control-plane-recovery-hardening-027-r1",
+        "branch": "feat/control-plane-recovery-hardening-027-r1",
+        "readonly_boundary": "read-only",
+        "launch_mechanism": "native",
+        "topology_tier": "native-separate-context",
+        "probe_event_ref": "native_dispatch:01a096a1-31ee-7c33-89f6-50a87366c37f",
+        "report": "docs/reports/review-WB-2026-09-11-control-plane-recovery-hardening-027-successor.md",
+        "status": "READY",
+        "observed_at": "2026-09-12T17:27:22Z"
+      },
+      {
+        "work_block_id": "WB-2026-09-11-control-plane-recovery-hardening-027",
+        "role": "verifier",
+        "execution_id": "01a096a9-8b70-7003-998a-9c71e2b330ad",
+        "context_id": "01a096a9-8b70-7003-998a-9c71e2b330ad",
+        "context_id_source": "execution_id",
+        "runtime": "runtime-provided",
+        "adapter": "multi_agent_v1",
+        "adapter_version": "runtime-provided",
+        "source_revision": "content-sha256:f805d881ba4c77d7da71b8b707cbe8b8adda337c27b3b7855c822ffbfa16a423",
+        "repository_root": "/tmp/azursystech-wb-control-plane-recovery-hardening-027-r1",
+        "branch": "feat/control-plane-recovery-hardening-027-r1",
+        "readonly_boundary": "read-only",
+        "launch_mechanism": "native",
+        "topology_tier": "native-separate-context",
+        "probe_event_ref": "native_dispatch:01a096a9-8b70-7003-998a-9c71e2b330ad",
+        "report": "docs/reports/verification-WB-2026-09-11-control-plane-recovery-hardening-027-successor.md",
+        "status": "READY",
+        "observed_at": "2026-09-12T17:28:12Z"
       }
     ]
   },
@@ -49,12 +89,12 @@
     "required": true,
     "status": "READY",
     "requirements_review": "docs/reports/requirements-quality-WB-2026-09-11-control-plane-recovery-hardening-027.md",
-    "traceability": "docs/reports/traceability-WB-2026-09-11-control-plane-recovery-hardening-027.md",
-    "consistency_analysis": "docs/reports/consistency-WB-2026-09-11-control-plane-recovery-hardening-027.md"
+    "traceability": "docs/reports/requirements-quality-WB-2026-09-11-control-plane-recovery-hardening-027.md",
+    "consistency_analysis": "docs/reports/requirements-quality-WB-2026-09-11-control-plane-recovery-hardening-027.md"
   },
   "write_gate": {
     "status": "READY",
-    "opened_at": "2026-09-12T17:05:23.644842+00:00"
+    "opened_at": "2026-09-12T17:46:24.382661+00:00"
   },
   "critic": {
     "required": true,
@@ -67,41 +107,44 @@
   "assurance": {
     "review": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
-      "isolation": "unknown",
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/review-WB-2026-09-11-control-plane-recovery-hardening-027-successor.md",
+      "execution_id": "01a096a1-31ee-7c33-89f6-50a87366c37f",
+      "isolation": "native-separate-context",
       "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
-      "isolation": "unknown",
+      "status": "READY",
+      "verdict": "READY",
+      "report": "docs/reports/verification-WB-2026-09-11-control-plane-recovery-hardening-027-successor.md",
+      "execution_id": "01a096a9-8b70-7003-998a-9c71e2b330ad",
+      "isolation": "native-separate-context",
       "skip_reason": ""
     },
     "evaluation": {
       "required": false,
-      "status": "PENDING",
-      "verdict": "PENDING",
+      "status": "SKIPPED",
+      "verdict": "UNVERIFIED",
       "plan": "",
       "report": "",
       "rubric_revision": "",
       "benchmark_revision": "",
-      "isolation": "unknown",
-      "skip_reason": ""
+      "isolation": "not_applicable",
+      "skip_reason": "Standard-tier deterministic control-plane change has no generative evaluation deliverable"
     },
     "drift": {
       "required": false,
-      "status": "PENDING",
-      "verdict": "PENDING",
-      "report": "",
-      "isolation": "unknown",
+      "status": "READY",
+      "verdict": "ALIGNED",
+      "report": "docs/reports/drift-WB-2026-09-11-control-plane-recovery-hardening-027-successor.md",
+      "isolation": "same-context",
       "skip_reason": ""
     }
   },
   "closeout_mode": "pending",
+  "frozen_revision": "content-sha256:f805d881ba4c77d7da71b8b707cbe8b8adda337c27b3b7855c822ffbfa16a423",
   "integrations": {
     "approved": [],
     "admission_records": []
@@ -138,5 +181,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "source work opened by Work Block coordination"
+  "lifecycle_note": "reopened same Work Block for corrected terminal publication after fresh final assurance"
 }

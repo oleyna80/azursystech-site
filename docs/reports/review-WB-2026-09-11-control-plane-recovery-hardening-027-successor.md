@@ -2,9 +2,14 @@
 artifact_type: review_report
 work_block_id: WB-2026-09-11-control-plane-recovery-hardening-027
 status: accepted
-revision: successor-freeze-r1
-execution_id: 01a09542-9a3d-7800-9215-f4c88cac06d8
-context_id: 01a09542-9a3d-7800-9215-f4c88cac06d8
+revision: terminal-publication-reconciliation-r2
+execution_id: 01a096a1-31ee-7c33-89f6-50a87366c37f
+context_id: 01a096a1-31ee-7c33-89f6-50a87366c37f
+runtime: runtime-provided
+adapter: multi_agent_v1
+adapter_version: runtime-provided
+model: gpt-5.6-luna
+reasoning: high
 isolation: native-separate-context
 verdict: READY
 ---
@@ -16,8 +21,8 @@ verdict: READY
 - Repository root: `/tmp/azursystech-wb-control-plane-recovery-hardening-027-r1`
 - Branch: `feat/control-plane-recovery-hardening-027-r1`
 - Baseline: `7c19720422d317ac36286691d540a966e3620fc0`
-- Frozen revision: `content-sha256:3323b9cddbdf9eba6061a488f92ec77135568c8655eba31599ad28abeb6e25b0`
-- Native execution/context: `01a09542-9a3d-7800-9215-f4c88cac06d8`
+- Frozen revision: `content-sha256:f805d881ba4c77d7da71b8b707cbe8b8adda337c27b3b7855c822ffbfa16a423`
+- Native execution/context: `01a096a1-31ee-7c33-89f6-50a87366c37f`
 - Boundary: read-only; no edit, stage, commit, push, merge, deploy, cleanup, or predecessor-worktree mutation.
 
 ## Verdict
@@ -31,7 +36,7 @@ verdict: READY
 - `python3 scripts/test-active-work-block-recovery.py` exited `0` with `active Work Block recovery matrix: OK`; coverage includes missing/malformed state, active-state refusal, foreign path, marker/template/argument rejection, partial/extra state, closure-only no-op, and normal-hook denial.
 - `python3 scripts/test-github-capability-control-plane.py` exited `0` with `PASS=14 FAIL=0`.
 - `python3 scripts/validate-release-state.py --root .` reported `Release-state contract: READY`.
-- Define traceability reported `READY; requirements=7 acceptance=5 tasks=8`.
+- Define traceability reported `READY; requirements=9 acceptance=6 tasks=9`.
 - `python3 scripts/test-subagent-topology.py` reported `subagent topology matrix: OK`.
 - `git diff --check` was clean; no change exists in `scripts/subagent_topology.py`.
 
