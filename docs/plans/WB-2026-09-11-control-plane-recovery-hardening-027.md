@@ -3,7 +3,7 @@ artifact_type: work_block
 work_block_id: WB-2026-09-11-control-plane-recovery-hardening-027
 revision: terminal-publication-reconciliation-r2
 specification: docs/specs/WB-2026-09-11-control-plane-recovery-hardening-027.md
-status: in_progress
+status: completed
 process_feedback_required: true
 ---
 
@@ -94,11 +94,11 @@ paths. No topology source change is permitted.
 
 ## Final State
 
-- **Stage State:** in_progress
-- **Review Gate:** PENDING
-- **Verification Verdict:** PENDING
+- **Stage State:** completed
+- **Review Gate:** READY
+- **Verification Verdict:** READY
 - **Evaluation Verdict:** SKIPPED — Standard-tier deterministic control-plane change has no generative evaluation deliverable
-- **Drift Gate:** PENDING
-- **Closeout Mode:** pending
-- **Task Status:** active
-- **External VCS State:** non-normative; no publication or integration action authorized
+- **Drift Gate:** ALIGNED
+- **Closeout Mode:** success-closeout
+- **Task Status:** completed
+- **External VCS State:** non-normative; exact subject publication pending Owner integration review
