@@ -2,7 +2,7 @@
 artifact_type: work_block
 work_block_id: WB-2026-09-11-control-plane-recovery-hardening-027
 revision: recovery-successor-r1
-status: in_progress
+status: completed
 process_feedback_required: true
 ---
 
