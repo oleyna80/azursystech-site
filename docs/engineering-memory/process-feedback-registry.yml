@@ -57,6 +57,20 @@ observations:
     authority: advisory_only
     avoidable_friction: true
     related_work_blocks: []
+  - id: PF-2026-09-12-terminal-plan-tasklist-publication-mismatch
+    work_block_id: WB-2026-09-11-control-plane-recovery-hardening-027
+    date: "2026-09-12"
+    category: CONTRACT_MISMATCH
+    observation: The terminal publication guard did not admit the lifecycle-required exact Work Block plan and tasklist projection, making an assured terminal candidate unpublishable.
+    evidence: "Historical candidate 6e6e3252fc4bbb3c3b23fdcbb81b6e0e069256e6 passed parent/child, assurance, branch, and trailer predicates but terminal_diff_allowed rejected its bound plan/tasklist projection; fresh Critic 01a0965a-820a-7f72-9026-908b502de0e8 identified the gap."
+    likely_systemic_cause: The repository terminal path check used only a static coordination allowlist instead of deriving exact plan/tasklist paths from the active parent Work Block identity and lifecycle state.
+    impact: A technically assured terminal closeout could not be published, and tasklist closure was not enforced by the publication predicate.
+    suggested_improvement: Derive exactly one parent-bound plan and tasklist, require matching Work Block/specification identity and revision, completed closure markers, checked required tasks, and reject all unrelated or extra paths.
+    severity: LOW
+    status: TRIAGED
+    authority: advisory_only
+    avoidable_friction: true
+    related_work_blocks: []
   - id: PF-2026-09-10-subagent-topology-validator-recovery-deadlock
     work_block_id: WB-2026-09-09-subagent-topology-reconciliation
     date: "2026-09-10"

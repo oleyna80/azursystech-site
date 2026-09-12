@@ -1,7 +1,8 @@
 ---
 artifact_type: tasklist
 work_block_id: WB-2026-09-11-control-plane-recovery-hardening-027
-revision: recovery-successor-r1
+specification: docs/specs/WB-2026-09-11-control-plane-recovery-hardening-027.md
+revision: terminal-publication-reconciliation-r2
 status: active
 ---
 
@@ -29,3 +30,7 @@ status: active
 - [ ] TASK-007 [type=requirement] [req=REQ-007] [ac=AC-005] [paths=docs/reports/closeout-WB-2026-09-11-control-plane-recovery-hardening-027.md] Confirm hard-stop and preservation boundaries.
   Confirm no push, merge, deployment, destructive cleanup, predecessor
   mutation, topology-source mutation, or archival-tag publication occurred.
+- [ ] TASK-009 [type=requirement] [req=REQ-008,REQ-009] [ac=AC-006] [paths=.agent/hooks/hard_stop_policy.py,scripts/test-github-capability-control-plane.py] Enforce exact terminal plan/tasklist projection.
+  Derive only the exact plan and tasklist bound to the active parent Work
+  Block, require matching identity/revision and completed closure invariants,
+  and deny unrelated, extra, arbitrary, malformed, or incomplete variants.

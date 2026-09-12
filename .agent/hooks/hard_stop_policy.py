@@ -32,6 +32,16 @@ TERMINAL_CLOSEOUT_PATHS = {
     "PROJECT_MAP.md",
 }
 TERMINAL_WORK_BLOCK = re.compile(r"^Work-Block:\s*(\S+)\s*$", re.MULTILINE)
+WORK_BLOCK_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
+FRONTMATTER_KEY = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*$")
+TERMINAL_PLAN_MARKERS = (
+    ("Stage State", "completed"),
+    ("Review Gate", "READY"),
+    ("Verification Verdict", "READY"),
+    ("Drift Gate", "ALIGNED"),
+    ("Closeout Mode", "success-closeout"),
+    ("Task Status", "completed"),
+)
 
 CONSEQUENTIAL = [
     (
@@ -157,6 +167,215 @@ def git(root: Path, *args: str) -> str:
     except (OSError, subprocess.SubprocessError) as exc:
         deny(f"Cannot inspect git state for Hard Stop policy: {exc}")
     return result.stdout.strip()
+
+
+def git_optional(root: Path, *args: str) -> str | None:
+    """Read a Git object without turning an expected missing path into a deny."""
+    try:
+        result = subprocess.run(
+            ["git", *args], cwd=root, check=True, capture_output=True,
+            text=True, timeout=3
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return result.stdout
+
+
+def valid_work_block_id(value: object) -> bool:
+    candidate = value if isinstance(value, str) else ""
+    return bool(
+        WORK_BLOCK_ID.fullmatch(candidate)
+        and ".." not in candidate
+        and not any(character.isspace() or ord(character) < 32 for character in candidate)
+    )
+
+
+def parse_frontmatter(text: str) -> tuple[dict[str, str], str] | None:
+    """Parse the repository's deliberately small, single-line frontmatter contract."""
+    if not text.startswith("---\n"):
+        return None
+    remainder = text[4:]
+    marker = "\n---\n"
+    if marker not in remainder:
+        return None
+    header, body = remainder.split(marker, 1)
+    if marker in body:
+        return None
+    values: dict[str, str] = {}
+    for line in header.splitlines():
+        if not line.strip():
+            continue
+        if ":" not in line:
+            return None
+        key, value = line.split(":", 1)
+        key = key.strip()
+        value = value.strip()
+        if not FRONTMATTER_KEY.fullmatch(key) or key in values or not value:
+            return None
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            value = value[1:-1]
+        values[key] = value
+    return values, body
+
+
+def tree_frontmatter(root: Path, revision: str, path: str) -> tuple[dict[str, str], str] | None:
+    content = git_optional(root, "show", f"{revision}:{path}")
+    if content is None:
+        return None
+    return parse_frontmatter(content)
+
+
+def active_projection_matches(text: str, expected_path: str) -> bool:
+    values = re.findall(r"(?m)^\s*active_work_block:\s*([^\s#]+)\s*(?:#.*)?$", text)
+    return bool(values) and all(value == expected_path for value in values)
+
+
+def terminal_plan_complete(body: str) -> bool:
+    final_states = list(
+        re.finditer(
+            r"(?ms)^##\s+Final State\s*$\n(?P<body>.*?)(?=^##\s+|\Z)",
+            body,
+        )
+    )
+    if len(final_states) != 1:
+        return False
+    final_state = final_states[0]
+    markers = re.findall(
+        r"(?m)^\s*-\s+\*\*([^:]+):\*\*\s+(.+?)\s*$",
+        final_state.group("body"),
+    )
+    normalized = lambda value: re.sub(r"[^a-z0-9]+", "", value.lower())
+    for label, value in TERMINAL_PLAN_MARKERS:
+        matches = [
+            marker_value
+            for marker_label, marker_value in markers
+            if normalized(marker_label) == normalized(label)
+        ]
+        if len(matches) != 1 or matches[0] != value:
+            return False
+    return True
+
+
+def completed_projection(text: str) -> list[str] | None:
+    match = re.search(
+        r"(?ms)^[ \t]*completed_work_blocks:\s*\n(?P<body>(?:^[ \t]*-\s+[^\n]+\n?)*)",
+        text,
+    )
+    if match is None:
+        return None
+    return re.findall(r"(?m)^\s+-\s+(docs/plans/[^\s#]+)$", match.group("body"))
+
+
+def terminal_child_coordination_matches(
+    registry: str, project_map: str, plan_path: str,
+) -> bool:
+    registry_active = re.findall(
+        r"(?m)^\s*active_work_block:\s*([^\s#]+|null)\s*(?:#.*)?$", registry
+    )
+    map_active = re.findall(
+        r"(?m)^\s*active_work_block:\s*([^\s#]+|null)\s*(?:#.*)?$", project_map
+    )
+    registry_completed = completed_projection(registry)
+    map_completed = completed_projection(project_map)
+    return (
+        registry_active
+        and map_active
+        and all(value == "null" for value in registry_active)
+        and all(value == "null" for value in map_active)
+        and registry_completed is not None
+        and registry_completed == map_completed
+        and registry_completed.count(plan_path) == 1
+        and registry_completed[-1] == plan_path
+    )
+
+
+def terminal_projection(
+    root: Path, parent_revision: str, parent_state: dict,
+) -> tuple[str, str] | None:
+    """Return only the exact plan/tasklist paths bound to this active parent."""
+    work_block_id = parent_state.get("work_block_id")
+    specification = parent_state.get("specification")
+    if not valid_work_block_id(work_block_id) or not isinstance(specification, dict):
+        return None
+    specification_path = specification.get("path")
+    specification_revision = specification.get("revision")
+    expected_specification = f"docs/specs/{work_block_id}.md"
+    if specification_path != expected_specification or not isinstance(specification_revision, str) or not specification_revision:
+        return None
+    plan_path = f"docs/plans/{work_block_id}.md"
+    tasklist_path = f"docs/tasklist/{work_block_id}.tasklist.md"
+    spec = tree_frontmatter(root, parent_revision, specification_path)
+    plan = tree_frontmatter(root, parent_revision, plan_path)
+    tasklist = tree_frontmatter(root, parent_revision, tasklist_path)
+    if spec is None or plan is None or tasklist is None:
+        return None
+    spec_meta, _ = spec
+    plan_meta, _ = plan
+    task_meta, _ = tasklist
+    if (
+        spec_meta.get("artifact_type") != "specification"
+        or spec_meta.get("work_block_id") != work_block_id
+        or spec_meta.get("revision") != specification_revision
+        or plan_meta.get("artifact_type") != "work_block"
+        or plan_meta.get("work_block_id") != work_block_id
+        or plan_meta.get("specification") != specification_path
+        or plan_meta.get("revision") != specification_revision
+        or plan_meta.get("status") not in {"draft", "planned", "in_progress", "blocked"}
+        or task_meta.get("artifact_type") != "tasklist"
+        or task_meta.get("work_block_id") != work_block_id
+        or task_meta.get("specification") != specification_path
+        or task_meta.get("revision") != specification_revision
+        or task_meta.get("status") not in {"active", "planned", "in_progress", "blocked"}
+    ):
+        return None
+    registry = git_optional(root, "show", f"{parent_revision}:FILE_REGISTRY.yml")
+    project_map = git_optional(root, "show", f"{parent_revision}:PROJECT_MAP.md")
+    if registry is None or project_map is None:
+        return None
+    if not active_projection_matches(registry, plan_path) or not active_projection_matches(project_map, plan_path):
+        return None
+
+    child_plan = tree_frontmatter(root, "HEAD", plan_path)
+    child_tasklist = tree_frontmatter(root, "HEAD", tasklist_path)
+    child_gate_text = git_optional(root, "show", "HEAD:.agent/active-work-block.json")
+    child_registry = git_optional(root, "show", "HEAD:FILE_REGISTRY.yml")
+    child_project_map = git_optional(root, "show", "HEAD:PROJECT_MAP.md")
+    try:
+        child_gate = json.loads(child_gate_text) if child_gate_text is not None else None
+    except json.JSONDecodeError:
+        child_gate = None
+    if (
+        child_plan is None
+        or child_tasklist is None
+        or not isinstance(child_gate, dict)
+        or not canonical_terminal_inactive(child_gate, root)
+        or child_registry is None
+        or child_project_map is None
+        or not terminal_child_coordination_matches(
+            child_registry, child_project_map, plan_path
+        )
+    ):
+        return None
+    child_plan_meta, child_plan_body = child_plan
+    child_task_meta, child_task_body = child_tasklist
+    if (
+        child_plan_meta.get("artifact_type") != "work_block"
+        or child_plan_meta.get("work_block_id") != work_block_id
+        or child_plan_meta.get("specification") != specification_path
+        or child_plan_meta.get("revision") != specification_revision
+        or child_plan_meta.get("status") != "completed"
+        or not terminal_plan_complete(child_plan_body)
+        or child_task_meta.get("artifact_type") != "tasklist"
+        or child_task_meta.get("work_block_id") != work_block_id
+        or child_task_meta.get("specification") != specification_path
+        or child_task_meta.get("revision") != specification_revision
+        or child_task_meta.get("status") != "completed"
+    ):
+        return None
+    task_items = re.findall(r"(?m)^- \[([ xX])\]\s+TASK-[A-Za-z0-9_-]+\b", child_task_body)
+    if not task_items or any(mark != "x" and mark != "X" for mark in task_items):
+        return None
+    return plan_path, tasklist_path
 
 
 def current_branch(root: Path) -> str:
@@ -509,18 +728,31 @@ def define_quality_ready(gate: dict) -> bool:
     )
 
 
-def canonical_terminal_inactive(gate: dict) -> bool:
-    return (
-        gate.get("schema_version") == 3
-        and gate.get("authority_mode") == "github_capability"
-        and gate.get("work_block_id") == ""
-        and gate.get("specification") == {"path": "", "revision": ""}
-        and gate.get("subject_branch") == ""
-        and gate.get("base_commit") == ""
-        and gate.get("write_set") == []
-        and gate.get("write_gate") == {"status": "BLOCKED", "opened_at": None}
-        and gate.get("closeout_mode") == "success-closeout"
-    )
+def canonical_terminal_inactive(gate: dict, root: Path | None = None) -> bool:
+    """Require the exact repository template plus only the closeout note."""
+    if not isinstance(gate, dict):
+        return False
+    template_root = (root or Path(__file__).resolve().parents[2]).resolve()
+    try:
+        template = json.loads(
+            (template_root / ".agent/active-work-block.default.json").read_text(
+                encoding="utf-8"
+            )
+        )
+    except (OSError, json.JSONDecodeError):
+        return False
+    if not isinstance(template, dict):
+        return False
+    if set(gate) != set(template) | {"lifecycle_note"}:
+        return False
+    for key, expected in template.items():
+        if key == "closeout_mode":
+            if gate.get(key) != "success-closeout":
+                return False
+        elif gate.get(key) != expected:
+            return False
+    note = gate.get("lifecycle_note")
+    return isinstance(note, str) and bool(note.strip())
 
 
 def commit_work_block_id(root: Path, revision: str) -> str:
@@ -529,14 +761,27 @@ def commit_work_block_id(root: Path, revision: str) -> str:
     return matches[0] if len(matches) == 1 else ""
 
 
-def terminal_diff_allowed(root: Path) -> bool:
-    paths = git(root, "diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD").splitlines()
-    return bool(paths) and all(path in TERMINAL_CLOSEOUT_PATHS for path in paths)
+def terminal_diff_allowed(
+    root: Path, parent_revision: str = "", parent_state: dict | None = None,
+) -> bool:
+    paths = git_optional(
+        root, "diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"
+    )
+    if paths is None:
+        return False
+    changed = [path for path in paths.splitlines() if path]
+    if not changed or parent_state is None or not parent_revision:
+        return False
+    bound = terminal_projection(root, parent_revision, parent_state)
+    if bound is None:
+        return False
+    allowed = TERMINAL_CLOSEOUT_PATHS | set(bound)
+    return set(bound).issubset(changed) and all(path in allowed for path in changed)
 
 
 def terminal_closeout_push_allowed(command: str, gate: dict, root: Path) -> bool:
     """Allow only the one committed active-to-inactive closeout transition."""
-    if not canonical_terminal_inactive(gate):
+    if not canonical_terminal_inactive(gate, root):
         return False
     current = current_branch(root)
     configured_default = default_branch(root)
@@ -565,13 +810,14 @@ def terminal_closeout_push_allowed(command: str, gate: dict, root: Path) -> bool
     if not parent or not isinstance(child_state, dict) or not isinstance(parent_state, dict):
         return False
     work_block_id = str(parent_state.get("work_block_id") or "").strip()
-    if not work_block_id or not canonical_terminal_inactive(child_state):
+    if not work_block_id or not canonical_terminal_inactive(child_state, root):
         return False
     if parent_state.get("schema_version") != 3 or parent_state.get("authority_mode") != "github_capability":
         return False
     if str(parent_state.get("subject_branch") or "").strip() != current:
         return False
-    if parent_state.get("write_gate", {}).get("status") != "READY":
+    parent_write_gate = parent_state.get("write_gate")
+    if not isinstance(parent_write_gate, dict) or parent_write_gate.get("status") != "READY":
         return False
     if (
         not define_quality_ready(parent_state)
@@ -582,7 +828,7 @@ def terminal_closeout_push_allowed(command: str, gate: dict, root: Path) -> bool
     return (
         commit_work_block_id(root, parent) == work_block_id
         and commit_work_block_id(root, "HEAD") == work_block_id
-        and terminal_diff_allowed(root)
+        and terminal_diff_allowed(root, parent, parent_state)
     )
 
 
@@ -606,7 +852,8 @@ def autonomous_subject_push_allowed(command: str, gate: dict, root: Path) -> boo
         return False
     if gate.get("schema_version") != 3 or gate.get("authority_mode") != "github_capability":
         return False
-    if gate.get("write_gate", {}).get("status") != "READY":
+    write_gate = gate.get("write_gate")
+    if not isinstance(write_gate, dict) or write_gate.get("status") != "READY":
         return False
     if (
         not define_quality_ready(gate)

@@ -2,7 +2,7 @@
 artifact_type: traceability
 work_block_id: WB-2026-09-11-control-plane-recovery-hardening-027
 specification: docs/specs/WB-2026-09-11-control-plane-recovery-hardening-027.md
-revision: recovery-successor-r1
+revision: terminal-publication-reconciliation-r2
 status: READY
 ---
 
@@ -17,6 +17,8 @@ status: READY
 | REQ-005 | AC-003 | TASK-004 | full canonical inactive contract |
 | REQ-006 | AC-002, AC-004 | TASK-005, TASK-006 | focused/current regressions and assurance |
 | REQ-007 | AC-005 | TASK-001, TASK-007 | path/status/authority audit |
+| REQ-008 | AC-006 | TASK-009 | exact parent-bound terminal plan/tasklist allowlist |
+| REQ-009 | AC-006 | TASK-009 | identity, revision, closure markers, and checked tasks |
 
 All requirements have measurable acceptance criteria and an owning task. The
 recovery matrix is the source of truth for positive and adversarial-negative

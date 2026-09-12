@@ -98,7 +98,7 @@ def ready_gate(base: dict[str, object], cwd: Path) -> dict[str, object]:
     value["work_block_id"] = "WB-TEST-GITHUB-CAPABILITY"
     value["governance_profile"] = "Assured"
     value["specification"] = {
-        "path": "docs/plans/test.md",
+        "path": "docs/specs/WB-TEST-GITHUB-CAPABILITY.md",
         "revision": "test-spec-v1",
     }
     value["subject_branch"] = git(cwd, "branch", "--show-current")
@@ -200,6 +200,106 @@ def write_gate(cwd: Path, value: dict[str, object]) -> None:
     path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
 
+TERMINAL_FIXTURE_ID = "WB-TEST-GITHUB-CAPABILITY"
+TERMINAL_FIXTURE_SPEC = f"docs/specs/{TERMINAL_FIXTURE_ID}.md"
+TERMINAL_FIXTURE_PLAN = f"docs/plans/{TERMINAL_FIXTURE_ID}.md"
+TERMINAL_FIXTURE_TASKLIST = f"docs/tasklist/{TERMINAL_FIXTURE_ID}.tasklist.md"
+TERMINAL_FIXTURE_REVISION = "test-spec-v1"
+
+
+def terminal_fixture_spec() -> str:
+    return f"""---
+artifact_type: specification
+work_block_id: {TERMINAL_FIXTURE_ID}
+revision: {TERMINAL_FIXTURE_REVISION}
+status: approved
+---
+
+# Terminal fixture specification
+"""
+
+
+def terminal_fixture_plan(status: str) -> str:
+    terminal = status == "completed"
+    stage = "completed" if terminal else "in_progress"
+    review = "READY" if terminal else "PENDING"
+    verification = "READY" if terminal else "PENDING"
+    drift = "ALIGNED" if terminal else "PENDING"
+    closeout = "success-closeout" if terminal else "pending"
+    task_status = "completed" if terminal else "active"
+    return f"""---
+artifact_type: work_block
+work_block_id: {TERMINAL_FIXTURE_ID}
+specification: {TERMINAL_FIXTURE_SPEC}
+revision: {TERMINAL_FIXTURE_REVISION}
+status: {status}
+process_feedback_required: true
+---
+
+# Terminal fixture plan
+
+## Final State
+
+- **Stage State:** {stage}
+- **Review Gate:** {review}
+- **Verification Verdict:** {verification}
+- **Evaluation Verdict:** SKIPPED — fixture
+- **Drift Gate:** {drift}
+- **Closeout Mode:** {closeout}
+- **Task Status:** {task_status}
+"""
+
+
+def terminal_fixture_tasklist(status: str, *, checked: bool = True) -> str:
+    mark = "x" if checked else " "
+    return f"""---
+artifact_type: tasklist
+work_block_id: {TERMINAL_FIXTURE_ID}
+specification: {TERMINAL_FIXTURE_SPEC}
+revision: {TERMINAL_FIXTURE_REVISION}
+status: {status}
+---
+
+# Terminal fixture task list
+
+- [{mark}] TASK-001 [req=REQ-001] terminal projection invariant
+"""
+
+
+def write_terminal_projection(cwd: Path, *, plan_status: str, tasklist_status: str, checked: bool = True) -> None:
+    for path in (TERMINAL_FIXTURE_SPEC, TERMINAL_FIXTURE_PLAN, TERMINAL_FIXTURE_TASKLIST):
+        (cwd / path).parent.mkdir(parents=True, exist_ok=True)
+    (cwd / TERMINAL_FIXTURE_SPEC).write_text(terminal_fixture_spec(), encoding="utf-8")
+    (cwd / TERMINAL_FIXTURE_PLAN).write_text(terminal_fixture_plan(plan_status), encoding="utf-8")
+    (cwd / TERMINAL_FIXTURE_TASKLIST).write_text(
+        terminal_fixture_tasklist(tasklist_status, checked=checked), encoding="utf-8"
+    )
+
+
+def write_terminal_projection_maps(cwd: Path, *, active: bool) -> None:
+    plan = TERMINAL_FIXTURE_PLAN if active else "null"
+    completed = "" if active else f"  - {TERMINAL_FIXTURE_PLAN}\n"
+    (cwd / "FILE_REGISTRY.yml").write_text(
+        f"""migration_state:
+  completed_work_blocks:
+{completed}  active_work_block: {plan}
+""", encoding="utf-8"
+    )
+    (cwd / "PROJECT_MAP.md").write_text(
+        f"""# Fixture project map
+
+<!-- release-state
+completed_work_blocks:
+{completed}active_work_block: {plan}
+-->
+
+```yaml
+active_work_block: {plan}
+```
+""", encoding="utf-8"
+    )
+
+
 def make_repo() -> tuple[tempfile.TemporaryDirectory[str], Path, dict[str, object]]:
     holder = tempfile.TemporaryDirectory(prefix="azursystech-capability-test-")
     cwd = Path(holder.name)
@@ -233,16 +333,19 @@ def make_terminal_repo(
     malformed_parent: bool = False,
     source_mutation: bool = False,
     extra_terminal_path: str = "",
+    terminal_mutator: object = None,
 ) -> tuple[tempfile.TemporaryDirectory[str], Path, str]:
     holder, cwd, base = make_repo()
     parent = ready_gate(base, cwd)
+    write_terminal_projection(cwd, plan_status="in_progress", tasklist_status="active")
+    write_terminal_projection_maps(cwd, active=True)
     if callable(parent_mutator):
         parent_mutator(parent)
     if malformed_parent:
         (cwd / ".agent/active-work-block.json").write_text("not-json\n", encoding="utf-8")
     else:
         write_gate(cwd, parent)
-    git(cwd, "add", ".agent/active-work-block.json")
+    git(cwd, "add", "-A")
     git(cwd, "commit", "-q", "-m", "admit assured terminal fixture\n\nWork-Block: WB-TEST-GITHUB-CAPABILITY")
 
     inactive = copy.deepcopy(base)
@@ -255,10 +358,13 @@ def make_terminal_repo(
             "write_set": [],
             "write_gate": {"status": "BLOCKED", "opened_at": None},
             "closeout_mode": "success-closeout",
+            "lifecycle_note": "fixture terminal closeout",
         }
     )
     write_gate(cwd, inactive)
-    git(cwd, "add", ".agent/active-work-block.json")
+    write_terminal_projection(cwd, plan_status="completed", tasklist_status="completed")
+    write_terminal_projection_maps(cwd, active=False)
+    git(cwd, "add", ".agent/active-work-block.json", TERMINAL_FIXTURE_SPEC, TERMINAL_FIXTURE_PLAN, TERMINAL_FIXTURE_TASKLIST, "FILE_REGISTRY.yml", "PROJECT_MAP.md")
     paths = [".agent/active-work-block.json"]
     if source_mutation:
         (cwd / "src").mkdir()
@@ -271,19 +377,82 @@ def make_terminal_repo(
         extra.write_text("unexpected\n", encoding="utf-8")
         git(cwd, "add", extra_terminal_path)
         paths.append(extra_terminal_path)
+    if callable(terminal_mutator):
+        terminal_mutator(cwd)
+    git(cwd, "add", "-A")
     git(cwd, "commit", "-q", "-m", "close terminal fixture\n\nWork-Block: WB-TEST-GITHUB-CAPABILITY")
     return holder, cwd, "git push origin HEAD:refs/heads/feature/capability-test"
+
+
+def terminal_extra(path: str) -> object:
+    def mutate(cwd: Path) -> None:
+        target = cwd / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("unexpected terminal artifact\n", encoding="utf-8")
+    return mutate
+
+
+def terminal_replace(path: str, old: str, new: str) -> object:
+    def mutate(cwd: Path) -> None:
+        target = cwd / path
+        content = target.read_text(encoding="utf-8")
+        if old not in content:
+            raise AssertionError(f"fixture replacement not found in {path}: {old!r}")
+        target.write_text(content.replace(old, new, 1), encoding="utf-8")
+    return mutate
+
+
+def terminal_append(path: str, text: str) -> object:
+    def mutate(cwd: Path) -> None:
+        target = cwd / path
+        target.write_text(target.read_text(encoding="utf-8") + text, encoding="utf-8")
+    return mutate
+
+
+def terminal_gate_update(updater: object) -> object:
+    def mutate(cwd: Path) -> None:
+        path = cwd / ".agent/active-work-block.json"
+        gate = json.loads(path.read_text(encoding="utf-8"))
+        updater(gate)
+        write_gate(cwd, gate)
+    return mutate
 
 
 def test_terminal_closeout_publication() -> None:
     exact = "git push origin HEAD:refs/heads/feature/capability-test"
     cases = []
-    cases.append((make_terminal_repo(), True, "valid one-commit terminal closeout"))
+    cases.append((make_terminal_repo(), True, "exact bound plan and tasklist terminal closeout"))
     cases.append((make_terminal_repo(parent_mutator=lambda gate: gate.update(subject_branch="feature/other")), False, "wrong parent subject branch"))
     cases.append((make_terminal_repo(parent_mutator=lambda gate: gate["assurance"]["review"].update(status="PENDING", verdict="PENDING")), False, "parent without READY assurance"))
     cases.append((make_terminal_repo(malformed_parent=True), False, "malformed parent active state"))
     cases.append((make_terminal_repo(source_mutation=True), False, "source mutation in terminal commit"))
     cases.append((make_terminal_repo(extra_terminal_path="docs/notes.txt"), False, "unlisted terminal path"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_extra("docs/plans/other.md")), False, "unrelated plan"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_extra("docs/tasklist/other.tasklist.md")), False, "unrelated tasklist"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_extra("docs/plans/second.md")), False, "extra second plan"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_extra("docs/tasklist/second.tasklist.md")), False, "extra second tasklist"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_extra("docs/plans/test.md")), False, "arbitrary plan path"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_extra("docs/tasklist/test.md")), False, "arbitrary tasklist path"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_replace(TERMINAL_FIXTURE_PLAN, "status: completed", "status: in_progress")), False, "bound plan not completed"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_replace(TERMINAL_FIXTURE_TASKLIST, "status: completed", "status: active")), False, "tasklist still active"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_replace(TERMINAL_FIXTURE_TASKLIST, "- [x] TASK-001", "- [ ] TASK-001")), False, "unchecked required task"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_replace(TERMINAL_FIXTURE_PLAN, f"work_block_id: {TERMINAL_FIXTURE_ID}", "work_block_id: WB-OTHER")), False, "mismatched plan work block id"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_replace(TERMINAL_FIXTURE_TASKLIST, f"work_block_id: {TERMINAL_FIXTURE_ID}", "work_block_id: WB-OTHER")), False, "mismatched tasklist work block id"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_replace(TERMINAL_FIXTURE_PLAN, f"specification: {TERMINAL_FIXTURE_SPEC}", "specification: docs/specs/WB-OTHER.md")), False, "mismatched plan specification"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_replace(TERMINAL_FIXTURE_TASKLIST, f"specification: {TERMINAL_FIXTURE_SPEC}", "specification: docs/specs/WB-OTHER.md")), False, "mismatched tasklist specification"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_replace(TERMINAL_FIXTURE_PLAN, f"revision: {TERMINAL_FIXTURE_REVISION}", "revision: test-spec-v2")), False, "mismatched plan revision"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_replace(TERMINAL_FIXTURE_TASKLIST, f"revision: {TERMINAL_FIXTURE_REVISION}", "revision: test-spec-v2")), False, "mismatched tasklist revision"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_replace("FILE_REGISTRY.yml", "active_work_block: null", "active_work_block: docs/plans/other.md")), False, "child registry remains active"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_replace("PROJECT_MAP.md", "active_work_block: null", "active_work_block: docs/plans/other.md")), False, "child project map remains active"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_append(TERMINAL_FIXTURE_PLAN, "\n- **Review Gate:** BLOCKED\n")), False, "duplicate contradictory final marker"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_append(TERMINAL_FIXTURE_PLAN, "\n## Final State\n\n- **Review Gate:** BLOCKED\n")), False, "duplicate contradictory final state"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_gate_update(lambda gate: gate.update(non_trivial=True))), False, "terminal gate retained non-trivial state"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_gate_update(lambda gate: gate["assurance"]["review"].update(status="READY", verdict="READY"))), False, "terminal gate retained assurance state"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_gate_update(lambda gate: gate.update(subagent_topology={}))), False, "terminal gate retained topology state"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_gate_update(lambda gate: gate["coordination_write_set"].append("docs/plans/**"))), False, "terminal gate widened coordination state"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_gate_update(lambda gate: gate.update(unexpected="value"))), False, "terminal gate retained unknown state"))
+    cases.append((make_terminal_repo(parent_mutator=lambda gate: gate.update(write_gate="READY")), False, "typed malformed parent write gate"))
+    cases.append((make_terminal_repo(parent_mutator=lambda gate: gate.update(work_block_id="../escape")), False, "unsafe parent work block id"))
     for fixture, expected, label in cases:
         holder, cwd, _fixture_exact = fixture
         try:

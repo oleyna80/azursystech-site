@@ -1,8 +1,9 @@
 ---
 artifact_type: work_block
 work_block_id: WB-2026-09-11-control-plane-recovery-hardening-027
-revision: recovery-successor-r1
-status: completed
+revision: terminal-publication-reconciliation-r2
+specification: docs/specs/WB-2026-09-11-control-plane-recovery-hardening-027.md
+status: in_progress
 process_feedback_required: true
 ---
 
@@ -13,7 +14,8 @@ process_feedback_required: true
 - Existing Work Block: `WB-2026-09-11-control-plane-recovery-hardening-027`
 - Successor root: `/tmp/azursystech-wb-control-plane-recovery-hardening-027-r1`
 - Successor branch: `feat/control-plane-recovery-hardening-027-r1`
-- Recovery baseline: `7c19720422d317ac36286691d540a966e3620fc0`
+- Recovery baseline: `7c19720422d317ac36286691d540a966e3620fc0`; corrective
+  publication baseline: `6e6e3252fc4bbb3c3b23fdcbb81b6e0e069256e6`.
 - Reason: the predecessor worktree disappeared while it contained an
   uncommitted fail-closed recovery implementation.
 - WIP evidence: unreachable commit `ac039cd9fc00ad269c4fd0f48060161de24c80a2`,
@@ -26,10 +28,10 @@ process_feedback_required: true
 3. Resolve Critic obligations: exact canonical key-set comparison, intentional
    hook-launch-error regressions in both harnesses, explicit routing evidence,
    and exact standard verification commands.
-4. Reconstruct the approved four-file implementation from baseline and WIP
-   evidence.
-5. Run focused fixture/recovery tests and relevant control-plane suites.
-6. Freeze the candidate, obtain separate native Reviewer acceptance, rerun any
+4. Reconstruct the approved implementation and add the exact parent-bound
+   plan/tasklist terminal publication predicate from fresh Critic findings.
+5. Run focused fixture/recovery/publication tests and relevant control-plane suites.
+6. Freeze the candidate, obtain a fresh separate native Reviewer acceptance, rerun any
    affected checks, freeze again, and obtain separate native Verifier READY.
 7. Run Drift, Process Feedback, and Closeout; create the authorized local
    commit only after all required gates are READY.
@@ -70,6 +72,8 @@ Source:
 .codex/hooks/tests/gate-fixtures.sh
 .codex/scripts/recover-active-work-block.py
 scripts/test-active-work-block-recovery.py
+.agent/hooks/hard_stop_policy.py
+scripts/test-github-capability-control-plane.py
 ```
 
 Coordination/evidence uses only `.agent/active-work-block.json`, gate files,
@@ -90,11 +94,11 @@ paths. No topology source change is permitted.
 
 ## Final State
 
-- **Stage State:** completed
-- **Review Gate:** READY
-- **Verification Verdict:** READY
+- **Stage State:** in_progress
+- **Review Gate:** PENDING
+- **Verification Verdict:** PENDING
 - **Evaluation Verdict:** SKIPPED — Standard-tier deterministic control-plane change has no generative evaluation deliverable
-- **Drift Gate:** ALIGNED
-- **Closeout Mode:** success-closeout
-- **Task Status:** completed
+- **Drift Gate:** PENDING
+- **Closeout Mode:** pending
+- **Task Status:** active
 - **External VCS State:** non-normative; no publication or integration action authorized

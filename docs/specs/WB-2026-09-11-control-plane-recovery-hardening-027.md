@@ -1,7 +1,7 @@
 ---
 artifact_type: specification
 work_block_id: WB-2026-09-11-control-plane-recovery-hardening-027
-revision: recovery-successor-r1
+revision: terminal-publication-reconciliation-r2
 status: approved
 ---
 
@@ -41,6 +41,14 @@ Block state without weakening normal fail-closed admission.
   coordination artifacts are reconstructed through the current lifecycle.
   `scripts/subagent_topology.py`, application code, default branch, remote
   refs, deployment, credentials, and predecessor worktree are out of scope.
+- REQ-008: Terminal closeout admits only the static terminal coordination
+  paths plus the exact Work Block-bound plan and tasklist derived from the
+  assured active parent; unrelated, extra, arbitrary, malformed, or
+  mismatched paths fail closed.
+- REQ-009: A terminal plan and tasklist must bind to the same Work Block and
+  specification revision, transition to completed, and contain the required
+  closure markers and checked required task items before publication is
+  allowed.
 
 ## Acceptance criteria
 
@@ -58,11 +66,16 @@ Block state without weakening normal fail-closed admission.
 - AC-005 [req=REQ-007]: The candidate contains no changes outside the approved
   source or coordination write-sets and does not mutate predecessor or remote
   state.
+- AC-006 [req=REQ-008,REQ-009]: Exact bound plan/tasklist terminal projection
+  is allowed only when all parent/child identity, status, closure, registry,
+  and task completion invariants hold; all adversarial path and state variants
+  are denied.
 
 ## Boundaries
 
 In scope: the two fixture harnesses, the bounded recovery helper, its focused
-matrix, current Work Block coordination, and assurance evidence. Out of scope:
+matrix, the terminal publication guard and its focused adversarial projection
+tests, current Work Block coordination, and assurance evidence. Out of scope:
 generic recovery, hook disabling, arbitrary writers, topology implementation
 changes, application/dependency/database changes, push, merge, deployment,
 branch/tag cleanup, and predecessor-worktree repair.

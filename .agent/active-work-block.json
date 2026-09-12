@@ -1,33 +1,67 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "",
-  "governance_profile": "Controlled",
+  "work_block_id": "WB-2026-09-11-control-plane-recovery-hardening-027",
+  "governance_profile": "Assured",
   "specification": {
-    "path": "",
-    "revision": ""
+    "path": "docs/specs/WB-2026-09-11-control-plane-recovery-hardening-027.md",
+    "revision": "terminal-publication-reconciliation-r2"
   },
-  "subject_branch": "",
-  "base_commit": "",
-  "non_trivial": false,
-  "subagent_topology": null,
+  "subject_branch": "feat/control-plane-recovery-hardening-027-r1",
+  "base_commit": "6e6e3252fc4bbb3c3b23fdcbb81b6e0e069256e6",
+  "non_trivial": true,
+  "subagent_topology": {
+    "policy": "native-separate-context-required",
+    "status": "READY",
+    "capability": {
+      "status": "available",
+      "runtime": "runtime-provided",
+      "adapter": "multi_agent_v1",
+      "adapter_version": "runtime-provided",
+      "repository_root": "/tmp/azursystech-wb-control-plane-recovery-hardening-027-r1",
+      "probe_event_ref": "native_dispatch:01a09510-2125-77b1-a59e-f39f9d2c0842,native_dispatch:01a09510-21b3-7160-a1e3-f7cd03647704,native_dispatch:01a09510-2241-7cf1-96e7-3f0d28ba8db8",
+      "verified_at": "2026-09-12T10:03:22Z"
+    },
+    "role_bindings": [
+      {
+        "work_block_id": "WB-2026-09-11-control-plane-recovery-hardening-027",
+        "role": "critic",
+        "execution_id": "01a09681-9ec4-7991-89d3-55f660ab579d",
+        "context_id": "01a09681-9ec4-7991-89d3-55f660ab579d",
+        "context_id_source": "execution_id",
+        "runtime": "runtime-provided",
+        "adapter": "multi_agent_v1",
+        "adapter_version": "runtime-provided",
+        "source_revision": "6e6e3252fc4bbb3c3b23fdcbb81b6e0e069256e6",
+        "repository_root": "/tmp/azursystech-wb-control-plane-recovery-hardening-027-r1",
+        "branch": "feat/control-plane-recovery-hardening-027-r1",
+        "readonly_boundary": "read-only",
+        "launch_mechanism": "native",
+        "topology_tier": "native-separate-context",
+        "probe_event_ref": "native_dispatch:01a09681-9ec4-7991-89d3-55f660ab579d",
+        "report": "docs/reports/critic-WB-2026-09-11-control-plane-recovery-hardening-027-terminal-publication.md",
+        "status": "READY",
+        "observed_at": "2026-09-12T16:50:48Z"
+      }
+    ]
+  },
   "define_quality": {
-    "required": false,
-    "status": "PENDING",
-    "requirements_review": "",
-    "traceability": "",
-    "consistency_analysis": ""
+    "required": true,
+    "status": "READY",
+    "requirements_review": "docs/reports/requirements-quality-WB-2026-09-11-control-plane-recovery-hardening-027.md",
+    "traceability": "docs/reports/traceability-WB-2026-09-11-control-plane-recovery-hardening-027.md",
+    "consistency_analysis": "docs/reports/consistency-WB-2026-09-11-control-plane-recovery-hardening-027.md"
   },
   "write_gate": {
-    "status": "BLOCKED",
-    "opened_at": null
+    "status": "READY",
+    "opened_at": "2026-09-12T16:15:04.620645+00:00"
   },
   "critic": {
     "required": true,
-    "status": "PENDING",
-    "verdict": "PENDING",
-    "report": "",
-    "isolation": "unknown",
+    "status": "READY",
+    "verdict": "APPROVE",
+    "report": "docs/reports/critic-WB-2026-09-11-control-plane-recovery-hardening-027-terminal-publication.md",
+    "isolation": "native-separate-context",
     "skip_reason": ""
   },
   "assurance": {
@@ -67,12 +101,19 @@
       "skip_reason": ""
     }
   },
-  "closeout_mode": "success-closeout",
+  "closeout_mode": "pending",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
-  "write_set": [],
+  "write_set": [
+    ".claude/hooks/tests/gate-fixtures.sh",
+    ".codex/hooks/tests/gate-fixtures.sh",
+    ".codex/scripts/recover-active-work-block.py",
+    "scripts/test-active-work-block-recovery.py",
+    ".agent/hooks/hard_stop_policy.py",
+    "scripts/test-github-capability-control-plane.py"
+  ],
   "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
@@ -85,6 +126,7 @@
     "docs/tasklist/**",
     "docs/reports/**",
     "docs/architecture/drafts/**",
+    "docs/engineering-memory/process-feedback-registry.yml",
     "memory_bank/**"
   ],
   "external_hard_stops": [
@@ -96,5 +138,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "Canonical success closeout after PF reconciliation and accepted unchanged source assurance"
+  "lifecycle_note": "source work opened by Work Block coordination"
 }
