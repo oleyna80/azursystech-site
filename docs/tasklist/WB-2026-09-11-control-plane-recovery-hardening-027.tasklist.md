@@ -3,7 +3,7 @@ artifact_type: tasklist
 work_block_id: WB-2026-09-11-control-plane-recovery-hardening-027
 specification: docs/specs/WB-2026-09-11-control-plane-recovery-hardening-027.md
 revision: terminal-publication-reconciliation-r2
-status: completed
+status: active
 ---
 
 # Task List — control-plane recovery hardening

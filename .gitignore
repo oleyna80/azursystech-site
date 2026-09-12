@@ -97,6 +97,8 @@ codex-orchestration-skills/
 !docs/templates/**
 !.agent/
 !.agent/**
+.agent/**/__pycache__/
+.agent/**/*.pyc
 !.codex/
 !.codex/AGENTS.md
 !.codex/critic.md
@@ -168,4 +170,3 @@ Thumbs.db
 ai_studio_chek/
 private_evidence/
 .artifacts/
-

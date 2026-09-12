@@ -3,17 +3,15 @@
 - **Work Block:** `WB-2026-09-11-control-plane-recovery-hardening-027`
 - **Write Gate Status:** `READY` (admission record; active SSOT is `BLOCKED` after freeze)
 - **Subject branch:** `feat/control-plane-recovery-hardening-027-r1`
-- **Recovery baseline:** `7c19720422d317ac36286691d540a966e3620fc0`
+- **Recovery baseline:** `3b4e04ad9f28d4715e4327f9d6a960bed23da3f7`
 - **Repository root:** `/tmp/azursystech-wb-control-plane-recovery-hardening-027-r1`
-- **Critic binding:** `01a0952f-20c5-7b01-b110-f651bfc62be1`
+- **Critic binding:** `01a09701-65e4-7ac0-bcf0-d1116049e363`
 
 The approved source write-set is exactly:
 
 ```text
-.claude/hooks/tests/gate-fixtures.sh
-.codex/hooks/tests/gate-fixtures.sh
-.codex/scripts/recover-active-work-block.py
-scripts/test-active-work-block-recovery.py
+.gitignore
+.codex/scripts/lifecycle.py
 ```
 
 The candidate is in post-implementation assurance. The active lifecycle SSOT

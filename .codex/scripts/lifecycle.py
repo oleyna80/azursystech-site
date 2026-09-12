@@ -86,7 +86,9 @@ def git_head(root: Path) -> str:
 
 def _candidate_path_matches(relative: str, write_set: list[str]) -> bool:
     for raw_pattern in write_set:
-        pattern = str(raw_pattern).strip().replace("\\", "/").lstrip("./")
+        pattern = str(raw_pattern).strip().replace("\\", "/")
+        if pattern.startswith("./"):
+            pattern = pattern[2:]
         if not pattern:
             continue
         if pattern.endswith("/**"):

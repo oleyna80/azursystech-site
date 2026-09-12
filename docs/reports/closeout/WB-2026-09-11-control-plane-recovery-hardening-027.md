@@ -37,20 +37,27 @@ Claude/Codex lifecycle-hook JSON mismatch, and the repository-local terminal
 publication mismatch that failed to admit the exact lifecycle-bound plan and
 tasklist. They remain separate observations. The terminal contract correction
 preserves the static allowlist and adds only exact active-parent-derived plan
-and tasklist bindings.
+and tasklist bindings. This corrective revision also fixes the repository-local
+inactive governance projection (`PROJECT_MAP.md` now uses `Controlled`, matching
+the canonical inactive gate) and narrows `.gitignore` precedence so generated
+Python bytecode below `.agent` remains ignored while committed policy sources
+remain trackable.
 
 ## Assurance
 
-- Fresh Critic: native execution/context `01a09697-6695-7eb2-a805-68ad9f993ac1`, `APPROVE`, no findings.
-- Fresh Reviewer: native execution/context `01a096a1-31ee-7c33-89f6-50a87366c37f`, `READY`, no material findings.
-- Fresh Verifier: native execution/context `01a096a9-8b70-7003-998a-9c71e2b330ad`, `READY`, no blocking findings; dispatch requested as Luna High/high reasoning.
+- Admission Critic: native execution/context `01a096ee-5358-7440-804b-6cccb739556b`, `APPROVE`, scope conditions resolved.
+- Final Critic: native execution/context `01a09701-65e4-7ac0-bcf0-d1116049e363`, Luna High/high, `APPROVE`, no material findings.
+- Fresh Reviewer: native execution/context `01a09735-eef2-7c33-a90d-5a95ad0bbced`, Luna High/high, `READY`, no material findings.
+- Fresh Verifier: native execution/context `01a09757-5aff-70d2-b832-43ad63353b02`, Luna High/high, `READY`, no blocking findings.
 - Drift: `ALIGNED`; no implementation, contract, documentation, topology, or release-state drift remains in scope.
-- Coordination-only PF reconciliation: the accepted source candidate remains
-  byte-identical (`content-sha256:f805d881ba4c77d7da71b8b707cbe8b8adda337c27b3b7855c822ffbfa16a423`),
-  so the existing native assurance bindings remain bound to the same frozen
-  identity and current root/branch. The lifecycle contract admits a committed
-  active parent with READY assurance followed by one minimal terminal child; no
-  assurance was reused for a changed source.
+- Corrective source candidate frozen identity:
+  `content-sha256:090c6f2d3e46520c181366b088d85b4dec826d29b0fb43d1f2fadc34535539a2`.
+  It covers exactly `.gitignore` and `.codex/scripts/lifecycle.py`; the latter
+  fixes exact hidden-path matching for candidate identity. Fresh assurance is
+  bound to this identity and the current root/branch. The lifecycle contract
+  admits a committed active parent with READY assurance followed by one
+  minimal terminal child; no prior assurance was reused for this changed
+  source.
 
 ## Process Feedback
 
@@ -84,10 +91,12 @@ dimensions:
   process_overhead_repeated_work:
     state: FRICTION_OBSERVED
     evidence: "The repeated rejected hook outputs created avoidable diagnostic and lifecycle friction across SessionStart, PostToolUse, and Stop."
-avoidable_friction_count: 2
+avoidable_friction_count: 4
 observation_ids:
 - PF-2026-09-12-codex-hook-json-contract-mismatch
 - PF-2026-09-12-terminal-plan-tasklist-publication-mismatch
+- PF-2026-09-12-terminal-inactive-governance-projection-mismatch
+- PF-2026-09-12-agent-bytecode-ignore-precedence
 registry: docs/engineering-memory/process-feedback-registry.yml
 ```
 
