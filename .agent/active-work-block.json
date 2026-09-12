@@ -8,7 +8,7 @@
     "revision": "terminal-publication-reconciliation-r2"
   },
   "subject_branch": "feat/control-plane-recovery-hardening-027-r1",
-  "base_commit": "6e6e3252fc4bbb3c3b23fdcbb81b6e0e069256e6",
+  "base_commit": "269719d99c927e47c35d2bf57b64199dffe99bdc",
   "non_trivial": true,
   "subagent_topology": {
     "policy": "native-separate-context-required",
@@ -26,22 +26,22 @@
       {
         "work_block_id": "WB-2026-09-11-control-plane-recovery-hardening-027",
         "role": "critic",
-        "execution_id": "01a09681-9ec4-7991-89d3-55f660ab579d",
-        "context_id": "01a09681-9ec4-7991-89d3-55f660ab579d",
+        "execution_id": "01a09697-6695-7eb2-a805-68ad9f993ac1",
+        "context_id": "01a09697-6695-7eb2-a805-68ad9f993ac1",
         "context_id_source": "execution_id",
         "runtime": "runtime-provided",
         "adapter": "multi_agent_v1",
         "adapter_version": "runtime-provided",
-        "source_revision": "6e6e3252fc4bbb3c3b23fdcbb81b6e0e069256e6",
+        "source_revision": "269719d99c927e47c35d2bf57b64199dffe99bdc",
         "repository_root": "/tmp/azursystech-wb-control-plane-recovery-hardening-027-r1",
         "branch": "feat/control-plane-recovery-hardening-027-r1",
         "readonly_boundary": "read-only",
         "launch_mechanism": "native",
         "topology_tier": "native-separate-context",
-        "probe_event_ref": "native_dispatch:01a09681-9ec4-7991-89d3-55f660ab579d",
+        "probe_event_ref": "native_dispatch:01a09697-6695-7eb2-a805-68ad9f993ac1",
         "report": "docs/reports/critic-WB-2026-09-11-control-plane-recovery-hardening-027-terminal-publication.md",
         "status": "READY",
-        "observed_at": "2026-09-12T16:50:48Z"
+        "observed_at": "2026-09-12T17:14:50Z"
       }
     ]
   },
@@ -54,7 +54,7 @@
   },
   "write_gate": {
     "status": "READY",
-    "opened_at": "2026-09-12T16:15:04.620645+00:00"
+    "opened_at": "2026-09-12T17:05:23.644842+00:00"
   },
   "critic": {
     "required": true,

@@ -37,8 +37,14 @@ Block state without weakening normal fail-closed admission.
 - REQ-006: Regression evidence covers positive recovery, active refusal,
   normal-hook denial, unsafe template denial, launch errors, path binding,
   canonical variants, and lifecycle closure fields.
-- REQ-007: The implementation is limited to the four approved source paths;
-  coordination artifacts are reconstructed through the current lifecycle.
+- REQ-007: The implementation is limited to the six approved source and
+  control-plane paths: `.claude/hooks/tests/gate-fixtures.sh`,
+  `.codex/hooks/tests/gate-fixtures.sh`,
+  `.codex/scripts/recover-active-work-block.py`,
+  `scripts/test-active-work-block-recovery.py`,
+  `.agent/hooks/hard_stop_policy.py`, and
+  `scripts/test-github-capability-control-plane.py`; coordination artifacts
+  are reconstructed through the current lifecycle.
   `scripts/subagent_topology.py`, application code, default branch, remote
   refs, deployment, credentials, and predecessor worktree are out of scope.
 - REQ-008: Terminal closeout admits only the static terminal coordination

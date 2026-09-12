@@ -372,9 +372,18 @@ def terminal_projection(
         or child_task_meta.get("status") != "completed"
     ):
         return None
-    task_items = re.findall(r"(?m)^- \[([ xX])\]\s+TASK-[A-Za-z0-9_-]+\b", child_task_body)
-    if not task_items or any(mark != "x" and mark != "X" for mark in task_items):
+    task_items = re.findall(
+        r"(?m)^\s*[-*+]\s+\[([ xX])\](?:\s+([^\n]*?))?\s*$",
+        child_task_body,
+    )
+    if not task_items:
         return None
+    for mark, item in task_items:
+        task_id = item.split(None, 1)[0] if item and item.split(None, 1) else ""
+        if not re.fullmatch(r"TASK-[A-Za-z0-9_-]+", task_id):
+            return None
+        if mark != "x" and mark != "X":
+            return None
     return plan_path, tasklist_path
 
 
@@ -728,18 +737,21 @@ def define_quality_ready(gate: dict) -> bool:
     )
 
 
-def canonical_terminal_inactive(gate: dict, root: Path | None = None) -> bool:
+def canonical_terminal_inactive(
+    gate: dict, root: Path | None = None, revision: str = "HEAD"
+) -> bool:
     """Require the exact repository template plus only the closeout note."""
     if not isinstance(gate, dict):
         return False
     template_root = (root or Path(__file__).resolve().parents[2]).resolve()
+    template_text = git_optional(
+        template_root, "show", f"{revision}:.agent/active-work-block.default.json"
+    )
+    if template_text is None:
+        return False
     try:
-        template = json.loads(
-            (template_root / ".agent/active-work-block.default.json").read_text(
-                encoding="utf-8"
-            )
-        )
-    except (OSError, json.JSONDecodeError):
+        template = json.loads(template_text)
+    except json.JSONDecodeError:
         return False
     if not isinstance(template, dict):
         return False

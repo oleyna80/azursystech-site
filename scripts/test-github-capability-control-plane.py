@@ -451,6 +451,8 @@ def test_terminal_closeout_publication() -> None:
     cases.append((make_terminal_repo(terminal_mutator=terminal_gate_update(lambda gate: gate.update(subagent_topology={}))), False, "terminal gate retained topology state"))
     cases.append((make_terminal_repo(terminal_mutator=terminal_gate_update(lambda gate: gate["coordination_write_set"].append("docs/plans/**"))), False, "terminal gate widened coordination state"))
     cases.append((make_terminal_repo(terminal_mutator=terminal_gate_update(lambda gate: gate.update(unexpected="value"))), False, "terminal gate retained unknown state"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_append(TERMINAL_FIXTURE_TASKLIST, "\n- [ ] unclassified terminal task\n")), False, "unchecked malformed task item"))
+    cases.append((make_terminal_repo(terminal_mutator=terminal_append(TERMINAL_FIXTURE_TASKLIST, "\n- [x] not-a-task terminal item\n")), False, "malformed task identifier"))
     cases.append((make_terminal_repo(parent_mutator=lambda gate: gate.update(write_gate="READY")), False, "typed malformed parent write gate"))
     cases.append((make_terminal_repo(parent_mutator=lambda gate: gate.update(work_block_id="../escape")), False, "unsafe parent work block id"))
     for fixture, expected, label in cases:
@@ -479,6 +481,24 @@ def test_terminal_closeout_publication() -> None:
         git(cwd, "add", "README.md")
         git(cwd, "commit", "-q", "-m", "arbitrary post-terminal commit\n\nWork-Block: WB-TEST-GITHUB-CAPABILITY")
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "second commit after terminal closeout")
+    finally:
+        holder.cleanup()
+
+    holder, cwd, _exact = make_terminal_repo(
+        terminal_mutator=terminal_gate_update(lambda gate: gate.update(non_trivial=True))
+    )
+    try:
+        default_template = cwd / ".agent/active-work-block.default.json"
+        default_template.write_text(
+            default_template.read_text(encoding="utf-8").replace(
+                '"non_trivial": false', '"non_trivial": true', 1
+            ),
+            encoding="utf-8",
+        )
+        assert_deny(
+            hook(HARD_STOP, cwd, "Bash", {"command": exact}),
+            "dirty working-tree template cannot redefine canonical inactive",
+        )
     finally:
         holder.cleanup()
 

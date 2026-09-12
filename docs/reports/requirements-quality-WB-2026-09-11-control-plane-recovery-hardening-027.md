@@ -19,7 +19,7 @@ or Owner choice is missing for this recovery continuation.
 
 | Dimension | Status | Evidence |
 |---|---|---|
-| Scope and exclusions | READY | REQ-007 and Boundaries |
+| Scope and exclusions | READY | REQ-007 enumerates the six approved source/control-plane paths and Boundaries |
 | Actors / permissions / ownership | READY | Owner-authorized recovery; normal hooks unchanged |
 | Requirement completeness | READY | REQ-001 through REQ-009 |
 | Clarity / ambiguity | READY | exact paths, root, branch, baseline, and failure classes |
@@ -27,7 +27,7 @@ or Owner choice is missing for this recovery continuation.
 | Acceptance measurability | READY | AC-001 through AC-006 |
 | Failure / recovery coverage | READY | missing, malformed, active, unsafe, foreign, launch-error cases |
 | Security / operational coverage | READY | no arbitrary path/payload/writer and durable replacement |
-| Traceability | READY | tasklist and traceability report, including exact terminal projection |
+| Traceability | READY | tasklist and traceability report, including exact parent-bound plan/tasklist terminal projection |
 
 ## Remaining Owner decisions
 
