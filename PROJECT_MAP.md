@@ -147,4 +147,4 @@ specification draft
 | `scripts/` | source/tools | Validation scripts, deployment, VPS operations, and CI contracts. |
 | `web/` | source | Production Next.js website and SQL intake flow. |
 | `admin/` | source | Internal admin Next.js application. |
-| `showcase/` | source | Portfolio/showcase applications and demos. |
+| `showcase/` | source | Portfolio/showcase Next.js application and demos. |
