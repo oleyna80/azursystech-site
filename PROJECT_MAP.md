@@ -96,6 +96,17 @@ Each Work Block selects independently:
 - **Isolation:** actual boundary from `same-session-degraded` to `os-isolated`.
 - **Evaluation posture:** not required or approved deterministic/output/trajectory plan.
 
+## Execution Surface Routing
+
+For choosing where work is executed, read `docs/architecture/execution-surface-routing.md`.
+
+Default routing:
+- current chat + connected plugins for Owner/Architect work and supported remote control-plane operations;
+- Codex for local repository/runtime execution and local assurance evidence;
+- Work for browser/computer/external multi-application workflows not covered by the current chat plugins or Codex runtime.
+
+Prefer the current chat when an authorized connected tool can safely complete the operation; use Codex or Work when the required capability or local evidence is unavailable here.
+
 ## Define-Stage Requirements Quality
 
 `governance/define-quality.md` establishes the pre-execution quality loop for formal work:
@@ -123,6 +134,7 @@ specification draft
 | `.agent/bootstrap-profile.json` | generated | Resolved installation profile and path contract. |
 | `.agent/workflows/sdd-protocol.md` | normative | Canonical 4-stage SDD lifecycle and gate semantics. |
 | `.agent/workflows/owner-controlled-github-flow.md` | operational consequence | Subject-branch candidate publication and Owner decision handoff. |
+| `docs/architecture/execution-surface-routing.md` | operational architecture | Chat/plugins-first routing; Codex for local runtime; Work for external computer workflows. |
 | `.agent/ROSTER.md` | normative | Logical roles, skill routing, runtime binding, isolation. |
 | `.agent/active-work-block.json` | operational gate | Active specification, write-set, integrations, assurance. |
 | `.agent/skills/` | normative skills | Project-local portable and operational skills. |
@@ -135,4 +147,4 @@ specification draft
 | `scripts/` | source/tools | Validation scripts, deployment, VPS operations, and CI contracts. |
 | `web/` | source | Production Next.js website and SQL intake flow. |
 | `admin/` | source | Internal admin Next.js application. |
-| `showcase/` | source | Portfolio/showcase Next.js application and demos. |
+| `showcase/` | source | Portfolio/showcase applications and demos. |
