@@ -14,7 +14,7 @@ Add a dedicated SEO-oriented commercial landing page for AzurSysTech's managed L
 The service should be positioned as a practical recurring service for:
 
 - small businesses running web applications or websites on a VPS;
-- freelance developers who do not want to maintain servers themselves;
+- freelance developers who do not want routine server maintenance to consume development time;
 - web agencies that need a Linux infrastructure partner for several client servers;
 - small SaaS / web-product teams without a dedicated system administrator.
 
@@ -24,7 +24,7 @@ The commercial model is recurring monthly monitoring and maintenance with clearl
 
 English is the content baseline for the first implementation.
 
-Proposed canonical route:
+Approved initial canonical route:
 
 `/en/managed-linux`
 
@@ -36,6 +36,32 @@ Later phases may add:
 German and Italian are possible future locales but are explicitly out of scope for the first implementation.
 
 Do not publish hreflang entries for a locale until that localized page actually exists. When FR/RU variants are added, follow the repository's existing canonical/hreflang conventions.
+
+## SEO and AI retrieval principles
+
+The page must be understandable from ordinary server-rendered HTML without relying on images, hover states, carousels, client-only tabs, or collapsed content for essential commercial facts.
+
+Within the first 300–500 words, a visitor or agent should be able to determine:
+
+- what the service is;
+- who it is for;
+- the starting price;
+- the supported Linux/platform baseline;
+- the difference between monitoring and hands-on administration;
+- that standard plans do not include a 24/7 human-response SLA;
+- that the client keeps ownership/control of the infrastructure.
+
+Use direct factual language. Prefer statements such as:
+
+- `Monitor costs €29 per server per month.`
+- `Care includes up to 30 minutes of hands-on administration per month.`
+- `Managed includes up to 90 minutes of hands-on administration per month.`
+- `Standard plans do not include a 24/7 human-response SLA.`
+- `The client keeps ownership and appropriate administrative control of the server.`
+
+Do not hide important scope or price information only inside decorative badges or graphics.
+
+Use one H1, then a logical H2/H3 hierarchy with no skipped heading levels.
 
 ## SEO baseline
 
@@ -62,7 +88,45 @@ Linux VPS management and recurring Linux server maintenance.
 
 Use these naturally. Do not keyword-stuff headings or body copy.
 
-The implementation should follow existing AzurSysTech SEO patterns for metadata, canonical URL, structured data, internal links and sitemap inclusion.
+The implementation should follow existing AzurSysTech patterns for metadata, canonical URL, structured data, internal links and sitemap inclusion.
+
+## Approved heading hierarchy
+
+```text
+H1 Linux VPS Management for Small Businesses, Developers and Web Agencies
+
+H2 Service at a glance
+
+H2 What we manage on your Linux server
+
+H2 Linux VPS management plans
+  H3 Monitor
+  H3 Care
+  H3 Managed
+
+H2 Who this service is for
+  H3 Small businesses
+  H3 Freelance developers
+  H3 Web agencies
+  H3 Small SaaS teams
+
+H2 Supported Linux environments
+
+H2 How Linux server management works
+  H3 Server audit
+  H3 Onboarding
+  H3 Monitoring
+  H3 Maintenance
+  H3 Reporting and escalation
+
+H2 You keep control of your infrastructure
+
+H2 What the monthly plans do not include
+
+H2 Frequently asked questions
+
+H2 Request a Linux server audit
+```
 
 ## Page content structure
 
@@ -74,11 +138,15 @@ The implementation should follow existing AzurSysTech SEO patterns for metadata,
 
 **H1**
 
-`Linux VPS management without the overhead of a full-time administrator`
+`Linux VPS Management for Small Businesses, Developers and Web Agencies`
 
-**Lead paragraph**
+**Lead statement**
 
-AzurSysTech monitors, maintains and secures Linux VPS environments for small businesses, developers and web agencies. Start with essential monitoring and add maintenance or hands-on administration as your infrastructure grows.
+`Monitoring, security updates, backups, Nginx and Docker support for Ubuntu and Debian servers — from €29 per server/month.`
+
+**Supporting paragraph**
+
+AzurSysTech provides recurring Linux VPS monitoring and maintenance for small businesses, developers and web agencies. Start with essential monitoring and add routine maintenance or hands-on administration as the infrastructure grows.
 
 **Primary CTA**
 
@@ -96,36 +164,79 @@ The CTA should use the existing localized AzurSysTech contact/intake flow rather
 
 ---
 
-### 2. Problem / value section
+### 2. Service at a glance
 
 **H2**
 
-`Keep small server problems from becoming outages`
+`Service at a glance`
 
-**Body copy**
+Render as a compact factual summary in ordinary HTML.
 
-A VPS can run quietly for months until a disk fills up, a certificate expires, a backup stops working, a security update is missed or a critical service fails. The service centralizes routine checks and maintenance so the client keeps control of the infrastructure without having to monitor every server manually.
+Required facts:
 
-Optional short value points:
+- **Starting price:** €29 / server / month
+- **Platforms:** Ubuntu 22.04 / 24.04, Debian 12
+- **Stack:** Nginx, Docker, Docker Compose, systemd
+- **Service type:** remote monitoring and maintenance
+- **Human 24/7 SLA:** not included in standard plans
+- **Server ownership:** remains with the client
 
-- know when a server or critical service is unavailable;
-- detect disk, memory, SSL and backup problems early;
-- keep routine maintenance predictable;
-- escalate non-routine work with a clear scope instead of hiding it inside an unlimited support promise.
+This block should remain readable as plain text even without CSS.
 
 ---
 
-### 3. Plans and pricing
+### 3. What we manage
 
-This is the main commercial section.
+**H2**
 
-Render the three plans as three separate comparison cards/columns on larger screens and a readable stacked sequence on smaller screens. Visual styling is not specified yet; reuse the existing AzurSysTech design language during implementation.
+`What we manage on your Linux server`
 
-#### Monitor — €29 / month
+**Intro copy**
 
-For a simple VPS where the client mainly needs visibility and early warning.
+AzurSysTech provides recurring monitoring and maintenance for Linux VPS and standard dedicated servers. The service focuses on operating-system and infrastructure health rather than application development.
 
-Included:
+**Visible scope list**
+
+- server availability;
+- CPU, memory, disk and resource usage;
+- critical system services;
+- SSL certificate expiry;
+- Linux security updates;
+- SSH and firewall configuration;
+- Nginx;
+- Docker and Docker Compose;
+- backup-job status;
+- basic PostgreSQL/MySQL operational tasks.
+
+**Mandatory scope statement**
+
+`The service focuses on infrastructure operations. Application bugs and software-development work are outside the standard monthly plans.`
+
+---
+
+### 4. Linux VPS management plans
+
+**H2**
+
+`Linux VPS management plans`
+
+**Intro copy**
+
+Choose monitoring only, routine maintenance, or a broader managed-server plan. Prices below apply to one standard server per month.
+
+Render the plans as three separate semantic `article` blocks/cards on larger screens and as a readable stacked sequence on smaller screens. Visual styling is not specified yet; reuse the existing AzurSysTech design language during implementation.
+
+#### Monitor
+
+**Price**
+
+`€29 / server / month`
+
+**Positioning**
+
+For servers that mainly need continuous visibility and early warning.
+
+**Included**
 
 - 1 Linux server;
 - uptime / HTTP availability monitoring;
@@ -136,39 +247,58 @@ Included:
 - alerts and operational recommendations;
 - monthly server health summary.
 
-Not included:
+**Mandatory explicit sentence**
 
-- routine manual administration time;
-- unlimited incident remediation;
-- application debugging.
+`Monitor costs €29 per server per month. Hands-on administration is not included.`
 
-#### Care — €69 / month
+#### Care
 
-For a production VPS that also needs routine Linux maintenance.
+**Price**
 
-Includes everything in **Monitor**, plus:
+`€69 / server / month`
+
+**Positioning**
+
+For production servers that need routine Linux maintenance.
+
+**Includes everything in Monitor, plus**
 
 - routine security updates and patching;
 - basic SSH, firewall and server-hardening review;
-- basic Nginx and Docker maintenance;
+- basic Nginx maintenance;
+- basic Docker maintenance;
 - routine backup configuration checks;
 - up to 30 minutes of hands-on administration per month;
 - business-hours response for included maintenance work.
 
-#### Managed — €129 / month
+**Mandatory explicit sentence**
 
-For web applications or agency-managed workloads that need more regular operational attention.
+`Care includes up to 30 minutes of hands-on administration per month.`
 
-Includes everything in **Care**, plus:
+#### Managed
 
-- Docker Compose / Nginx application operations within the agreed infrastructure scope;
+**Price**
+
+`€129 / server / month`
+
+**Positioning**
+
+For web applications and agency-managed infrastructure that requires more regular operational attention.
+
+**Includes everything in Care, plus**
+
+- Docker Compose / Nginx application infrastructure operations within the agreed infrastructure scope;
 - scheduled maintenance activities;
 - backup and restore coordination;
 - up to 90 minutes of hands-on administration per month;
 - priority response during business hours;
 - concise documentation of material operational changes.
 
-**Pricing notes**
+**Mandatory explicit sentence**
+
+`Managed includes up to 90 minutes of hands-on administration per month.`
+
+**Pricing notes shown directly below the three plans**
 
 - Monthly prices apply to one standard server unless otherwise agreed.
 - Initial audit/onboarding is separate from the recurring monthly fee.
@@ -178,13 +308,37 @@ Includes everything in **Care**, plus:
 
 ---
 
-### 4. Supported environments
+### 5. Who this service is for
 
 **H2**
 
-`A focused support scope keeps maintenance predictable`
+`Who this service is for`
 
-Initial support baseline:
+#### Small businesses
+
+A website or application runs on a VPS, but there is no dedicated Linux administrator.
+
+#### Freelance developers
+
+You build and deploy applications but do not want routine server maintenance to consume development time.
+
+#### Web agencies
+
+You manage several customer websites or applications and need a recurring Linux infrastructure partner.
+
+#### Small SaaS teams
+
+You operate a small production environment and need monitoring and routine administration without hiring a full-time sysadmin.
+
+---
+
+### 6. Supported Linux environments
+
+**H2**
+
+`Supported Linux environments`
+
+**Standard support**
 
 - Ubuntu 22.04 / 24.04;
 - Debian 12;
@@ -196,88 +350,139 @@ Initial support baseline:
 - basic PostgreSQL / MySQL operational tasks;
 - common VPS providers such as OVHcloud, Hetzner and Scaleway.
 
-Not part of the standard entry scope:
+**Requires separate review**
 
-- Kubernetes or complex clusters;
-- unsupported legacy operating systems;
+- Kubernetes;
+- high-availability clusters;
+- unsupported or legacy Linux distributions;
 - enterprise Active Directory / Exchange environments;
-- custom high-availability architectures;
-- application-code debugging;
-- mail-deliverability engineering;
-- 24/7 human incident response.
+- complex database engineering;
+- mail infrastructure;
+- custom HA architectures.
 
-A custom quote may cover environments outside the standard matrix after technical review.
-
----
-
-### 5. How it works
-
-**H2**
-
-`From audit to routine maintenance`
-
-Use a simple five-step sequence:
-
-1. **Audit** — review the server, stack, access model and obvious operational risks.
-2. **Onboarding** — agree the support scope and connect monitoring/checks.
-3. **Monitor** — watch availability, resources, services, certificates and backup signals.
-4. **Maintain** — perform the routine work included in the selected plan.
-5. **Report / escalate** — summarize server health and quote separately for work outside the agreed scope.
+Use `Requires separate review` rather than a blanket `not supported` label so compatible custom work can still be qualified later.
 
 ---
 
-### 6. Trust / operating principles
+### 7. How Linux server management works
 
 **H2**
 
-`Your server stays under your control`
+`How Linux server management works`
+
+#### Server audit
+
+We review the operating system, running services, hosting environment, access model and obvious operational risks.
+
+#### Onboarding
+
+We agree the support boundary and configure the monitoring and maintenance access required for the selected plan.
+
+#### Monitoring
+
+Availability, resources, critical services, certificates and backup signals are checked continuously where technically applicable.
+
+#### Maintenance
+
+Routine work included in the selected plan is performed according to the agreed scope.
+
+#### Reporting and escalation
+
+You receive server-health information and a separate proposal when an issue falls outside the subscription scope.
+
+---
+
+### 8. You keep control of your infrastructure
+
+**H2**
+
+`You keep control of your infrastructure`
 
 Content points:
 
-- the client keeps ownership of the hosting account and infrastructure;
+- the hosting account remains in the client's name;
 - the client retains appropriate administrative access;
-- no vendor lock-in is created by the maintenance service;
+- no mandatory migration to AzurSysTech hosting is required;
+- no proprietary lock-in is created by the maintenance service;
 - repeatable operations should be automated where practical;
-- material changes should be documented;
-- work outside the subscription scope should be identified before it turns into open-ended support.
+- material operational changes should be documented;
+- work outside the subscription scope should be identified before it becomes open-ended support.
+
+**Mandatory explicit sentence**
+
+`The client keeps ownership and appropriate administrative control of the server.`
 
 Do not add unsupported security guarantees, uptime guarantees, customer results, testimonials or ROI claims.
 
 ---
 
-### 7. FAQ
+### 9. What the monthly plans do not include
 
-Visible FAQ should contain at least these questions.
+**H2**
 
-**Do I keep root or administrator access?**  
+`What the monthly plans do not include`
+
+Visible list:
+
+- application-code debugging;
+- feature development;
+- migrations unless agreed separately;
+- major OS/application upgrades;
+- incident recovery after compromise;
+- forensic/security investigation;
+- unlimited manual support;
+- third-party hosting/storage costs;
+- standard 24/7 human-response SLA.
+
+**Mandatory explicit sentence**
+
+`Standard plans do not include a 24/7 human-response SLA.`
+
+---
+
+### 10. Frequently asked questions
+
+**H2**
+
+`Frequently asked questions`
+
+The visible FAQ should contain at least these questions and answers.
+
+**What is included in Linux VPS management?**  
+Depending on the plan, the service covers server monitoring, resource checks, critical services, SSL certificates, backup-job status, Linux updates and selected Nginx/Docker maintenance. Hands-on administration is limited by the selected plan.
+
+**How much does Linux server management cost?**  
+Monitor costs €29 per server per month, Care costs €69 per server per month, and Managed costs €129 per server per month. Initial audit/onboarding and work outside the monthly plan are quoted separately.
+
+**Do I keep root or administrator access to my server?**  
 Yes. The service manages agreed operational tasks; it does not require the client to give up ownership or appropriate administrative control of the server.
 
 **Do I need to move my VPS to AzurSysTech?**  
 No. The service is intended to work with an existing compatible VPS or dedicated server. Hosting-provider fees remain separate.
 
-**Is support available 24/7?**  
-Automated monitoring can run continuously, but the standard plans do not include a 24/7 human-response SLA. Any stronger SLA must be agreed separately.
-
-**What happens when monitoring detects a problem?**  
-AzurSysTech reviews the alert. If remediation is included in the selected plan and remaining monthly scope, it can be handled as part of the service. Otherwise the client receives a clear recommendation or separate work proposal.
-
-**Can you manage several servers for a developer or web agency?**  
-Yes. Multi-server and agency arrangements should be scoped separately so monitoring, maintenance allowance and responsibilities remain explicit.
-
 **Which Linux distributions do you support?**  
 The initial standard support matrix is Ubuntu 22.04/24.04 and Debian 12. Other environments require review before acceptance.
 
+**Do you manage Docker and Nginx?**  
+Yes, basic Nginx, Docker and Docker Compose operations are included according to the selected plan and agreed infrastructure scope.
+
+**Is support available 24/7?**  
+Automated monitoring can run continuously, but the standard plans do not include a 24/7 human-response SLA. Any stronger SLA must be agreed separately.
+
+**Can you manage multiple servers for a developer or web agency?**  
+Yes. Multi-server and agency arrangements should be scoped separately so monitoring, maintenance allowance and responsibilities remain explicit.
+
 ---
 
-### 8. Final CTA
+### 11. Final CTA
 
 **H2**
 
-`Start with a server audit`
+`Request a Linux server audit`
 
 **Body copy**
 
-Share the current VPS provider, Linux distribution, main services and what you want monitored or maintained. AzurSysTech will confirm whether the server fits the standard support scope and which plan is appropriate.
+Tell us your VPS provider, Linux distribution, main services and what you want monitored or maintained. AzurSysTech will confirm whether the server fits the standard support scope and which plan applies.
 
 **CTA**
 
@@ -285,15 +490,59 @@ Share the current VPS provider, Linux distribution, main services and what you w
 
 Use the existing contact/intake flow.
 
+## Semantic HTML requirements
+
+The implementation should preserve semantic structure rather than using generic decorative containers for all content.
+
+Preferred shape:
+
+```text
+<main>
+  <section> Hero
+    <h1>
+  <section> Service at a glance
+    <h2>
+  <section> What we manage
+    <h2>
+  <section> Pricing
+    <h2>
+    <article> Monitor
+    <article> Care
+    <article> Managed
+  <section> Who this is for
+    <h2>
+    <h3> persona headings
+  <section> Supported environments
+    <h2>
+  <section> How it works
+    <h2>
+    <h3> process-step headings
+  <section> Control / trust
+    <h2>
+  <section> Exclusions
+    <h2>
+  <section> FAQ
+    <h2>
+  <section> CTA
+    <h2>
+</main>
+```
+
+Essential facts must be present as text in the rendered HTML.
+
 ## Structured data requirements for implementation
 
-When the page is implemented, use structured data derived from visible content only:
+When the page is implemented, use structured data derived from visible content only.
+
+Primary graph:
 
 - `WebPage`;
 - `Service`;
-- `BreadcrumbList`;
-- `FAQPage` when the FAQ is visibly rendered;
-- an offer/catalog structure for the three visible plans only if it matches the project's existing schema conventions.
+- `BreadcrumbList`.
+
+For the three plans, use an `Offer` / `OfferCatalog` structure only if it matches the project's existing schema conventions and exactly mirrors the visible plan names, prices and scope.
+
+Visible FAQ may also be represented as `FAQPage` only when it remains in exact parity with the rendered questions and answers. Do not rely on FAQ rich-result eligibility as a core SEO strategy.
 
 Structured data must not introduce claims, prices, guarantees or service details that are absent from the visible page.
 
@@ -318,23 +567,29 @@ Existing relevant pages should also gain a contextual internal link back to the 
 - no 24/7 SLA;
 - no Kubernetes offer;
 - no new visual design system;
+- no AI-only hidden content;
+- no separate AI-specific copy that differs from visible human-facing content;
 - no French, Russian, German or Italian copy in the first content pass;
 - no production deployment as part of implementation without separate Owner approval.
 
 ## Acceptance criteria for the future implementation
 
-- AC-001: English page exists at the approved localized route and uses the English copy baseline above.
+- AC-001: English page exists at `/en/managed-linux` and uses the approved English content baseline.
 - AC-002: Metadata title, description, H1, canonical and structured data are consistent with visible content.
-- AC-003: The three plans are visibly separated and show exactly the approved monthly prices: €29, €69 and €129.
-- AC-004: Scope boundaries clearly distinguish monitoring, routine maintenance and separately billed work.
-- AC-005: The page explicitly states that standard plans do not include 24/7 human-response SLA.
-- AC-006: Supported and excluded environments are visible.
-- AC-007: Visible FAQ and FAQ structured data remain in parity.
-- AC-008: CTA reuses an existing AzurSysTech contact/intake path; no new backend form is introduced.
-- AC-009: The implementation reuses the current AzurSysTech components/design language rather than creating a parallel visual system.
-- AC-010: No unsupported testimonials, client outcomes, uptime guarantees, ROI claims or security guarantees are added.
-- AC-011: No FR/RU hreflang variant is emitted until the corresponding localized page exists.
-- AC-012: The implementation remains a landing-page/SEO change and does not expand into monitoring infrastructure, billing, customer portal or production operations.
+- AC-003: The first 300–500 words make the service type, audience, starting price, supported baseline, scope boundary, server ownership and lack of standard 24/7 human SLA unambiguous.
+- AC-004: The three plans are visibly separated and show exactly the approved monthly prices: €29, €69 and €129.
+- AC-005: The page contains the explicit factual plan sentences for Monitor, Care and Managed.
+- AC-006: Scope boundaries clearly distinguish monitoring, routine maintenance, hands-on administration and separately billed work.
+- AC-007: The page explicitly states that standard plans do not include a 24/7 human-response SLA.
+- AC-008: Supported and separate-review environments are visible.
+- AC-009: Visible FAQ and any FAQ structured data remain in parity.
+- AC-010: CTA reuses an existing AzurSysTech contact/intake path; no new backend form is introduced.
+- AC-011: The implementation reuses the current AzurSysTech components/design language rather than creating a parallel visual system.
+- AC-012: No unsupported testimonials, client outcomes, uptime guarantees, ROI claims or security guarantees are added.
+- AC-013: No FR/RU hreflang variant is emitted until the corresponding localized page exists.
+- AC-014: Essential pricing and service-scope facts are ordinary rendered text, not image-only, hover-only, carousel-only or client-only content.
+- AC-015: One H1 and a valid H2/H3 hierarchy are maintained.
+- AC-016: The implementation remains a landing-page/SEO change and does not expand into monitoring infrastructure, billing, customer portal or production operations.
 
 ## Implementation handoff
 
@@ -344,7 +599,8 @@ Before writing page code, Codex should:
 2. initialize the normal Work Block / plan / tasklist required by the repository;
 3. inspect the existing localized service page, metadata, sitemap, structured-data and contact-link patterns;
 4. propose the minimal write-set;
-5. implement only after the repository write gate is READY.
+5. preserve semantic HTML and server-rendered essential content;
+6. implement only after the repository write gate is READY.
 
 The implementation branch is:
 
