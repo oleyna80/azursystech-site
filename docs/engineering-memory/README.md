@@ -51,6 +51,9 @@ verify the current state and update this directory during closeout.
 - `process-feedback-registry.yml` - the single structured sink for evidence-backed
   Work Block process observations; it is advisory and cannot grant systemic
   change authority.
+- `deferred-findings-register.md` - advisory parking register for material
+  technical/product findings discovered outside the active Work Block; review
+  periodically and promote accepted items into separate approved Work Blocks.
 - [AI Video Production Operating Instruction](ai-video-production-operating-instruction.md) - canonical, evidence-gated rules for future Veo/Gemini or other AI-video production and release; its readable non-normative Markdown companion is the [AI Video Generation and Publication Policy](../policies/ai-video-generation-and-publication-policy.md).
 
 ## Closeout Rule
