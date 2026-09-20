@@ -678,7 +678,7 @@ Existing relevant pages should also gain a contextual internal link back to the 
 
 Before writing page code, Codex should:
 
-1. read `AGENTS.md`, `PROJECT_MAP.md`, this specification and the current localized service-page implementation patterns;
+1. read `AGENTS.md`, `PROJECT_MAP.md`, `PRODUCT.md`, this specification, `docs/plans/WB-2026-09-19-managed-linux-service-design-brief.md`, and the current localized service-page implementation patterns;
 2. initialize the normal Work Block / plan / tasklist required by the repository;
 3. inspect the existing localized service page, metadata, sitemap, structured-data and contact-link patterns;
 4. propose the minimal write-set;
