@@ -314,21 +314,25 @@ For web applications and agency-managed infrastructure that requires more regula
 
 `Who this service is for`
 
+**Intro copy**
+
+The service is designed for teams that need reliable Linux operations but do not need, or do not want to hire, a full-time system administrator.
+
 #### Small businesses
 
-A website or application runs on a VPS, but there is no dedicated Linux administrator.
+Your website, business application or internal tool runs on a VPS, but nobody is responsible for routine Linux maintenance, monitoring and updates.
 
 #### Freelance developers
 
-You build and deploy applications but do not want routine server maintenance to consume development time.
+You build and deploy applications but want to keep server maintenance, certificates, backups and routine incidents from consuming development time.
 
 #### Web agencies
 
-You manage several customer websites or applications and need a recurring Linux infrastructure partner.
+You manage several client websites or applications and need a recurring Linux infrastructure partner for standard VPS environments.
 
 #### Small SaaS teams
 
-You operate a small production environment and need monitoring and routine administration without hiring a full-time sysadmin.
+You operate a small production environment and need monitoring, maintenance and occasional administration without building an internal infrastructure team.
 
 ---
 
@@ -338,29 +342,36 @@ You operate a small production environment and need monitoring and routine admin
 
 `Supported Linux environments`
 
+**Intro copy**
+
+The standard service is intentionally focused on common Linux web-server environments. A narrow support matrix keeps maintenance predictable and reduces operational risk.
+
 **Standard support**
 
-- Ubuntu 22.04 / 24.04;
+- Ubuntu 22.04 and 24.04;
 - Debian 12;
 - VPS and standard dedicated servers;
 - systemd;
 - Nginx;
 - Docker and Docker Compose;
-- Let's Encrypt / standard TLS certificates;
-- basic PostgreSQL / MySQL service operations for standard single-server / single-instance deployments;
-- common VPS providers such as OVHcloud, Hetzner and Scaleway.
+- Let's Encrypt and standard TLS certificates;
+- basic PostgreSQL/MySQL service operations for standard single-server / single-instance deployments;
+- common hosting providers such as OVHcloud, Hetzner and Scaleway.
 
 **Requires separate review**
 
 - Kubernetes;
 - high-availability clusters;
-- unsupported or legacy Linux distributions;
+- legacy or unsupported Linux distributions;
+- complex database architectures;
+- replication and clustering;
 - enterprise Active Directory / Exchange environments;
-- complex database engineering;
 - mail infrastructure;
-- custom HA architectures.
+- custom HA or failover architectures.
 
-Use `Requires separate review` rather than a blanket `not supported` label so compatible custom work can still be qualified later.
+**Scope note**
+
+Environments outside the standard matrix can still be considered, but only after technical review.
 
 ### PostgreSQL / MySQL scope boundary
 
@@ -403,6 +414,10 @@ The standard scope is database-service operation at the infrastructure layer, in
 - forensic investigation;
 - application-specific database debugging.
 
+**Public summary copy**
+
+`Basic PostgreSQL/MySQL service operations are available within the agreed plan scope. Advanced DBA work, query optimization, schema changes, major version upgrades, replication, clustering and data recovery are quoted separately.`
+
 **Mandatory explicit sentence**
 
 `Database service administration covers routine infrastructure operations. Query optimization, schema changes, major version upgrades, replication, clustering and data recovery are quoted separately.`
@@ -417,25 +432,29 @@ A restore request must not be treated as an unlimited included operation merely 
 
 `How Linux server management works`
 
+**Intro copy**
+
+The service follows a simple operating model so responsibilities remain clear from the beginning.
+
 #### Server audit
 
-We review the operating system, running services, hosting environment, access model and obvious operational risks.
+We review the operating system, hosting environment, running services, current access model, update status, monitoring gaps and obvious operational risks.
 
 #### Onboarding
 
-We agree the support boundary and configure the monitoring and maintenance access required for the selected plan.
+We agree the support scope, document the server baseline and configure the monitoring and maintenance access required for the selected plan.
 
 #### Monitoring
 
-Availability, resources, critical services, certificates and backup signals are checked continuously where technically applicable.
+Availability, resources, critical services, certificates and backup signals are monitored where technically applicable.
 
 #### Maintenance
 
-Routine work included in the selected plan is performed according to the agreed scope.
+Routine work included in the selected plan is performed according to the agreed scope and available monthly administration allowance.
 
 #### Reporting and escalation
 
-You receive server-health information and a separate proposal when an issue falls outside the subscription scope.
+You receive clear information about server health and material issues. Work outside the subscription scope is identified separately before additional work begins.
 
 ---
 
@@ -445,15 +464,19 @@ You receive server-health information and a separate proposal when an issue fall
 
 `You keep control of your infrastructure`
 
-Content points:
+**Intro copy**
 
-- the hosting account remains in the client's name;
-- the client retains appropriate administrative access;
-- no mandatory migration to AzurSysTech hosting is required;
-- no proprietary lock-in is created by the maintenance service;
-- repeatable operations should be automated where practical;
-- material operational changes should be documented;
-- work outside the subscription scope should be identified before it becomes open-ended support.
+Managed maintenance should reduce operational work without taking ownership of the infrastructure away from the client.
+
+**Content points**
+
+- your hosting account remains in your name;
+- you retain appropriate administrator or root access;
+- you are not required to migrate to AzurSysTech hosting;
+- no proprietary lock-in is introduced;
+- material operational changes are documented;
+- repeatable maintenance tasks are automated where practical;
+- work outside the subscription is identified separately.
 
 **Mandatory explicit sentence**
 
@@ -469,18 +492,26 @@ Do not add unsupported security guarantees, uptime guarantees, customer results,
 
 `What the monthly plans do not include`
 
-Visible list:
+**Intro copy**
+
+The monthly plans cover clearly defined infrastructure operations. Work outside that boundary is quoted separately.
+
+**Excluded from the standard plans**
 
 - application-code debugging;
 - feature development;
 - migrations unless agreed separately;
-- major OS/application upgrades;
-- advanced database administration, query optimization, schema migrations, major database upgrades, replication/clustering and data recovery;
+- major operating-system or application upgrades;
+- query optimization and application-level database tuning;
+- schema migrations and advanced database administration;
+- major PostgreSQL/MySQL upgrades;
+- replication, clustering or HA database architecture;
+- data corruption recovery;
 - incident recovery after compromise;
-- forensic/security investigation;
+- forensic or security investigation;
 - unlimited manual support;
-- third-party hosting/storage costs;
-- standard 24/7 human-response SLA.
+- third-party hosting, storage or software costs;
+- 24/7 human-response SLA.
 
 **Mandatory explicit sentence**
 
@@ -497,28 +528,31 @@ Visible list:
 The visible FAQ should contain at least these questions and answers.
 
 **What is included in Linux VPS management?**  
-Depending on the plan, the service covers server monitoring, resource checks, critical services, SSL certificates, backup-job status, Linux updates and selected Nginx/Docker maintenance. Hands-on administration is limited by the selected plan.
+Depending on the selected plan, the service covers monitoring, resource checks, critical services, SSL certificates, backup-job status, Linux updates and selected Nginx, Docker and database-service operations. Hands-on administration is limited by the selected plan.
 
 **How much does Linux server management cost?**  
 Monitor costs €29 per server per month, Care costs €69 per server per month, and Managed costs €129 per server per month. Initial audit/onboarding and work outside the monthly plan are quoted separately.
 
 **Do I keep root or administrator access to my server?**  
-Yes. The service manages agreed operational tasks; it does not require the client to give up ownership or appropriate administrative control of the server.
+Yes. You keep ownership and appropriate administrative control of the server.
 
 **Do I need to move my VPS to AzurSysTech?**  
-No. The service is intended to work with an existing compatible VPS or dedicated server. Hosting-provider fees remain separate.
+No. The service is intended to work with your existing compatible VPS or dedicated server.
 
 **Which Linux distributions do you support?**  
-The initial standard support matrix is Ubuntu 22.04/24.04 and Debian 12. Other environments require review before acceptance.
+The standard support matrix starts with Ubuntu 22.04/24.04 and Debian 12. Other environments require technical review.
 
 **Do you manage Docker and Nginx?**  
-Yes, basic Nginx, Docker and Docker Compose operations are included according to the selected plan and agreed infrastructure scope.
+Yes. Basic Nginx, Docker and Docker Compose operations are included according to the selected plan and agreed infrastructure scope.
+
+**Do you manage PostgreSQL or MySQL?**  
+Basic PostgreSQL/MySQL service operations can be included in Care and Managed plans within the available administration time. Advanced DBA work, query optimization, schema changes, major upgrades, replication, clustering and data recovery are handled separately.
 
 **Is support available 24/7?**  
-Automated monitoring can run continuously, but the standard plans do not include a 24/7 human-response SLA. Any stronger SLA must be agreed separately.
+Automated monitoring can run continuously, but standard plans do not include a 24/7 human-response SLA.
 
-**Can you manage multiple servers for a developer or web agency?**  
-Yes. Multi-server and agency arrangements should be scoped separately so monitoring, maintenance allowance and responsibilities remain explicit.
+**Can you manage multiple servers for a developer or agency?**  
+Yes. Multi-server and agency arrangements are scoped separately so responsibilities, monitoring coverage and administration allowances remain clear.
 
 ---
 
@@ -530,7 +564,7 @@ Yes. Multi-server and agency arrangements should be scoped separately so monitor
 
 **Body copy**
 
-Tell us your VPS provider, Linux distribution, main services and what you want monitored or maintained. AzurSysTech will confirm whether the server fits the standard support scope and which plan applies.
+Tell us your VPS provider, Linux distribution, main services and what you want monitored or maintained. AzurSysTech will confirm whether the server fits the standard support scope and which plan is appropriate.
 
 **CTA**
 
