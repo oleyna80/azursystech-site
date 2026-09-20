@@ -206,7 +206,7 @@ AzurSysTech provides recurring monitoring and maintenance for Linux VPS and stan
 - Nginx;
 - Docker and Docker Compose;
 - backup-job status;
-- basic PostgreSQL/MySQL operational tasks.
+- basic PostgreSQL/MySQL service operations.
 
 **Mandatory scope statement**
 
@@ -347,7 +347,7 @@ You operate a small production environment and need monitoring and routine admin
 - Nginx;
 - Docker and Docker Compose;
 - Let's Encrypt / standard TLS certificates;
-- basic PostgreSQL / MySQL operational tasks;
+- basic PostgreSQL / MySQL service operations for standard single-server / single-instance deployments;
 - common VPS providers such as OVHcloud, Hetzner and Scaleway.
 
 **Requires separate review**
@@ -361,6 +361,53 @@ You operate a small production environment and need monitoring and routine admin
 - custom HA architectures.
 
 Use `Requires separate review` rather than a blanket `not supported` label so compatible custom work can still be qualified later.
+
+### PostgreSQL / MySQL scope boundary
+
+Public wording should use **basic PostgreSQL / MySQL service operations**, not a broad promise such as `PostgreSQL/MySQL support`.
+
+The standard scope is database-service operation at the infrastructure layer, initially limited to standard single-server / single-instance PostgreSQL or MySQL/MariaDB deployments.
+
+**Monitor may include**
+
+- database service availability checks;
+- relevant disk/resource monitoring;
+- backup-job status checks when a compatible backup process already exists.
+
+**Care may include, within the included 30 minutes of hands-on administration**
+
+- basic database-service log inspection during an infrastructure incident;
+- controlled database-service restart when appropriate;
+- routine package/security updates that do not require a major database migration;
+- basic configuration review;
+- simple database/user/permission administration;
+- checks of an existing logical backup procedure.
+
+**Managed may include, within the included 90 minutes of hands-on administration**
+
+- the Care database-service operations above;
+- backup/restore coordination within the agreed infrastructure scope;
+- more regular database-service operational attention.
+
+**Quoted separately / requires separate review**
+
+- SQL query optimization;
+- index design and application performance tuning;
+- schema design or schema/data migrations;
+- major PostgreSQL/MySQL version upgrades;
+- replication, clustering and high-availability setups;
+- PgBouncer, ProxySQL, Patroni, Galera or similar architecture work;
+- point-in-time-recovery architecture;
+- large database migrations;
+- corruption or data recovery;
+- forensic investigation;
+- application-specific database debugging.
+
+**Mandatory explicit sentence**
+
+`Database service administration covers routine infrastructure operations. Query optimization, schema changes, major version upgrades, replication, clustering and data recovery are quoted separately.`
+
+A restore request must not be treated as an unlimited included operation merely because a backup exists; complex restore or recovery work is separately scoped unless explicitly covered.
 
 ---
 
@@ -428,6 +475,7 @@ Visible list:
 - feature development;
 - migrations unless agreed separately;
 - major OS/application upgrades;
+- advanced database administration, query optimization, schema migrations, major database upgrades, replication/clustering and data recovery;
 - incident recovery after compromise;
 - forensic/security investigation;
 - unlimited manual support;
@@ -582,14 +630,15 @@ Existing relevant pages should also gain a contextual internal link back to the 
 - AC-006: Scope boundaries clearly distinguish monitoring, routine maintenance, hands-on administration and separately billed work.
 - AC-007: The page explicitly states that standard plans do not include a 24/7 human-response SLA.
 - AC-008: Supported and separate-review environments are visible.
-- AC-009: Visible FAQ and any FAQ structured data remain in parity.
-- AC-010: CTA reuses an existing AzurSysTech contact/intake path; no new backend form is introduced.
-- AC-011: The implementation reuses the current AzurSysTech components/design language rather than creating a parallel visual system.
-- AC-012: No unsupported testimonials, client outcomes, uptime guarantees, ROI claims or security guarantees are added.
-- AC-013: No FR/RU hreflang variant is emitted until the corresponding localized page exists.
-- AC-014: Essential pricing and service-scope facts are ordinary rendered text, not image-only, hover-only, carousel-only or client-only content.
-- AC-015: One H1 and a valid H2/H3 hierarchy are maintained.
-- AC-016: The implementation remains a landing-page/SEO change and does not expand into monitoring infrastructure, billing, customer portal or production operations.
+- AC-009: PostgreSQL/MySQL wording is limited to basic database-service operations; advanced DBA/application database work is explicitly outside the standard monthly plans.
+- AC-010: Visible FAQ and any FAQ structured data remain in parity.
+- AC-011: CTA reuses an existing AzurSysTech contact/intake path; no new backend form is introduced.
+- AC-012: The implementation reuses the current AzurSysTech components/design language rather than creating a parallel visual system.
+- AC-013: No unsupported testimonials, client outcomes, uptime guarantees, ROI claims or security guarantees are added.
+- AC-014: No FR/RU hreflang variant is emitted until the corresponding localized page exists.
+- AC-015: Essential pricing and service-scope facts are ordinary rendered text, not image-only, hover-only, carousel-only or client-only content.
+- AC-016: One H1 and a valid H2/H3 hierarchy are maintained.
+- AC-017: The implementation remains a landing-page/SEO change and does not expand into monitoring infrastructure, billing, customer portal or production operations.
 
 ## Implementation handoff
 
