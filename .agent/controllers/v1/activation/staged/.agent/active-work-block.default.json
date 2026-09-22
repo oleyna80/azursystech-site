@@ -1,0 +1,28 @@
+{
+  "schema_version": 4,
+  "authority_mode": "versioned_controller",
+  "work_block_id": "",
+  "repository_root": "",
+  "subject_branch": "",
+  "original_baseline": "",
+  "controller_binding": null,
+  "define": null,
+  "define_history": [],
+  "critic": null,
+  "capability": null,
+  "capability_history": [],
+  "role_provenance": [],
+  "dispatch_history": [],
+  "candidate": null,
+  "candidate_history": [],
+  "assurance": null,
+  "assurance_history": [],
+  "lifecycle_status": "INACTIVE",
+  "lifecycle_phase": "Inactive",
+  "write_set": [],
+  "write_gate": {
+    "status": "BLOCKED",
+    "opened_at": null
+  },
+  "terminal_authority": null
+}
