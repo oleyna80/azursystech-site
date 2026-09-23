@@ -1,7 +1,7 @@
 # Machine-readable navigation registry for authority-bearing files and major zones.
 # Runtime implementation surfaces are conditional on .agent/bootstrap-profile.json.
 
-version: 8
+version: 9
 scope: azursystech
 project:
   name: "AzurSysTech"
@@ -190,6 +190,12 @@ entries:
     status: normative
     owner: architect
     authority: define_quality_only_no_source_write_authority
+
+  governance/enforcement.md:
+    role: runtime_neutral_hook_enforcement_reversibility_and_poka_yoke_policy
+    status: normative
+    owner: architect
+    authority: none
 
   governance/decision-provenance.md:
     role: provenance_contract_for_reusable_sdlc_mechanisms
