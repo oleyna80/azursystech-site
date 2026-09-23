@@ -307,22 +307,31 @@ def load_operational_active_work_block(root: Path) -> dict[str, Any]:
     return value
 
 
-def validate_operational_active_work_block(
-    root: Path, active: str | None, active_frontmatter: dict[str, Any] | None
-) -> None:
-    """Cross-check the operational gate record against canonical release state."""
+def load_operational_inactive_template(root: Path) -> dict[str, Any]:
+    path = root / ".agent" / "active-work-block.default.json"
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ReleaseStateError(f"operational inactive template is malformed: {exc}") from exc
+    if not isinstance(value, dict):
+        raise ReleaseStateError("operational inactive template must be a JSON object")
+    return value
+
+
+def validate_operational_active_work_block(root: Path) -> None:
+    """Validate the operational gate without binding it to migration state."""
     operational = load_operational_active_work_block(root)
     work_block_id = operational.get("work_block_id")
     specification = operational.get("specification")
+    if operational.get("schema_version") != 3 or operational.get("authority_mode") != "github_capability":
+        raise ReleaseStateError("operational Work Block requires schema v3 and github_capability authority")
 
-    if active is None:
+    if work_block_id is None or work_block_id == "":
         operational_path = (
             specification.get("path") if isinstance(specification, dict) else specification
         )
         if work_block_id not in {"", None} or operational_path not in {"", None}:
-            raise ReleaseStateError(
-                "operational active Work Block must be inactive when release state has no active Work Block"
-            )
+            raise ReleaseStateError("operational inactive Work Block has an active identity")
         if specification != {"path": "", "revision": ""}:
             raise ReleaseStateError(
                 "operational inactive Work Block requires empty specification path and revision"
@@ -337,14 +346,52 @@ def validate_operational_active_work_block(
             raise ReleaseStateError(
                 "operational inactive Work Block requires write_gate.status=BLOCKED"
             )
-        if operational.get("closeout_mode") not in {"pending", "success-closeout", "reporting-only"}:
+        if not isinstance(operational.get("closeout_mode"), str) or operational["closeout_mode"] not in {"pending", "success-closeout", "reporting-only"}:
             raise ReleaseStateError("operational inactive Work Block has invalid closeout_mode")
+        template = load_operational_inactive_template(root)
+        closure_fields = {"closeout_mode", "lifecycle_note"}
+        if {key: value for key, value in operational.items() if key not in closure_fields} != {
+            key: value for key, value in template.items() if key not in closure_fields
+        }:
+            raise ReleaseStateError("operational inactive Work Block is not canonical")
         return
 
     if not isinstance(work_block_id, str) or not work_block_id.strip():
         raise ReleaseStateError("operational active Work Block requires work_block_id")
+    profile = operational.get("governance_profile")
+    if not isinstance(profile, str) or profile not in {"Advisory", "Controlled", "Managed", "Assured", "Distributed"}:
+        raise ReleaseStateError("operational active Work Block requires governance_profile")
+    if not isinstance(operational.get("non_trivial"), bool):
+        raise ReleaseStateError("operational active Work Block requires non_trivial flag")
+    if not isinstance(operational.get("define_quality"), dict) or not isinstance(operational.get("critic"), dict):
+        raise ReleaseStateError("operational active Work Block requires Define and Critic state")
+    assurance = operational.get("assurance")
+    if not isinstance(assurance, dict) or any(
+        not isinstance(assurance.get(name), dict)
+        or not isinstance(assurance[name].get("required"), bool)
+        or not isinstance(assurance[name].get("status"), str)
+        or assurance[name]["status"] not in {"PENDING", "READY", "SKIPPED", "DEGRADED", "BLOCKED"}
+        for name in ("review", "verification", "evaluation", "drift")
+    ):
+        raise ReleaseStateError("operational active Work Block requires structured assurance state")
+    integrations = operational.get("integrations")
+    if not isinstance(integrations, dict) or not isinstance(integrations.get("approved"), list) or not isinstance(integrations.get("admission_records"), list):
+        raise ReleaseStateError("operational active Work Block requires integrations state")
     if not isinstance(specification, dict):
         raise ReleaseStateError("operational active Work Block requires specification object")
+    if not isinstance(specification.get("revision"), str) or not specification["revision"].strip():
+        raise ReleaseStateError("operational active Work Block requires specification.revision")
+    if not isinstance(operational.get("subject_branch"), str) or not operational["subject_branch"].strip():
+        raise ReleaseStateError("operational active Work Block requires subject_branch")
+    if not isinstance(operational.get("base_commit"), str) or not re.fullmatch(r"[0-9a-f]{40}", operational["base_commit"]):
+        raise ReleaseStateError("operational active Work Block requires base_commit SHA")
+    if not isinstance(operational.get("write_set"), list) or not operational["write_set"] or any(
+        not isinstance(path, str) or not path.strip() for path in operational["write_set"]
+    ):
+        raise ReleaseStateError("operational active Work Block requires non-empty write_set")
+    gate = operational.get("write_gate")
+    if not isinstance(gate, dict) or not isinstance(gate.get("status"), str) or gate["status"] not in {"READY", "BLOCKED"}:
+        raise ReleaseStateError("operational active Work Block requires valid write_gate")
     specification_path, specification_file = safe_repo_path(
         root, specification.get("path"), "operational active Work Block specification.path"
     )
@@ -354,11 +401,6 @@ def validate_operational_active_work_block(
         )
     if not specification_file.is_file():
         raise ReleaseStateError("operational active Work Block specification.path is missing")
-    expected_id = active_frontmatter.get("work_block_id") if active_frontmatter else None
-    if work_block_id != expected_id:
-        raise ReleaseStateError(
-            "operational active Work Block ID does not match release-state active Work Block"
-        )
     specification_frontmatter, _, _ = parse_frontmatter(
         specification_file, "operational active Work Block specification"
     )
@@ -366,11 +408,13 @@ def validate_operational_active_work_block(
         raise ReleaseStateError(
             "operational active Work Block specification requires artifact_type=specification"
         )
-    if specification_frontmatter.get("work_block_id") != expected_id:
+    if specification_frontmatter.get("work_block_id") != work_block_id:
         raise ReleaseStateError(
             "operational active Work Block specification Work Block ID does not match "
-            "release-state active Work Block"
+            "operational state"
         )
+    if specification_frontmatter.get("revision") != specification["revision"]:
+        raise ReleaseStateError("operational active Work Block specification revision does not match operational state")
     if applicable(operational):
         try:
             validate_topology(operational, phase="admission", root=root)
@@ -733,7 +777,7 @@ def validate_repository(root: Path) -> dict[str, Any]:
     if map_active != active:
         raise ReleaseStateError("PROJECT_MAP active Work Block does not match FILE_REGISTRY.yml")
     validate_map_projection(map_text, active)
-    validate_operational_active_work_block(root, active, active_frontmatter)
+    validate_operational_active_work_block(root)
 
     release_state = registry.get("release_state")
     if not isinstance(release_state, dict):

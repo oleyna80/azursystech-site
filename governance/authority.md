@@ -112,15 +112,19 @@ other corrective work remain autonomous while the approved requirement, risk,
 architecture, authority, and write-set boundaries do not change.
 
 Autonomous remote publication has two distinct subject-candidate paths. An
-assured active candidate requires a `READY` write gate, formal Define-quality
-evidence where the governance profile requires it, a `READY` Critic, and
-`READY` Review and Verification. Its only normal non-force command form pushes
+assured active candidate requires a frozen, unchanged source candidate and a
+`BLOCKED` source write gate, formal Define-quality evidence where the governance
+profile requires it, a resolved Critic (`READY` with `APPROVE` or `SUPPLEMENT`,
+or explicit `SKIPPED` with a non-empty reason), and separate-context `READY`
+Reviewer and Verifier evidence for that exact frozen candidate. A negative
+Reviewer or Verifier verdict reopens source work and requires a new freeze.
+Its only normal non-force command form pushes
 `HEAD` through `origin` to `refs/heads/<subject_branch>`, where the attached
 non-default branch exactly matches the active Work Block `subject_branch`.
 
 A final terminal closeout candidate uses that same literal command form, but is
 admitted only when committed Git ancestry proves one immediate transition from
-that same publication-eligible active parent to a canonical terminal inactive
+an eligible active parent to a canonical terminal inactive
 child. The parent must carry the matching Work Block, exact subject branch,
 READY formal Define-quality evidence where the governance profile requires it,
 and READY Critic/Review/Verification state. The child must contain
@@ -135,8 +139,10 @@ controls fail closed for executable command or process substitutions;
 single-quoted literal prose is not an executable substitution. The explicit
 command prevents the remote destination from being inferred from mutable
 upstream configuration. A successful candidate push is reported to the Owner
-for the final `MERGE / REVISION / REJECT` decision; it is not a merge or
-deployment authorization. Force/default/protected/tag/release/deletion and
+for GitHub architecture and conformance review followed by the final
+`MERGE / REVISION / REJECT` decision. GitHub review is not a prerequisite for
+subject-branch push, and the push is not a merge or deployment authorization.
+Force/default/protected/tag/release/deletion and
 other external hard stops remain Owner-controlled.
 
 Technical credential presence, a runtime permission prompt, and project-local

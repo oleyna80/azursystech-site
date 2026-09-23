@@ -8,12 +8,17 @@ OS, workflow, and credential capability separation.
 from __future__ import annotations
 
 import json
+import hashlib
+import fnmatch
 import os
 from pathlib import Path
 import re
 import shlex
 import subprocess
 import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+from subagent_topology import TopologyError, applicable as topology_applicable, validate as validate_topology
 
 GATE_PATH = Path(".agent/active-work-block.json")
 
@@ -175,6 +180,16 @@ def git_optional(root: Path, *args: str) -> str | None:
         result = subprocess.run(
             ["git", *args], cwd=root, check=True, capture_output=True,
             text=True, timeout=3
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return result.stdout
+
+
+def git_bytes_optional(root: Path, *args: str) -> bytes | None:
+    try:
+        result = subprocess.run(
+            ["git", *args], cwd=root, check=True, capture_output=True, timeout=5
         )
     except (OSError, subprocess.SubprocessError):
         return None
@@ -724,6 +739,203 @@ def required_critic_ready(gate: dict) -> bool:
     )
 
 
+def resolved_critic_for_publication(gate: dict) -> bool:
+    critic = gate.get("critic")
+    if not isinstance(critic, dict) or critic.get("required") is not True:
+        return False
+    if critic.get("status") == "READY":
+        return critic.get("verdict") in {"APPROVE", "SUPPLEMENT"}
+    return (
+        critic.get("status") == "SKIPPED"
+        and critic.get("verdict") == "SKIPPED"
+        and isinstance(critic.get("skip_reason"), str)
+        and bool(critic["skip_reason"].strip())
+    )
+
+
+def _committed_report(root: Path, report: str) -> tuple[dict[str, str], list[str]] | None:
+    if not isinstance(report, str):
+        return None
+    parts = report.replace("\\", "/").split("/")
+    if len(parts) < 3 or parts[:2] != ["docs", "reports"] or ".." in parts or report.startswith("/"):
+        return None
+    candidate = (root / report).resolve()
+    try:
+        candidate.relative_to((root / "docs" / "reports").resolve())
+        content = candidate.read_bytes()
+        lines = content.decode("utf-8").splitlines()
+    except (OSError, ValueError, UnicodeError):
+        return None
+    if git_bytes_optional(root, "show", f"HEAD:{report}") != content or not lines or lines[0] != "---":
+        return None
+    metadata: dict[str, str] = {}
+    for line in lines[1:]:
+        if line == "---":
+            return metadata, lines
+        if ": " not in line:
+            return None
+        key, value = line.split(": ", 1)
+        if not key or not value.strip() or key in metadata:
+            return None
+        metadata[key] = value.strip()
+    return None
+
+
+def _report_metadata_matches(metadata: dict[str, str], expected: dict[str, str]) -> bool:
+    return all(metadata.get(key) == value for key, value in expected.items())
+
+
+def critic_disposition_evidence(gate: dict, root: Path) -> bool:
+    if not resolved_critic_for_publication(gate):
+        return False
+    critic = gate["critic"]
+    result = _committed_report(root, critic.get("report", ""))
+    specification = gate.get("specification")
+    if result is None or not isinstance(specification, dict):
+        return False
+    metadata, _ = result
+    expected = {
+        "artifact_type": "critic_disposition",
+        "work_block_id": gate.get("work_block_id"),
+        "specification": specification.get("path"),
+        "revision": specification.get("revision"),
+        "frozen_candidate": gate.get("frozen_revision"),
+        "status": critic["status"],
+        "verdict": critic["verdict"],
+    }
+    if any(not isinstance(value, str) or not value for value in expected.values()):
+        return False
+    if critic["status"] == "SKIPPED":
+        expected["skip_reason"] = critic["skip_reason"].strip()
+    return _report_metadata_matches(metadata, expected)
+
+
+def _candidate_path_matches(relative: str, write_set: list[str]) -> bool:
+    for raw in write_set:
+        if not isinstance(raw, str):
+            return False
+        pattern = raw.strip().replace("\\", "/")
+        if pattern.startswith("./"):
+            pattern = pattern[2:]
+        if pattern.endswith("/**"):
+            prefix = pattern[:-3].rstrip("/")
+            if relative == prefix or relative.startswith(f"{prefix}/"):
+                return True
+        elif relative == pattern or fnmatch.fnmatchcase(relative, pattern):
+            return True
+    return False
+
+
+def _candidate_digest(entries: list[tuple[str, bytes, bytes]]) -> str:
+    if not entries:
+        return ""
+    digest = hashlib.sha256()
+    for relative, kind, content in sorted(entries):
+        path = relative.encode("utf-8", errors="surrogateescape")
+        digest.update(len(path).to_bytes(8, "big"))
+        digest.update(path)
+        digest.update(len(kind).to_bytes(8, "big"))
+        digest.update(kind)
+        digest.update(len(content).to_bytes(8, "big"))
+        digest.update(content)
+    return f"content-sha256:{digest.hexdigest()}"
+
+
+def frozen_candidate_matches_head(gate: dict, root: Path) -> bool:
+    """Bind the frozen worktree bytes and pushed HEAD to the same legacy identity."""
+    revision = gate.get("frozen_revision")
+    write_set = gate.get("write_set")
+    if not isinstance(revision, str) or re.fullmatch(r"content-sha256:[0-9a-f]{64}", revision) is None:
+        return False
+    if not isinstance(write_set, list) or not write_set or any(not isinstance(p, str) or not p.strip() for p in write_set):
+        return False
+    worktree: list[tuple[str, bytes, bytes]] = []
+    for current, directories, files in os.walk(root, topdown=True, followlinks=False):
+        here = Path(current)
+        directories[:] = [name for name in directories if name != ".git"]
+        symlink_directories = [name for name in directories if (here / name).is_symlink()]
+        for name in files + symlink_directories:
+            path = here / name
+            relative = path.relative_to(root).as_posix()
+            if relative == ".agent/active-work-block.json" or not _candidate_path_matches(relative, write_set):
+                continue
+            try:
+                if path.is_symlink():
+                    worktree.append((relative, b"symlink", os.readlink(path).encode("utf-8", errors="surrogateescape")))
+                elif path.is_file():
+                    worktree.append((relative, b"file", path.read_bytes()))
+            except OSError:
+                return False
+    if _candidate_digest(worktree) != revision:
+        return False
+    tree = git_bytes_optional(root, "ls-tree", "-r", "-z", "HEAD")
+    if tree is None:
+        return False
+    committed: list[tuple[str, bytes, bytes]] = []
+    for record in tree.split(b"\0"):
+        if not record:
+            continue
+        try:
+            metadata, raw_relative = record.split(b"\t", 1)
+            mode, kind, object_id = metadata.split(b" ")
+            relative = raw_relative.decode("utf-8", errors="surrogateescape")
+        except ValueError:
+            return False
+        if relative == ".agent/active-work-block.json" or not _candidate_path_matches(relative, write_set):
+            continue
+        if kind != b"blob":
+            return False
+        content = git_bytes_optional(root, "cat-file", "blob", object_id.decode("ascii"))
+        if content is None:
+            return False
+        committed.append((relative, b"symlink" if mode == b"120000" else b"file", content))
+    return _candidate_digest(committed) == revision
+
+
+def assured_candidate_evidence(gate: dict, root: Path) -> bool:
+    assurance = gate.get("assurance")
+    if not required_assurance_ready(gate) or not isinstance(assurance, dict):
+        return False
+    revision = gate.get("frozen_revision")
+    ids: set[str] = set()
+    contexts: set[str] = set()
+    for name, prefix in (("review", "review_result"), ("verification", "verification_result")):
+        record = assurance[name]
+        if record.get("work_block_id") != gate.get("work_block_id") or record.get("candidate_revision") != revision:
+            return False
+        for key in ("execution_id", "context_id", "report"):
+            if not isinstance(record.get(key), str) or not record[key].strip():
+                return False
+        if record.get("isolation") not in {"separate_context", "native-separate-context"}:
+            return False
+        ids.add(record["execution_id"])
+        contexts.add(record["context_id"])
+        result = _committed_report(root, record["report"])
+        specification = gate.get("specification")
+        if result is None or not isinstance(specification, dict):
+            return False
+        metadata, lines = result
+        expected_metadata = {
+            "artifact_type": "reviewer_report" if name == "review" else "verifier_report",
+            "work_block_id": gate.get("work_block_id"),
+            "specification": specification.get("path"),
+            "revision": specification.get("revision"),
+            "frozen_candidate": revision,
+            "status": "READY",
+            "verdict": "READY",
+            "execution_id": record["execution_id"],
+            "context_id": record["context_id"],
+        }
+        if any(not isinstance(value, str) or not value for value in expected_metadata.values()):
+            return False
+        if not _report_metadata_matches(metadata, expected_metadata):
+            return False
+        expected = f"{prefix}: execution_id={record['execution_id']} candidate={revision} verdict=READY"
+        if [line.strip() for line in lines if line.strip().startswith(f"{prefix}:")] != [expected]:
+            return False
+    return len(ids) == 2 and len(contexts) == 2
+
+
 def define_quality_ready(gate: dict) -> bool:
     profile = str(gate.get("governance_profile") or "").strip()
     quality = gate.get("define_quality")
@@ -865,14 +1077,20 @@ def autonomous_subject_push_allowed(command: str, gate: dict, root: Path) -> boo
     if gate.get("schema_version") != 3 or gate.get("authority_mode") != "github_capability":
         return False
     write_gate = gate.get("write_gate")
-    if not isinstance(write_gate, dict) or write_gate.get("status") != "READY":
+    if not isinstance(write_gate, dict) or write_gate.get("status") != "BLOCKED":
         return False
     if (
         not define_quality_ready(gate)
-        or not required_critic_ready(gate)
-        or not required_assurance_ready(gate)
+        or not critic_disposition_evidence(gate, root)
+        or not assured_candidate_evidence(gate, root)
+        or not frozen_candidate_matches_head(gate, root)
     ):
         return False
+    if topology_applicable(gate):
+        try:
+            validate_topology(gate, phase="closeout", root=root)
+        except TopologyError:
+            return False
     subject = str(gate.get("subject_branch") or "").strip()
     configured_default = default_branch(root)
     if not subject or not configured_default or subject == configured_default:
@@ -931,9 +1149,9 @@ def check_command(command: str, gate: dict, root: Path) -> None:
         if autonomous_subject_push_allowed(command, gate, root):
             return
         deny(
-            "Remote source publication is allowed only as an explicit, non-force push of "
-            "HEAD to the active Work Block's exact subject branch after READY Critic, Review, "
-            "and Verification; all other publication remains Owner-controlled."
+            "Remote source publication requires literal non-force HEAD to the exact subject branch, "
+            "an unchanged frozen candidate committed at HEAD, resolved Critic (READY or reasoned SKIPPED), "
+            "and candidate-bound READY Reviewer/Verifier; all other publication remains Owner-controlled."
         )
 
     for pattern, label in CONSEQUENTIAL:

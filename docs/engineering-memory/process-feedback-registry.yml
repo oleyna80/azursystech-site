@@ -5,6 +5,76 @@ authority_boundary:
   systemic_change_requires: separate_improvement_work_block
   direct_governance_mutation: forbidden
 observations:
+  - id: PF-2026-09-23-wb034-reporting-recovery-deadlock
+    work_block_id: WB-035
+    date: "2026-09-23"
+    category: CONTRACT_MISMATCH
+    observation: WB-034 smoke exposed that valid active Work Blocks with unfinished assurance could not take reporting-only terminal recovery.
+    evidence: "WB-035 v1 regression in scripts/test-github-capability-control-plane.py exercises all-PENDING reporting-only recovery and strict success-closeout; see docs/specs/WB-035-governance-recovery-state-separation.md v2."
+    likely_systemic_cause: Lifecycle closeout validation rejected unfinished assurance before selecting reporting-only versus success-closeout semantics.
+    impact: A failed or incomplete assurance run could leave an active Work Block without its intended fail-safe terminal path.
+    suggested_improvement: "Resolved in WB-035: evaluate reporting-only as reasoned canonical-inactive recovery while keeping success-closeout strict. Retain both regressions."
+    severity: HIGH
+    status: VERIFIED
+    authority: advisory_only
+    avoidable_friction: true
+    related_work_blocks: [WB-034]
+  - id: PF-2026-09-23-wb034-operational-migration-coupling
+    work_block_id: WB-035
+    date: "2026-09-23"
+    category: CONTRACT_MISMATCH
+    observation: WB-034 smoke exposed release-state validation coupling an ordinary operational Work Block to migration_state.active_work_block.
+    evidence: "WB-035 v1 focused regressions in scripts/test-release-state-contracts.py and the independent-domain contract in governance/release-state.md."
+    likely_systemic_cause: The validator treated operational active-work-block JSON and the migration registry/projection as one state domain.
+    impact: A valid ordinary active Work Block was blocked when migration_state had no active migration Work Block.
+    suggested_improvement: "Resolved in WB-035: independently validate operational state and migration registry/projection, retaining malformed-state and projection denial tests."
+    severity: HIGH
+    status: VERIFIED
+    authority: advisory_only
+    avoidable_friction: true
+    related_work_blocks: [WB-034]
+  - id: PF-2026-09-23-wb035-assurance-transitions
+    work_block_id: WB-035
+    date: "2026-09-23"
+    category: CONTRACT_MISMATCH
+    observation: WB-035 v1 passed implementation tests but could not complete ordinary local Reviewer and Verifier assurance with exact frozen-candidate binding.
+    evidence: "WB-035 v2 lifecycle transitions and focused regressions in scripts/test-github-capability-control-plane.py and scripts/test-subagent-topology.py."
+    likely_systemic_cause: Reviewer had no explicit lifecycle transition, Controlled Verifier lacked a non-native path, and freeze/rework did not consistently reset candidate-specific assurance.
+    impact: Publication could be blocked or could attempt to reuse stale assurance after rework.
+    suggested_improvement: "Resolved in WB-035 v2: prepare/finalize Reviewer and Verifier, reset assurance on freeze/rework, and bind reports to one frozen revision; retain native topology checks."
+    severity: HIGH
+    status: VERIFIED
+    authority: advisory_only
+    avoidable_friction: true
+    related_work_blocks: [WB-034]
+  - id: PF-2026-09-23-wb035-publication-permission
+    work_block_id: WB-035
+    date: "2026-09-23"
+    category: GOVERNANCE_AMBIGUITY
+    observation: Frozen source write_gate BLOCKED conflicted with a publication predicate that expected READY, and reasoned Critic SKIPPED was not accepted as resolved.
+    evidence: "WB-035 v2 publication regressions in scripts/test-github-capability-control-plane.py and contract in .agent/workflows/owner-controlled-github-flow.md."
+    likely_systemic_cause: Source-write and candidate-publication permissions were conflated, while the publication Critic predicate diverged from admission semantics.
+    impact: An assured frozen candidate with explicit bounded Critic SKIPPED could not be published to its exact subject branch.
+    suggested_improvement: "Resolved in WB-035 v2: separate the predicates, require unchanged frozen source and committed candidate-bound assurance, and accept only READY APPROVE/SUPPLEMENT or reasoned SKIPPED Critic."
+    severity: HIGH
+    status: VERIFIED
+    authority: advisory_only
+    avoidable_friction: true
+    related_work_blocks: [WB-034]
+  - id: PF-2026-09-23-wb035-session-only-rationale
+    work_block_id: WB-035
+    date: "2026-09-23"
+    category: CONTEXT_OR_MEMORY_GAP
+    observation: Material WB-035 scope, Critic disposition, and assurance results risked existing only in session-local coordination or chat context.
+    evidence: "WB-035 v2 self-contained specification, this registry, and candidate-bound docs/reports/WB-035-*.md evidence records."
+    likely_systemic_cause: Operational active Work Block state carried rationale and assurance fields without requiring durable repository reports for the final candidate.
+    impact: A new Codex or Claude session could not reconstruct why the Work Block exists, what was verified, and what remains deferred from repository artifacts alone.
+    suggested_improvement: "Resolved in WB-035 v2 by committing the specification, process feedback, Critic disposition, Reviewer report, and Verifier report with exact candidate references."
+    severity: MEDIUM
+    status: VERIFIED
+    authority: advisory_only
+    avoidable_friction: true
+    related_work_blocks: [WB-034]
   - id: PF-2026-09-09-agent-browser-capability
     work_block_id: WB-2026-09-09-process-feedback-self-improvement
     date: "2026-09-09"

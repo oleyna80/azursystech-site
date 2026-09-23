@@ -111,6 +111,10 @@ def active_fixture(holder: str) -> Path:
     active = json.loads(active_path.read_text(encoding="utf-8"))
     active["work_block_id"] = work_block_id
     active["specification"] = {"path": specification, "revision": "v1"}
+    active["subject_branch"] = "fixture/operational-work"
+    active["base_commit"] = "0" * 40
+    active["write_gate"] = {"status": "READY", "opened_at": "2026-09-23T00:00:00Z"}
+    active["write_set"] = ["scripts/validate-release-state.py"]
     active_path.write_text(json.dumps(active), encoding="utf-8")
     require(run(fixture), 0, "disposable active fixture must pass")
     return fixture
@@ -276,11 +280,7 @@ def main() -> int:
         for relative in ("FILE_REGISTRY.yml", "PROJECT_MAP.md"):
             path = fixture / relative
             path.write_text(path.read_text(encoding="utf-8").replace(plan, alternate), encoding="utf-8")
-        require_failure(
-            fixture,
-            "registry and map changed without operational active record must fail",
-            "operational active Work Block ID does not match release-state active Work Block",
-        )
+        require(run(fixture), 0, "migration active record may differ from operational Work Block")
     with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
         fixture = active_fixture(holder)
         active = fixture / ".agent/active-work-block.json"
@@ -289,8 +289,8 @@ def main() -> int:
         active.write_text(json.dumps(data), encoding="utf-8")
         require_failure(
             fixture,
-            "operational active record changed without registry and map must fail",
-            "operational active Work Block ID does not match release-state active Work Block",
+            "operational Work Block ID must match its specification",
+            "operational active Work Block specification Work Block ID does not match operational state",
         )
     with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
         fixture = active_fixture(holder)
@@ -324,7 +324,7 @@ def main() -> int:
             fixture,
             "existing specification with wrong Work Block identity must fail",
             "operational active Work Block specification Work Block ID does not match "
-            "release-state active Work Block",
+            "operational state",
         )
     with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
         fixture = active_fixture(holder)
@@ -415,7 +415,7 @@ def main() -> int:
             map_text,
             encoding="utf-8",
         )
-        require_failure(fixture, "stale operational active record with no canonical active Work Block must fail", "operational active Work Block must be inactive")
+        require(run(fixture), 0, "operational active Work Block may coexist with inactive migration state")
     with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
         fixture = inactive_fixture(holder)
         active = json.loads((fixture / ".agent/active-work-block.json").read_text(encoding="utf-8"))
@@ -446,6 +446,48 @@ def main() -> int:
             "source authority in inactive candidate must fail",
             "operational inactive Work Block must have empty write_set",
         )
+    with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
+        fixture = active_fixture(holder)
+        active_path = fixture / ".agent/active-work-block.json"
+        active = json.loads(active_path.read_text(encoding="utf-8"))
+        active["write_gate"] = "READY"
+        active_path.write_text(json.dumps(active), encoding="utf-8")
+        require_failure(fixture, "malformed operational active gate must fail", "requires valid write_gate")
+    with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
+        fixture = active_fixture(holder)
+        active_path = fixture / ".agent/active-work-block.json"
+        active = json.loads(active_path.read_text(encoding="utf-8"))
+        active["work_block_id"] = []
+        active_path.write_text(json.dumps(active), encoding="utf-8")
+        require_failure(fixture, "malformed operational identity must fail", "requires work_block_id")
+    with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
+        fixture = active_fixture(holder)
+        active_path = fixture / ".agent/active-work-block.json"
+        active = json.loads(active_path.read_text(encoding="utf-8"))
+        active.pop("assurance")
+        active_path.write_text(json.dumps(active), encoding="utf-8")
+        require_failure(fixture, "missing operational assurance state must fail", "requires structured assurance state")
+    with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
+        fixture = active_fixture(holder)
+        project_map = fixture / "PROJECT_MAP.md"
+        map_text = project_map.read_text(encoding="utf-8")
+        plan, _, _ = active_paths(fixture)
+        project_map.write_text(
+            map_text.replace(f"active_work_block: {plan}", "active_work_block: null", 1),
+            encoding="utf-8",
+        )
+        require_failure(
+            fixture,
+            "migration registry and map mismatch must fail independently",
+            "PROJECT_MAP active Work Block does not match FILE_REGISTRY.yml",
+        )
+    with tempfile.TemporaryDirectory(prefix="release-state-contract-") as holder:
+        fixture = fixture_root(holder)
+        active_path = fixture / ".agent/active-work-block.json"
+        inactive = json.loads((fixture / ".agent/active-work-block.default.json").read_text(encoding="utf-8"))
+        inactive["unexpected"] = True
+        active_path.write_text(json.dumps(inactive), encoding="utf-8")
+        require_failure(fixture, "incomplete inactive shape must fail", "operational inactive Work Block is not canonical")
     print("release-state contract regressions: OK")
     return 0
 

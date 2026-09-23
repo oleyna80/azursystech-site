@@ -22,11 +22,18 @@ security/business/governance decision, risk, or write-set expansion.
 
 ## Stage B — Freeze and assure a candidate
 
-Before remote publication, record the exact `HEAD`, required checks, Critic,
-Reviewer, Verifier, and residual risks. Required Critic, Review, and
-Verification must all be `READY`; formal profiles also require READY
-Define-quality evidence. A corrective change creates a new candidate and
-repeats the affected assurance.
+Before remote publication, record the exact `HEAD`, frozen source candidate,
+required checks, Critic disposition, Reviewer, Verifier, and residual risks in
+repository artifacts. A freeze sets `write_gate: BLOCKED` for source edits and
+resets candidate-specific Reviewer and Verifier evidence. Reviewer and Verifier
+must be READY for the same frozen candidate; formal profiles also require READY
+Define-quality evidence. Critic is resolved by READY with APPROVE/SUPPLEMENT or
+explicit SKIPPED with a nonempty reason. DEGRADED/FALLBACK do not qualify for
+autonomous publication. A corrective source change requires rework, a new
+freeze, and fresh assurance. Repository reports bind execution IDs, WB,
+specification revision, frozen candidate, separate context, and verdict;
+Critic disposition also binds its status and any skip reason. Reports are committed before
+publication without entering their own content-sha256 source hash.
 
 ## Stage C — Autonomous exact-subject candidate push
 
@@ -36,16 +43,19 @@ The sole autonomous publication form is:
 git push origin HEAD:refs/heads/<exact subject_branch>
 ```
 
-There are two admitted states for this exact command. An active candidate must
-have the attached non-default branch and matching active Work Block
-`subject_branch`, READY write gate/formal Define evidence, and READY Critic,
-Review, and Verification. A terminal candidate must instead be the immediate
+Source-write permission and candidate-publication permission are separate
+predicates. An active frozen candidate must have the attached non-default
+branch and matching active Work Block `subject_branch`, BLOCKED source write
+gate, unchanged frozen source content committed at HEAD, applicable READY
+Define evidence, resolved Critic, and candidate-bound READY Reviewer and
+Verifier reports committed at HEAD. A terminal candidate must instead be the immediate
 child of that publication-eligible active commit, with the same Work Block and
 subject branch proven from committed parent state and commit trailers; its
 current state must be exact canonical inactive and its commit diff must contain
 only the minimal closeout/coordination allowlist. Inactive state by itself is
 not an allowance. A second commit, source mutation, malformed parent, or any
-missing READY evidence removes terminal eligibility.
+missing required evidence removes terminal eligibility. Terminal publication
+is a distinct legacy path and is not required for a frozen subject candidate.
 
 The exact push is the sole shell command: it cannot be coupled to another
 action. The explicit remote and destination prevent an upstream or arbitrary
