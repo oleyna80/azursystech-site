@@ -179,22 +179,37 @@ degraded rather than assumed from textual compliance.
 
 The expected control points are:
 
-- **Bootstrap/admission** — correct repository root, branch, Work Block,
-  specification, write-set, and required capability evidence.
-- **Before write** — only admitted paths and permitted lifecycle state.
-- **Candidate freeze** — exact candidate identity becomes the assurance
-  boundary.
-- **Reviewer/Verifier** — evidence is bound to the exact candidate; rework
-  invalidates candidate-specific assurance as defined by lifecycle policy.
-- **Commit** — branch, Work Block, staged scope, and commit linkage remain
-  consistent.
-- **Subject-branch push** — exact bounded publication only after the required
-  candidate assurance.
-- **Consequential operations** — merge, deployment, release, live
-  production/data/infra/credential mutation, and other Hard Stops require the
-  applicable Owner/external authority.
-- **Closeout** — durable reports, reusable engineering memory/process feedback
-  where required, and canonical lifecycle state are preserved.
+- **Bootstrap/admission** — verify the intended repository/session root, attached
+  branch, active Work Block, specification identity, approved scope, exact
+  write-set, and required capability evidence before write authority is opened.
+- **Before write** — allow mutation only inside the admitted write-set and only
+  in a lifecycle state that permits source writes.
+- **Before freeze** — verify that the candidate is coherent, the approved scope
+  and write-set have not expanded, and the required deterministic checks for
+  freezing have completed. Freezing establishes the exact candidate identity
+  used by assurance.
+- **Before Reviewer/Verifier** — require the exact frozen candidate, the required
+  role/context isolation for the selected governance profile, and valid durable
+  evidence/report paths. Verifier dispatch must respect the lifecycle ordering
+  after Reviewer where required.
+- **After rework** — any source change that creates a new candidate invalidates
+  candidate-specific Reviewer/Verifier assurance from the previous candidate;
+  a new freeze establishes a new assurance boundary.
+- **Before commit** — verify branch/Work Block consistency, the required
+  `Work-Block:` trailer or equivalent linkage, staged scope/write-set, and
+  absence of prohibited local/session-only or otherwise forbidden files.
+- **Before push** — require the exact subject branch and explicit non-force
+  publication form, deny default/protected/destructive ref updates, prove the
+  frozen candidate is unchanged, and require the applicable Reviewer/Verifier
+  assurance for that exact candidate.
+- **Before dangerous operations** — default/protected branch mutation, merge,
+  deployment, release, destructive production database mutation, live
+  infrastructure mutation, secrets/credentials changes, and equivalent Hard
+  Stops require the applicable explicit Owner/external authority.
+- **Closeout** — preserve required durable documentation and assurance reports,
+  promote reusable engineering memory/process feedback when applicable, and
+  restore the canonical inactive lifecycle state without inventing successful
+  evidence.
 
 ## Fail-Closed and Advisory Boundaries
 
