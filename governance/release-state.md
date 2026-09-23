@@ -37,9 +37,11 @@ copy of later hosting-platform state.
    and active migration Work Blocks.
 3. The machine block and visible `Migration Work` section in `PROJECT_MAP.md` are
    the human-readable projection of the same migration state.
-4. Closeout reports provide evidence and classification; they do not override the
+4. `.agent/active-work-block.json` is the operational Work Block gate state. It
+   records the current branch-bound work, which may be unrelated to migration.
+5. Closeout reports provide evidence and classification; they do not override the
    Work Block or registry.
-5. GitHub PR/merge state is external operational evidence and cannot override
+6. GitHub PR/merge state is external operational evidence and cannot override
    repository authority.
 
 ## Required Invariants
@@ -66,7 +68,7 @@ Legacy `Drift Gate: READY` remains accepted for historical Work Blocks created
 before `ALIGNED` became the canonical terminal drift token. New Work Blocks use
 `ALIGNED`.
 
-### Active Work Block
+### Active Migration Work Block
 
 A non-null `active_work_block` must:
 
@@ -79,6 +81,18 @@ A non-null `active_work_block` must:
 
 When `active_work_block` is null, that section must explicitly state that there is
 no active implementation Work Block.
+
+### Operational Work Block
+
+The operational JSON is validated independently of `migration_state` and its
+`PROJECT_MAP.md` projection. An absent operational Work Block requires the full
+canonical inactive template shape, allowing only the closeout mode and lifecycle
+note to differ. An active operational Work Block requires a valid schema and
+authority mode, branch and base identity, write gate and write set, and a
+specification whose path, Work Block ID, and revision match the operational
+record. Applicable native topology checks still run. The operational Work Block
+need not equal `migration_state.active_work_block`; a normal non-migration Work
+Block may be active while migration state has no active Work Block.
 
 ### Closeout
 

@@ -108,18 +108,32 @@ def state(root: Path) -> dict:
         report = f"docs/reports/{role}.md"
         target = root / report
         target.parent.mkdir(parents=True, exist_ok=True)
-        content = "evidence\n"
-        if role == "verifier":
-            content += "verification_result: execution_id=assurance-verifier verdict=READY\n"
-        target.write_text(content, encoding="utf-8")
+        target.write_text("evidence\n", encoding="utf-8")
         execution_id = f"assurance-{role}"
         bindings.append({"work_block_id": "WB-test", "role": role, "execution_id": execution_id, "context_id": execution_id, "context_id_source": "execution_id", "runtime": "codex", "adapter": "codex", "adapter_version": "1", "source_revision": "abc123", "repository_root": str(root), "branch": "feat/test", "readonly_boundary": "runtime-readonly", "launch_mechanism": "native", "topology_tier": "native-separate-context", "probe_event_ref": f"native_dispatch:{execution_id}", "report": report, "status": "READY", "observed_at": timestamp})
-    write_set = ["docs/reports/**"]
+    source = root / "src/fixture.py"
+    source.parent.mkdir(parents=True, exist_ok=True)
+    source.write_text("fixture source\n", encoding="utf-8")
+    write_set = ["src/**"]
     frozen_revision = candidate_content_identity(root, write_set)
+    (root / "docs/reports/verifier.md").write_text(
+        verifier_report(frozen_revision, "assurance-verifier", "assurance-verifier", "READY"),
+        encoding="utf-8",
+    )
     bindings[0]["source_revision"] = "abc123"
     for binding in bindings[1:]:
         binding["source_revision"] = frozen_revision
-    return {"schema_version": 3, "authority_mode": "github_capability", "governance_profile": "Assured", "non_trivial": True, "work_block_id": "WB-test", "subject_branch": "feat/test", "base_commit": "abc123", "write_set": write_set, "frozen_revision": frozen_revision, "critic": {"status": "READY", "verdict": "APPROVE", "report": "docs/reports/critic.md"}, "define_quality": {"required": True, "status": "READY", "requirements_review": "docs/reports/requirements.md", "traceability": "docs/reports/traceability.md", "consistency_analysis": "docs/reports/consistency.md"}, "assurance": {"review": {"required": True, "status": "READY", "verdict": "READY", "report": "docs/reports/reviewer.md", "execution_id": "assurance-reviewer"}, "verification": {"required": True, "status": "READY", "verdict": "READY", "report": "docs/reports/verifier.md", "execution_id": "assurance-verifier"}, "evaluation": {"required": False, "status": "SKIPPED", "verdict": "", "skip_reason": "not required"}, "drift": {"required": False, "status": "SKIPPED", "verdict": "", "skip_reason": "not required"}}, "subagent_topology": {"policy": "native-separate-context-required", "status": "READY", "capability": capability, "role_bindings": bindings}}
+    return {"schema_version": 3, "authority_mode": "github_capability", "governance_profile": "Assured", "non_trivial": True, "work_block_id": "WB-test", "specification": {"path": "docs/specs/WB-test.md", "revision": "v1"}, "subject_branch": "feat/test", "base_commit": "abc123", "write_set": write_set, "frozen_revision": frozen_revision, "critic": {"status": "READY", "verdict": "APPROVE", "report": "docs/reports/critic.md"}, "define_quality": {"required": True, "status": "READY", "requirements_review": "docs/reports/requirements.md", "traceability": "docs/reports/traceability.md", "consistency_analysis": "docs/reports/consistency.md"}, "assurance": {"review": {"required": True, "status": "READY", "verdict": "READY", "report": "docs/reports/reviewer.md", "execution_id": "assurance-reviewer"}, "verification": {"required": True, "status": "READY", "verdict": "READY", "report": "docs/reports/verifier.md", "execution_id": "assurance-verifier"}, "evaluation": {"required": False, "status": "SKIPPED", "verdict": "", "skip_reason": "not required"}, "drift": {"required": False, "status": "SKIPPED", "verdict": "", "skip_reason": "not required"}}, "subagent_topology": {"policy": "native-separate-context-required", "status": "READY", "capability": capability, "role_bindings": bindings}}
+
+
+def verifier_report(candidate: str, execution: str, context: str, verdict: str) -> str:
+    return (
+        "---\nartifact_type: verifier_report\nwork_block_id: WB-test\n"
+        "specification: docs/specs/WB-test.md\nrevision: v1\n"
+        f"frozen_candidate: {candidate}\nstatus: {verdict}\nverdict: {verdict}\n"
+        f"execution_id: {execution}\ncontext_id: {context}\n---\n\n"
+        f"verification_result: execution_id={execution} candidate={candidate} verdict={verdict}\n"
+    )
 
 
 def denied(value: dict, root: Path, phase: str, label: str) -> None:
@@ -177,13 +191,19 @@ def verifier_sequencing_matrix(root: Path, valid: dict) -> None:
     }
     provisional["write_gate"] = {"status": "BLOCKED", "opened_at": None}
     report = root / "docs/reports/verifier.md"
-    report.write_text(
-        "evidence\nverification_result: execution_id=dispatch-verifier verdict=READY\n",
-        encoding="utf-8",
-    )
     frozen = candidate_content_identity(root, provisional["write_set"])
     provisional["frozen_revision"] = frozen
+    report.write_text(
+        verifier_report(frozen, "dispatch-verifier", "dispatch-verifier", "READY"),
+        encoding="utf-8",
+    )
     provisional["subagent_topology"]["role_bindings"][1]["source_revision"] = frozen
+    provisional["assurance"]["review"].update({
+        "work_block_id": provisional["work_block_id"],
+        "candidate_revision": frozen,
+        "context_id": provisional["subagent_topology"]["role_bindings"][1]["context_id"],
+        "isolation": "native-separate-context",
+    })
     capability = provisional["subagent_topology"]["capability"]
     binding = {
         "work_block_id": provisional["work_block_id"],
@@ -264,17 +284,17 @@ def verifier_sequencing_matrix(root: Path, valid: dict) -> None:
     blocked_report = root / "docs/reports/verifier.md"
     for content, label in (
         (
-            "evidence\nverification_result: execution_id=dispatch-verifier verdict=READY-forged\n",
+            verifier_report(frozen, "dispatch-verifier", "dispatch-verifier", "READY-forged"),
             "suffix result record",
         ),
         (
-            "evidence\nverification_result: execution_id=dispatch-verifier verdict=READY\n"
-            "verification_result: execution_id=dispatch-verifier verdict=READY\n",
+            verifier_report(frozen, "dispatch-verifier", "dispatch-verifier", "READY") +
+            f"verification_result: execution_id=dispatch-verifier candidate={frozen} verdict=READY\n",
             "duplicate result records",
         ),
         (
-            "evidence\nverification_result: execution_id=dispatch-verifier verdict=READY\n"
-            "verification_result: execution_id=dispatch-verifier verdict=BLOCKED\n",
+            verifier_report(frozen, "dispatch-verifier", "dispatch-verifier", "READY") +
+            f"verification_result: execution_id=dispatch-verifier candidate={frozen} verdict=BLOCKED\n",
             "conflicting result records",
         ),
     ):
@@ -288,12 +308,9 @@ def verifier_sequencing_matrix(root: Path, valid: dict) -> None:
         else:
             raise AssertionError(f"{label} must be rejected")
     blocked_report.write_text(
-        "evidence\nverification_result: execution_id=dispatch-verifier verdict=BLOCKED\n",
+        verifier_report(frozen, "dispatch-verifier", "dispatch-verifier", "BLOCKED"),
         encoding="utf-8",
     )
-    blocked_revision = candidate_content_identity(root, blocked["write_set"])
-    blocked["frozen_revision"] = blocked_revision
-    blocked["subagent_topology"]["role_bindings"][-1]["source_revision"] = blocked_revision
     try:
         finalize_verifier_execution(
             blocked, root, execution_id="dispatch-verifier", verdict="READY", now=NOW
@@ -384,6 +401,8 @@ def main() -> int:
             raise AssertionError(f"non-canonical RFC3339 UTC timestamp was accepted: {timestamp}")
     with tempfile.TemporaryDirectory(prefix="subagent-topology-") as holder:
         root = Path(holder)
+        (root / ".agent").mkdir()
+        shutil.copy2(Path(__file__).resolve().parents[1] / ".agent/active-work-block.default.json", root / ".agent/active-work-block.default.json")
         valid = state(root)
         validate(valid, phase="admission", root=root, now=NOW)
         validate(valid, phase="closeout", root=root, now=NOW)

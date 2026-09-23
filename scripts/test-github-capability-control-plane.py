@@ -12,6 +12,9 @@ import subprocess
 import sys
 import tempfile
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / ".codex" / "scripts"))
+from lifecycle import candidate_content_identity
+
 ROOT = Path(__file__).resolve().parents[1]
 HARD_STOP = ROOT / ".agent/hooks/hard_stop_policy.py"
 CODEX_GATE = ROOT / ".codex/hooks/pre_tool_use_policy.py"
@@ -191,6 +194,61 @@ def ready_gate(base: dict[str, object], cwd: Path) -> dict[str, object]:
         "capability": capability,
         "role_bindings": role_bindings,
     }
+    return value
+
+
+def assurance_report(gate: dict[str, object], role: str, revision: str, execution: str, context: str, verdict: str) -> str:
+    prefix = "review" if role == "review" else "verification"
+    artifact = "reviewer_report" if role == "review" else "verifier_report"
+    spec = gate["specification"]
+    return (
+        f"---\nartifact_type: {artifact}\nwork_block_id: {gate['work_block_id']}\n"
+        f"specification: {spec['path']}\nrevision: {spec['revision']}\n"
+        f"frozen_candidate: {revision}\nstatus: {verdict}\nverdict: {verdict}\n"
+        f"execution_id: {execution}\ncontext_id: {context}\n---\n\n"
+        f"{prefix}_result: execution_id={execution} candidate={revision} verdict={verdict}\n"
+    )
+
+
+def critic_report(gate: dict[str, object]) -> str:
+    critic = gate["critic"]
+    spec = gate["specification"]
+    reason = f"skip_reason: {critic['skip_reason']}\n" if critic["status"] == "SKIPPED" else ""
+    return (
+        f"---\nartifact_type: critic_disposition\nwork_block_id: {gate['work_block_id']}\n"
+        f"specification: {spec['path']}\nrevision: {spec['revision']}\n"
+        f"frozen_candidate: {gate['frozen_revision']}\nstatus: {critic['status']}\n"
+        f"verdict: {critic['verdict']}\n{reason}---\n\nCritic disposition.\n"
+    )
+
+
+def frozen_publication_gate(base: dict[str, object], cwd: Path) -> dict[str, object]:
+    value = ready_gate(base, cwd)
+    value["governance_profile"] = "Controlled"
+    value["non_trivial"] = False
+    value["subagent_topology"] = None
+    value["define_quality"]["required"] = False
+    value["write_set"] = ["README.md"]
+    value["write_gate"] = {"status": "BLOCKED", "opened_at": None}
+    revision = candidate_content_identity(cwd, value["write_set"])
+    value["frozen_revision"] = revision
+    (cwd / "docs/reports/critic.md").write_text(critic_report(value), encoding="utf-8")
+    for role, report, execution, context in (
+        ("review", "docs/reports/review.md", "fixture-review-exec", "fixture-review-context"),
+        ("verification", "docs/reports/verification.md", "fixture-verifier-exec", "fixture-verifier-context"),
+    ):
+        record = value["assurance"][role]
+        record.update({
+            "work_block_id": value["work_block_id"],
+            "candidate_revision": revision,
+            "execution_id": execution,
+            "context_id": context,
+            "report": report,
+            "isolation": "separate_context",
+        })
+        (cwd / report).write_text(assurance_report(value, role, revision, execution, context, "READY"), encoding="utf-8")
+    git(cwd, "add", "docs/reports/critic.md", "docs/reports/review.md", "docs/reports/verification.md")
+    git(cwd, "commit", "-q", "-m", "fixture assurance reports")
     return value
 
 
@@ -797,6 +855,45 @@ def test_reporting_only_closeout_inactive_coordination_scope() -> None:
         holder.cleanup()
 
 
+def test_reporting_only_pending_recovery() -> None:
+    holder, cwd, template = make_repo()
+    try:
+        opened = lifecycle_open(cwd)
+        if opened.returncode != 0:
+            raise AssertionError(f"lifecycle open failed: {opened.stdout} {opened.stderr}")
+        active_path = cwd / ".agent/active-work-block.json"
+        before = json.loads(active_path.read_text(encoding="utf-8"))
+        assert all(role["status"] == "PENDING" for role in before["assurance"].values())
+
+        command = [sys.executable, str(LIFECYCLE), "--root", str(cwd), "close"]
+        missing_reason = run(command + ["--mode", "reporting-only", "--reason", "   "], cwd)
+        assert missing_reason.returncode == 2
+        assert "non-empty --reason" in missing_reason.stdout
+        assert json.loads(active_path.read_text(encoding="utf-8")) == before
+
+        success = run(command + ["--mode", "success-closeout", "--reason", "premature"], cwd)
+        assert success.returncode == 2
+        assert "assurance.review is still PENDING" in success.stdout
+        assert json.loads(active_path.read_text(encoding="utf-8")) == before
+
+        reason = "assurance remains pending; recovery required"
+        recovery = run(command + ["--mode", "reporting-only", "--reason", reason], cwd)
+        if recovery.returncode != 0:
+            raise AssertionError(f"reporting-only recovery failed: {recovery.stdout} {recovery.stderr}")
+        inactive = json.loads(active_path.read_text(encoding="utf-8"))
+        assert inactive["closeout_mode"] == "reporting-only"
+        assert inactive["lifecycle_note"] == reason
+        assert inactive["write_gate"] == {"status": "BLOCKED", "opened_at": None}
+        assert all(role["status"] == "PENDING" for role in inactive["assurance"].values())
+        assert all(role["verdict"] == "PENDING" for role in inactive["assurance"].values())
+        for field in ("closeout_mode", "lifecycle_note"):
+            inactive.pop(field, None)
+            template.pop(field, None)
+        assert inactive == template
+    finally:
+        holder.cleanup()
+
+
 def test_lifecycle_rejects_default_and_detached() -> None:
     holder, cwd, _base = make_repo()
     try:
@@ -823,13 +920,18 @@ def test_hard_stops() -> None:
     try:
         write_gate(cwd, ready_gate(base, cwd))
         assert_allow(hook(HARD_STOP, cwd, "Bash", {"command": "git commit -m fixture"}), "normal local commit")
+        publication = frozen_publication_gate(base, cwd)
+        write_gate(cwd, publication)
         exact = "git push origin HEAD:refs/heads/feature/capability-test"
         assert_allow(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "assured exact subject candidate publication")
-        supplementary_critic = ready_gate(base, cwd)
+        supplementary_critic = copy.deepcopy(publication)
         supplementary_critic["critic"]["verdict"] = "SUPPLEMENT"
+        (cwd / "docs/reports/critic.md").write_text(critic_report(supplementary_critic), encoding="utf-8")
+        git(cwd, "add", "docs/reports/critic.md")
+        git(cwd, "commit", "-q", "-m", "fixture Critic supplement")
         write_gate(cwd, supplementary_critic)
         assert_allow(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "accepted Critic supplement")
-        attached_gate = ready_gate(base, cwd)
+        attached_gate = copy.deepcopy(publication)
         write_gate(cwd, attached_gate)
         git(cwd, "switch", "-q", "--detach")
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "detached HEAD")
@@ -863,30 +965,30 @@ def test_hard_stops() -> None:
             (f"{exact} && gh api repos/o/r/actions/workflows/x/dispatches --method POST", "exact push chained with GitHub API mutation"),
         ):
             assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": command}), label)
-        pending_review = ready_gate(base, cwd)
+        pending_review = copy.deepcopy(publication)
         pending_review["assurance"]["review"]["status"] = "PENDING"
         pending_review["assurance"]["review"]["verdict"] = "PENDING"
         write_gate(cwd, pending_review)
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "review pending")
-        pending_verification = ready_gate(base, cwd)
+        pending_verification = copy.deepcopy(publication)
         pending_verification["assurance"]["verification"]["status"] = "PENDING"
         pending_verification["assurance"]["verification"]["verdict"] = "PENDING"
         write_gate(cwd, pending_verification)
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "verification pending")
-        pending_critic = ready_gate(base, cwd)
+        pending_critic = copy.deepcopy(publication)
         pending_critic["critic"]["status"] = "PENDING"
         pending_critic["critic"]["verdict"] = "PENDING"
         write_gate(cwd, pending_critic)
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "critic pending")
-        wrong_subject = ready_gate(base, cwd)
+        wrong_subject = copy.deepcopy(publication)
         wrong_subject["subject_branch"] = "feature/other"
         write_gate(cwd, wrong_subject)
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "subject binding mismatch")
-        missing_subject = ready_gate(base, cwd)
+        missing_subject = copy.deepcopy(publication)
         missing_subject["subject_branch"] = ""
         write_gate(cwd, missing_subject)
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "empty subject branch")
-        write_gate(cwd, ready_gate(base, cwd))
+        write_gate(cwd, publication)
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "git push origin HEAD:main"}), "default branch push")
         git(cwd, "update-ref", "refs/remotes/origin/trunk", "HEAD")
         git(cwd, "symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/trunk")
@@ -904,6 +1006,134 @@ def test_hard_stops() -> None:
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "docker push ghcr.io/example/app:tag"}), "image publication")
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "ssh prod.example systemctl restart app"}), "live ssh")
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": "rm -rf build"}), "recursive rm")
+    finally:
+        holder.cleanup()
+
+
+def test_frozen_publication_evidence() -> None:
+    holder, cwd, base = make_repo()
+    try:
+        publication = frozen_publication_gate(base, cwd)
+        exact = "git push origin HEAD:refs/heads/feature/capability-test"
+
+        def check(mutator: object, label: str) -> None:
+            gate = copy.deepcopy(publication)
+            mutator(gate)
+            write_gate(cwd, gate)
+            assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), label)
+
+        write_gate(cwd, publication)
+        assert_allow(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "baseline frozen publication")
+        check(lambda g: g["assurance"]["review"].update(status="PENDING", verdict="PENDING"), "Reviewer PENDING")
+        check(lambda g: g["assurance"]["verification"].update(status="PENDING", verdict="PENDING"), "Verifier PENDING")
+        check(lambda g: g["assurance"]["review"].update(candidate_revision="content-sha256:" + "0" * 64), "Reviewer candidate A")
+        check(lambda g: g["assurance"]["verification"].update(candidate_revision="content-sha256:" + "0" * 64), "Verifier candidate A")
+        check(lambda g: g["assurance"]["review"].update(context_id="fixture-verifier-context"), "shared assurance context")
+        check(lambda g: g["assurance"]["review"].update(report="docs/reports/missing.md"), "missing Reviewer report")
+        check(lambda g: g["critic"].update(report=""), "missing Critic report")
+        check(lambda g: g["critic"].update(report="docs/reports/review.md"), "wrong Critic report")
+        check(lambda g: g["specification"].update(revision="wrong-revision"), "wrong specification revision")
+        check(lambda g: g["critic"].update(status="SKIPPED", verdict="SKIPPED", skip_reason=""), "unreasoned Critic skip")
+        check(lambda g: g["critic"].update(status="DEGRADED", verdict="FALLBACK"), "degraded Critic")
+        check(lambda g: g["critic"].update(status="READY", verdict="FALLBACK"), "fallback Critic")
+        check(lambda g: g["write_gate"].update(status="READY"), "unfrozen write gate")
+
+        write_gate(cwd, publication)
+        review_path = cwd / "docs/reports/review.md"
+        original_review = review_path.read_text(encoding="utf-8")
+        review_path.write_text(original_review.replace("revision: test-spec-v1", "revision: stale-spec"), encoding="utf-8")
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "uncommitted Reviewer report")
+        git(cwd, "add", "docs/reports/review.md")
+        git(cwd, "commit", "-q", "-m", "fixture stale Reviewer report")
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "stale Reviewer report metadata")
+        review_path.write_text(original_review, encoding="utf-8")
+        git(cwd, "add", "docs/reports/review.md")
+        git(cwd, "commit", "-q", "-m", "fixture restored Reviewer report")
+
+        critic_path = cwd / "docs/reports/critic.md"
+        original_critic = critic_path.read_text(encoding="utf-8")
+        critic_path.write_text(original_critic.replace(f"frozen_candidate: {publication['frozen_revision']}", "frozen_candidate: content-sha256:" + "0" * 64), encoding="utf-8")
+        git(cwd, "add", "docs/reports/critic.md")
+        git(cwd, "commit", "-q", "-m", "fixture stale Critic report")
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "stale Critic report metadata")
+        critic_path.write_text(original_critic, encoding="utf-8")
+        git(cwd, "add", "docs/reports/critic.md")
+        git(cwd, "commit", "-q", "-m", "fixture restored Critic report")
+
+        skipped = copy.deepcopy(publication)
+        skipped["critic"].update(status="SKIPPED", verdict="SKIPPED", skip_reason="Owner-authorized bounded recovery")
+        (cwd / "docs/reports/critic.md").write_text(critic_report(skipped), encoding="utf-8")
+        write_gate(cwd, skipped)
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "uncommitted Critic skip")
+        git(cwd, "add", "docs/reports/critic.md")
+        git(cwd, "commit", "-q", "-m", "fixture Critic skip")
+        write_gate(cwd, skipped)
+        assert_allow(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "reasoned Critic skip")
+
+        (cwd / "README.md").write_text("source changed after freeze\n", encoding="utf-8")
+        write_gate(cwd, publication)
+        assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "source changed after freeze")
+    finally:
+        holder.cleanup()
+
+
+def test_controlled_assurance_rework() -> None:
+    holder, cwd, base = make_repo()
+    try:
+        gate = ready_gate(base, cwd)
+        gate["governance_profile"] = "Controlled"
+        gate["non_trivial"] = False
+        gate["subagent_topology"] = None
+        gate["write_set"] = ["README.md"]
+        for role in ("review", "verification"):
+            gate["assurance"][role] = copy.deepcopy(base["assurance"][role])
+            gate["assurance"][role]["required"] = True
+        write_gate(cwd, gate)
+
+        def transition(*args: str, allowed: bool = True) -> dict[str, object]:
+            result = run([sys.executable, str(LIFECYCLE), "--root", str(cwd), *args], cwd)
+            if (result.returncode == 0) != allowed:
+                raise AssertionError(f"lifecycle {'expected success' if allowed else 'expected denial'}: {args}: {result.stdout} {result.stderr}")
+            return json.loads((cwd / ".agent/active-work-block.json").read_text(encoding="utf-8"))
+
+        frozen_a = transition("freeze", "--reason", "candidate A")
+        assert frozen_a["assurance"]["review"]["status"] == "PENDING"
+        transition("prepare-verifier", "--execution-id", "v-early", "--context-id", "v-early", "--context-id-source", "execution_id", "--report", "docs/reports/verification.md", allowed=False)
+        transition("prepare-reviewer", "--execution-id", "r-a", "--context-id", "ctx-a", "--report", "docs/reports/review.md")
+        (cwd / "docs/reports/review.md").write_text(
+            assurance_report(frozen_a, "review", frozen_a["frozen_revision"], "r-a", "ctx-a", "CHANGES_REQUIRED"),
+            encoding="utf-8",
+        )
+        rework = transition("finalize-reviewer", "--execution-id", "r-a", "--verdict", "CHANGES_REQUIRED")
+        assert rework["write_gate"]["status"] == "READY" and "frozen_revision" not in rework
+        assert rework["assurance"]["review"]["status"] == "PENDING"
+        transition("finalize-reviewer", "--execution-id", "r-a", "--verdict", "READY", allowed=False)
+        (cwd / "README.md").write_text("candidate B\n", encoding="utf-8")
+        frozen_b = transition("freeze", "--reason", "candidate B")
+        assert frozen_b["frozen_revision"] != frozen_a["frozen_revision"]
+        transition("prepare-reviewer", "--execution-id", "r-b", "--context-id", "ctx-b", "--report", "docs/reports/review.md")
+        (cwd / "docs/reports/review.md").write_text(
+            assurance_report(frozen_b, "review", frozen_a["frozen_revision"], "r-b", "ctx-b", "READY"),
+            encoding="utf-8",
+        )
+        transition("finalize-reviewer", "--execution-id", "r-b", "--verdict", "READY", allowed=False)
+        (cwd / "docs/reports/review.md").write_text(
+            assurance_report(frozen_b, "review", frozen_b["frozen_revision"], "r-b", "ctx-b", "READY"),
+            encoding="utf-8",
+        )
+        reviewed = transition("finalize-reviewer", "--execution-id", "r-b", "--verdict", "READY")
+        assert reviewed["assurance"]["review"]["status"] == "READY"
+        transition("prepare-verifier", "--execution-id", "v-b", "--context-id", "ctx-v", "--context-id-source", "platform_context_id", "--report", "docs/reports/verification.md")
+        (cwd / "docs/reports/verification.md").write_text(
+            assurance_report(frozen_b, "verification", frozen_b["frozen_revision"], "v-b", "ctx-v", "BLOCKED"),
+            encoding="utf-8",
+        )
+        blocked = transition("finalize-verifier", "--execution-id", "v-b", "--verdict", "BLOCKED")
+        assert blocked["write_gate"]["status"] == "READY" and "frozen_revision" not in blocked
+        assert blocked["assurance"]["review"]["status"] == "PENDING"
+        transition("prepare-verifier", "--execution-id", "v-stale", "--context-id", "ctx-stale", "--context-id-source", "execution_id", "--report", "docs/reports/verification.md", allowed=False)
+        frozen_c = transition("freeze", "--reason", "candidate C")
+        assert frozen_c["assurance"]["verification"]["status"] == "PENDING"
     finally:
         holder.cleanup()
 
@@ -1290,8 +1520,11 @@ TESTS = [
     test_lifecycle,
     test_lifecycle_managed_define_quality,
     test_reporting_only_closeout_inactive_coordination_scope,
+    test_reporting_only_pending_recovery,
     test_lifecycle_rejects_default_and_detached,
     test_hard_stops,
+    test_frozen_publication_evidence,
+    test_controlled_assurance_rework,
     test_terminal_closeout_publication,
     test_codex_scope,
     test_codex_coordination_commit_scope,

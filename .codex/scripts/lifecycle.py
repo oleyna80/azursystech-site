@@ -372,10 +372,36 @@ def open_state(root: Path, args: argparse.Namespace, current: dict) -> dict:
 
 def blocked_copy(current: dict, reason: str, root: Path) -> dict:
     validate_state(current)
+    if current.get("write_gate", {}).get("status") != "READY" or not current.get("work_block_id"):
+        raise ValueError("freeze requires an active READY source write gate")
     value = copy.deepcopy(current)
     value["write_gate"] = {"status": "BLOCKED", "opened_at": None}
     value["lifecycle_note"] = reason
     value["frozen_revision"] = candidate_content_identity(root, value.get("write_set"))
+    _reset_candidate_assurance(value, root)
+    return value
+
+
+def _reset_candidate_assurance(value: dict, root: Path) -> None:
+    defaults = load_default_state(root)["assurance"]
+    for role in ("review", "verification"):
+        required = value["assurance"][role].get("required")
+        value["assurance"][role] = copy.deepcopy(defaults[role])
+        value["assurance"][role]["required"] = required
+    topology = value.get("subagent_topology")
+    if isinstance(topology, dict) and isinstance(topology.get("role_bindings"), list):
+        topology["role_bindings"] = [
+            binding for binding in topology["role_bindings"]
+            if not isinstance(binding, dict) or binding.get("role") not in {"reviewer", "verifier"}
+        ]
+
+
+def _return_to_rework(current: dict, root: Path, reason: str) -> dict:
+    value = copy.deepcopy(current)
+    value.pop("frozen_revision", None)
+    value["write_gate"] = {"status": "READY", "opened_at": now()}
+    value["lifecycle_note"] = reason
+    _reset_candidate_assurance(value, root)
     return value
 
 
@@ -407,7 +433,7 @@ def validate_assurance_role_bindings(current: dict) -> None:
 def _require_frozen_candidate(current: dict, root: Path) -> None:
     """Require the current filesystem to still be the frozen source candidate."""
     if current.get("write_gate", {}).get("status") != "BLOCKED":
-        raise ValueError("Verifier execution requires a frozen BLOCKED write gate")
+        raise ValueError("assurance execution requires a frozen BLOCKED write gate")
     validate_candidate_identity(current, root)
 
 
@@ -417,6 +443,14 @@ def _review_ready_prerequisite(current: dict) -> None:
     review = assurance.get("review") if isinstance(assurance, dict) else None
     if not isinstance(review, dict) or review.get("status") != "READY" or review.get("verdict") != "READY":
         raise ValueError("Verifier execution requires completed assurance.review READY/READY")
+    if review.get("work_block_id") != current.get("work_block_id") or review.get("candidate_revision") != current.get("frozen_revision"):
+        raise ValueError("Verifier execution requires Reviewer evidence for this frozen candidate")
+    if not all(isinstance(review.get(key), str) and review[key].strip() for key in ("execution_id", "context_id", "report")):
+        raise ValueError("Verifier execution requires complete Reviewer evidence")
+    if not applicable(current):
+        if review.get("isolation") != "separate_context":
+            raise ValueError("Verifier execution requires separate-context Reviewer evidence")
+        return
     bindings = current.get("subagent_topology", {}).get("role_bindings")
     reviewer = next(
         (item for item in bindings if isinstance(item, dict) and item.get("role") == "reviewer"),
@@ -448,20 +482,129 @@ def _report_file(root: Path, report: str) -> Path:
     return candidate
 
 
-def _report_result(root: Path, report: str, execution_id: str, verdict: str) -> None:
-    """Require the authoritative report to bind this execution to its verdict."""
+def _report_metadata(path: Path) -> dict[str, str]:
+    lines = path.read_text(encoding="utf-8").splitlines()
+    if not lines or lines[0] != "---":
+        raise ValueError("assurance report requires metadata frontmatter")
+    metadata: dict[str, str] = {}
+    for line in lines[1:]:
+        if line == "---":
+            return metadata
+        if ": " not in line:
+            raise ValueError("assurance report metadata is malformed")
+        key, value = line.split(": ", 1)
+        if not key or not value.strip() or key in metadata:
+            raise ValueError("assurance report metadata is empty or duplicated")
+        metadata[key] = value.strip()
+    raise ValueError("assurance report metadata is unterminated")
+
+
+def _candidate_report_result(
+    current: dict, root: Path, role: str, report: str, execution_id: str,
+    context_id: str, revision: str, verdict: str
+) -> None:
     path = _report_file(root, report)
-    expected = f"verification_result: execution_id={execution_id} verdict={verdict}"
-    records = [
-        line.strip()
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip().startswith("verification_result:")
-    ]
+    metadata = _report_metadata(path)
+    expected_metadata = {
+        "artifact_type": "reviewer_report" if role == "review" else "verifier_report",
+        "work_block_id": current["work_block_id"],
+        "specification": current["specification"]["path"],
+        "revision": current["specification"]["revision"],
+        "frozen_candidate": revision,
+        "status": verdict,
+        "verdict": verdict,
+        "execution_id": execution_id,
+        "context_id": context_id,
+    }
+    if any(metadata.get(key) != value for key, value in expected_metadata.items()):
+        raise ValueError(f"authoritative {role} report metadata does not match execution and candidate")
+    prefix = f"{role}_result:"
+    expected = f"{prefix} execution_id={execution_id} candidate={revision} verdict={verdict}"
+    records = [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip().startswith(prefix)]
     if records != [expected]:
-        raise ValueError(
-            "authoritative verification report must contain exactly one result "
-            "record matching the execution ID and requested verdict"
-        )
+        raise ValueError(f"authoritative {role} report must bind execution, candidate, and verdict")
+
+
+def prepare_reviewer_execution(current: dict, root: Path, binding: dict) -> dict:
+    validate_state(current)
+    _require_frozen_candidate(current, root)
+    if applicable(current):
+        validate_topology(current, phase="admission", root=root)
+    review = current.get("assurance", {}).get("review")
+    if not isinstance(review, dict) or review.get("status") != "PENDING" or review.get("execution_id"):
+        raise ValueError("Reviewer preparation requires an unbound PENDING review")
+    for key in ("execution_id", "context_id", "report"):
+        if not isinstance(binding.get(key), str) or not binding[key].strip():
+            raise ValueError(f"Reviewer preparation requires {key}")
+    _report_file_path_only(binding["report"])
+    value = copy.deepcopy(current)
+    value["assurance"]["review"].update({
+        "work_block_id": current["work_block_id"],
+        "candidate_revision": current["frozen_revision"],
+        "execution_id": binding["execution_id"],
+        "context_id": binding["context_id"],
+        "report": binding["report"],
+        "isolation": "native-separate-context" if applicable(current) else "separate_context",
+    })
+    if applicable(current):
+        value["subagent_topology"]["role_bindings"].append(_native_binding(current, root, "reviewer", binding))
+    return value
+
+
+def finalize_reviewer_execution(current: dict, root: Path, *, execution_id: str, verdict: str) -> dict:
+    validate_state(current)
+    if verdict not in {"READY", "CHANGES_REQUIRED", "BLOCKED"}:
+        raise ValueError("Reviewer finalization verdict is invalid")
+    _require_frozen_candidate(current, root)
+    review = current.get("assurance", {}).get("review")
+    if not isinstance(review, dict) or review.get("status") != "PENDING" or review.get("execution_id") != execution_id:
+        raise ValueError("Reviewer finalization requires the prepared execution")
+    if review.get("work_block_id") != current.get("work_block_id") or review.get("candidate_revision") != current.get("frozen_revision"):
+        raise ValueError("Reviewer execution does not match the frozen candidate")
+    _candidate_report_result(current, root, "review", review["report"], execution_id, review["context_id"], current["frozen_revision"], verdict)
+    if verdict != "READY":
+        return _return_to_rework(current, root, f"Reviewer {verdict}: {review['report']}")
+    value = copy.deepcopy(current)
+    value["assurance"]["review"].update({"status": "READY", "verdict": "READY"})
+    if applicable(value):
+        reviewer = next(item for item in value["subagent_topology"]["role_bindings"] if item.get("role") == "reviewer")
+        if reviewer.get("execution_id") != execution_id or reviewer.get("source_revision") != value["frozen_revision"]:
+            raise ValueError("native Reviewer binding does not match execution or candidate")
+        reviewer["status"] = "READY"
+    return value
+
+
+def _report_file_path_only(report: str) -> None:
+    normalized = report.replace("\\", "/")
+    parts = normalized.split("/")
+    if normalized.startswith("/") or ".." in parts or len(parts) < 3 or parts[:2] != ["docs", "reports"]:
+        raise ValueError("assurance report must be a safe path under docs/reports")
+
+
+def _native_binding(current: dict, root: Path, role: str, binding: dict) -> dict:
+    capability = current.get("subagent_topology", {}).get("capability")
+    if not isinstance(capability, dict):
+        raise ValueError(f"{role} requires native capability evidence")
+    execution_id = binding["execution_id"]
+    return {
+        **binding,
+        "dispatch_id": execution_id,
+        "context_id_source": binding.get("context_id_source", "platform_context_id"),
+        "work_block_id": current["work_block_id"],
+        "role": role,
+        "source_revision": current["frozen_revision"],
+        "repository_root": str(root.resolve()),
+        "branch": current["subject_branch"],
+        "runtime": capability.get("runtime"),
+        "adapter": capability.get("adapter"),
+        "adapter_version": capability.get("adapter_version"),
+        "readonly_boundary": "read-only",
+        "launch_mechanism": "native",
+        "topology_tier": "native-separate-context",
+        "probe_event_ref": f"native_dispatch:{execution_id}",
+        "observed_at": binding.get("observed_at") or now(),
+        "status": "PENDING",
+    }
 
 
 def prepare_verifier_execution(
@@ -471,13 +614,31 @@ def prepare_verifier_execution(
     *,
     now: dt.datetime | None = None,
 ) -> dict:
-    """Record native dispatch provenance while the Verifier remains PENDING."""
+    """Record separate-context dispatch while the Verifier remains PENDING."""
     validate_state(current)
-    if not applicable(current):
-        raise ValueError("Verifier execution preparation is only required for applicable Work Blocks")
     _require_frozen_candidate(current, root)
-    validate_topology(current, phase="admission", root=root, now=now)
     _review_ready_prerequisite(current)
+    if not applicable(current):
+        verification = current.get("assurance", {}).get("verification")
+        if not isinstance(verification, dict) or verification.get("status") != "PENDING" or verification.get("execution_id"):
+            raise ValueError("Verifier preparation requires an unbound PENDING verification")
+        for key in ("execution_id", "context_id", "report"):
+            if not isinstance(binding.get(key), str) or not binding[key].strip():
+                raise ValueError(f"Verifier preparation requires {key}")
+        _report_file_path_only(binding["report"])
+        if binding["execution_id"] == current["assurance"]["review"]["execution_id"] or binding["context_id"] == current["assurance"]["review"]["context_id"]:
+            raise ValueError("Verifier must use a separate execution and context from Reviewer")
+        value = copy.deepcopy(current)
+        value["assurance"]["verification"].update({
+            "work_block_id": current["work_block_id"],
+            "candidate_revision": current["frozen_revision"],
+            "execution_id": binding["execution_id"],
+            "context_id": binding["context_id"],
+            "report": binding["report"],
+            "isolation": "separate_context",
+        })
+        return value
+    validate_topology(current, phase="admission", root=root, now=now)
     topology = current.get("subagent_topology")
     capability = topology.get("capability") if isinstance(topology, dict) else None
     if not isinstance(capability, dict):
@@ -514,8 +675,11 @@ def prepare_verifier_execution(
     assurance.update({
         "status": "PENDING",
         "verdict": "PENDING",
+        "work_block_id": current["work_block_id"],
+        "candidate_revision": current["frozen_revision"],
         "report": binding["report"],
         "execution_id": binding["execution_id"],
+        "context_id": binding["context_id"],
         "isolation": "native-separate-context",
     })
     value["subagent_topology"]["role_bindings"].append(copy.deepcopy(binding))
@@ -543,12 +707,27 @@ def finalize_verifier_execution(
     if verdict not in {"READY", "BLOCKED"}:
         raise ValueError("Verifier finalization verdict must be READY or BLOCKED")
     _require_frozen_candidate(current, root)
+    _review_ready_prerequisite(current)
+    if not applicable(current):
+        verification = current.get("assurance", {}).get("verification")
+        if not isinstance(verification, dict) or verification.get("status") != "PENDING" or verification.get("execution_id") != execution_id:
+            raise ValueError("Verifier finalization requires the prepared execution")
+        if verification.get("work_block_id") != current.get("work_block_id") or verification.get("candidate_revision") != current.get("frozen_revision"):
+            raise ValueError("Verifier execution does not match the frozen candidate")
+        _candidate_report_result(current, root, "verification", verification["report"], execution_id, verification["context_id"], current["frozen_revision"], verdict)
+        if verdict == "BLOCKED":
+            return _return_to_rework(current, root, f"Verifier BLOCKED: {verification['report']}")
+        value = copy.deepcopy(current)
+        value["assurance"]["verification"].update({"status": "READY", "verdict": "READY"})
+        return value
     validate_topology(current, phase="verifier-execution", root=root, now=now)
     bindings = current["subagent_topology"]["role_bindings"]
     verifier = next(item for item in bindings if item.get("role") == "verifier")
     if verifier.get("execution_id") != execution_id:
         raise ValueError("finalization execution ID does not match the provisional native dispatch")
-    _report_result(root, verifier["report"], execution_id, verdict)
+    _candidate_report_result(current, root, "verification", verifier["report"], execution_id, verifier["context_id"], current["frozen_revision"], verdict)
+    if verdict == "BLOCKED":
+        return _return_to_rework(current, root, f"Verifier BLOCKED: {verifier['report']}")
     value = copy.deepcopy(current)
     final_binding = next(item for item in value["subagent_topology"]["role_bindings"] if item.get("role") == "verifier")
     final_binding["status"] = verdict
@@ -570,6 +749,23 @@ def validate_closeout_state(
     now: dt.datetime | None = None,
 ) -> None:
     validate_state(current)
+    if mode not in {"success-closeout", "reporting-only"}:
+        raise ValueError("close requires a valid closeout mode")
+    if mode == "reporting-only":
+        specification = current.get("specification")
+        gate = current.get("write_gate")
+        for field in ("work_block_id", "subject_branch", "base_commit"):
+            if not isinstance(current.get(field), str) or not current[field].strip():
+                raise ValueError(f"reporting-only close requires active {field}")
+        if not isinstance(specification, dict) or not all(
+            isinstance(specification.get(field), str) and specification[field].strip()
+            for field in ("path", "revision")
+        ):
+            raise ValueError("reporting-only close requires active specification")
+        if not isinstance(current.get("write_set"), list) or not current["write_set"]:
+            raise ValueError("reporting-only close requires active write_set")
+        if not isinstance(gate, dict) or gate.get("status") not in {"READY", "BLOCKED"}:
+            raise ValueError("reporting-only close requires active write_gate")
     assurance = current.get("assurance")
     if not isinstance(assurance, dict):
         raise ValueError("close requires assurance state")
@@ -585,14 +781,14 @@ def validate_closeout_state(
         skip_reason = str(state.get("skip_reason") or "").strip()
         if status not in ASSURANCE_STATUSES:
             raise ValueError(f"assurance.{name}.status is invalid or missing")
-        if status == "PENDING":
+        if mode == "success-closeout" and status == "PENDING":
             raise ValueError(f"assurance.{name} is still PENDING")
         if status == "SKIPPED":
             if required:
                 raise ValueError(f"required assurance.{name} cannot be SKIPPED")
             if not skip_reason:
                 raise ValueError(f"skipped assurance.{name} requires skip_reason")
-        elif verdict not in ASSURANCE_VERDICTS[name]:
+        elif mode == "success-closeout" and verdict not in ASSURANCE_VERDICTS[name]:
             raise ValueError(f"assurance.{name}.verdict is unresolved or invalid")
         normalized[name] = (required, status, verdict)
 
@@ -669,6 +865,13 @@ def main() -> int:
 
     freeze = subparsers.add_parser("freeze")
     freeze.add_argument("--reason", required=True)
+    prepare_reviewer = subparsers.add_parser("prepare-reviewer")
+    prepare_reviewer.add_argument("--execution-id", required=True)
+    prepare_reviewer.add_argument("--context-id", required=True)
+    prepare_reviewer.add_argument("--report", required=True)
+    finalize_reviewer = subparsers.add_parser("finalize-reviewer")
+    finalize_reviewer.add_argument("--execution-id", required=True)
+    finalize_reviewer.add_argument("--verdict", choices=("READY", "CHANGES_REQUIRED", "BLOCKED"), required=True)
     prepare_verifier = subparsers.add_parser("prepare-verifier")
     prepare_verifier.add_argument("--execution-id", required=True)
     prepare_verifier.add_argument("--context-id", required=True)
@@ -704,6 +907,16 @@ def main() -> int:
         value = open_state(root, args, current)
     elif args.command == "freeze":
         value = blocked_copy(current, args.reason, root)
+    elif args.command == "prepare-reviewer":
+        value = prepare_reviewer_execution(current, root, {
+            "execution_id": args.execution_id.strip(),
+            "context_id": args.context_id.strip(),
+            "report": args.report.strip(),
+        })
+    elif args.command == "finalize-reviewer":
+        value = finalize_reviewer_execution(
+            current, root, execution_id=args.execution_id.strip(), verdict=args.verdict
+        )
     elif args.command == "prepare-verifier":
         dispatch_id = args.execution_id.strip()
         binding = {
@@ -714,26 +927,29 @@ def main() -> int:
             "report": args.report.strip(),
             "observed_at": args.observed_at.strip() or now(),
         }
-        topology = current.get("subagent_topology")
-        capability = topology.get("capability") if isinstance(topology, dict) else None
-        if not isinstance(capability, dict):
-            raise ValueError("prepare-verifier requires native capability evidence")
-        binding.update({
-            "work_block_id": current.get("work_block_id"),
-            "role": "verifier",
-            "source_revision": current.get("frozen_revision"),
-            "repository_root": str(root.resolve()),
-            "branch": current.get("subject_branch"),
-            "runtime": capability.get("runtime"),
-            "adapter": capability.get("adapter"),
-            "adapter_version": capability.get("adapter_version"),
-            "readonly_boundary": "read-only",
-            "launch_mechanism": "native",
-            "topology_tier": "native-separate-context",
-            "probe_event_ref": f"native_dispatch:{dispatch_id}",
-            "status": "PENDING",
-        })
-        value = prepare_verifier_execution(current, root, binding)
+        if not applicable(current):
+            value = prepare_verifier_execution(current, root, binding)
+        else:
+            topology = current.get("subagent_topology")
+            capability = topology.get("capability") if isinstance(topology, dict) else None
+            if not isinstance(capability, dict):
+                raise ValueError("prepare-verifier requires native capability evidence")
+            binding.update({
+                "work_block_id": current.get("work_block_id"),
+                "role": "verifier",
+                "source_revision": current.get("frozen_revision"),
+                "repository_root": str(root.resolve()),
+                "branch": current.get("subject_branch"),
+                "runtime": capability.get("runtime"),
+                "adapter": capability.get("adapter"),
+                "adapter_version": capability.get("adapter_version"),
+                "readonly_boundary": "read-only",
+                "launch_mechanism": "native",
+                "topology_tier": "native-separate-context",
+                "probe_event_ref": f"native_dispatch:{dispatch_id}",
+                "status": "PENDING",
+            })
+            value = prepare_verifier_execution(current, root, binding)
     elif args.command == "finalize-verifier":
         value = finalize_verifier_execution(
             current,
@@ -742,11 +958,13 @@ def main() -> int:
             verdict=args.verdict,
         )
     else:
+        if args.mode == "reporting-only" and not args.reason.strip():
+            raise ValueError("reporting-only close requires a non-empty --reason")
         validate_closeout_state(current, args.mode, root)
         # A terminal closeout must not leave a branch-bound active record behind.
         # The inactive record retains only the closeout classification and the
         # coordination note; a subsequent Work Block must explicitly reopen scope.
-        value = default_state(root, args.reason)
+        value = default_state(root, args.reason.strip())
         value["closeout_mode"] = args.mode
 
     atomic(state, value)
