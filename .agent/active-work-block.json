@@ -1,14 +1,14 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-033",
+  "work_block_id": "",
   "governance_profile": "Controlled",
   "specification": {
-    "path": "docs/specs/WB-033.md",
-    "revision": "WB-033-r2.1"
+    "path": "",
+    "revision": ""
   },
-  "subject_branch": "feat/governance-recovery-033",
-  "base_commit": "3ea13015e196516a65cdcb58fff455370d66cda0",
+  "subject_branch": "",
+  "base_commit": "",
   "non_trivial": false,
   "subagent_topology": null,
   "define_quality": {
@@ -19,15 +19,15 @@
     "consistency_analysis": ""
   },
   "write_gate": {
-    "status": "READY",
-    "opened_at": "2026-09-23T14:11:33Z"
+    "status": "BLOCKED",
+    "opened_at": null
   },
   "critic": {
     "required": true,
-    "status": "READY",
-    "verdict": "APPROVE",
-    "report": "docs/reports/WB-033-critic-r5.md",
-    "isolation": "separate-subagent",
+    "status": "PENDING",
+    "verdict": "PENDING",
+    "report": "",
+    "isolation": "unknown",
     "skip_reason": ""
   },
   "assurance": {
@@ -67,16 +67,12 @@
       "skip_reason": ""
     }
   },
-  "closeout_mode": "pending",
+  "closeout_mode": "success-closeout",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
-  "write_set": [
-    ".agent/controllers/v1/**",
-    ".githooks/commit-msg",
-    ".githooks/tests/commit-msg-fixtures.sh"
-  ],
+  "write_set": [],
   "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
@@ -100,5 +96,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "WB-033-r2.1 approved by independent Critic; bounded hook grammar repair admitted, source write gate READY"
+  "lifecycle_note": "canonical success closeout after corrected inactive projection and bytecode ignore precedence"
 }
