@@ -51,7 +51,7 @@ deployment automation, and supporting Agentic SDLC operating files.
 The architecture comprises four separable layers:
 
 1. **Governance Core** — `governance/` (authority, lifecycle, artifacts, define-quality,
-   decision provenance, release state, runtime capabilities, evaluation).
+   enforcement, decision provenance, release state, runtime capabilities, evaluation).
 2. **Portable Workflow & Memory** — `.agent/workflows/` (SDD protocol, subject-branch candidate flow),
    `.agent/ROSTER.md`, `docs/specs/`, `docs/plans/`, `docs/tasklist/`, `docs/reports/`,
    `docs/engineering-memory/`, and `.agent/skills/`.
@@ -130,7 +130,8 @@ specification draft
 | `AGENTS.md` | normative | Root operating contract for all agents. |
 | `PROJECT_MAP.md` | normative | Human-readable map and authority model. |
 | `FILE_REGISTRY.yml` | normative | Machine-readable registry for key files and zones. |
-| `governance/` | normative | Runtime-neutral governance core (authority, lifecycle, define-quality, etc.). |
+| `governance/` | normative | Runtime-neutral governance core (authority, lifecycle, define-quality, enforcement, etc.). |
+| `governance/enforcement.md` | normative | Runtime-neutral placement of Git, shared-policy, harness, and external controls; durable-memory, reversibility, and poka-yoke rules. |
 | `.agent/bootstrap-profile.json` | generated | Resolved installation profile and path contract. |
 | `.agent/workflows/sdd-protocol.md` | normative | Canonical 4-stage SDD lifecycle and gate semantics. |
 | `.agent/workflows/owner-controlled-github-flow.md` | operational consequence | Subject-branch candidate publication and Owner decision handoff. |
