@@ -10,6 +10,7 @@ OpenCode, Antigravity, or any future agent runtime:
 - Which artifacts are authoritative?
 - Which role may decide, write, review, verify, evaluate, or approve?
 - Which side effects require a hard stop?
+- Which SDLC invariants require deterministic enforcement, and at which control layer?
 - Are requirements sufficiently clarified, reviewable, and traceable before implementation?
 - What deterministic, output, and observable trajectory evidence is required?
 - Where did a reusable framework mechanism come from, and how was it changed locally?
@@ -21,6 +22,7 @@ OpenCode, Antigravity, or any future agent runtime:
 | Document | Purpose |
 |---|---|
 | `authority.md` | Stable logical roles, authority boundaries, runtime/model/isolation separation |
+| `enforcement.md` | Runtime-neutral hook/enforcement placement, reversibility, durable-memory, and poka-yoke rules |
 | `lifecycle.md` | Runtime-neutral lifecycle functions, stage transitions, degraded paths |
 | `artifacts.md` | Portable artifact chain, status, versioning, evidence, and SSOT rules |
 | `define-quality.md` | Clarification, requirements-quality review, stable requirement/task traceability, and read-only pre-execution consistency analysis |
@@ -30,10 +32,11 @@ OpenCode, Antigravity, or any future agent runtime:
 
 ## Boundary
 
-Runtime-specific instructions, model names, plugins, hooks, MCP servers, CLI
+Runtime-specific instructions, model names, hook APIs, plugins, MCP servers, CLI
 commands, provider credentials, and transport mechanisms do not belong in this
-directory. They belong under `runtimes/`, `integrations/`, user-level runtime
-configuration, or project-local private configuration.
+directory. Runtime-neutral enforcement invariants and placement rules do belong
+here; runtime-specific adapters belong under their runtime surfaces or project-local
+configuration.
 
 Requirements-quality evidence and traceability validation refine Stage 0. They do
 not create a second source of truth, grant source-write authority, or replace the
