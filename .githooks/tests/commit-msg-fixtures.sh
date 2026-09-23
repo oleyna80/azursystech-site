@@ -26,6 +26,7 @@ new_repo() {
   mkdir -p "$NEW_REPO/.agent"; printf '%s\n' "$state" > "$NEW_REPO/.agent/active-work-block.json"
 }
 STATE='{"schema_version":3,"work_block_id":"WB-2026-09-06-work-block-commit-linkage","subject_branch":"fixture-branch","write_gate":{"status":"READY"}}'
+SHORT_STATE='{"schema_version":3,"work_block_id":"WB-033","subject_branch":"fixture-branch","write_gate":{"status":"READY"}}'
 
 case_hook() {
   local name="$1" state="$2" message="$3" expected="$4" needle="${5:-}" repo out code
@@ -37,10 +38,16 @@ case_hook() {
 }
 
 case_hook correct "$STATE" $'feat: valid\n\nWork-Block: WB-2026-09-06-work-block-commit-linkage' 0
+case_hook short-correct "$SHORT_STATE" $'feat: short ID valid\n\nWork-Block: WB-033' 0
 case_hook missing "$STATE" 'feat: missing' 1 'requires exactly one'
 case_hook malformed "$STATE" $'feat: malformed\n\nWork-Block: not-a-work-block' 1 malformed
+case_hook malformed-short-digits "$SHORT_STATE" $'feat: malformed short digits\n\nWork-Block: WB-33' 1 malformed
+case_hook malformed-short-suffix "$SHORT_STATE" $'feat: malformed short suffix\n\nWork-Block: WB-033-extra' 1 malformed
+case_hook mismatched-short "$SHORT_STATE" $'feat: mismatched short ID\n\nWork-Block: WB-034' 1 'does not match'
 case_hook multiple "$STATE" $'feat: multiple\n\nWork-Block: WB-2026-09-06-work-block-commit-linkage\nWork-Block: WB-2026-09-06-work-block-commit-linkage' 1 'found 2'
 case_hook mismatch "$STATE" $'feat: mismatch\n\nWork-Block: WB-2026-09-06-other' 1 'does not match'
+case_hook malformed-short-state-digits '{"schema_version":3,"work_block_id":"WB-33","subject_branch":"fixture-branch"}' $'feat: malformed short state\n\nWork-Block: WB-033' 1 invalid
+case_hook malformed-short-state-suffix '{"schema_version":3,"work_block_id":"WB-033-extra","subject_branch":"fixture-branch"}' $'feat: malformed short state suffix\n\nWork-Block: WB-033-extra' 1 invalid
 
 new_repo "$STATE" other-branch; repo="$NEW_REPO"; printf '%s\n' $'feat: stale\n\nWork-Block: WB-2026-09-06-work-block-commit-linkage' > "$repo/message"
 if (cd "$repo" && "$HOOK" "$repo/message") 2>/dev/null; then echo FAIL branch-mismatch; failures=$((failures + 1)); else echo PASS branch-mismatch; fi
