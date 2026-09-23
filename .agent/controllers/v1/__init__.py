@@ -1,9 +1,4 @@
-"""Versioned Work Block controller generation v1.
-
-This package is inert while WB-031 is active.  Future live entry points are
-staged under ``activation/staged`` and import this package only after the
-post-terminal activation projection has been verified and integrated.
-"""
+"""Inert Work Block controller v1. Importing this package has no side effects."""
 
 from .errors import ControllerError, DurabilityUncertain, ValidationError
 

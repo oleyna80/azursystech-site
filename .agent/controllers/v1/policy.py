@@ -1,155 +1,128 @@
-"""Runtime-neutral Work Block policy evaluator."""
+"""One runtime-neutral evaluator for Work Block writes and External Hard Stops."""
 
 from __future__ import annotations
 
 import fnmatch
 from dataclasses import dataclass, field
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Any, Mapping
 
-from .clock import Clock, utc_now
 from .errors import ControllerError, ValidationError
-from .evidence import require_fresh_capability
-from .recovery import validate_canonical_inactive
+from .state import validate
 
-SUPPORTED_AUTHORITY_RUNTIMES = {"codex", "claude"}
+HARD_STOPS = frozenset({
+    "controller_activation", "controller_materialization", "live_control_change",
+    "protected_branch", "default_branch", "merge", "deploy", "force_push",
+    "credentials", "live_data", "infrastructure", "governance_override",
+    "destructive", "client_communications", "release", "unknown_effect",
+})
+LIVE_PATHS = (
+    ".agent/hooks/", ".codex/", ".claude/", ".agent/active-work-block.default.json",
+    ".agent/controller-manifest.json", "governance/",
+)
+LIVE_ROOTS = frozenset({".agent/hooks", ".codex", ".claude", "governance"})
 
 
 @dataclass(frozen=True)
-class NormalizedEvent:
+class Event:
     runtime: str
     operation: str
-    tool: str
     repository_root: str
+    branch: str
     paths: tuple[str, ...] = ()
+    effect: str = ""
     metadata: Mapping[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
-class PolicyDecision:
+class Decision:
     allowed: bool
     reason: str
-    code: str
 
-    @classmethod
-    def allow(cls, reason: str = "canonical evaluator allowed operation") -> "PolicyDecision":
-        return cls(True, reason, "ALLOW")
-
-    @classmethod
-    def deny(cls, code: str, reason: str) -> "PolicyDecision":
-        return cls(False, reason, code)
+    @property
+    def code(self) -> str:
+        return "ALLOW" if self.allowed else "DENY"
 
 
-def _normalize_path(root: Path, raw: str) -> str:
-    if raw == "__UNKNOWN_WRITE_PATH__":
-        raise ValidationError("write path cannot be determined")
-    path = Path(raw)
-    root = root.resolve()
-    candidate = path if path.is_absolute() else root / Path(PurePosixPath(raw))
+def _path(root: str, raw: str) -> str:
+    if not isinstance(raw, str) or not raw or raw == "__UNKNOWN_WRITE_PATH__":
+        raise ValidationError("write path is unknown")
+    base = Path(root).resolve()
+    target = (base / raw).resolve(strict=False)
     try:
-        relative = candidate.resolve(strict=False).relative_to(root)
-    except (OSError, RuntimeError, ValueError) as exc:
-        raise ValidationError("write path is outside repository or cannot be resolved safely") from exc
-    value = relative.as_posix()
-    parts = PurePosixPath(value).parts
-    if not value or value == "." or ".." in parts:
-        raise ValidationError("write path is not a normalized repository-relative path")
-    return value[2:] if value.startswith("./") else value
+        relative = target.relative_to(base).as_posix()
+    except ValueError as exc:
+        raise ValidationError("write path escapes repository") from exc
+    if relative in {"", "."}:
+        raise ValidationError("write path is repository root")
+    return relative
 
 
-def _matches(path: str, patterns: object) -> bool:
-    if not isinstance(patterns, list):
-        return False
-    for raw in patterns:
-        if not isinstance(raw, str) or not raw:
-            continue
-        pattern = raw.replace("\\", "/").removeprefix("./")
+def _matches(path: str, patterns: list[str]) -> bool:
+    for pattern in patterns:
         if pattern.endswith("/**"):
-            prefix = pattern[:-3].rstrip("/")
-            if path == prefix or path.startswith(f"{prefix}/"):
+            prefix = pattern[:-3]
+            if path.startswith(prefix + "/"):
                 return True
         elif path == pattern or fnmatch.fnmatchcase(path, pattern):
             return True
     return False
 
 
-def evaluate(
-    event: NormalizedEvent,
-    state: Mapping[str, object],
-    *,
-    clock: Clock = utc_now,
-) -> PolicyDecision:
-    """Return the sole authority-bearing Work Block policy decision."""
-    if event.runtime not in SUPPORTED_AUTHORITY_RUNTIMES:
-        return PolicyDecision.deny(
-            "RUNTIME_PARITY_UNVERIFIED",
-            "runtime has no verified authority-bearing write interception",
-        )
-    if event.operation == "read":
-        return PolicyDecision.allow("read-only operation")
-    if event.operation == "lifecycle_transition":
-        operation = event.metadata.get("lifecycle_operation")
-        if operation == "open":
-            try:
-                validate_canonical_inactive(state)
-            except ValidationError:
-                return PolicyDecision.deny("OPEN_STATE_INVALID", "open requires canonical inactive authority")
-            return PolicyDecision.allow("canonical lifecycle CLI owns v1 admission semantics")
-        if state.get("lifecycle_status") != "ACTIVE":
-            return PolicyDecision.deny("LIFECYCLE_STATE_INVALID", "transition requires active authority")
-        binding = state.get("controller_binding")
-        if not isinstance(binding, dict) or binding.get("generation") != "v1":
-            return PolicyDecision.deny("CONTROLLER_BINDING_MISMATCH", "active Work Block is not bound to v1")
-        if state.get("repository_root") != event.repository_root:
-            return PolicyDecision.deny("ROOT_MISMATCH", "event repository root does not match authority")
-        return PolicyDecision.allow("canonical lifecycle CLI owns transition validation and atomic persistence")
-    binding = state.get("controller_binding")
-    if not isinstance(binding, dict) or binding.get("generation") != "v1":
-        return PolicyDecision.deny("CONTROLLER_BINDING_MISMATCH", "active Work Block is not bound to v1")
-    if state.get("repository_root") != event.repository_root:
-        return PolicyDecision.deny("ROOT_MISMATCH", "event repository root does not match authority")
-
-    if event.operation == "native_dispatch":
-        try:
-            capability = state.get("capability")
-            if not isinstance(capability, dict):
-                raise ValidationError("native capability evidence is missing")
-            require_fresh_capability(
-                capability,
-                expected_work_block_id=str(state.get("work_block_id") or ""),
-                expected_root=event.repository_root,
-                clock=clock,
-            )
-        except ControllerError as exc:
-            return PolicyDecision.deny("CAPABILITY_NOT_FRESH", str(exc))
-        return PolicyDecision.allow("fresh native capability permits new dispatch")
-
-    if event.operation != "write":
-        return PolicyDecision.deny("UNKNOWN_OPERATION", "operation is not recognized")
-    if state.get("lifecycle_status") != "ACTIVE" or state.get("lifecycle_phase") != "Execute":
-        return PolicyDecision.deny("WRITE_PHASE_BLOCKED", "source writes require active Execute phase")
-    write_gate = state.get("write_gate")
-    if not isinstance(write_gate, dict) or write_gate.get("status") != "READY":
-        return PolicyDecision.deny("WRITE_GATE_BLOCKED", "source write gate is not READY")
-    if not event.paths:
-        return PolicyDecision.deny("WRITE_PATH_MISSING", "write operation has no resolved target")
+def evaluate(event: Event, state: dict) -> Decision:
+    """Single canonical decision. Malformed inputs fail closed."""
     try:
-        normalized = tuple(_normalize_path(Path(event.repository_root), path) for path in event.paths)
-    except ValidationError as exc:
-        return PolicyDecision.deny("WRITE_PATH_INVALID", str(exc))
-    denied = [path for path in normalized if not _matches(path, state.get("write_set"))]
-    if denied:
-        return PolicyDecision.deny(
-            "WRITE_SET_DENIED",
-            f"path is outside admitted write-set: {denied[0]}",
-        )
-    return PolicyDecision.allow("all write targets are within the admitted write-set")
-
-
-def compose(outer: PolicyDecision, canonical: PolicyDecision) -> PolicyDecision:
-    """Monotonic deny-only composition; neither layer can weaken the other."""
-    if not outer.allowed:
-        return outer
-    if not canonical.allowed:
-        return canonical
-    return PolicyDecision.allow("outer hard-stop and canonical evaluator both allow")
+        validate(state)
+        if event.runtime not in {"codex", "claude"} or not event.repository_root or not event.branch:
+            return Decision(False, "runtime or repository binding is unknown")
+        if event.effect in HARD_STOPS:
+            return Decision(False, f"External Hard Stop: {event.effect}")
+        if event.effect:
+            return Decision(False, "unknown side effect")
+        if event.operation == "read":
+            return Decision(True, "read-only operation")
+        active = state["active"]
+        if event.operation == "lifecycle":
+            command = event.metadata.get("command", "")
+            if not isinstance(command, str) or not command.startswith(("python -m v1.cli ", "python3 -m v1.cli ")):
+                return Decision(False, "lifecycle command is ambiguous")
+            if active is not None and event.branch != active["subject_branch"]:
+                return Decision(False, "lifecycle branch mismatch")
+            return Decision(True, "CLI validates and persists lifecycle transition")
+        if active is None or state["lifecycle_state"] not in {"DEFINE", "EXECUTE", "ASSURE"}:
+            return Decision(False, "active Work Block required")
+        if event.branch != active["subject_branch"]:
+            return Decision(False, "current branch differs from subject branch")
+        if event.operation == "write":
+            if state["lifecycle_state"] != "EXECUTE" or active["write_gate"] != "READY":
+                return Decision(False, "source write requires EXECUTE and READY gate")
+            if not event.paths:
+                return Decision(False, "write targets are unknown")
+            paths = tuple(_path(event.repository_root, value) for value in event.paths)
+            if any(path.startswith(LIVE_PATHS) or path in LIVE_ROOTS or path in LIVE_PATHS for path in paths):
+                return Decision(False, "live control surface is outside inert source work")
+            if any(path.startswith(".agent/controllers/v1/activation/") for path in paths):
+                return Decision(False, "activation staging is not inert source work")
+            if any(not _matches(path, active["write_set"]) for path in paths):
+                return Decision(False, "write target outside admitted write-set")
+            return Decision(True, "all writes are within admitted write-set")
+        if event.operation == "push":
+            from .evidence import require_success
+            if state["lifecycle_state"] != "ASSURE" or active["write_gate"] != "READY":
+                return Decision(False, "publication requires assured candidate")
+            # These facts must come from a trusted future wrapper, not command text.
+            default_branch = event.metadata.get("default_branch")
+            if (not isinstance(default_branch, str) or not default_branch
+                    or event.metadata.get("subject_branch_is_protected") is not False
+                    or active["subject_branch"] == default_branch):
+                return Decision(False, "default or protected branch status is unsafe or unknown")
+            exact = f"git push origin HEAD:refs/heads/{active['subject_branch']}"
+            if event.metadata.get("command") != exact:
+                return Decision(False, "push must be exact sole subject-branch refspec")
+            if event.metadata.get("head_tree") != active["candidate_id"]:
+                return Decision(False, "HEAD tree differs from assured candidate")
+            require_success(active)
+            return Decision(True, "exact assured non-force subject-branch publication")
+        return Decision(False, "operation is unknown")
+    except (ControllerError, ValueError, TypeError, KeyError) as exc:
+        return Decision(False, f"invalid state or event: {exc}")
