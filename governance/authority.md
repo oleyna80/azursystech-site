@@ -20,6 +20,17 @@ hooks constrain normal agent behavior. GitHub repository rules, least-privilege
 credentials, OS isolation, and secret ownership constrain what the agent can
 actually do outside that cooperative process.
 
+Deterministic control placement follows `governance/enforcement.md`. The
+governance contract defines required invariants; Git hooks, shared validators,
+runtime-specific hook adapters, and external platform controls implement those
+invariants at the narrowest reliable boundary. An implementation mechanism
+never expands authority merely because it can technically perform an action.
+
+The default autonomous boundary is reversible engineering work on the approved
+subject branch. Merge, deployment, release, and other consequential external
+actions remain separate Owner-authority decisions. Authorization of one does
+not imply authorization of another.
+
 ## Stable Logical Roles
 
 | Role | Core responsibility | Default write authority |

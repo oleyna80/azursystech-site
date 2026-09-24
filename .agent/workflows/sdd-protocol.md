@@ -12,6 +12,23 @@ from assurance verdicts. A failed, unavailable, or unverified check is never a p
 Drafts, candidates, generated context, requirements-quality reports, tasklists, and
 operational memory cannot override higher authority.
 
+## Cross-Cutting Durability and Enforcement
+
+Apply `governance/enforcement.md` across every stage.
+
+- Material decisions, constraints, assumptions, exceptions, failures, approvals,
+  and verification results that matter beyond the current session must be
+  persisted in the appropriate repository artifact.
+- Prefer deterministic enforcement over model compliance when an SDLC
+  invariant can be checked mechanically.
+- Prefer Git-native controls for Git-observable commit and publication
+  invariants, backed by shared validators where practical.
+- Use runtime-specific hooks for pre-write/tool/runtime events Git cannot
+  observe, while preserving equivalent runtime-neutral policy semantics.
+- Autonomous execution is bounded to reversible engineering work. Merge,
+  deployment, release, and other consequential external actions remain subject
+  to the separate authority rules in `governance/authority.md`.
+
 ## Stage 0 — Define
 
 The Orchestrator records objective, scope/exclusions, authority chain, risk,
