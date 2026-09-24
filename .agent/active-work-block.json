@@ -1,14 +1,14 @@
 {
   "schema_version": 3,
   "authority_mode": "github_capability",
-  "work_block_id": "WB-036",
+  "work_block_id": "",
   "governance_profile": "Controlled",
   "specification": {
-    "path": "docs/specs/WB-036.md",
-    "revision": "v3"
+    "path": "",
+    "revision": ""
   },
-  "subject_branch": "audit/hook-enforcement-036",
-  "base_commit": "703dcd05c0aa561d10571b4e1c652302769c1b06",
+  "subject_branch": "",
+  "base_commit": "",
   "non_trivial": false,
   "subagent_topology": null,
   "define_quality": {
@@ -24,78 +24,55 @@
   },
   "critic": {
     "required": true,
-    "status": "READY",
-    "verdict": "APPROVE",
-    "report": "docs/reports/WB-036-critic-disposition-v3.md",
-    "isolation": "separate_context",
+    "status": "PENDING",
+    "verdict": "PENDING",
+    "report": "",
+    "isolation": "unknown",
     "skip_reason": ""
   },
   "assurance": {
     "review": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/WB-036-reviewer-v3-r3.md",
-      "isolation": "separate_context",
-      "skip_reason": "",
-      "work_block_id": "WB-036",
-      "candidate_revision": "content-sha256:8316494fad5e3c666af422e2f1472b3a21799fe238b76302b8d2bedae44f2061",
-      "execution_id": "wb036-v3-review-3",
-      "context_id": "/root/wb036_reviewer_v3_r3"
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
+      "skip_reason": ""
     },
     "verification": {
       "required": true,
-      "status": "READY",
-      "verdict": "READY",
-      "report": "docs/reports/WB-036-verifier-v3.md",
-      "isolation": "separate_context",
-      "skip_reason": "",
-      "work_block_id": "WB-036",
-      "candidate_revision": "content-sha256:8316494fad5e3c666af422e2f1472b3a21799fe238b76302b8d2bedae44f2061",
-      "execution_id": "wb036-v3-verify-1",
-      "context_id": "/root/wb036_verifier_v3"
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
+      "skip_reason": ""
     },
     "evaluation": {
       "required": false,
-      "status": "SKIPPED",
+      "status": "PENDING",
       "verdict": "PENDING",
       "plan": "",
       "report": "",
       "rubric_revision": "",
       "benchmark_revision": "",
       "isolation": "unknown",
-      "skip_reason": "Deterministic enforcement controls have no generative evaluation deliverable"
+      "skip_reason": ""
     },
     "drift": {
       "required": false,
-      "status": "READY",
-      "verdict": "ALIGNED",
-      "report": "docs/reports/WB-036-drift.md",
-      "isolation": "same_context",
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
       "skip_reason": ""
     }
   },
-  "closeout_mode": "pending",
+  "closeout_mode": "success-closeout",
   "integrations": {
     "approved": [],
     "admission_records": []
   },
-  "write_set": [
-    ".githooks/pre-commit",
-    ".githooks/pre-push",
-    ".githooks/commit-msg",
-    ".githooks/tests/commit-msg-fixtures.sh",
-    ".githooks/tests/git-transition-fixtures.sh",
-    ".agent/hooks/git_transition_policy.py",
-    ".agent/hooks/hard_stop_policy.py",
-    "scripts/bootstrap.sh",
-    "scripts/test-github-capability-control-plane.py",
-    ".codex/hooks/pre_tool_use_policy.py",
-    ".claude/hooks/work_block_gate.py",
-    ".github/workflows/control-plane-contracts.yml",
-    "scripts/validate-git-conformance.py",
-    "scripts/test-git-conformance.py"
-  ],
+  "write_set": [],
   "coordination_write_set": [
     ".agent/active-work-block.json",
     ".agent/critic-gate.md",
@@ -103,7 +80,6 @@
     ".codex/write-gate.md",
     "FILE_REGISTRY.yml",
     "PROJECT_MAP.md",
-    "docs/engineering-memory/process-feedback-registry.yml",
     "docs/plans/**",
     "docs/specs/**",
     "docs/tasklist/**",
@@ -120,6 +96,5 @@
     "client_communications",
     "irreversible_publish"
   ],
-  "lifecycle_note": "WB-036 v3 r3: Reviewer r2 rework verified",
-  "frozen_revision": "content-sha256:8316494fad5e3c666af422e2f1472b3a21799fe238b76302b8d2bedae44f2061"
+  "lifecycle_note": "WB-036 assured source and bounded coordination correction published; terminal closeout"
 }
