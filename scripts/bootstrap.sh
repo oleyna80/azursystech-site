@@ -10,10 +10,12 @@ DEFAULT_WORK_BLOCK="$ROOT/.agent/active-work-block.default.json"
 
 case "${1:-}" in
   --install-git-hooks)
-    [ -x "$ROOT/.githooks/commit-msg" ] || {
-      echo "FAIL: .githooks/commit-msg is missing or not executable" >&2
-      exit 1
-    }
+    for hook in commit-msg pre-commit pre-push; do
+      [ -x "$ROOT/.githooks/$hook" ] || {
+        echo "FAIL: .githooks/$hook is missing or not executable" >&2
+        exit 1
+      }
+    done
     git -C "$ROOT" config core.hooksPath .githooks
     [ "$(git -C "$ROOT" config --get core.hooksPath)" = ".githooks" ] || {
       echo "FAIL: could not configure core.hooksPath=.githooks" >&2
@@ -23,10 +25,12 @@ case "${1:-}" in
     exit 0
     ;;
   --check-git-hooks)
-    [ -x "$ROOT/.githooks/commit-msg" ] || {
-      echo "FAIL: .githooks/commit-msg is missing or not executable" >&2
-      exit 1
-    }
+    for hook in commit-msg pre-commit pre-push; do
+      [ -x "$ROOT/.githooks/$hook" ] || {
+        echo "FAIL: .githooks/$hook is missing or not executable" >&2
+        exit 1
+      }
+    done
     [ "$(git -C "$ROOT" config --get core.hooksPath || true)" = ".githooks" ] || {
       echo "FAIL: core.hooksPath is not .githooks" >&2
       exit 1

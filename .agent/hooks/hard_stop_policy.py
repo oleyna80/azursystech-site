@@ -306,6 +306,7 @@ def terminal_child_coordination_matches(
 
 def terminal_projection(
     root: Path, parent_revision: str, parent_state: dict,
+    child_revision: str = "HEAD",
 ) -> tuple[str, str] | None:
     """Return only the exact plan/tasklist paths bound to this active parent."""
     work_block_id = parent_state.get("work_block_id")
@@ -350,11 +351,11 @@ def terminal_projection(
     if not active_projection_matches(registry, plan_path) or not active_projection_matches(project_map, plan_path):
         return None
 
-    child_plan = tree_frontmatter(root, "HEAD", plan_path)
-    child_tasklist = tree_frontmatter(root, "HEAD", tasklist_path)
-    child_gate_text = git_optional(root, "show", "HEAD:.agent/active-work-block.json")
-    child_registry = git_optional(root, "show", "HEAD:FILE_REGISTRY.yml")
-    child_project_map = git_optional(root, "show", "HEAD:PROJECT_MAP.md")
+    child_plan = tree_frontmatter(root, child_revision, plan_path)
+    child_tasklist = tree_frontmatter(root, child_revision, tasklist_path)
+    child_gate_text = git_optional(root, "show", f"{child_revision}:.agent/active-work-block.json")
+    child_registry = git_optional(root, "show", f"{child_revision}:FILE_REGISTRY.yml")
+    child_project_map = git_optional(root, "show", f"{child_revision}:PROJECT_MAP.md")
     try:
         child_gate = json.loads(child_gate_text) if child_gate_text is not None else None
     except json.JSONDecodeError:
@@ -656,6 +657,10 @@ def canonical_branch_ref(value: str) -> str:
     ref = value.strip()
     if ref.startswith("refs/heads/"):
         ref = ref[len("refs/heads/") :]
+    if ref.startswith("refs/remotes/origin/"):
+        ref = ref[len("refs/remotes/origin/") :]
+    if ref.startswith("origin/"):
+        ref = ref[len("origin/") :]
     return ref
 
 
@@ -841,8 +846,34 @@ def _candidate_digest(entries: list[tuple[str, bytes, bytes]]) -> str:
     return f"content-sha256:{digest.hexdigest()}"
 
 
+def candidate_tree_identity(root: Path, treeish: str, write_set: list[str]) -> str:
+    """Hash the complete Git tree projection selected by the source write-set."""
+    tree = git_bytes_optional(root, "ls-tree", "-r", "-z", treeish)
+    if tree is None:
+        return ""
+    entries: list[tuple[str, bytes, bytes]] = []
+    for record in tree.split(b"\0"):
+        if not record:
+            continue
+        try:
+            metadata, raw_relative = record.split(b"\t", 1)
+            mode, kind, object_id = metadata.split(b" ")
+            relative = raw_relative.decode("utf-8", errors="surrogateescape")
+        except ValueError:
+            return ""
+        if relative == ".agent/active-work-block.json" or not _candidate_path_matches(relative, write_set):
+            continue
+        if kind != b"blob" or mode not in {b"100644", b"100755", b"120000"}:
+            return ""
+        content = git_bytes_optional(root, "cat-file", "blob", object_id.decode("ascii"))
+        if content is None:
+            return ""
+        entries.append((relative, b"symlink" if mode == b"120000" else b"file", content))
+    return _candidate_digest(entries)
+
+
 def frozen_candidate_matches_head(gate: dict, root: Path) -> bool:
-    """Bind the frozen worktree bytes and pushed HEAD to the same legacy identity."""
+    """Bind the frozen worktree bytes and pushed HEAD to the same identity."""
     revision = gate.get("frozen_revision")
     write_set = gate.get("write_set")
     if not isinstance(revision, str) or re.fullmatch(r"content-sha256:[0-9a-f]{64}", revision) is None:
@@ -868,28 +899,7 @@ def frozen_candidate_matches_head(gate: dict, root: Path) -> bool:
                 return False
     if _candidate_digest(worktree) != revision:
         return False
-    tree = git_bytes_optional(root, "ls-tree", "-r", "-z", "HEAD")
-    if tree is None:
-        return False
-    committed: list[tuple[str, bytes, bytes]] = []
-    for record in tree.split(b"\0"):
-        if not record:
-            continue
-        try:
-            metadata, raw_relative = record.split(b"\t", 1)
-            mode, kind, object_id = metadata.split(b" ")
-            relative = raw_relative.decode("utf-8", errors="surrogateescape")
-        except ValueError:
-            return False
-        if relative == ".agent/active-work-block.json" or not _candidate_path_matches(relative, write_set):
-            continue
-        if kind != b"blob":
-            return False
-        content = git_bytes_optional(root, "cat-file", "blob", object_id.decode("ascii"))
-        if content is None:
-            return False
-        committed.append((relative, b"symlink" if mode == b"120000" else b"file", content))
-    return _candidate_digest(committed) == revision
+    return candidate_tree_identity(root, "HEAD", write_set) == revision
 
 
 def assured_candidate_evidence(gate: dict, root: Path) -> bool:
@@ -979,6 +989,16 @@ def canonical_terminal_inactive(
     return isinstance(note, str) and bool(note.strip())
 
 
+def canonical_inactive_for_commit(gate: dict, root: Path) -> bool:
+    """Allow the exact inactive template or the canonical successful closeout."""
+    template_text = git_optional(root, "show", "HEAD:.agent/active-work-block.default.json")
+    try:
+        template = json.loads(template_text) if template_text is not None else None
+    except json.JSONDecodeError:
+        return False
+    return isinstance(template, dict) and (gate == template or canonical_terminal_inactive(gate, root))
+
+
 def commit_work_block_id(root: Path, revision: str) -> str:
     message = git(root, "show", "-s", "--format=%B", revision)
     matches = TERMINAL_WORK_BLOCK.findall(message)
@@ -1041,12 +1061,13 @@ def terminal_closeout_push_allowed(command: str, gate: dict, root: Path) -> bool
     if str(parent_state.get("subject_branch") or "").strip() != current:
         return False
     parent_write_gate = parent_state.get("write_gate")
-    if not isinstance(parent_write_gate, dict) or parent_write_gate.get("status") != "READY":
+    if not isinstance(parent_write_gate, dict) or parent_write_gate.get("status") != "BLOCKED":
         return False
     if (
         not define_quality_ready(parent_state)
-        or not required_critic_ready(parent_state)
-        or not required_assurance_ready(parent_state)
+        or not critic_disposition_evidence(parent_state, root)
+        or not assured_candidate_evidence(parent_state, root)
+        or not frozen_candidate_matches_head(parent_state, root)
     ):
         return False
     return (
@@ -1058,6 +1079,12 @@ def terminal_closeout_push_allowed(command: str, gate: dict, root: Path) -> bool
 
 def autonomous_subject_push_allowed(command: str, gate: dict, root: Path) -> bool:
     """Allow only a fully explicit, assured push of this Work Block's HEAD."""
+    committed_gate = git_bytes_optional(root, "show", "HEAD:.agent/active-work-block.json")
+    try:
+        if committed_gate is None or json.loads(committed_gate) != gate:
+            return False
+    except (ValueError, UnicodeError):
+        return False
     commands = shell_command_segments(command)
     if commands is None or len(commands) != 1:
         return False

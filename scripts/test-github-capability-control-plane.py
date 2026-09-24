@@ -23,6 +23,7 @@ CLAUDE_ASSURANCE = ROOT / ".claude/hooks/assurance_gate.py"
 LIFECYCLE = ROOT / ".codex/scripts/lifecycle.py"
 EVAL_VALIDATOR = ROOT / "scripts/validate-evaluation.py"
 DEFAULT_GATE = ROOT / ".agent/active-work-block.default.json"
+GIT_TRANSITION = ROOT / ".agent/hooks/git_transition_policy.py"
 
 
 def run(command: list[str], cwd: Path, *, input_text: str | None = None) -> subprocess.CompletedProcess[str]:
@@ -247,8 +248,9 @@ def frozen_publication_gate(base: dict[str, object], cwd: Path) -> dict[str, obj
             "isolation": "separate_context",
         })
         (cwd / report).write_text(assurance_report(value, role, revision, execution, context, "READY"), encoding="utf-8")
-    git(cwd, "add", "docs/reports/critic.md", "docs/reports/review.md", "docs/reports/verification.md")
-    git(cwd, "commit", "-q", "-m", "fixture assurance reports")
+    write_gate(cwd, value)
+    git(cwd, "add", ".agent/active-work-block.json", "docs/reports/critic.md", "docs/reports/review.md", "docs/reports/verification.md")
+    git(cwd, "commit", "-q", "-m", "fixture assurance reports and gate")
     return value
 
 
@@ -258,7 +260,7 @@ def write_gate(cwd: Path, value: dict[str, object]) -> None:
     path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
 
-TERMINAL_FIXTURE_ID = "WB-TEST-GITHUB-CAPABILITY"
+TERMINAL_FIXTURE_ID = "WB-036"
 TERMINAL_FIXTURE_SPEC = f"docs/specs/{TERMINAL_FIXTURE_ID}.md"
 TERMINAL_FIXTURE_PLAN = f"docs/plans/{TERMINAL_FIXTURE_ID}.md"
 TERMINAL_FIXTURE_TASKLIST = f"docs/tasklist/{TERMINAL_FIXTURE_ID}.tasklist.md"
@@ -369,8 +371,12 @@ def make_repo() -> tuple[tempfile.TemporaryDirectory[str], Path, dict[str, objec
     git(cwd, "commit", "-q", "-m", "fixture base")
     git(cwd, "branch", "-M", "main")
     git(cwd, "switch", "-q", "-c", "feature/capability-test")
-    (cwd / ".agent").mkdir(parents=True, exist_ok=True)
+    (cwd / ".agent/hooks").mkdir(parents=True, exist_ok=True)
+    (cwd / ".codex/scripts").mkdir(parents=True, exist_ok=True)
     (cwd / "scripts").mkdir()
+    shutil.copy2(GIT_TRANSITION, cwd / ".agent/hooks/git_transition_policy.py")
+    shutil.copy2(HARD_STOP, cwd / ".agent/hooks/hard_stop_policy.py")
+    shutil.copy2(LIFECYCLE, cwd / ".codex/scripts/lifecycle.py")
     (cwd / "scripts/subagent_topology.py").write_text(
         git(ROOT, "show", "HEAD:scripts/subagent_topology.py") + "\n",
         encoding="utf-8",
@@ -392,9 +398,20 @@ def make_terminal_repo(
     source_mutation: bool = False,
     extra_terminal_path: str = "",
     terminal_mutator: object = None,
+    precommit_expected: bool | None = None,
 ) -> tuple[tempfile.TemporaryDirectory[str], Path, str]:
     holder, cwd, base = make_repo()
-    parent = ready_gate(base, cwd)
+    parent = frozen_publication_gate(base, cwd)
+    parent["work_block_id"] = TERMINAL_FIXTURE_ID
+    parent["specification"] = {"path": TERMINAL_FIXTURE_SPEC, "revision": TERMINAL_FIXTURE_REVISION}
+    (cwd / "docs/reports/critic.md").write_text(critic_report(parent), encoding="utf-8")
+    for role, path in (("review", "docs/reports/review.md"), ("verification", "docs/reports/verification.md")):
+        record = parent["assurance"][role]
+        record["work_block_id"] = TERMINAL_FIXTURE_ID
+        (cwd / path).write_text(
+            assurance_report(parent, role, parent["frozen_revision"], record["execution_id"], record["context_id"], "READY"),
+            encoding="utf-8",
+        )
     write_terminal_projection(cwd, plan_status="in_progress", tasklist_status="active")
     write_terminal_projection_maps(cwd, active=True)
     if callable(parent_mutator):
@@ -404,7 +421,7 @@ def make_terminal_repo(
     else:
         write_gate(cwd, parent)
     git(cwd, "add", "-A")
-    git(cwd, "commit", "-q", "-m", "admit assured terminal fixture\n\nWork-Block: WB-TEST-GITHUB-CAPABILITY")
+    git(cwd, "commit", "-q", "-m", f"admit assured terminal fixture\n\nWork-Block: {TERMINAL_FIXTURE_ID}")
 
     inactive = copy.deepcopy(base)
     inactive.update(
@@ -438,8 +455,25 @@ def make_terminal_repo(
     if callable(terminal_mutator):
         terminal_mutator(cwd)
     git(cwd, "add", "-A")
-    git(cwd, "commit", "-q", "-m", "close terminal fixture\n\nWork-Block: WB-TEST-GITHUB-CAPABILITY")
+    if precommit_expected is not None:
+        install_git_transition_fixture(cwd)
+        result = run([sys.executable, str(cwd / ".agent/hooks/git_transition_policy.py"), "pre-commit"], cwd)
+        if (result.returncode == 0) != precommit_expected:
+            raise AssertionError(f"terminal pre-commit expected {precommit_expected}: {result.stderr}")
+    git(cwd, "commit", "-q", "-m", f"close terminal fixture\n\nWork-Block: {TERMINAL_FIXTURE_ID}")
     return holder, cwd, "git push origin HEAD:refs/heads/feature/capability-test"
+
+
+def install_git_transition_fixture(cwd: Path) -> Path:
+    hooks = cwd / ".agent/hooks"
+    hooks.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(GIT_TRANSITION, hooks / "git_transition_policy.py")
+    shutil.copy2(HARD_STOP, hooks / "hard_stop_policy.py")
+    scripts = cwd / ".codex/scripts"
+    scripts.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(LIFECYCLE, scripts / "lifecycle.py")
+    git(cwd, "remote", "add", "origin", "fixture-origin")
+    return hooks / "git_transition_policy.py"
 
 
 def terminal_extra(path: str) -> object:
@@ -482,6 +516,7 @@ def test_terminal_closeout_publication() -> None:
     cases.append((make_terminal_repo(), True, "exact bound plan and tasklist terminal closeout"))
     cases.append((make_terminal_repo(parent_mutator=lambda gate: gate.update(subject_branch="feature/other")), False, "wrong parent subject branch"))
     cases.append((make_terminal_repo(parent_mutator=lambda gate: gate["assurance"]["review"].update(status="PENDING", verdict="PENDING")), False, "parent without READY assurance"))
+    cases.append((make_terminal_repo(parent_mutator=lambda gate: gate["write_gate"].update(status="READY")), False, "unfrozen parent write gate"))
     cases.append((make_terminal_repo(malformed_parent=True), False, "malformed parent active state"))
     cases.append((make_terminal_repo(source_mutation=True), False, "source mutation in terminal commit"))
     cases.append((make_terminal_repo(extra_terminal_path="docs/notes.txt"), False, "unlisted terminal path"))
@@ -524,6 +559,7 @@ def test_terminal_closeout_publication() -> None:
         finally:
             holder.cleanup()
 
+
     holder, cwd, _exact = make_terminal_repo()
     try:
         for command, label in (
@@ -559,6 +595,52 @@ def test_terminal_closeout_publication() -> None:
         )
     finally:
         holder.cleanup()
+
+
+def test_git_transition_assured_events() -> None:
+    holder, cwd, base = make_repo()
+    try:
+        gate = frozen_publication_gate(base, cwd)
+        policy = install_git_transition_fixture(cwd)
+        oid = git(cwd, "rev-parse", "HEAD")
+        event = f"HEAD {oid} refs/heads/feature/capability-test {'0' * len(oid)}\n"
+        result = run([sys.executable, str(policy), "pre-push", "origin", "fixture-origin"], cwd, input_text=event)
+        if result.returncode:
+            raise AssertionError(f"assured active pre-push denied: {result.stderr}")
+        wrong = event.replace("refs/heads/feature/capability-test", "refs/heads/main")
+        result = run([sys.executable, str(policy), "pre-push", "origin", "fixture-origin"], cwd, input_text=wrong)
+        if result.returncode == 0:
+            raise AssertionError("default-branch pre-push unexpectedly allowed")
+        unready = copy.deepcopy(gate)
+        unready["assurance"]["review"].update(status="PENDING", verdict="PENDING")
+        write_gate(cwd, unready)
+        git(cwd, "add", ".agent/active-work-block.json")
+        git(cwd, "commit", "-q", "-m", "fixture committed pending assurance")
+        write_gate(cwd, gate)
+        oid = git(cwd, "rev-parse", "HEAD")
+        event = f"HEAD {oid} refs/heads/feature/capability-test {'0' * len(oid)}\n"
+        result = run([sys.executable, str(policy), "pre-push", "origin", "fixture-origin"], cwd, input_text=event)
+        if result.returncode == 0:
+            raise AssertionError("uncommitted READY assurance unexpectedly authorized push")
+    finally:
+        holder.cleanup()
+
+    holder, cwd, _ = make_terminal_repo(precommit_expected=True)
+    try:
+        oid = git(cwd, "rev-parse", "HEAD")
+        parent = git(cwd, "rev-parse", "HEAD^")
+        event = f"HEAD {oid} refs/heads/feature/capability-test {parent}\n"
+        result = run([sys.executable, str(cwd / ".agent/hooks/git_transition_policy.py"), "pre-push", "origin", "fixture-origin"], cwd, input_text=event)
+        if result.returncode:
+            raise AssertionError(f"assured terminal pre-push denied: {result.stderr}")
+    finally:
+        holder.cleanup()
+
+    holder, cwd, _ = make_terminal_repo(
+        terminal_mutator=terminal_replace(TERMINAL_FIXTURE_PLAN, "status: completed", "status: in_progress"),
+        precommit_expected=False,
+    )
+    holder.cleanup()
 
 
 def make_parallel_worktrees() -> tuple[
@@ -927,9 +1009,9 @@ def test_hard_stops() -> None:
         supplementary_critic = copy.deepcopy(publication)
         supplementary_critic["critic"]["verdict"] = "SUPPLEMENT"
         (cwd / "docs/reports/critic.md").write_text(critic_report(supplementary_critic), encoding="utf-8")
-        git(cwd, "add", "docs/reports/critic.md")
-        git(cwd, "commit", "-q", "-m", "fixture Critic supplement")
         write_gate(cwd, supplementary_critic)
+        git(cwd, "add", ".agent/active-work-block.json", "docs/reports/critic.md")
+        git(cwd, "commit", "-q", "-m", "fixture Critic supplement")
         assert_allow(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "accepted Critic supplement")
         attached_gate = copy.deepcopy(publication)
         write_gate(cwd, attached_gate)
@@ -1065,9 +1147,9 @@ def test_frozen_publication_evidence() -> None:
         (cwd / "docs/reports/critic.md").write_text(critic_report(skipped), encoding="utf-8")
         write_gate(cwd, skipped)
         assert_deny(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "uncommitted Critic skip")
-        git(cwd, "add", "docs/reports/critic.md")
-        git(cwd, "commit", "-q", "-m", "fixture Critic skip")
         write_gate(cwd, skipped)
+        git(cwd, "add", ".agent/active-work-block.json", "docs/reports/critic.md")
+        git(cwd, "commit", "-q", "-m", "fixture Critic skip")
         assert_allow(hook(HARD_STOP, cwd, "Bash", {"command": exact}), "reasoned Critic skip")
 
         (cwd / "README.md").write_text("source changed after freeze\n", encoding="utf-8")
@@ -1204,6 +1286,108 @@ def test_codex_coordination_commit_scope() -> None:
             hook(CODEX_GATE, cwd, "Bash", {"command": "git commit -m coordination"}),
             "staged hidden coordination commit",
         )
+    finally:
+        holder.cleanup()
+
+
+def test_runtime_frozen_commit_delegation() -> None:
+    holder, cwd, base = make_repo()
+    try:
+        gate = ready_gate(base, cwd)
+        gate["work_block_id"] = "WB-036"
+        write_gate(cwd, gate)
+        (cwd / "src").mkdir()
+        (cwd / "src/a.txt").write_text("candidate\n", encoding="utf-8")
+        git(cwd, "add", "src/a.txt", ".agent/active-work-block.json")
+        git(cwd, "config", "alias.c", "commit")
+        bypass_commands = (
+            "git commit --no-verify -m candidate",
+            "git commit -n -m candidate",
+            "git commit --no-veri -m candidate",
+            "git commit --no-verify=true -m candidate",
+            "git commit --no-{verify,verify} -m candidate",
+            "git commit --no-verif* -m candidate",
+            "git -c core.hooksPath=/tmp commit -m candidate",
+            "git -C . commit -m candidate",
+            "GIT_CONFIG_COUNT=1 git commit -m candidate",
+            "env GIT_CONFIG_COUNT=1 git commit -m candidate",
+            "command git commit -n -m candidate",
+            "git commit -m candidate; git commit -n -m bypass",
+            "git commit -m candidate#; git commit -n -m bypass",
+            "git commit -m candidate\ngit -c core.hooksPath=/tmp/empty commit -m bypass",
+            "git commit -m candidate\r\ngit -c core.hooksPath=/tmp/empty commit -m bypass",
+            "git commit -m $(touch /tmp/commit-bypass)",
+            "git -c alias.x=commit x -n -m bypass",
+            "git c -n -m bypass",
+            "bash -c 'git commit -n -m bypass'",
+            r"g\it -c alias.c=commit c -n -m bypass",
+            "git${IFS}commit -n -m bypass",
+            "g${x}it -c alias.c=commit c -n -m bypass",
+            r"bash -c 'g\it -c alias.c=commit c -n -m bypass'",
+            "g${WB036_U:-}it comm${WB036_U:-}it -n -m bypass",
+            "bash -c 'g${WB036_U:-}it comm${WB036_U:-}it -n -m bypass'",
+            "env bash -c 'g${WB036_U:-}it comm${WB036_U:-}it -n -m bypass'",
+            "bash -c 'g${WB036_U:-}it comm${WB036_U:-}it --no${WB036_U:-}-verify -m bypass'",
+            "env WB036_A=1 WB036_B=2 bash -c 'g${WB036_U:-}it comm${WB036_U:-}it --no${WB036_U:-}-verify -m bypass'",
+            "env -Sbash -c 'g${WB036_U:-}it comm${WB036_U:-}it --no${WB036_U:-}-verify -m bypass'",
+            "env --split-string=bash -c 'g${WB036_U:-}it comm${WB036_U:-}it --no${WB036_U:-}-verify -m bypass'",
+            "bash -c 'echo safe'",
+        )
+        for adapter in (CODEX_GATE, CLAUDE_GATE):
+            assert_allow(hook(adapter, cwd, "Bash", {"command": "git status --short"}),
+                         f"{adapter.name} direct Git status")
+            assert_allow(hook(adapter, cwd, "Bash", {"command": "rg -n commit-msg-fixtures src/a.txt"}),
+                         f"{adapter.name} unrelated search command")
+            assert_allow(hook(adapter, cwd, "Bash", {"command": "rg -n 'git commit' src/a.txt"}),
+                         f"{adapter.name} search pattern mentioning Git")
+            for command in (
+                "env LANG=C rg -n 'git commit' src/a.txt",
+                "command rg -n 'git commit' src/a.txt",
+                "env QUERY=git rg -n QUERY src/a.txt",
+            ):
+                assert_allow(hook(adapter, cwd, "Bash", {"command": command}),
+                             f"{adapter.name} wrapped non-Git search {command}")
+            assert_allow(hook(adapter, cwd, "Bash", {"command": "env WB036_A=1 printf safe"}),
+                         f"{adapter.name} ordinary environment command")
+            for command in bypass_commands:
+                assert_deny(hook(adapter, cwd, "Bash", {"command": command}),
+                            f"{adapter.name} READY commit bypass {command}")
+
+        gate["write_gate"] = {"status": "BLOCKED", "opened_at": None}
+        gate["frozen_revision"] = candidate_content_identity(cwd, gate["write_set"])
+        write_gate(cwd, gate)
+        git(cwd, "add", ".agent/active-work-block.json")
+        (cwd / ".githooks").mkdir()
+        shutil.copy2(ROOT / ".githooks/pre-commit", cwd / ".githooks/pre-commit")
+        shutil.copy2(ROOT / ".githooks/commit-msg", cwd / ".githooks/commit-msg")
+        git(cwd, "config", "core.hooksPath", ".githooks")
+        for adapter in (CODEX_GATE, CLAUDE_GATE):
+            assert_allow(hook(adapter, cwd, "Bash", {"command": "git commit -m candidate"}),
+                         f"{adapter.name} frozen candidate commit")
+            for command in bypass_commands:
+                assert_deny(hook(adapter, cwd, "Bash", {"command": command}),
+                            f"{adapter.name} frozen commit bypass {command}")
+
+        git(cwd, "config", "--unset", "core.hooksPath")
+        for adapter in (CODEX_GATE, CLAUDE_GATE):
+            assert_deny(hook(adapter, cwd, "Bash", {"command": "git commit -m candidate"}),
+                        f"{adapter.name} missing native hook")
+        git(cwd, "config", "core.hooksPath", ".githooks")
+        message_hook = cwd / ".githooks/commit-msg"
+        message_hook.unlink()
+        for adapter in (CODEX_GATE, CLAUDE_GATE):
+            assert_deny(hook(adapter, cwd, "Bash", {"command": "git commit -m candidate"}),
+                        f"{adapter.name} missing commit-msg hook")
+        shutil.copy2(ROOT / ".githooks/commit-msg", message_hook)
+        message_hook.chmod(0o644)
+        for adapter in (CODEX_GATE, CLAUDE_GATE):
+            assert_deny(hook(adapter, cwd, "Bash", {"command": "git commit -m candidate"}),
+                        f"{adapter.name} non-executable commit-msg hook")
+        message_hook.chmod(0o755)
+        (cwd / "src/a.txt").write_text("stale\n", encoding="utf-8")
+        for adapter in (CODEX_GATE, CLAUDE_GATE):
+            assert_deny(hook(adapter, cwd, "Bash", {"command": "git commit -m candidate"}),
+                        f"{adapter.name} stale frozen candidate")
     finally:
         holder.cleanup()
 
@@ -1526,8 +1710,10 @@ TESTS = [
     test_frozen_publication_evidence,
     test_controlled_assurance_rework,
     test_terminal_closeout_publication,
+    test_git_transition_assured_events,
     test_codex_scope,
     test_codex_coordination_commit_scope,
+    test_runtime_frozen_commit_delegation,
     test_binding_mismatch_coordination_and_repair,
     test_parallel_worktree_isolation,
     test_claude_scope_and_closeout,

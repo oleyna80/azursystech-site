@@ -21,7 +21,7 @@ completed_work_blocks:
   - docs/plans/WB-2026-09-09-lifecycle-ownership-reconciliation.md
   - docs/plans/WB-2026-09-09-process-feedback-self-improvement.md
   - docs/plans/WB-2026-09-11-control-plane-recovery-hardening-027.md
-active_work_block: null
+active_work_block: docs/plans/WB-036.md
 -->
 
 ```yaml
@@ -29,7 +29,7 @@ release_state:
   schema_version: 1
   authority_mode: github_capability
   repository_status: operational
-  active_work_block: null
+  active_work_block: docs/plans/WB-036.md
   governance_profile: Controlled
   publication_mode: autonomous_assured_subject_branch_owner_merge_decision
   last_reconciled_commit: repository_evidence_only
@@ -37,8 +37,8 @@ release_state:
 
 ## Migration Work
 
-- No active implementation Work Block.
-- The completed corrective Work Block is recorded in the release-state completed list.
+- `docs/plans/WB-036.md` is the active enforcement audit and alignment Work Block.
+- Completed Work Blocks are recorded in the release-state completed list.
 - The completed migration index and active path are machine-readable in
   `FILE_REGISTRY.yml:migration_state`.
 

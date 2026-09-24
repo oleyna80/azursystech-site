@@ -5,6 +5,20 @@ authority_boundary:
   systemic_change_requires: separate_improvement_work_block
   direct_governance_mutation: forbidden
 observations:
+  - id: PF-2026-09-24-wb036-capability-boundary-overclaim
+    work_block_id: WB-036
+    date: "2026-09-24"
+    category: CONTRACT_MISMATCH
+    observation: WB-036 Reviewer rounds r9-r15 repeatedly refined runtime bypass detection before r15 demonstrated that arbitrary Bash can bypass a local hook; the original capability-boundary claim was too strong. A formal closeout validator accepted NONE — checked despite Reviewer finding this semantic omission.
+    evidence: "docs/reports/WB-036-reviewer-r9.md through docs/reports/WB-036-reviewer-r15.md; docs/reports/WB-036-tests.md; docs/reports/WB-036-reviewer-v3-r3.md Process Feedback follow-up; scripts/validate-process-feedback.py accepted the earlier syntactically valid closeout while Reviewer identified omitted friction."
+    likely_systemic_cause: The initial contract conflated deterministic cooperative command screening with a security boundary against arbitrary shell execution, and machine validation checked Process Feedback structure rather than the factual completeness of its claims.
+    impact: Repeated corrective review and implementation churn preceded the Owner-approved cooperative contract; closeout evidence initially understated this friction.
+    suggested_improvement: "WB-036 v3 records the cooperative boundary and external authority check. Retain this advisory observation for future process improvement; any new systemic validator or execution control needs a separate approved Work Block."
+    severity: MEDIUM
+    status: NEW
+    authority: advisory_only
+    avoidable_friction: true
+    related_work_blocks: [WB-035]
   - id: PF-2026-09-23-wb034-reporting-recovery-deadlock
     work_block_id: WB-035
     date: "2026-09-23"

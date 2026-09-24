@@ -24,6 +24,7 @@ new_repo() {
   git init -q "$NEW_REPO"; git -C "$NEW_REPO" config user.email fixture@example.invalid
   git -C "$NEW_REPO" config user.name fixture; git -C "$NEW_REPO" checkout -q -b "$branch"
   mkdir -p "$NEW_REPO/.agent"; printf '%s\n' "$state" > "$NEW_REPO/.agent/active-work-block.json"
+  cp "$ROOT_DIR/.agent/active-work-block.default.json" "$NEW_REPO/.agent/active-work-block.default.json"
 }
 STATE='{"schema_version":3,"work_block_id":"WB-2026-09-06-work-block-commit-linkage","subject_branch":"fixture-branch","write_gate":{"status":"READY"}}'
 SHORT_STATE='{"schema_version":3,"work_block_id":"WB-033","subject_branch":"fixture-branch","write_gate":{"status":"READY"}}'
@@ -51,7 +52,7 @@ case_hook malformed-short-state-suffix '{"schema_version":3,"work_block_id":"WB-
 
 new_repo "$STATE" other-branch; repo="$NEW_REPO"; printf '%s\n' $'feat: stale\n\nWork-Block: WB-2026-09-06-work-block-commit-linkage' > "$repo/message"
 if (cd "$repo" && "$HOOK" "$repo/message") 2>/dev/null; then echo FAIL branch-mismatch; failures=$((failures + 1)); else echo PASS branch-mismatch; fi
-new_repo "$STATE" fixture-branch; repo="$NEW_REPO"; git -C "$repo" commit --allow-empty --no-verify -q -m init; git -C "$repo" checkout --detach -q HEAD
+new_repo "$STATE" fixture-branch; repo="$NEW_REPO"; git -C "$repo" commit --allow-empty -q -m init; git -C "$repo" checkout --detach -q HEAD
 printf '%s\n' $'feat: detached\n\nWork-Block: WB-2026-09-06-work-block-commit-linkage' > "$repo/message"
 if (cd "$repo" && "$HOOK" "$repo/message") 2>/dev/null; then echo FAIL detached; failures=$((failures + 1)); else echo PASS detached; fi
 
@@ -60,8 +61,30 @@ for gate in READY BLOCKED; do
   printf '%s\n' $'feat: frozen\n\nWork-Block: WB-2026-09-06-work-block-commit-linkage' > "$repo/message"
   if (cd "$repo" && "$HOOK" "$repo/message"); then echo "PASS active-$gate"; else echo "FAIL active-$gate"; failures=$((failures + 1)); fi
 done
-case_hook inactive '{"schema_version":3,"work_block_id":"","subject_branch":"","write_gate":{"status":"BLOCKED"}}' 'chore: ordinary' 0
-case_hook closed '{"schema_version":3,"work_block_id":"","subject_branch":""}' 'chore: closed' 0
+case_hook malformed-inactive '{"schema_version":3,"work_block_id":"","subject_branch":"","write_gate":{"status":"BLOCKED"}}' 'chore: ordinary' 1 canonical
+case_hook malformed-closed '{"schema_version":3,"work_block_id":"","subject_branch":""}' 'chore: closed' 1 canonical
+canonical="$(python3 - "$ROOT_DIR/.agent/active-work-block.default.json" <<'PY'
+import json,sys
+value=json.load(open(sys.argv[1])); value['closeout_mode']='success-closeout'; value['lifecycle_note']='fixture coordination'
+print(json.dumps(value))
+PY
+)"
+case_hook canonical-inactive "$canonical" 'chore: coordination' 0
+default_inactive="$(cat "$ROOT_DIR/.agent/active-work-block.default.json")"
+case_hook default-inactive "$default_inactive" 'chore: ordinary coordination' 0
+new_repo "$SHORT_STATE" fixture-branch; repo="$NEW_REPO"
+git -C "$repo" add .agent/active-work-block.json
+git -C "$repo" commit -q -m $'feat: active fixture\n\nWork-Block: WB-033'
+printf '%s\n' "$canonical" > "$repo/.agent/active-work-block.json"
+printf '%s\n' $'chore: close WB\n\nWork-Block: WB-033' > "$repo/message"
+if (cd "$repo" && "$HOOK" "$repo/message"); then echo PASS terminal-correct; else echo FAIL terminal-correct; failures=$((failures + 1)); fi
+printf '%s\n' $'chore: wrong close\n\nWork-Block: WB-034' > "$repo/message"
+if (cd "$repo" && "$HOOK" "$repo/message") 2>/dev/null; then echo FAIL terminal-wrong-trailer; failures=$((failures + 1)); else echo PASS terminal-wrong-trailer; fi
+printf '%s\n' 'chore: missing close trailer' > "$repo/message"
+if (cd "$repo" && "$HOOK" "$repo/message") 2>/dev/null; then echo FAIL terminal-missing-trailer; failures=$((failures + 1)); else echo PASS terminal-missing-trailer; fi
+printf '%s\n' "$default_inactive" > "$repo/.agent/active-work-block.json"
+printf '%s\n' $'chore: pending close\n\nWork-Block: WB-033' > "$repo/message"
+if (cd "$repo" && "$HOOK" "$repo/message") 2>/dev/null; then echo FAIL terminal-pending-inactive; failures=$((failures + 1)); else echo PASS terminal-pending-inactive; fi
 new_repo '{}' fixture-branch; repo="$NEW_REPO"; rm "$repo/.agent/active-work-block.json"; printf '%s\n' ordinary > "$repo/message"
 if (cd "$repo" && "$HOOK" "$repo/message") 2>/dev/null; then echo FAIL missing-state; failures=$((failures + 1)); else echo PASS missing-state; fi
 new_repo '{}' fixture-branch; repo="$NEW_REPO"; printf '{not-json\n' > "$repo/.agent/active-work-block.json"; printf '%s\n' ordinary > "$repo/message"
@@ -77,19 +100,17 @@ set +e
 out="$(git -C "$repo" commit --allow-empty -m 'feat: missing trailer' 2>&1)"; code=$?
 set -e
 if [ "$code" -eq 0 ] || [[ "$out" != *'requires exactly one'* ]]; then
-  echo "FAIL no-verify-rejected: exit=$code output=$out" >&2; failures=$((failures + 1))
-else
-  git -C "$repo" commit --allow-empty --no-verify -q -m 'feat: bypassed fixture hook'
-  echo 'PASS no-verify-cooperative-bypass'
-fi
+  echo "FAIL missing-trailer-rejected: exit=$code output=$out" >&2; failures=$((failures + 1))
+else echo 'PASS missing-trailer-rejected'; fi
 
 bootstrap_repo="$(mktemp -d)"; TEMP_DIRS+=("$bootstrap_repo")
 mkdir -p "$bootstrap_repo/.agent" "$bootstrap_repo/.githooks" "$bootstrap_repo/scripts"
 cp "$ROOT_DIR/scripts/bootstrap.sh" "$bootstrap_repo/scripts/bootstrap.sh"
 cp "$HOOK" "$bootstrap_repo/.githooks/commit-msg"
+cp "$ROOT_DIR/.githooks/pre-commit" "$ROOT_DIR/.githooks/pre-push" "$bootstrap_repo/.githooks/"
 cp "$ROOT_DIR/.agent/bootstrap-profile.json" "$ROOT_DIR/.agent/active-work-block.default.json" "$bootstrap_repo/.agent/"
 cp "$ROOT_DIR/scripts/validate-installation-profile.py" "$bootstrap_repo/scripts/"
-chmod +x "$bootstrap_repo/scripts/bootstrap.sh" "$bootstrap_repo/.githooks/commit-msg"
+chmod +x "$bootstrap_repo/scripts/bootstrap.sh" "$bootstrap_repo/.githooks/commit-msg" "$bootstrap_repo/.githooks/pre-commit" "$bootstrap_repo/.githooks/pre-push"
 python3 - "$ROOT_DIR/.agent/bootstrap-profile.json" "$bootstrap_repo" <<'PY'
 import json
 import pathlib
@@ -116,5 +137,8 @@ if "$bootstrap_repo/scripts/bootstrap.sh" --check-git-hooks >/dev/null 2>&1; the
 "$bootstrap_repo/scripts/bootstrap.sh" --check-git-hooks >/dev/null && echo PASS hook-install-and-check || { echo FAIL hook-install-and-check; failures=$((failures + 1)); }
 chmod -x "$bootstrap_repo/.githooks/commit-msg"
 if "$bootstrap_repo/scripts/bootstrap.sh" --check-git-hooks >/dev/null 2>&1; then echo FAIL non-executable-hook; failures=$((failures + 1)); else echo PASS non-executable-hook; fi
+chmod +x "$bootstrap_repo/.githooks/commit-msg"
+chmod -x "$bootstrap_repo/.githooks/pre-push"
+if "$bootstrap_repo/scripts/bootstrap.sh" --check-git-hooks >/dev/null 2>&1; then echo FAIL non-executable-pre-push; failures=$((failures + 1)); else echo PASS non-executable-pre-push; fi
 [ "$failures" -eq 0 ] || exit 1
 echo 'All commit-msg linkage fixtures passed.'

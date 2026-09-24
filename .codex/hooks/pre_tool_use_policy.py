@@ -529,12 +529,24 @@ def direct_gate_repair_bash(command: str, root: Path) -> bool:
 
 def check_bash(event: dict, gate: dict, root: Path) -> None:
     command = bash_command(event)
+    sys.path.insert(0, str(root / ".agent/hooks"))
+    try:
+        from git_transition_policy import Denied as DispatchDenied, runtime_git_dispatch
+        runtime_git_dispatch(command, root)
+    except (ImportError, DispatchDenied) as exc:
+        raise Denied(f"Shared Git dispatch policy denied: {exc}") from exc
 
     if re.search(r"\bgit\s+push\b", command, re.I):
         return
 
     commit_arguments = git_commit_arguments(command)
     if commit_arguments is not None:
+        sys.path.insert(0, str(root / ".agent/hooks"))
+        try:
+            from git_transition_policy import Denied as TransitionDenied, runtime_commit_command, runtime_frozen_commit
+            runtime_commit_command(command)
+        except (ImportError, TransitionDenied) as exc:
+            raise Denied(f"Shared commit command policy denied: {exc}") from exc
         if canonical_inactive(gate):
             selector = inactive_commit_selector(commit_arguments)
             if selector:
@@ -559,6 +571,12 @@ def check_bash(event: dict, gate: dict, root: Path) -> None:
         validate_binding(root, gate)
         if not source:
             require_scope(staged, coordination_paths, "Coordination commit")
+            return
+        if gate.get("write_gate", {}).get("status") == "BLOCKED":
+            try:
+                runtime_frozen_commit(root)
+            except TransitionDenied as exc:
+                raise Denied(f"Shared frozen commit policy denied: {exc}") from exc
             return
         allowed = validate_source_gate(gate, root) + coordination_paths
         require_scope(staged, allowed, "Staged commit")
