@@ -41,6 +41,24 @@ DEFINED
 
 `IMPLEMENTING` is not a separate state unless it introduces a mechanically distinct contract. Normal implementation is represented by `OPEN + source_write_gate=READY`.
 
+## Candidate identity
+
+The authoritative frozen source identity is `source_candidate_id`.
+
+Current target representation:
+
+```text
+content-sha256:<digest>
+```
+
+The digest is computed deterministically over the canonical ordered frozen source projection: repository-relative source path + exact blob bytes.
+
+`candidate_commit_sha` is the durable source+evidence package commit and is not a competing candidate identity.
+
+`terminal_commit_sha` is the terminal history boundary.
+
+Reviewer/Verifier bind `source_candidate_id`; terminal publication binds both `source_candidate_id` and exact `candidate_commit_sha`.
+
 ## Transition contracts
 
 ### T-001 — DEFINED → OPEN
@@ -101,14 +119,16 @@ Sequence:
 candidate-bound Critic disposition
 → Reviewer
 → Verifier
-→ optional assurance dispositions
+→ any assurance explicitly promoted to required candidate assurance
 ```
 
 Postconditions:
 
-- every required assurance is bound to the same exact frozen identity;
-- optional assurance is explicitly resolved;
+- every **required candidate assurance** is bound to the same exact `source_candidate_id`;
+- optional evaluation/drift may remain PENDING unless promoted to required candidate assurance;
 - source remains immutable.
+
+Optional assurance must be explicitly resolved before `CLOSED_SUCCESS`, but does not block candidate commit by default.
 
 ### T-004 — ASSURED → CANDIDATE_STAGED
 
@@ -163,22 +183,26 @@ Postconditions:
 
 ### T-006 — CANDIDATE_COMMITTED → TERMINAL_PREPARED
 
-Owner: Lifecycle Engine + coordination transaction layer.
+Owner: Lifecycle Engine + Git Transaction Layer.
 
 Preconditions:
 
-- exact candidate commit exists;
-- assurance bindings refer to that candidate;
-- required closeout evidence exists.
+- exact `candidate_commit_sha` exists;
+- assurance bindings refer to the same `source_candidate_id`;
+- required terminal-only closeout/process evidence exists.
 
 Mutation:
 
-- prepare final plan/tasklist/registry/project-map/release-state projection while WB is still active.
+- generate final plan/tasklist/registry/project-map/release-state projection while WB is still active;
+- validate it;
+- stage all permitted terminal projection files except the canonical inactive lifecycle-state delta.
 
 Postconditions:
 
 - terminal projection is fully validated;
-- no further source mutation is needed;
+- staged terminal bytes equal their worktree copies;
+- no source path is staged;
+- no further source mutation or ordinary evidence generation is needed;
 - WB is still active.
 
 ### T-007 — TERMINAL_PREPARED → CLOSED_SUCCESS
@@ -187,9 +211,11 @@ Owner: Lifecycle Engine.
 
 Preconditions:
 
-- candidate commit exists;
-- terminal projection has already been prepared and validated;
-- required assurance is complete;
+- exact candidate commit exists;
+- terminal projection is already generated, validated, and staged except for the inactive lifecycle-state delta;
+- required candidate assurance is complete;
+- optional assurance is explicitly resolved;
+- Process Feedback/terminal evidence disposition is resolved;
 - no unresolved required evidence remains.
 
 Mutation:
@@ -198,8 +224,8 @@ Mutation:
 
 Postconditions:
 
-- no new source or coordination evidence should need to be created;
-- only canonical terminal materialization remains.
+- no new source or ordinary coordination/evidence artifact may be created;
+- Git Transaction Layer may stage only the canonical inactive lifecycle-state delta required by the terminal commit.
 
 ### T-008 — CLOSED_SUCCESS → TERMINAL_COMMITTED
 
@@ -221,19 +247,34 @@ Postconditions:
 
 ### T-009 — TERMINAL_COMMITTED → PUBLISHED
 
-Owner: Git pre-push + remote GitHub + CI/published conformance.
+Owner: Git pre-push + remote Git host.
 
 Preconditions:
 
+- local published-conformance dry run passes on exact terminal history;
 - exact non-force push;
 - target is exact subject branch;
 - terminal history validates.
 
 Postconditions:
 
-- branch is published;
-- CI/published-object checks run;
-- result may become READY_FOR_GITHUB_ARCHITECTURE_REVIEW.
+- remote subject-branch ref points to the exact terminal SHA.
+
+### T-010 — PUBLISHED → PUBLISHED_VERIFIED
+
+Owner: CI / published conformance.
+
+Preconditions:
+
+- exact remote terminal SHA is known;
+- CI/published-object checks are evaluated for that exact SHA.
+
+Postconditions:
+
+- published conformance is READY;
+- state is eligible for `READY_FOR_GITHUB_ARCHITECTURE_REVIEW`.
+
+A mere successful push is not sufficient for architecture-review readiness.
 
 ## Recovery transitions
 
@@ -298,19 +339,36 @@ Canonical recovery must not depend on incidental `git reset --soft` index semant
 
 ### R-004 — CANDIDATE_COMMITTED → TERMINAL_REPAIR
 
-Use when source candidate is unchanged and only terminal/coordination/evidence state needs repair.
+Use when source candidate is unchanged and only **terminal-only** coordination/process evidence needs repair.
 
 Preserved:
 
 - candidate commit;
-- frozen identity;
-- source assurance, unless the repaired artifact is itself part of that assurance contract.
+- `source_candidate_id`;
+- source assurance.
+
+Forbidden:
+
+- rewriting candidate-bound Critic/Reviewer/Verifier/test evidence already contained in the candidate commit.
 
 Goal:
 
 - repair terminal projection without replaying the full source assurance cycle.
 
-### R-005 — EVIDENCE_REPAIR
+### R-005 — CANDIDATE_COMMITTED → RECOVER_CANDIDATE_PACKAGE
+
+Use when candidate-bound evidence inside an unpublished candidate commit requires formatting/binding repair but source bytes and substantive assurance remain valid.
+
+Postconditions:
+
+- source candidate identity preserved;
+- exact candidate package commit is replaced;
+- affected evidence is repaired/revalidated;
+- substantive assurance is replayed only if its verdict/binding meaning changed.
+
+A source or substantive assurance defect uses normal REWORK instead.
+
+### R-006 — EVIDENCE_REPAIR
 
 Use when only report structure/metadata is invalid.
 
@@ -323,7 +381,7 @@ Invalidation:
 - only the evidence validation that depends on that artifact;
 - no source freeze invalidation if candidate bytes are unchanged.
 
-### R-006 — REPORTING_ONLY_STOP
+### R-007 — REPORTING_ONLY_STOP
 
 Use when work cannot be completed successfully.
 
@@ -431,10 +489,12 @@ Validate the published result independently.
 
 Retains merge, deploy, release, destructive production operations, and exceptional recovery authority where explicitly required.
 
-## Open design questions
+## Resolved by Architecture Freeze v0.2
 
-1. Can a successor WB begin after `STOPPED`, and what terminal/history boundary is required?
-2. Which coordination artifacts are part of candidate assurance versus terminal evidence only?
-3. Should contract-only changes always repeat Reviewer/Verifier, or only when they can affect the frozen candidate semantics?
-4. How should the Git Transaction Layer expose bounded Owner-authorized recovery to different runtimes without runtime-specific policy duplication?
-5. Which schema/parser implementation should become the single canonical contract reader?
+- A successor WB may begin after a valid STOPPED terminal boundary only with a clean canonical branch and no implicit carry-over of unfinished source.
+- Candidate versus terminal evidence is explicitly separated; candidate-bound evidence must be valid before candidate commit.
+- Enforcement-relevant contract changes require fresh Define Critic and downstream assurance as applicable; explicitly schema-classified non-semantic changes do not.
+- Recovery is exposed through named lifecycle capabilities calling a shared Git Transaction Layer.
+- One shared Python Contract Reader with one YAML implementation is the current target; the architecture does not mandate a specific schema framework dependency.
+- `source_candidate_id` is the authoritative frozen source identity; candidate/terminal commit SHAs are package/history provenance.
+- `PUBLISHED` and `PUBLISHED_VERIFIED` are distinct external publication states.
