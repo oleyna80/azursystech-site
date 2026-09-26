@@ -536,7 +536,7 @@ Parser/schema result must be identical.
 9. Git source view is an input to the reader, not a reason to duplicate parsing logic.
 10. Closeout manifest is generated from typed canonical lifecycle/evidence bindings.
 
-## Resolved by Architecture Freeze v0.2
+## Resolved by Architecture Freeze v0.6
 
 - Mutable authoritative lifecycle state uses JSON.
 - Durable human governance/evidence uses constrained YAML frontmatter + Markdown body.
