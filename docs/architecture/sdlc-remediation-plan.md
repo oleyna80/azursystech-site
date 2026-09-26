@@ -145,9 +145,20 @@ Likely future Work Block:
 
 ## Phase F — Shared schema/parser layer
 
+Detailed schema/contract model: `docs/architecture/sdlc-schema-contract-model.md`.
+
 Primary objective:
 
 Remove independent interpretations of the same repository contract.
+
+Target architecture:
+
+- one canonical Contract Reader;
+- versioned strict artifact schemas;
+- one canonical path grammar;
+- identical parsing semantics for worktree/index/commit/published views;
+- schema/binding validation at artifact creation/finalization time;
+- transition semantics kept outside the parser.
 
 Candidate shared contracts:
 
@@ -159,10 +170,13 @@ Candidate shared contracts:
 
 Required properties:
 
-- strict types;
+- strict types with no truthiness coercion;
 - duplicate-key rejection;
-- malformed YAML rejection;
+- malformed/unsupported YAML rejection;
 - control-character rejection;
+- explicit schema version separate from WB business revision;
+- stable machine-readable error classes;
+- consumer parity tests across lifecycle, hooks and published conformance;
 - consistent behavior in lifecycle, local hooks, and published conformance.
 
 Likely future Work Block:
