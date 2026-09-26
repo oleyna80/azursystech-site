@@ -387,10 +387,10 @@ Keep irreversible/high-impact operations protected by remote/platform/Owner cont
 9. Exceptional recovery should become named lifecycle capabilities instead of ad-hoc Git command authorization.
 10. Worktree/session binding must be explicit.
 
-## Open questions
+## Resolved by Architecture Freeze v0.2
 
-1. Which external GitHub protections are guaranteed available in every repository tier used by AzurSysTech?
-2. Should exact subject-branch push be allowed immediately after local terminal validation or only after a local published-conformance dry run?
-3. Which infrastructure operations can be classified as ordinary bounded engineering versus always Owner-controlled?
-4. Does the future Git Transaction Layer need its own executable entrypoint, or should lifecycle commands call it internally?
-5. What minimum normalized event schema is shared by Codex, Claude Code, and future runtimes?
+- The architecture does not assume identical GitHub protection features across repository/account tiers. Available remote protections are used where present; Owner-controlled boundaries remain non-delegated where remote enforcement is unavailable.
+- Exact subject-branch push requires a local published-conformance dry run on the exact terminal history before non-force publication.
+- Production/live infrastructure mutation is Owner-controlled by default. Non-production/test infrastructure may be autonomous only inside an explicit bounded WB contract.
+- Lifecycle commands call the shared Git Transaction Layer internally. A standalone low-level transaction CLI, if present for diagnostics/tests, is not normal agent authority.
+- The normalized runtime event contains runtime/adapter identity, session/context identity when available, bound root, requested operation/tool class, normalized command/arguments, explicit target paths/ref targets where available, and authoritative lifecycle/WB identity. Runtime-specific extras are provenance only.
