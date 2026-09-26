@@ -192,6 +192,7 @@ Mutation:
 Postconditions:
 
 - `candidate_commit_sha` durably records the exact source candidate + finalized candidate-bound evidence package;
+- package includes the authoritative candidate lifecycle-state snapshot with frozen source identity and required assurance bindings;
 - candidate-bound evidence is immutable for that package;
 - lifecycle remains active for optional dispositions and terminal preparation.
 
@@ -409,13 +410,23 @@ Invalidation:
 
 ### R-007 — REPORTING_ONLY_STOP
 
-Use when work cannot be completed successfully.
+Use when work cannot be completed successfully from any active lifecycle phase.
+
+Mutation / history contract:
+
+- create stop/coordination evidence;
+- do not include uncommitted source candidate bytes;
+- create a STOPPED terminal commit whose parent is current branch HEAD;
+- write canonical STOPPED/inactive lifecycle projection;
+- clean the canonical index.
 
 Postconditions:
 
 - reason/blocker is durable;
+- whether a candidate commit existed before stop is recorded;
 - no synthetic READY/SKIPPED is created;
-- active WB is released into an explicit STOPPED state.
+- active WB is released into an explicit STOPPED state;
+- unfinished source, if preserved, exists only as explicit non-authoritative recovery material outside successor authority.
 
 `STOPPED` must not be represented as successful completion.
 
