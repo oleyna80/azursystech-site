@@ -100,6 +100,18 @@ Expected:
 - EVIDENCE_REPAIR fixes only report metadata;
 - source assurance is not replayed unless substantive verdict/binding changed.
 
+### H-R02B — Finalized evidence supersession
+
+Prepare a finalized Reviewer/Verifier/Define evidence artifact with a non-substantive metadata defect discovered after finalization but before candidate commit.
+
+Expected:
+
+- historical finalized evidence is not edited;
+- replacement evidence is created with explicit `supersedes` linkage;
+- lifecycle binding moves to the replacement;
+- `source_candidate_id` remains unchanged;
+- no source assurance replay occurs when substantive verdict/binding meaning is unchanged.
+
 ### H-R03 — Stale candidate-index rebuild
 
 Prepare:
@@ -266,6 +278,9 @@ Global invariants to assert after every step:
 - subject branch/base consistent;
 - write-set authority does not silently expand;
 - source candidate identity binds exact base + changed-path state/mode/content and changes only when that canonical source projection changes;
+- Define Critic/candidate disposition bind the exact `contract_projection_id`;
+- schema-declared progress/status-only changes do not alter `contract_projection_id`;
+- finalized evidence is never modified in place; supersession preserves history;
 - index-only transition never changes worktree candidate;
 - evidence repair never changes source candidate;
 - no stale assurance authorizes a changed candidate;
