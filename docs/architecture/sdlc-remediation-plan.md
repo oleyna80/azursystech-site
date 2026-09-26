@@ -171,6 +171,8 @@ Likely future Work Block:
 
 ## Phase G — Hook simplification
 
+Detailed authority/control model: `docs/architecture/sdlc-authority-control-model.md`.
+
 Primary objective:
 
 Reduce hooks to deterministic enforcement at the correct control points.
@@ -178,6 +180,8 @@ Reduce hooks to deterministic enforcement at the correct control points.
 Runtime hooks should answer:
 
 > Is this already-defined transition allowed from the current state?
+
+Runtime-specific adapters should only normalize events into one shared runtime-neutral evaluator. Local hooks remain cooperative guardrails; merge/deploy/protected-branch/production boundaries must remain independently enforced by Owner and external platform controls.
 
 They should not:
 
