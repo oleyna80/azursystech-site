@@ -50,10 +50,10 @@ clean trusted base
 → candidate-bound Critic disposition
 → Reviewer READY
 → Verifier READY
-→ optional assurance dispositions
-→ MATERIALIZE_FROZEN_CANDIDATE
+→ MATERIALIZE_CANDIDATE_PACKAGE
 → candidate pre-commit
 → candidate commit
+→ optional assurance dispositions
 → TERMINAL_PREPARED
 → terminal projection validation
 → success closeout
@@ -100,23 +100,25 @@ Expected:
 - EVIDENCE_REPAIR fixes only report metadata;
 - source assurance is not replayed unless substantive verdict/binding changed.
 
-### H-R03 — Stale index rebuild
+### H-R03 — Stale candidate-index rebuild
 
 Prepare:
 
-- exact frozen worktree candidate;
-- READY assurance;
+- exact frozen worktree source matching `source_candidate_id`;
+- READY required candidate assurance;
+- finalized candidate-bound evidence;
 - stale index from prior state.
 
 Expected:
 
-`REBUILD_FROZEN_INDEX` changes index only and ends with staged source exactly equal to frozen candidate.
+`REBUILD_CANDIDATE_INDEX` changes index only and ends with the complete staged source + candidate-evidence package.
 
 Assert:
 
 - no worktree source mutation;
-- frozen identity unchanged;
-- Reviewer/Verifier bindings unchanged.
+- `source_candidate_id` unchanged;
+- Reviewer/Verifier bindings unchanged;
+- no terminal-only or extra path is staged.
 
 ### H-R04 — Unpublished candidate recovery
 
@@ -134,16 +136,29 @@ Assert:
 - old candidate assurance invalidated;
 - no force operation.
 
-### H-R05 — Terminal evidence repair
+### H-R05 — Terminal-only evidence repair
 
-Prepare a committed assured candidate and a terminal projection with an evidence-only defect.
+Prepare a committed assured candidate and a terminal projection with a terminal-only evidence defect.
 
 Expected:
 
 - candidate commit remains;
 - source assurance remains valid;
-- terminal/evidence artifact can be repaired;
+- terminal-only evidence can be repaired;
+- candidate-bound evidence remains immutable;
 - no full source assurance replay.
+
+### H-R05B — Candidate package evidence repair
+
+Prepare an unpublished candidate commit whose source candidate and substantive assurance remain valid but whose candidate-bound evidence metadata is defective.
+
+Expected:
+
+- `RECOVER_CANDIDATE_PACKAGE` returns to candidate-package preparation;
+- `source_candidate_id` remains unchanged;
+- affected evidence is repaired/revalidated;
+- replacement candidate commit is created;
+- no source assurance replay unless substantive verdict/binding changed.
 
 ### H-R06 — Reporting-only STOPPED
 
@@ -154,6 +169,9 @@ Expected:
 - blocker/reason durable;
 - no synthetic READY/SKIPPED;
 - state becomes explicit STOPPED;
+- canonical stopped branch/index are clean;
+- unfinished source is not implicitly carried forward;
+- any preserved unfinished work exists only in explicit non-authoritative recovery material;
 - history/evidence remains inspectable.
 
 ## Negative scenarios
@@ -247,7 +265,7 @@ Global invariants to assert after every step:
 - WB identity unchanged unless transition explicitly closes it;
 - subject branch/base consistent;
 - write-set authority does not silently expand;
-- source candidate identity changes only on source mutation;
+- source candidate identity binds exact base + changed-path state/mode/content and changes only when that canonical source projection changes;
 - index-only transition never changes worktree candidate;
 - evidence repair never changes source candidate;
 - no stale assurance authorizes a changed candidate;
