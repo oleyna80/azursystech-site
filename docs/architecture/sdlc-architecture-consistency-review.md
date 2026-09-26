@@ -1,6 +1,6 @@
 ---
 artifact_type: architecture_review
-status: ready_for_owner_freeze_decision
+status: completed_owner_approved
 scope: docs-only
 not_work_block: true
 reviewed_freeze_revision: v0.6
@@ -482,6 +482,13 @@ Resolution:
 
 
 
+## Owner freeze decision
+
+- **Decision:** Architecture Freeze v0.6 approved.
+- **Date:** 2026-09-26.
+- **Result:** the consistency review is complete and the reviewed architecture is frozen.
+- **Next step:** derive bounded remediation Work Blocks from the frozen architecture; implementation remains separately authorized per Work Block.
+
 ## Final consistency pass — v0.6
 
 Result: **READY_FOR_OWNER_FREEZE_DECISION**
@@ -508,7 +515,7 @@ Final cross-checks confirm:
 
 No material internal contradiction is currently identified.
 
-This review does **not** mark the architecture frozen. Freeze status remains an Owner decision.
+The Owner has approved Architecture Freeze v0.6. The architecture is frozen; later changes require an explicit architecture amendment.
 
 ## Preliminary review result
 
