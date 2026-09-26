@@ -1,12 +1,12 @@
 ---
 artifact_type: architecture_decision
 status: proposed
-revision: v0.1
+revision: v0.2
 scope: docs-only
 not_work_block: true
 ---
 
-# SDLC Architecture Freeze v0.1
+# SDLC Architecture Freeze v0.2
 
 ## Purpose
 
@@ -56,6 +56,14 @@ In particular:
 
 Freeze creates one exact immutable source-candidate identity.
 
+The authoritative identity is `source_candidate_id`.
+
+For the current architecture it is a deterministic `content-sha256:<digest>` over the canonical ordered frozen source projection: repository-relative source path plus exact blob bytes for every path in the frozen source set.
+
+`candidate_commit_sha` is durable package/provenance identity and is **not** a competing source-candidate identity. `terminal_commit_sha` is the terminal history boundary.
+
+Reviewer and Verifier bind `source_candidate_id`. Terminal publication binds both the same `source_candidate_id` and the exact `candidate_commit_sha`.
+
 After freeze:
 
 - source bytes are immutable;
@@ -103,9 +111,21 @@ The staged source projection exactly equals the frozen candidate and contains no
 
 Candidate source and required candidate evidence are durable in history.
 
-### TERMINAL_PREPARED / CLOSED_SUCCESS
+### TERMINAL_PREPARED
 
-Only the prepared terminal projection and canonical inactive lifecycle state may be materialized for the terminal commit.
+The candidate commit already exists.
+
+All terminal projection files except the canonical inactive lifecycle-state delta are generated, validated, and staged while the WB is still active.
+
+The index contains only permitted terminal projection paths, no source path is staged, and staged terminal bytes equal their worktree copies.
+
+### CLOSED_SUCCESS
+
+Lifecycle state becomes canonical inactive only after the terminal projection is already prepared.
+
+The Git Transaction Layer may then stage only the canonical inactive lifecycle-state delta required for the terminal commit.
+
+No new source or ordinary evidence generation is allowed after this point.
 
 ## 6. Recovery
 
@@ -153,7 +173,7 @@ Canonical postcondition:
 
 ### Terminal repair
 
-If candidate source is unchanged and only terminal/evidence state is defective:
+If candidate source is unchanged and only **terminal-only** coordination/process evidence is defective:
 
 ```text
 CANDIDATE_COMMITTED
@@ -162,6 +182,23 @@ CANDIDATE_COMMITTED
 ```
 
 The candidate commit and source assurance remain valid.
+
+`TERMINAL_REPAIR` may not rewrite candidate-bound Critic/Reviewer/Verifier/test evidence already contained in the candidate commit.
+
+### Candidate package evidence repair
+
+If a candidate-bound evidence defect is discovered after an unpublished candidate commit:
+
+```text
+CANDIDATE_COMMITTED
+→ RECOVER_CANDIDATE_PACKAGE
+→ candidate package preparation
+→ replacement candidate commit
+```
+
+The transition preserves `source_candidate_id` and substantive assurance verdicts only when their exact bindings and meaning remain valid. It repairs/revalidates candidate evidence and creates a replacement `candidate_commit_sha`.
+
+A substantive assurance or source change uses normal REWORK instead.
 
 ## 7. STOPPED / reporting-only semantics
 
@@ -176,10 +213,12 @@ A failed or intentionally abandoned WB may end in explicit `STOPPED`.
 
 A successor WB may start after a valid STOPPED terminal boundary only when:
 
-- the stopped branch has no unresolved staged source/index state;
+- the canonical stopped branch has no unresolved staged source/index state;
 - unfinished source work is not silently carried into the successor;
-- any preserved unfinished work remains on the stopped branch or is stored as explicit non-authoritative recovery material;
+- any unfinished source worth preserving is stored through an explicit **non-authoritative recovery mechanism** outside successor authority, such as a separate recovery ref, generated patch/bundle, or dedicated recovery worktree;
 - the successor declares the STOPPED terminal commit as its trusted predecessor when using the same history line.
+
+Dirty worktree state is never treated as durable STOPPED evidence.
 
 This keeps the repository transactionally clean without pretending the stopped WB succeeded.
 
@@ -208,7 +247,11 @@ Requires:
 
 ### CONTRACT — non-semantic
 
-Only explicitly classified non-enforcement metadata/editorial fields may use contract/evidence repair without full assurance replay.
+Only fields explicitly classified by the artifact schema/architecture as non-enforcement metadata/editorial fields may use contract/evidence repair without full assurance replay.
+
+An implementation agent may not self-classify an arbitrary change as non-semantic.
+
+Markdown body edits are non-semantic only where the artifact contract explicitly states that the body is non-authoritative.
 
 Unknown contract changes default to enforcement-relevant.
 
@@ -244,13 +287,16 @@ Independent reproduction/verification of the same exact frozen candidate.
 
 ### Optional evaluation/drift
 
+`ASSURED` means required candidate assurance is complete for the exact frozen source candidate.
+
 Optional assurance must be explicitly resolved before successful closeout.
 
 Default policy:
 
+- optional evaluation/drift may remain PENDING through `CANDIDATE_STAGED` and `CANDIDATE_COMMITTED`;
 - optional evaluation/drift do **not** block candidate commit;
 - they **do** block successful closeout while PENDING;
-- a WB specification may explicitly promote one to required candidate assurance.
+- a WB specification may explicitly promote one to required candidate assurance, in which case it becomes part of `ASSURED` and candidate-commit prerequisites.
 
 ### Assurance freshness
 
@@ -264,13 +310,15 @@ Any new freeze invalidates candidate-bound assurance even if the resulting sourc
 
 ### Candidate commit contains
 
-- exact source candidate;
+- exact source candidate corresponding to `source_candidate_id`;
 - current enforcement-relevant contract revision needed to judge that candidate;
 - candidate-bound Critic disposition;
 - Reviewer report;
 - Verifier report;
 - required candidate-bound test evidence;
 - other artifacts explicitly declared candidate assurance.
+
+All candidate-bound evidence must be schema/binding-valid before candidate commit. After commit it is immutable within that candidate package; repairs use `RECOVER_CANDIDATE_PACKAGE` rather than `TERMINAL_REPAIR`.
 
 ### Terminal commit contains
 
@@ -473,6 +521,13 @@ Exact subject-branch publication may be autonomous after:
 
 After push, CI/published conformance runs independently.
 
+Publication status is explicit:
+
+- `PUBLISHED` — exact remote subject-branch ref now points to the expected terminal SHA;
+- `PUBLISHED_VERIFIED` — CI/published conformance is READY for that exact remote SHA.
+
+`READY_FOR_GITHUB_ARCHITECTURE_REVIEW` requires `PUBLISHED_VERIFIED`.
+
 Merge and deploy remain separate Owner decisions.
 
 ## 22. External platform controls
@@ -561,17 +616,38 @@ Each implementation WB:
 
 ## 28. Proposed implementation sequence
 
-1. **Git Transaction & Index Recovery**
-2. **Terminal Transaction & Closeout Ordering**
-3. **Assurance & Evidence Contract Cleanup**
-4. **Control-Plane Schema Unification**
-5. **Hook Responsibility Simplification**
-6. **SDLC E2E Transaction Harness**
-7. **Final Conformance Hardening**
+Use a diagnostic-first sequence so integration failures are visible before enforcement changes accumulate:
+
+0. **SDLC E2E Baseline Harness** — fixture infrastructure and current expected blockers; no governance redesign.
+1. **Contract Reader Foundation** — minimal strict schemas/path grammar/parity for fields already used by enforcement.
+2. **Git Transaction & Index Recovery**.
+3. **Terminal Transaction & Closeout Ordering**.
+4. **Assurance & Evidence Contract Cleanup**.
+5. **Hook Responsibility Simplification**.
+6. **E2E Green + Final Schema Migration + Conformance Hardening**.
+
+The harness is extended after every implementation WB. Expected blockers are converted into passing scenarios as their owning remediation lands.
 
 A WB may be split further if its write-set or acceptance surface becomes too broad.
 
-## 29. Freeze acceptance criteria
+## 29. Staged migration compatibility
+
+Because the revision is implemented across multiple Work Blocks, partial migration must remain coherent.
+
+Every remediation WB must declare:
+
+- old behavior still supported;
+- new behavior introduced;
+- producer and consumer versions involved;
+- activation point for the new state/capability/schema;
+- compatibility tests;
+- rollback boundary.
+
+A new state, transition, schema, or enforcement rule becomes authoritative only when the required producer, consumer, validation path, and E2E scenario are present together.
+
+Do not activate a new control merely because one layer has implemented it.
+
+## 30. Freeze acceptance criteria
 
 This architecture can be marked `frozen` when the Owner confirms:
 
