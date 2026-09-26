@@ -1,6 +1,6 @@
 ---
 artifact_type: remediation_plan
-status: draft
+status: ready_for_work_block_planning
 scope: docs-only
 not_work_block: true
 ---
@@ -9,9 +9,17 @@ not_work_block: true
 
 ## Status
 
-Draft architecture plan derived from the SDLC audit.
+Implementation planning sequence derived from the frozen SDLC Architecture v0.6.
 
 This document does not authorize implementation. Each implementation batch must later be converted into a separate bounded Work Block with its own scope, acceptance criteria, Critic, assurance, and publication flow.
+
+
+
+## Planning status
+
+Architecture design is frozen. The next activity is **Work Block decomposition**, not further architecture redesign.
+
+No remediation implementation is authorized by this document alone. Each implementation batch requires its own bounded Work Block contract.
 
 ## Guiding principle
 
@@ -44,7 +52,7 @@ Exit criteria:
 
 ## Phase B — Freeze target architecture
 
-Proposed freeze document: `docs/architecture/sdlc-architecture-freeze.md`.
+Frozen architecture contract: `docs/architecture/sdlc-architecture-freeze.md` revision v0.6.
 
 Decide and document:
 
@@ -57,12 +65,12 @@ Decide and document:
 7. STOPPED/reporting-only semantics;
 8. single schema/parser ownership.
 
-Exit criteria:
+Exit criteria: **COMPLETE (2026-09-26)**
 
-- the Owner approves the proposed architecture freeze;
-- one approved architecture model exists;
-- no two layers independently define conflicting transition semantics;
-- later implementation Work Blocks treat the frozen architecture as their contract rather than redesigning it opportunistically.
+- Owner approved Architecture Freeze v0.6;
+- one frozen architecture model exists;
+- the consistency review found no remaining material internal contradiction;
+- later implementation Work Blocks must treat the frozen architecture as their contract rather than redesigning it opportunistically.
 
 ## Phase C — Git transaction layer
 
