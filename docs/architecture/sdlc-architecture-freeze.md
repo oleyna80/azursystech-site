@@ -1,12 +1,12 @@
 ---
 artifact_type: architecture_decision
 status: proposed
-revision: v0.5
+revision: v0.6
 scope: docs-only
 not_work_block: true
 ---
 
-# SDLC Architecture Freeze v0.5
+# SDLC Architecture Freeze v0.6
 
 ## Purpose
 
@@ -83,6 +83,26 @@ After freeze:
 - exact publication authority may become available after assurance without reopening source writes.
 
 `source_mutable` and `candidate_publishable` are independent properties.
+
+## 3A. Define contract identity
+
+The enforcement-relevant contract approved by Define Critic has one canonical identity: `contract_projection_id`.
+
+It is derived from the normative Define contract, including:
+
+- full normative specification content;
+- source/coordination authority;
+- acceptance criteria;
+- normative plan/task definitions;
+- branch/base and other admission semantics.
+
+Schema-declared progress/status/evidence fields are excluded from this projection.
+
+Until structured plan/task schemas are available, unknown plan/task changes default to contract-relevant.
+
+Define Critic and candidate-bound Critic disposition bind `contract_projection_id`.
+
+Exact file digests remain provenance and audit evidence, but they do not by themselves force assurance replay when only schema-declared non-semantic progress fields changed.
 
 ## 4. Git transaction layer
 
@@ -293,7 +313,15 @@ Unknown contract changes default to enforcement-relevant.
 
 Formatting/metadata repair with unchanged substantive verdict/binding.
 
-Invalidates only the affected evidence artifact/validation.
+Rules:
+
+- draft evidence may be corrected by its owner before finalization;
+- finalized evidence is immutable and never edited in place;
+- post-finalization repair creates a new version/artifact with explicit `supersedes` linkage;
+- lifecycle binding moves to the replacement only through a supported evidence transition;
+- historical evidence remains preserved.
+
+Invalidates only the affected evidence binding/validation unless the substantive verdict or candidate/contract binding changes.
 
 ### INDEX
 
@@ -307,9 +335,11 @@ Invalidates no assurance.
 
 Contract assurance before implementation.
 
+Binds the exact `contract_projection_id` plus provenance for the reviewed artifacts.
+
 ### Candidate-bound Critic disposition
 
-Separate artifact binding the resolved Define Critic decision to one exact frozen candidate.
+Separate artifact binding the resolved Define Critic decision, including the same `contract_projection_id`, to one exact frozen candidate.
 
 ### Reviewer
 
@@ -357,7 +387,11 @@ Any new freeze invalidates candidate-bound assurance even if the resulting sourc
 
 The candidate lifecycle-state snapshot records at least WB/branch/base/contract binding, frozen `source_candidate_id`, required candidate assurance status, source write gate, and optional assurance state. Optional assurance may still be PENDING at candidate commit.
 
-All candidate-bound evidence must be schema/binding-valid before candidate commit. After commit it is immutable within that candidate package; repairs use `RECOVER_CANDIDATE_PACKAGE` rather than `TERMINAL_REPAIR`.
+All candidate-bound evidence must be schema/binding-valid before candidate commit.
+
+Finalized evidence is immutable. A repair after finalization creates a superseding artifact/version rather than rewriting history.
+
+After candidate commit, candidate-bound evidence is immutable within that package; repairs use `RECOVER_CANDIDATE_PACKAGE` and a replacement candidate package rather than `TERMINAL_REPAIR`.
 
 ### Terminal commit contains
 
