@@ -311,3 +311,26 @@ Accepted direction:
 - structured blocker diagnostics;
 - no real merge/deploy in the harness.
 
+## Architecture freeze candidate
+
+The resolved design decisions are consolidated in:
+
+`docs/architecture/sdlc-architecture-freeze.md`
+
+Status: **proposed v0.1**.
+
+The freeze candidate resolves the current open questions for:
+
+- STOPPED successor semantics;
+- candidate versus terminal evidence;
+- contract-change invalidation;
+- runtime-neutral recovery exposure;
+- canonical Contract Reader implementation form;
+- optional assurance timing;
+- Process Feedback placement;
+- serialization/schema evolution;
+- exact subject-branch publication prerequisites;
+- E2E runtime/remote simulation strategy.
+
+No implementation authority is created by this proposal. Implementation begins only through separate bounded Work Blocks after Owner approval of the architecture freeze.
+
