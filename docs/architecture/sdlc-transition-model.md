@@ -177,19 +177,22 @@ Owner: Git + pre-commit guard.
 
 Preconditions:
 
-- staged source equals frozen candidate;
-- required assurance is READY/resolved;
+- index is in exact `CANDIDATE_STAGED` state;
+- staged source subset matches `source_candidate_id`;
+- staged candidate-evidence subset matches the finalized candidate evidence set;
+- required candidate assurance is READY/resolved;
 - commit metadata is valid;
-- no forbidden paths are staged.
+- no terminal-only, extra, or forbidden path is staged.
 
 Mutation:
 
-- append candidate commit to local history.
+- append candidate package commit to local history.
 
 Postconditions:
 
-- candidate commit durably records source + required evidence snapshot;
-- lifecycle remains active for terminal preparation.
+- `candidate_commit_sha` durably records the exact source candidate + finalized candidate-bound evidence package;
+- candidate-bound evidence is immutable for that package;
+- lifecycle remains active for optional dispositions and terminal preparation.
 
 ### T-006 — CANDIDATE_COMMITTED → TERMINAL_PREPARED
 
