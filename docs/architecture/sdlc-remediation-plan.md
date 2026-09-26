@@ -15,6 +15,36 @@ This document does not authorize implementation. Each implementation batch must 
 
 
 
+## Owner-approved Work Block order
+
+Approved by Owner on 2026-09-26.
+
+Implementation planning order:
+
+0. **SDLC E2E Baseline Harness**
+1. **Contract Reader Foundation**
+2. **Git Transaction & Index Recovery**
+3. **Terminal Transaction & Closeout Ordering**
+4. **Assurance & Evidence Contract Cleanup**
+5. **Hook Responsibility Simplification**
+6. **E2E Green + Final Schema Migration + Conformance Hardening**
+
+This order is now the planning baseline. Reordering or combining these batches requires an explicit architecture/planning amendment when it changes dependency assumptions or control-plane activation sequencing.
+
+## Bootstrap constraint before remediation implementation
+
+The current local WB-037 remains unfinished and blocked before publication.
+
+Therefore, before starting the first remediation Work Block, planning must define an explicit Owner-controlled bootstrap/recovery procedure that:
+
+- starts from a known published canonical base;
+- preserves WB-037 local materials/evidence needed for audit or later recovery;
+- does not treat the unfinished WB-037 state as a valid predecessor for a new remediation WB;
+- does not use force push, merge, deploy, or destructive cleanup;
+- leaves a clean, deterministic repository/index/history state for the first remediation Work Block.
+
+This bootstrap is a transition/setup action, not part of the remediation architecture itself.
+
 ## Planning status
 
 Architecture design is frozen. The next activity is **Work Block decomposition**, not further architecture redesign.
