@@ -185,3 +185,22 @@ This bootstrap does not decide whether WB-037 will later be:
 - formally STOPPED once the new STOPPED lifecycle exists.
 
 That is a separate Owner decision after the remediation control plane provides a safe supported transition.
+
+## Clean remediation worktree verification — 2026-09-26
+
+Operator verified after `git fetch origin --prune`:
+
+- local preserved WB-037 HEAD: `c4829e77e2e9ae6a694a7def87b381c54571fd6d`;
+- `origin/audit/hook-enforcement-036` resolves to the same exact SHA;
+- exact SHA is contained by the published remote WB-036 branch;
+- new local worktree created successfully;
+- new subject branch: `test/sdlc-e2e-baseline-038`;
+- new worktree HEAD: `c4829e77e2e9ae6a694a7def87b381c54571fd6d`;
+- new worktree status is clean.
+
+Remaining bootstrap check:
+
+- verify external WB-037 recovery artifact checksums from inside the recovery directory.
+
+After checksum verification succeeds, the bootstrap boundary is complete and WB-038 Define may begin in the new worktree.
+
