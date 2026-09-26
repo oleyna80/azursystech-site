@@ -54,8 +54,8 @@ clean trusted base
 → candidate pre-commit
 → candidate commit
 → optional assurance dispositions
+→ prepare + validate + stage terminal projection
 → TERMINAL_PREPARED
-→ terminal projection validation
 → success closeout
 → canonical inactive materialization
 → terminal pre-commit
