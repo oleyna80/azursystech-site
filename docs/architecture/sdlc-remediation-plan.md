@@ -72,10 +72,11 @@ Make worktree/index/history transitions explicit and deterministic.
 
 Expected capabilities:
 
-- materialize exact frozen candidate into index;
-- rebuild stale index from exact frozen candidate;
+- materialize the complete candidate package into index: exact frozen source + finalized candidate-bound evidence;
+- rebuild stale candidate index from canonical source/evidence bindings;
 - recover an unpublished candidate to a known canonical state;
-- verify no extra/forbidden path enters the index;
+- recover an unpublished candidate package for evidence-only repair without replaying source assurance when semantics are unchanged;
+- verify no terminal-only/extra/forbidden path enters the candidate index;
 - preserve source bytes during index-only transitions.
 
 Key invariant:
@@ -259,7 +260,7 @@ Minimum recovery scenarios:
 
 - source rework after Reviewer CHANGES_REQUIRED;
 - evidence-only repair;
-- stale-index rebuild;
+- stale candidate-index rebuild;
 - unpublished candidate recovery;
 - reporting-only STOPPED path.
 
