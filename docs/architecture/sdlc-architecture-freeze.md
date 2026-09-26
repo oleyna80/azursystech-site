@@ -1,12 +1,12 @@
 ---
 artifact_type: architecture_decision
 status: proposed
-revision: v0.3
+revision: v0.4
 scope: docs-only
 not_work_block: true
 ---
 
-# SDLC Architecture Freeze v0.3
+# SDLC Architecture Freeze v0.4
 
 ## Purpose
 
@@ -31,6 +31,7 @@ DEFINED
 → CLOSED_SUCCESS
 → TERMINAL_COMMITTED
 → PUBLISHED
+→ PUBLISHED_VERIFIED
 ```
 
 `IMPLEMENTING` is not a separate lifecycle state. It is represented by `OPEN + source_write_gate=READY`.
@@ -334,11 +335,13 @@ Any new freeze invalidates candidate-bound assurance even if the resulting sourc
 ### Candidate commit contains
 
 - exact source candidate corresponding to `source_candidate_id`;
-- current enforcement-relevant contract revision needed to judge that candidate;
+- current enforcement-relevant contract artifacts needed to judge that candidate;
+- exact Define Critic evidence referenced by the candidate-bound disposition;
 - candidate-bound Critic disposition;
 - Reviewer report;
 - Verifier report;
 - required candidate-bound test evidence;
+- any optional assurance explicitly promoted to required candidate assurance;
 - other artifacts explicitly declared candidate assurance.
 
 All candidate-bound evidence must be schema/binding-valid before candidate commit. After commit it is immutable within that candidate package; repairs use `RECOVER_CANDIDATE_PACKAGE` rather than `TERMINAL_REPAIR`.
@@ -348,10 +351,13 @@ All candidate-bound evidence must be schema/binding-valid before candidate commi
 - final plan/tasklist completion projection;
 - release-state / project-map / registry terminal projection where applicable;
 - standalone Process Feedback disposition/record;
+- optional evaluation/drift reports or explicit SKIPPED dispositions that were not promoted to candidate assurance;
 - generated closeout/terminal manifest;
 - canonical inactive lifecycle state.
 
-Process Feedback is not source assurance and does not block candidate commit by default.
+Process Feedback and non-promoted optional assurance are terminal evidence and do not block candidate commit by default.
+
+The closeout manifest references the exact optional assurance evidence/dispositions used for successful closeout.
 
 ## 11. Process Feedback
 
@@ -543,6 +549,8 @@ Exact subject-branch publication may be autonomous after:
 3. exact non-force push target is the subject branch.
 
 After push, CI/published conformance runs independently.
+
+The canonical delivery path ends only after published verification.
 
 Publication status is explicit:
 
