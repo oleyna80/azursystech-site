@@ -1,9 +1,9 @@
 ---
 artifact_type: architecture_review
-status: in_progress
+status: ready_for_owner_freeze_decision
 scope: docs-only
 not_work_block: true
-reviewed_freeze_revision: v0.5
+reviewed_freeze_revision: v0.6
 ---
 
 # SDLC Architecture Consistency Review
@@ -480,9 +480,39 @@ Resolution:
 - historical evidence remains preserved;
 - if the old evidence is already inside an unpublished candidate commit, use `RECOVER_CANDIDATE_PACKAGE` before creating the replacement candidate package.
 
+
+
+## Final consistency pass — v0.6
+
+Result: **READY_FOR_OWNER_FREEZE_DECISION**
+
+All CR-001 through CR-024 findings have been incorporated into Architecture Freeze v0.6 and synchronized into the supporting transition, assurance/evidence, authority/control, schema/contract, E2E, and remediation documents.
+
+Final cross-checks confirm:
+
+- no remaining `Open questions` sections in the architecture support documents;
+- no stale `MATERIALIZE_FROZEN_CANDIDATE` or `REBUILD_FROZEN_INDEX` terminology;
+- optional assurance timing is consistent: candidate commit is allowed with non-promoted optional assurance PENDING; successful closeout is not;
+- candidate package staging includes exact source + finalized candidate-bound evidence;
+- candidate package contains a durable candidate lifecycle-state snapshot;
+- terminal preparation is complete and staged before successful closeout except for the canonical inactive-state delta;
+- terminal repair cannot mutate candidate-bound evidence;
+- post-finalization evidence repair uses immutable superseding artifacts;
+- STOPPED has a durable clean terminal-history contract and cannot leak unfinished source into a successor;
+- `source_candidate_id`, `candidate_commit_sha`, and `terminal_commit_sha` have distinct non-competing meanings;
+- Define assurance binds `contract_projection_id`, allowing schema-declared progress/status updates without accidental Critic invalidation;
+- `PUBLISHED` and `PUBLISHED_VERIFIED` are distinct; architecture-review readiness requires the latter;
+- autonomous subject-branch push requires exact local published-conformance dry-run READY;
+- remediation order is diagnostic-first and includes staged migration compatibility;
+- the E2E harness begins before remediation and is extended after each implementation Work Block.
+
+No material internal contradiction is currently identified.
+
+This review does **not** mark the architecture frozen. Freeze status remains an Owner decision.
+
 ## Preliminary review result
 
-Freeze v0.5 is directionally coherent but is **not ready to mark frozen**.
+Historical note: freeze v0.5 required CR-023/CR-024. Those findings are resolved in v0.6.
 
 No architectural reset is required.
 
@@ -498,4 +528,4 @@ The findings are bounded clarifications of:
 
 Recommended next step:
 
-Produce freeze v0.6 incorporating CR-023/CR-024 and the prior accepted resolutions, synchronize supporting documents, then perform a final consistency pass.
+Completed: freeze v0.6 incorporates CR-001 through CR-024 and passed the final consistency pass.
