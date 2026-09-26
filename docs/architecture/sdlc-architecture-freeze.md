@@ -1,12 +1,12 @@
 ---
 artifact_type: architecture_decision
 status: proposed
-revision: v0.4
+revision: v0.5
 scope: docs-only
 not_work_block: true
 ---
 
-# SDLC Architecture Freeze v0.4
+# SDLC Architecture Freeze v0.5
 
 ## Purpose
 
@@ -235,6 +235,16 @@ A failed or intentionally abandoned WB may end in explicit `STOPPED`.
 - receives its own durable terminal boundary;
 - does not count as successful completion.
 
+A reporting-only STOP may occur from any active lifecycle phase.
+
+Its STOPPED terminal commit:
+
+- uses the current branch HEAD as parent;
+- contains only stop/coordination evidence plus the canonical STOPPED/inactive lifecycle projection;
+- contains no uncommitted source candidate bytes;
+- records whether a candidate commit already existed before stop;
+- leaves the canonical index clean after commit.
+
 A successor WB may start after a valid STOPPED terminal boundary only when:
 
 - the canonical stopped branch has no unresolved staged source/index state;
@@ -342,7 +352,10 @@ Any new freeze invalidates candidate-bound assurance even if the resulting sourc
 - Verifier report;
 - required candidate-bound test evidence;
 - any optional assurance explicitly promoted to required candidate assurance;
+- authoritative candidate lifecycle-state snapshot;
 - other artifacts explicitly declared candidate assurance.
+
+The candidate lifecycle-state snapshot records at least WB/branch/base/contract binding, frozen `source_candidate_id`, required candidate assurance status, source write gate, and optional assurance state. Optional assurance may still be PENDING at candidate commit.
 
 All candidate-bound evidence must be schema/binding-valid before candidate commit. After commit it is immutable within that candidate package; repairs use `RECOVER_CANDIDATE_PACKAGE` rather than `TERMINAL_REPAIR`.
 
