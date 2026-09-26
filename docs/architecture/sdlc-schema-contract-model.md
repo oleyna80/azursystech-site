@@ -178,6 +178,24 @@ Path parsing and Git path selection remain separate concerns:
 - Git Transaction Layer resolves the effective Git-selected paths;
 - policy validates that effective selection is inside declared authority.
 
+## Contract projection identity
+
+The Contract Reader must expose a canonical `contract_projection_id` for Define/admission assurance.
+
+The projection includes only enforcement-relevant contract semantics:
+
+- full normative specification content;
+- source/coordination authority;
+- acceptance criteria;
+- normative plan/task definitions;
+- branch/base and admission semantics.
+
+Schema-declared progress/status/evidence fields are excluded.
+
+Unknown plan/task changes default to contract-relevant until their schema explicitly classifies them otherwise.
+
+Exact file digests are retained as provenance but are distinct from `contract_projection_id`.
+
 ## Artifact schema registry
 
 The Contract Reader should dispatch by `artifact_type` and `schema_version`.
@@ -297,6 +315,18 @@ Required concepts:
 - Process Feedback disposition;
 - closeout mode;
 - STOPPED reason where applicable.
+
+## Finalized evidence immutability
+
+Schema validation distinguishes draft from authoritative finalized evidence.
+
+After finalization:
+
+- the artifact is immutable;
+- repair is represented by a new version/artifact;
+- the replacement declares `supersedes`;
+- validators preserve and recognize the historical predecessor;
+- consumers bind only the lifecycle-selected valid version.
 
 ## Validation timing
 
