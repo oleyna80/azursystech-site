@@ -30,8 +30,8 @@ Purpose:
 Binding:
 
 - exact Work Block id;
-- exact specification path/revision;
-- exact approved contract artifacts;
+- exact `contract_projection_id`;
+- exact specification path/revision and reviewed artifact provenance;
 - subject branch/base where relevant.
 
 Does **not** bind to a frozen source candidate because the source candidate does not yet exist.
@@ -62,10 +62,11 @@ This is a separate artifact from the Define Critic report.
 Binding:
 
 - Work Block id;
+- exact `contract_projection_id`;
 - exact specification path/revision;
 - original Define Critic report;
 - original Critic status/verdict;
-- exact frozen candidate identity;
+- exact `source_candidate_id`;
 - explicit skip reason when SKIPPED.
 
 Allowed only when the original Critic state is already resolved.
@@ -137,6 +138,19 @@ Target lifecycle semantics:
 - optional assurance must be explicitly resolved before successful terminal closeout;
 - a WB contract may explicitly promote an optional assurance to required candidate assurance, in which case it becomes part of ASSURED/candidate-commit prerequisites.
 
+## Evidence versioning
+
+Authoritative finalized assurance evidence is append-only/immutable.
+
+Rules:
+
+- draft artifacts may be corrected by their owner before lifecycle finalization;
+- finalized artifacts are never edited in place;
+- later repair creates a new version/artifact with explicit `supersedes` linkage;
+- the previous artifact remains durable historical evidence;
+- lifecycle binding changes only through a supported evidence transition;
+- if the finalized artifact is already included in an unpublished candidate package, use `RECOVER_CANDIDATE_PACKAGE` before creating the replacement package.
+
 ## Evidence classes
 
 ### E-001 — Assurance reports
@@ -152,7 +166,9 @@ These are substantive evidence.
 
 A semantic change to verdict/findings/bindings can affect assurance validity.
 
-A formatting-only repair may be handled by EVIDENCE_REPAIR if the substantive verdict and candidate binding remain unchanged and the artifact owner re-validates it.
+A draft formatting defect may be corrected before finalization.
+
+After finalization, evidence is immutable. A formatting-only repair creates a superseding evidence version/artifact with explicit `supersedes` linkage if the substantive verdict and candidate/contract binding remain unchanged.
 
 ### E-002 — Test evidence
 
