@@ -34,6 +34,24 @@ Reported preserved local WB-037 state:
 
 The operator must re-verify local facts immediately before bootstrap. Chat/audit records are not a substitute for live Git state.
 
+## Live local verification — 2026-09-26
+
+Operator output confirms:
+
+- local branch: `fix/shared-context-trigger-037`;
+- local HEAD: `c4829e77e2e9ae6a694a7def87b381c54571fd6d`;
+- active lifecycle Work Block: `WB-037`;
+- base commit: `c4829e77e2e9ae6a694a7def87b381c54571fd6d`;
+- write gate: `BLOCKED`;
+- frozen revision: `content-sha256:ccd0d263e0e01fc79187f1c6918ebf31f5232661f72ef1698bebd9787975dd21`;
+- Reviewer: READY for the same frozen revision;
+- Verifier: READY for the same frozen revision;
+- optional evaluation/drift: SKIPPED with explicit reasons;
+- the working copy contains a substantial staged WB-037 set, additional unstaged WB-037 changes, and many untracked files;
+- untracked `.agents/skills/**` material is present and must not be treated as WB-038 source implicitly.
+
+The local state therefore matches the bootstrap assumption: WB-037 must be preserved, not normalized in place.
+
 ## Decision
 
 Do **not** reset, clean, stash, or otherwise normalize the current WB-037 working copy merely to start remediation.
