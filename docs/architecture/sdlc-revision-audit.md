@@ -1,6 +1,6 @@
 ---
 artifact_type: architecture_audit
-status: draft
+status: completed
 scope: docs-only
 not_work_block: true
 ---
@@ -317,7 +317,7 @@ The resolved design decisions are consolidated in:
 
 `docs/architecture/sdlc-architecture-freeze.md`
 
-Status: **proposed v0.6 — consistency review complete; awaiting Owner freeze decision**.
+Status: **Architecture Freeze v0.6 approved and frozen on 2026-09-26**.
 
 The freeze candidate resolves the current open questions for:
 
@@ -336,3 +336,12 @@ No implementation authority is created by this proposal. Implementation begins o
 
 
 Architecture consistency review: `docs/architecture/sdlc-architecture-consistency-review.md`.
+
+## Audit completion
+
+The architecture audit is complete.
+
+Owner approved `docs/architecture/sdlc-architecture-freeze.md` revision v0.6 on 2026-09-26.
+
+The audit branch remains the durable architecture SSOT. Further changes to the frozen decisions require an explicit architecture amendment. Implementation work must be performed through separate bounded Work Blocks derived from the frozen architecture.
+
