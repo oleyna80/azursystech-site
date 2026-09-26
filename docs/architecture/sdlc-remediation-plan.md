@@ -114,26 +114,30 @@ Likely future Work Block:
 
 ## Phase E — Assurance and evidence contracts
 
+Detailed target model: `docs/architecture/sdlc-assurance-evidence-model.md`.
+
 Primary objective:
 
 Separate source assurance from evidence formatting/metadata validation.
 
 Define:
 
-- Define Critic;
-- candidate-bound Critic disposition;
-- Reviewer;
-- Verifier;
-- optional assurance;
-- Process Feedback;
-- closeout evidence;
+- Define Critic as contract assurance;
+- candidate-bound Critic disposition as a separate frozen-candidate binding;
+- Reviewer and Verifier as exact-candidate assurance;
+- explicit optional assurance dispositions;
+- Process Feedback as process/terminal evidence rather than source assurance;
+- closeout as a derived terminal manifest;
 - which transitions each artifact blocks.
 
 Required result:
 
+- evidence schemas are validated at artifact finalization time;
 - evidence-only repair does not automatically invalidate source assurance;
 - source changes always invalidate candidate assurance;
-- contract changes invalidate only the assurance layers whose semantics may have changed.
+- contract changes invalidate only assurance layers whose semantics may have changed;
+- index-only materialization invalidates no assurance;
+- closeout does not manually duplicate stale Critic/Reviewer/Verifier bindings.
 
 Likely future Work Block:
 
