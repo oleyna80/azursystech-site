@@ -378,6 +378,20 @@ Invariant:
 
 > Index materialization is not source mutation.
 
+## Assurance integration
+
+Detailed assurance/evidence semantics are defined in `sdlc-assurance-evidence-model.md`.
+
+Lifecycle-level rules:
+
+- Define Critic is contract assurance and precedes source mutation.
+- Candidate-bound Critic disposition is separate and binds the resolved Define Critic decision to one exact frozen candidate.
+- Reviewer and Verifier bind to the same frozen candidate.
+- Process Feedback is process/terminal evidence, not source assurance.
+- Evidence-only repair does not invalidate source assurance by default.
+- Index-only materialization never invalidates candidate assurance.
+- Successful closeout requires all required assurance resolved and optional assurance explicitly disposed, but no new source assurance should be generated after closeout.
+
 ## Authority boundaries
 
 ### Lifecycle Engine
