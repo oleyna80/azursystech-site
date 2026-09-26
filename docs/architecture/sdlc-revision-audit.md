@@ -275,3 +275,39 @@ Accepted direction:
 - the same parser/schema for worktree, index, local commits, and published Git objects;
 - transition semantics remain outside the parser.
 
+## E2E transaction harness audit
+
+Detailed design: `docs/architecture/sdlc-e2e-transaction-harness.md`.
+
+The E2E audit confirms that component-level green checks are insufficient for the SDLC control plane.
+
+### EH-F01 — Real transaction smoke tests expose integration defects
+
+WB-034 intentionally exercised the real lifecycle without repairing it during the run. This is the correct pattern for control-plane auditing.
+
+### EH-F02 — Bootstrap/session binding belongs in E2E coverage
+
+A runtime session bound to the wrong initial worktree could not be corrected by command-local `cd`; the harness must model session/worktree bootstrap explicitly.
+
+### EH-F03 — Terminal rehearsal must precede enforcement changes
+
+WB-037 showed that candidate/terminal rehearsal could expose defects that isolated validators missed.
+
+### EH-F04 — Recovery must be tested by postcondition
+
+The stale-index deadlock shows why the harness must validate the canonical state produced by recovery rather than assuming a Git command's incidental behavior is acceptable.
+
+### EH-F05 — Reachability is a first-class test property
+
+Every supported state must have at least one mechanically reachable legal next transition. A set of individually correct deny rules is not sufficient if their intersection blocks the happy path.
+
+Accepted direction:
+
+- synthetic full happy-path transaction;
+- recovery scenarios;
+- negative fail-closed scenarios;
+- parser/schema parity;
+- transition reachability assertions;
+- structured blocker diagnostics;
+- no real merge/deploy in the harness.
+
