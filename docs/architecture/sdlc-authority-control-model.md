@@ -226,7 +226,8 @@ Owner:
 Allowed autonomous publication is narrowly bounded:
 
 - exact subject branch;
-- exact expected HEAD;
+- exact expected terminal HEAD;
+- local published-conformance dry run READY for that exact history;
 - non-force;
 - non-default/non-protected target unless repository policy explicitly says otherwise;
 - valid candidate + terminal history;
@@ -318,7 +319,8 @@ A key authority distinction:
 Can be autonomous when:
 
 - the Work Block explicitly allows publication;
-- exact branch/ref and HEAD are known;
+- exact branch/ref and terminal HEAD are known;
+- local published-conformance dry run is READY for that exact history;
 - push is non-force;
 - assurance and history contracts are satisfied.
 
