@@ -52,7 +52,7 @@ Examples:
 
 - source REWORK after Reviewer/Verifier finding;
 - EVIDENCE_REPAIR;
-- REBUILD_FROZEN_INDEX;
+- REBUILD_CANDIDATE_INDEX;
 - terminal repair with unchanged candidate;
 - recovery of an unpublished candidate where the lifecycle transition has a deterministic postcondition.
 
@@ -389,7 +389,7 @@ Keep irreversible/high-impact operations protected by remote/platform/Owner cont
 9. Exceptional recovery should become named lifecycle capabilities instead of ad-hoc Git command authorization.
 10. Worktree/session binding must be explicit.
 
-## Resolved by Architecture Freeze v0.2
+## Resolved by Architecture Freeze v0.6
 
 - The architecture does not assume identical GitHub protection features across repository/account tiers. Available remote protections are used where present; Owner-controlled boundaries remain non-delegated where remote enforcement is unavailable.
 - Exact subject-branch push requires a local published-conformance dry run on the exact terminal history before non-force publication.
