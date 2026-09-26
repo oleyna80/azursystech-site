@@ -438,7 +438,7 @@ Accepted architectural direction:
 
 - Optional evaluation/drift do not block candidate commit by default; PENDING blocks successful closeout. A WB may promote one to required candidate assurance.
 - Process Feedback is standalone process/terminal evidence, not a hidden Reviewer-report requirement.
-- Candidate commit contains candidate-bound Critic disposition, Reviewer, Verifier, required candidate test evidence, exact source candidate, and enforcement-relevant contract revision.
-- Terminal commit contains Process Feedback, final release/task projections, generated closeout manifest, and canonical inactive lifecycle state.
+- Candidate commit contains exact source candidate, enforcement-relevant contract artifacts, the exact Define Critic evidence referenced by the disposition, candidate-bound Critic disposition, Reviewer, Verifier, required candidate test evidence, and any optional assurance promoted to required candidate assurance.
+- Terminal commit contains Process Feedback, non-promoted optional assurance reports/dispositions, final release/task projections, generated closeout manifest, and canonical inactive lifecycle state.
 - Any new freeze invalidates candidate-bound assurance, even if the resulting source digest equals an earlier freeze; no evidence-reuse optimization is part of this revision.
 - Contract fields explicitly classified by schema as non-semantic may be repaired without full assurance replay; all unknown contract changes default to enforcement-relevant.
