@@ -76,9 +76,10 @@ Owner: Lifecycle Engine.
 Preconditions:
 
 - approved specification exists;
+- exact `contract_projection_id` is known;
 - subject branch and base commit are known;
 - source and coordination write-sets are explicit;
-- Define Critic disposition is resolved;
+- Define Critic is resolved for that exact contract projection;
 - no conflicting active WB exists.
 
 Mutation:
@@ -389,9 +390,19 @@ A source or substantive assurance defect uses normal REWORK instead.
 
 Use when only report structure/metadata is invalid.
 
+Before finalization:
+
+- draft evidence may be corrected by its owner.
+
+After finalization:
+
+- authoritative evidence is immutable;
+- repair creates a new evidence version/artifact with explicit `supersedes` linkage;
+- lifecycle binding moves to the replacement through a supported transition.
+
 Before candidate commit:
 
-- candidate-bound evidence may be repaired and re-finalized;
+- a superseding candidate-bound evidence artifact may be created/re-finalized;
 - `source_candidate_id` and source freeze remain valid when substantive verdict/binding meaning is unchanged.
 
 After candidate commit:
@@ -401,7 +412,7 @@ After candidate commit:
 
 Mutation:
 
-- affected evidence artifact only within the phase-specific boundary.
+- create/replace lifecycle binding to the affected evidence version within the phase-specific boundary; never rewrite finalized historical evidence.
 
 Invalidation:
 
@@ -446,9 +457,15 @@ Invalidates:
 
 ### CLASS 2 — CONTRACT
 
-Examples: specification, authority, acceptance criteria, write-set.
+Examples: normative specification content, authority, acceptance criteria, write-set, normative plan/task definition.
 
-Requires:
+Rules:
+
+- enforcement-relevant changes alter `contract_projection_id`;
+- schema-declared progress/status/evidence fields do not alter `contract_projection_id`;
+- unknown contract changes default to enforcement-relevant.
+
+Requires for enforcement-relevant change:
 
 - new Define Critic;
 - candidate assurance repetition when the contract change can affect candidate validity.
