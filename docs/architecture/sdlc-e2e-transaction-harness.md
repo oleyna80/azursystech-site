@@ -368,12 +368,12 @@ Using `git reset --soft` as the recovery mechanism preserved stale index state a
 
 WB-037 repeatedly reached states where relevant test suites passed but a later real transition exposed a new contract mismatch.
 
-## Resolved by Architecture Freeze v0.2
+## Resolved by Architecture Freeze v0.6
 
 - The core deterministic CI harness does not depend on live Codex/Claude sessions. Runtime adapter parity is tested separately with fixture events.
 - Remote publication is simulated with a local bare Git repository so real Git hooks/push/ref behavior can be exercised without GitHub or production mutation.
 - Reviewer/Verifier lifecycle behavior in the deterministic harness uses fixture reports/role executions. Real model quality and operational independence remain separate assurance concerns.
-- Governance/control-plane CI must eventually require the canonical happy path plus stale-index recovery, source rework, evidence-only repair, terminal repair, STOPPED, schema parity, transition reachability, and core negative publication/assurance cases.
+- Governance/control-plane CI must eventually require the canonical happy path plus stale candidate-index recovery, source rework, evidence-only repair, terminal repair, STOPPED, schema parity, transition reachability, and core negative publication/assurance cases.
 - Historical schema compatibility belongs to a separate compatibility/conformance suite rather than every happy-path E2E run.
 
 ## Incremental harness rollout
