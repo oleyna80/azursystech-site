@@ -543,7 +543,7 @@ Validate the published result independently.
 
 Retains merge, deploy, release, destructive production operations, and exceptional recovery authority where explicitly required.
 
-## Resolved by Architecture Freeze v0.2
+## Resolved by Architecture Freeze v0.6
 
 - A successor WB may begin after a valid STOPPED terminal boundary only with a clean canonical branch and no implicit carry-over of unfinished source. Unfinished work may survive only in explicit non-authoritative recovery material outside successor authority.
 - Candidate versus terminal evidence is explicitly separated; candidate-bound evidence must be valid before candidate commit.
