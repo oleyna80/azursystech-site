@@ -1,6 +1,6 @@
 ---
 artifact_type: work_block_plan
-status: proposed
+status: ready_for_define
 work_block_id: WB-038
 scope: planning-only
 not_active_work_block: true
@@ -356,3 +356,12 @@ Expected findings are mapped to later approved Work Blocks:
 - evidence producer/validator drift → Assurance & Evidence Contract Cleanup;
 - duplicated runtime/hook policy → Hook Responsibility Simplification;
 - final green transaction → E2E Green + Final Schema Migration + Conformance Hardening.
+
+
+## Define handoff status
+
+Bootstrap prerequisites are satisfied. WB-038 is ready for Define in the clean worktree:
+
+`~/Projects/WSL/azursystech-wb038`
+
+The active repository Work Block has not yet been opened. Define/Critic must occur before implementation.
