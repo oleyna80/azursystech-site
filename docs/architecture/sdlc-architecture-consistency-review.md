@@ -3,7 +3,7 @@ artifact_type: architecture_review
 status: in_progress
 scope: docs-only
 not_work_block: true
-reviewed_freeze_revision: v0.4
+reviewed_freeze_revision: v0.5
 ---
 
 # SDLC Architecture Consistency Review
@@ -435,9 +435,54 @@ A STOPPED terminal commit:
 
 Unfinished source is preserved only outside canonical successor history through explicit non-authoritative recovery material.
 
+
+
+### CR-023 — Define Critic binding needs a stable contract projection
+
+Severity: MATERIAL.
+
+The process distinguishes enforcement-relevant contract changes from progress/status edits, but the architecture does not yet define a stable identity for the contract that Define Critic approves.
+
+Binding Critic to whole mutable plan/tasklist bytes recreates the WB-037 pattern where progress synchronization can force a new Critic even though requirements/authority did not change.
+
+Resolution:
+
+Introduce `contract_projection_id`.
+
+It binds the enforcement-relevant Define contract:
+
+- full normative specification content;
+- source/coordination authority;
+- acceptance criteria;
+- normative plan/task definitions;
+- branch/base and other admission semantics.
+
+Schema-declared progress/status/evidence fields are excluded from the projection.
+
+Until structured plan/task schemas exist, unknown plan/task changes default to contract-relevant.
+
+Define Critic and candidate-bound Critic disposition bind `contract_projection_id`, while exact file digests remain provenance.
+
+### CR-024 — Finalized evidence must be immutable; repair must supersede
+
+Severity: MATERIAL.
+
+The architecture allows EVIDENCE_REPAIR but does not clearly distinguish draft correction from modification of finalized evidence.
+
+Completed assurance evidence is supposed to be durable and immutable.
+
+Resolution:
+
+- draft evidence may be corrected by its owner before finalization;
+- finalized evidence is never edited in place;
+- evidence repair after finalization creates a new version/artifact with explicit `supersedes` linkage;
+- lifecycle binding moves to the new valid evidence only through a supported transition;
+- historical evidence remains preserved;
+- if the old evidence is already inside an unpublished candidate commit, use `RECOVER_CANDIDATE_PACKAGE` before creating the replacement candidate package.
+
 ## Preliminary review result
 
-Freeze v0.4 is directionally coherent but is **not ready to mark frozen**.
+Freeze v0.5 is directionally coherent but is **not ready to mark frozen**.
 
 No architectural reset is required.
 
@@ -453,4 +498,4 @@ The findings are bounded clarifications of:
 
 Recommended next step:
 
-Produce freeze v0.5 incorporating CR-021/CR-022 and the prior accepted resolutions, synchronize supporting documents, then perform another consistency pass.
+Produce freeze v0.6 incorporating CR-023/CR-024 and the prior accepted resolutions, synchronize supporting documents, then perform a final consistency pass.
