@@ -1,12 +1,12 @@
 ---
 artifact_type: architecture_decision
 status: proposed
-revision: v0.2
+revision: v0.3
 scope: docs-only
 not_work_block: true
 ---
 
-# SDLC Architecture Freeze v0.2
+# SDLC Architecture Freeze v0.3
 
 ## Purpose
 
@@ -58,7 +58,16 @@ Freeze creates one exact immutable source-candidate identity.
 
 The authoritative identity is `source_candidate_id`.
 
-For the current architecture it is a deterministic `content-sha256:<digest>` over the canonical ordered frozen source projection: repository-relative source path plus exact blob bytes for every path in the frozen source set.
+For the current architecture it is a deterministic `content-sha256:<digest>` over a canonical source-candidate manifest.
+
+The manifest binds:
+
+- exact `base_commit`;
+- sorted effective changed source paths relative to that base;
+- for each changed path: repository-relative path, present/deleted state, Git mode when present, and exact blob content identity;
+- deterministic, unambiguous serialization/framing.
+
+Rename detection is not authoritative; rename semantics may be represented as delete + add.
 
 `candidate_commit_sha` is durable package/provenance identity and is **not** a competing source-candidate identity. `terminal_commit_sha` is the terminal history boundary.
 
@@ -80,9 +89,10 @@ Introduce a runtime-neutral Git Transaction Layer used by lifecycle transitions.
 
 It owns deterministic worktree/index/history postconditions, including:
 
-- `MATERIALIZE_FROZEN_CANDIDATE`;
-- `REBUILD_FROZEN_INDEX`;
+- `MATERIALIZE_CANDIDATE_PACKAGE`;
+- `REBUILD_CANDIDATE_INDEX`;
 - `RECOVER_FOR_REWORK`;
+- `RECOVER_CANDIDATE_PACKAGE`;
 - terminal projection materialization.
 
 The public lifecycle command identifies the intended transition. The underlying Git command is an implementation detail.
@@ -99,13 +109,22 @@ Source work proceeds in worktree under the write-set.
 
 ### FROZEN / ASSURED
 
-The worktree must match the frozen candidate.
+The worktree source projection must match `source_candidate_id`.
 
-The index may be empty or stale until materialization, but no commit is allowed until `MATERIALIZE_FROZEN_CANDIDATE` makes the staged source exactly equal to the frozen candidate.
+The index may be empty or stale until candidate-package materialization.
+
+No candidate commit is allowed until required candidate assurance and candidate-bound evidence are finalized.
 
 ### CANDIDATE_STAGED
 
-The staged source projection exactly equals the frozen candidate and contains no unauthorized path.
+`MATERIALIZE_CANDIDATE_PACKAGE` creates one exact staged package:
+
+- staged source subset exactly matches `source_candidate_id`;
+- staged candidate-evidence subset exactly matches the finalized candidate evidence set;
+- no terminal-only path is staged;
+- no extra/forbidden path is staged.
+
+This is the only valid precondition for candidate commit.
 
 ### CANDIDATE_COMMITTED
 
@@ -142,15 +161,19 @@ FROZEN/ASSURED
 → fresh candidate assurance
 ```
 
-### Stale index
+### Stale candidate index
 
-If source bytes remain identical:
+If source bytes and candidate assurance remain identical but the index is stale:
 
 ```text
-FROZEN/ASSURED + stale index
-→ REBUILD_FROZEN_INDEX
-→ same frozen candidate / same assurance
+ASSURED + stale index
+→ REBUILD_CANDIDATE_INDEX
+→ CANDIDATE_STAGED
 ```
+
+`REBUILD_CANDIDATE_INDEX` rebuilds the complete source + candidate-evidence package from canonical bindings.
+
+It changes only index state and invalidates no source assurance.
 
 ### Unpublished candidate recovery
 
@@ -544,9 +567,10 @@ Lifecycle exposes named typed operations, not arbitrary approved shell strings.
 
 Example conceptual operations:
 
-- `materialize_frozen_candidate`;
-- `rebuild_frozen_index`;
+- `materialize_candidate_package`;
+- `rebuild_candidate_index`;
 - `recover_for_rework`;
+- `recover_candidate_package`;
 - `prepare_terminal`;
 - `repair_terminal_evidence`.
 
@@ -590,7 +614,7 @@ Real Reviewer/Verifier model quality and independence remain operational assuran
 For governance/control-plane changes, CI must eventually require at minimum:
 
 - canonical happy path;
-- stale-index recovery;
+- stale candidate-index recovery;
 - source rework after Reviewer finding;
 - evidence-only repair;
 - terminal repair;
