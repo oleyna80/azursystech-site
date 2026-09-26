@@ -317,7 +317,7 @@ The resolved design decisions are consolidated in:
 
 `docs/architecture/sdlc-architecture-freeze.md`
 
-Status: **proposed v0.1**.
+Status: **proposed v0.6 — consistency review complete; awaiting Owner freeze decision**.
 
 The freeze candidate resolves the current open questions for:
 
@@ -334,3 +334,5 @@ The freeze candidate resolves the current open questions for:
 
 No implementation authority is created by this proposal. Implementation begins only through separate bounded Work Blocks after Owner approval of the architecture freeze.
 
+
+Architecture consistency review: `docs/architecture/sdlc-architecture-consistency-review.md`.
