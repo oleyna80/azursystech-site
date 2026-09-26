@@ -44,6 +44,8 @@ Exit criteria:
 
 ## Phase B — Freeze target architecture
 
+Proposed freeze document: `docs/architecture/sdlc-architecture-freeze.md`.
+
 Decide and document:
 
 1. canonical lifecycle states;
@@ -57,8 +59,10 @@ Decide and document:
 
 Exit criteria:
 
+- the Owner approves the proposed architecture freeze;
 - one approved architecture model exists;
-- no two layers independently define conflicting transition semantics.
+- no two layers independently define conflicting transition semantics;
+- later implementation Work Blocks treat the frozen architecture as their contract rather than redesigning it opportunistically.
 
 ## Phase C — Git transaction layer
 
