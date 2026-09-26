@@ -3,7 +3,7 @@ artifact_type: architecture_review
 status: in_progress
 scope: docs-only
 not_work_block: true
-reviewed_freeze_revision: v0.3
+reviewed_freeze_revision: v0.4
 ---
 
 # SDLC Architecture Consistency Review
@@ -391,9 +391,53 @@ Resolution:
 
 Synchronize the phase descriptions with the diagnostic-first split.
 
+
+
+### CR-021 — Candidate package must include a durable lifecycle-state snapshot
+
+Severity: MATERIAL.
+
+Terminal/published conformance needs to prove that the candidate commit was produced from an active frozen/assured WB with exact candidate bindings.
+
+Freeze v0.4 lists source/contract/assurance evidence but does not explicitly include the candidate-phase authoritative lifecycle-state projection.
+
+Without that snapshot, the terminal parent may not contain the authoritative candidate state needed for historical conformance.
+
+Resolution:
+
+Candidate package includes the authoritative candidate lifecycle-state snapshot showing at least:
+
+- WB/branch/base/contract binding;
+- frozen `source_candidate_id`;
+- required candidate assurance READY/resolved;
+- optional assurance may still be PENDING;
+- source write gate blocked;
+- candidate publication state appropriate for local commit.
+
+The terminal commit later replaces this with canonical inactive state.
+
+### CR-022 — STOPPED terminal commit parent/content rules are underspecified
+
+Severity: MATERIAL.
+
+Freeze v0.4 defines STOPPED as a durable terminal boundary but does not define its Git history shape when the WB stops before candidate commit.
+
+Resolution:
+
+A STOPPED terminal commit:
+
+- may be created from any active lifecycle phase through the reporting-only stop transition;
+- has the current branch HEAD as parent;
+- contains only stop/coordination evidence plus canonical inactive/STOPPED projection;
+- contains no uncommitted source candidate bytes;
+- leaves index clean after commit;
+- records whether a candidate commit existed before stop.
+
+Unfinished source is preserved only outside canonical successor history through explicit non-authoritative recovery material.
+
 ## Preliminary review result
 
-Freeze v0.3 is directionally coherent but is **not ready to mark frozen**.
+Freeze v0.4 is directionally coherent but is **not ready to mark frozen**.
 
 No architectural reset is required.
 
@@ -409,4 +453,4 @@ The findings are bounded clarifications of:
 
 Recommended next step:
 
-Produce freeze v0.4 incorporating CR-015 through CR-020, synchronize supporting documents, then perform another consistency pass.
+Produce freeze v0.5 incorporating CR-021/CR-022 and the prior accepted resolutions, synchronize supporting documents, then perform another consistency pass.
