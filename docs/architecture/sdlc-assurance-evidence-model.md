@@ -133,8 +133,9 @@ Rule:
 
 Target lifecycle semantics:
 
+- optional assurance may remain PENDING through candidate commit by default;
 - optional assurance must be explicitly resolved before successful terminal closeout;
-- whether an optional assurance must also block candidate commit is a policy decision and should be declared explicitly instead of inferred from generic PENDING logic.
+- a WB contract may explicitly promote an optional assurance to required candidate assurance, in which case it becomes part of ASSURED/candidate-commit prerequisites.
 
 ## Evidence classes
 
@@ -289,20 +290,24 @@ Required:
 
 Required:
 
-- exact frozen candidate;
+- exact `source_candidate_id`;
 - required candidate assurance READY;
 - staged source exactly materializes frozen bytes;
-- required candidate evidence is structurally valid.
+- every candidate-bound Critic/Reviewer/Verifier/test artifact is schema- and binding-valid;
+- candidate package contents are final for this commit.
 
-Process Feedback and terminal-only closeout narrative should not block candidate commit unless explicitly declared part of the candidate assurance policy.
+Optional evaluation/drift do not block candidate commit unless explicitly promoted to required candidate assurance.
+
+Process Feedback and terminal-only closeout evidence do not block candidate commit by default.
 
 ### Before terminal preparation
 
 Required:
 
-- exact candidate commit exists;
-- assurance bindings match the candidate;
-- evidence artifacts required for closeout are structurally valid or explicitly repaired.
+- exact `candidate_commit_sha` exists;
+- assurance bindings match the same `source_candidate_id`;
+- candidate-bound evidence is already immutable inside the candidate commit;
+- terminal-only evidence required for closeout is structurally valid or explicitly repairable.
 
 ### Before successful closeout
 
@@ -316,9 +321,24 @@ Required:
 
 ### After closeout
 
-No new source assurance or ordinary evidence generation should be required.
+No new source assurance or ordinary evidence generation is permitted.
 
-Only canonical inactive-state materialization and terminal commit should remain.
+Only canonical inactive-state materialization and terminal commit remain.
+
+## Candidate package immutability
+
+Once `candidate_commit_sha` is created, candidate-bound evidence inside that commit is immutable for that package.
+
+`TERMINAL_REPAIR` is limited to terminal-only evidence.
+
+If a candidate-bound evidence formatting/binding defect is found after an unpublished candidate commit, use `RECOVER_CANDIDATE_PACKAGE`:
+
+- preserve `source_candidate_id` when source bytes are unchanged;
+- preserve substantive assurance verdicts only when exact meaning/bindings remain valid;
+- repair/revalidate the affected evidence;
+- create a replacement candidate commit.
+
+A source or substantive assurance defect uses normal REWORK.
 
 ## Evidence ownership
 
@@ -414,10 +434,11 @@ Accepted architectural direction:
 7. Evidence schemas must be checked at creation/finalization time.
 8. Index-only transitions never invalidate assurance.
 
-## Open questions
+## Resolved by Architecture Freeze v0.2
 
-1. Should optional evaluation/drift block candidate commit, or only successful closeout?
-2. Should Process Feedback remain a Reviewer appendix or become a standalone lifecycle-produced assessment?
-3. Which evidence artifacts must be present in the candidate commit versus only the terminal commit?
-4. Should test evidence be immutable per freeze or regenerated on equivalent frozen bytes?
-5. Which exact contract changes are semantically material enough to require fresh Reviewer/Verifier?
+- Optional evaluation/drift do not block candidate commit by default; PENDING blocks successful closeout. A WB may promote one to required candidate assurance.
+- Process Feedback is standalone process/terminal evidence, not a hidden Reviewer-report requirement.
+- Candidate commit contains candidate-bound Critic disposition, Reviewer, Verifier, required candidate test evidence, exact source candidate, and enforcement-relevant contract revision.
+- Terminal commit contains Process Feedback, final release/task projections, generated closeout manifest, and canonical inactive lifecycle state.
+- Any new freeze invalidates candidate-bound assurance, even if the resulting source digest equals an earlier freeze; no evidence-reuse optimization is part of this revision.
+- Contract fields explicitly classified by schema as non-semantic may be repaired without full assurance replay; all unknown contract changes default to enforcement-relevant.
