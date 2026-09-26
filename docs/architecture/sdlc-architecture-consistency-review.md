@@ -3,7 +3,7 @@ artifact_type: architecture_review
 status: in_progress
 scope: docs-only
 not_work_block: true
-reviewed_freeze_revision: v0.1
+reviewed_freeze_revision: v0.2
 ---
 
 # SDLC Architecture Consistency Review
@@ -264,9 +264,56 @@ New enforcement becomes authoritative only when its required producer + consumer
 
 Do not activate a new state/transition merely because one layer has implemented it.
 
+
+
+### CR-013 — CANDIDATE_STAGED does not yet define the full candidate package
+
+Severity: MATERIAL.
+
+The freeze says the candidate commit contains both source and candidate-bound evidence, while `CANDIDATE_STAGED` currently specifies only the staged source projection.
+
+This leaves an implicit second staging path for Critic/Reviewer/Verifier/test evidence and risks recreating the source-versus-coordination staging conflicts seen in WB-037.
+
+Resolution:
+
+Define `CANDIDATE_STAGED` as one full candidate package state:
+
+- staged source subset exactly matches `source_candidate_id`;
+- staged candidate-evidence subset exactly matches the finalized candidate evidence set;
+- no terminal-only path is staged;
+- no extra/forbidden path is staged.
+
+Rename the normal transition to `MATERIALIZE_CANDIDATE_PACKAGE`.
+
+The stale-index repair becomes `REBUILD_CANDIDATE_INDEX` and rebuilds the complete package from canonical source + candidate-evidence bindings without changing worktree source or assurance.
+
+### CR-014 — source_candidate_id needs base/mode/deletion-aware canonical framing
+
+Severity: MATERIAL.
+
+A digest over only path + blob bytes is insufficiently specified:
+
+- concatenation can be ambiguous without framing;
+- executable/symlink mode changes are semantically relevant;
+- deletions need representation;
+- the same source diff applied to different base commits is not necessarily the same candidate.
+
+Resolution:
+
+Define `source_candidate_id` over a canonical manifest containing:
+
+- exact `base_commit`;
+- sorted effective changed source paths;
+- for each path: repository-relative path, present/deleted state, Git mode when present, and exact blob digest/content identity;
+- unambiguous deterministic serialization.
+
+Rename detection is not authoritative; a rename may be represented as delete + add.
+
+The external string representation remains `content-sha256:<digest>`.
+
 ## Preliminary review result
 
-Freeze v0.1 is directionally coherent but is **not ready to mark frozen**.
+Freeze v0.2 is directionally coherent but is **not ready to mark frozen**.
 
 No architectural reset is required.
 
@@ -282,4 +329,4 @@ The findings are bounded clarifications of:
 
 Recommended next step:
 
-Produce freeze v0.2 incorporating CR-001 through CR-012, synchronize supporting documents, then perform a second consistency pass.
+Produce freeze v0.3 incorporating CR-013/CR-014 and the already accepted CR-001 through CR-012 resolutions, synchronize supporting documents, then perform a second consistency pass.
