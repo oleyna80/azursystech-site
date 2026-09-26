@@ -1,6 +1,6 @@
 ---
 artifact_type: remediation_bootstrap_plan
-status: proposed
+status: completed
 scope: docs-only
 not_work_block: true
 architecture_freeze: v0.6
@@ -204,3 +204,18 @@ Remaining bootstrap check:
 
 After checksum verification succeeds, the bootstrap boundary is complete and WB-038 Define may begin in the new worktree.
 
+
+
+## Bootstrap completion — 2026-09-26
+
+Owner/operator confirmed that all external WB-037 recovery artifact checksums validate successfully.
+
+Bootstrap is complete:
+
+- WB-037 remains preserved in its original local worktree;
+- external recovery artifacts are integrity-verified;
+- WB-038 has a separate clean worktree;
+- WB-038 branch is `test/sdlc-e2e-baseline-038`;
+- WB-038 base is exact published WB-036 terminal `c4829e77e2e9ae6a694a7def87b381c54571fd6d`;
+- no stash/reset/clean/force/merge/deploy was used to normalize WB-037;
+- remediation Define may now begin.
