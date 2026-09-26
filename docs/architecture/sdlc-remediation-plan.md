@@ -218,6 +218,8 @@ Likely future Work Block:
 
 ## Phase H — Synthetic end-to-end transaction harness
 
+Detailed harness design: `docs/architecture/sdlc-e2e-transaction-harness.md`.
+
 Primary objective:
 
 Prove the whole SDLC as one transaction before relying on it for real control-plane work.
@@ -241,6 +243,13 @@ clean base
 → terminal commit
 → exact non-force publication simulation/conformance
 ```
+
+Required harness properties:
+
+- transition reachability from each supported non-terminal state;
+- parser/schema parity across worktree, index, local commit, and published-history fixtures;
+- structured blocker diagnostics;
+- canonical happy path completes without ad-hoc repository repair.
 
 Minimum recovery scenarios:
 
