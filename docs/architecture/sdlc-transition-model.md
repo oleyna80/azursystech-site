@@ -51,7 +51,14 @@ Current target representation:
 content-sha256:<digest>
 ```
 
-The digest is computed deterministically over the canonical ordered frozen source projection: repository-relative source path + exact blob bytes.
+The digest is computed over a deterministic canonical manifest containing:
+
+- exact `base_commit`;
+- sorted effective changed source paths;
+- for each changed path: repository-relative path, present/deleted state, Git mode when present, and exact blob content identity;
+- unambiguous deterministic serialization.
+
+Rename detection is not authoritative; delete + add is a valid canonical representation.
 
 `candidate_commit_sha` is the durable source+evidence package commit and is not a competing candidate identity.
 
@@ -136,14 +143,14 @@ Owner: Git Transaction Layer.
 
 Required transition:
 
-`MATERIALIZE_FROZEN_CANDIDATE`
+`MATERIALIZE_CANDIDATE_PACKAGE`
 
 Preconditions:
 
-- worktree source bytes exactly match `frozen_revision`;
-- selected paths are exactly within the frozen source set;
-- no forbidden paths are selected;
-- candidate assurance is still valid.
+- worktree source projection exactly matches `source_candidate_id`;
+- required candidate assurance is valid;
+- candidate-bound Critic/Reviewer/Verifier/test evidence is finalized and schema/binding-valid;
+- every candidate source/evidence path is authorized.
 
 Allowed mutation:
 
@@ -157,9 +164,12 @@ Forbidden mutation:
 
 Postconditions:
 
-- staged source tree equals exact frozen candidate.
+- staged source subset exactly matches `source_candidate_id`;
+- staged candidate-evidence subset exactly matches the finalized candidate evidence set;
+- no terminal-only path is staged;
+- no extra/forbidden path is staged.
 
-This transition must also support repair from a stale index.
+A stale index is repaired by `REBUILD_CANDIDATE_INDEX`, which produces this same postcondition.
 
 ### T-005 — CANDIDATE_STAGED → CANDIDATE_COMMITTED
 
@@ -295,15 +305,16 @@ Preserved:
 - approved base;
 - approved write-sets unless separately amended.
 
-### R-002 — FROZEN/ASSURED + STALE_INDEX → REBUILD_FROZEN_INDEX
+### R-002 — ASSURED + STALE_INDEX → REBUILD_CANDIDATE_INDEX
 
-Use when source candidate is unchanged but Git index does not match it.
+Use when source candidate and candidate assurance are unchanged but Git index does not match the required candidate package.
 
 Preconditions:
 
-- worktree source equals exact frozen identity;
-- assurance remains valid;
-- target paths are approved.
+- worktree source equals exact `source_candidate_id`;
+- candidate assurance remains valid;
+- finalized candidate evidence set is valid;
+- all target paths are approved.
 
 Mutation:
 
@@ -311,7 +322,8 @@ Mutation:
 
 Postconditions:
 
-- staged source equals exact frozen candidate.
+- full staged source + candidate-evidence package equals the canonical candidate package;
+- no terminal-only or extra path is staged.
 
 No source assurance invalidation.
 
@@ -460,7 +472,7 @@ Lifecycle-level rules:
 - Reviewer and Verifier bind to the same frozen candidate.
 - Process Feedback is process/terminal evidence, not source assurance.
 - Evidence-only repair does not invalidate source assurance by default.
-- Index-only materialization never invalidates candidate assurance.
+- Index-only candidate-package materialization never invalidates candidate assurance.
 - Successful closeout requires all required assurance resolved and optional assurance explicitly disposed, but no new source assurance should be generated after closeout.
 
 ## Authority boundaries
@@ -491,7 +503,7 @@ Retains merge, deploy, release, destructive production operations, and exception
 
 ## Resolved by Architecture Freeze v0.2
 
-- A successor WB may begin after a valid STOPPED terminal boundary only with a clean canonical branch and no implicit carry-over of unfinished source.
+- A successor WB may begin after a valid STOPPED terminal boundary only with a clean canonical branch and no implicit carry-over of unfinished source. Unfinished work may survive only in explicit non-authoritative recovery material outside successor authority.
 - Candidate versus terminal evidence is explicitly separated; candidate-bound evidence must be valid before candidate commit.
 - Enforcement-relevant contract changes require fresh Define Critic and downstream assurance as applicable; explicitly schema-classified non-semantic changes do not.
 - Recovery is exposed through named lifecycle capabilities calling a shared Git Transaction Layer.
