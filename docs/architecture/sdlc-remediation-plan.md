@@ -184,9 +184,10 @@ Required properties:
 - consumer parity tests across lifecycle, hooks and published conformance;
 - consistent behavior in lifecycle, local hooks, and published conformance.
 
-Likely future Work Block:
+Implementation split:
 
-**Control-Plane Schema Unification**
+- **Contract Reader Foundation** early in the sequence for enforcement-critical schemas/parity;
+- remaining legacy-reader/schema migration in the final conformance-hardening phase.
 
 ## Phase G — Hook simplification
 
@@ -275,9 +276,11 @@ Minimum negative scenarios:
 - force push;
 - reuse of assurance from previous freeze.
 
-Likely future Work Block:
+Implementation split:
 
-**SDLC E2E Transaction Harness**
+- **SDLC E2E Baseline Harness** first, encoding current expected blockers;
+- extend the harness after each remediation WB;
+- final phase promotes the fully green E2E suite to a required CI gate.
 
 ## Proposed implementation order
 
