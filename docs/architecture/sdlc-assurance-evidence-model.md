@@ -450,7 +450,7 @@ Accepted architectural direction:
 7. Evidence schemas must be checked at creation/finalization time.
 8. Index-only transitions never invalidate assurance.
 
-## Resolved by Architecture Freeze v0.2
+## Resolved by Architecture Freeze v0.6
 
 - Optional evaluation/drift do not block candidate commit by default; PENDING blocks successful closeout. A WB may promote one to required candidate assurance.
 - Process Feedback is standalone process/terminal evidence, not a hidden Reviewer-report requirement.
