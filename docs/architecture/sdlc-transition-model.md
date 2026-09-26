@@ -378,6 +378,19 @@ Invariant:
 
 > Index materialization is not source mutation.
 
+## Contract integration
+
+Detailed schema/parser semantics are defined in `sdlc-schema-contract-model.md`.
+
+Lifecycle rules:
+
+- every machine-gated artifact is parsed by one canonical Contract Reader;
+- lifecycle consumes typed canonical objects and adds transition-specific semantic checks;
+- runtime hooks, Git hooks, and published conformance must not maintain independent artifact parsers;
+- worktree/index/commit/published-object views differ only in byte source, not in parsing semantics;
+- artifact finalization must validate required schema/bindings before the artifact can become authoritative;
+- schema version and Work Block business revision are separate concepts.
+
 ## Assurance integration
 
 Detailed assurance/evidence semantics are defined in `sdlc-assurance-evidence-model.md`.
