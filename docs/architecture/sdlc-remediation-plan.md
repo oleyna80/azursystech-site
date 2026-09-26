@@ -282,17 +282,34 @@ Likely future Work Block:
 
 Do not implement everything in one Work Block.
 
-Recommended sequence after architecture approval:
+Recommended diagnostic-first sequence after architecture approval:
 
-1. Git Transaction & Index Recovery.
-2. Terminal Transaction & Closeout Ordering.
-3. Assurance & Evidence Contract Cleanup.
-4. Control-Plane Schema Unification.
-5. Hook Responsibility Simplification.
-6. SDLC E2E Transaction Harness.
-7. Final conformance hardening after the E2E path is green.
+0. **SDLC E2E Baseline Harness** — build isolated fixture infrastructure and encode the current expected blockers without redesigning enforcement.
+1. **Contract Reader Foundation** — implement the minimum shared strict schemas/path grammar/parity required by existing enforcement.
+2. **Git Transaction & Index Recovery** — add deterministic index materialization and named recovery postconditions.
+3. **Terminal Transaction & Closeout Ordering** — make terminal preparation/staging/closeout reachable and deterministic.
+4. **Assurance & Evidence Contract Cleanup** — separate candidate assurance from process/terminal evidence and generate closeout manifest.
+5. **Hook Responsibility Simplification** — remove duplicated orchestration/parser logic and keep hooks thin.
+6. **E2E Green + Final Schema Migration + Conformance Hardening** — migrate remaining consumers and require the complete E2E path in CI.
 
-The exact number and boundaries of Work Blocks may change after the audit is complete.
+The E2E harness is extended after every implementation Work Block. Each known blocker becomes a passing scenario when its owning remediation lands.
+
+The exact number and boundaries of Work Blocks may change if a proposed WB becomes too broad.
+
+## Staged migration rule
+
+Because implementation spans multiple Work Blocks, every remediation WB must declare:
+
+- old behavior still supported;
+- new behavior introduced;
+- producer/consumer versions affected;
+- activation point;
+- compatibility tests;
+- rollback boundary.
+
+A new state, schema, transition, or enforcement rule becomes authoritative only when its producer, consumer, validation path, and corresponding E2E scenario are available together.
+
+Do not activate partially implemented control-plane semantics.
 
 ## Work Block creation rule
 
