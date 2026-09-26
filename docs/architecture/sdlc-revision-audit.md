@@ -149,3 +149,51 @@ The revision is complete only when every permitted lifecycle state has:
 - positive and negative transaction tests.
 
 The remediation plan must be derived from that model, not the other way around.
+
+## Assurance & evidence audit
+
+Detailed model: `docs/architecture/sdlc-assurance-evidence-model.md`.
+
+The assurance audit confirms that engineering assurance and evidence packaging must be separated more explicitly.
+
+### AE-F01 — Define Critic and candidate-bound Critic disposition are distinct
+
+The Define Critic reviews the contract before implementation. Candidate-bound Critic disposition confirms applicability of that resolved decision to an exact frozen candidate.
+
+They must remain separate artifacts with different bindings and invalidation rules.
+
+### AE-F02 — Process Feedback is process evidence, not source assurance
+
+WB-037 showed a READY Reviewer report later blocking closeout because a Process Feedback-specific section was incomplete.
+
+The Process Feedback contract may gate terminal evidence completeness, but it must not retroactively convert a valid source-review verdict into a source defect.
+
+### AE-F03 — Closeout evidence should be derived
+
+Repeated recovery cycles required manual replacement of stale Critic/Reviewer/Verifier references in closeout artifacts.
+
+The target architecture should generate a terminal/closeout manifest from canonical lifecycle bindings instead of duplicating those bindings as manually synchronized prose.
+
+### AE-F04 — Evidence validation currently occurs too late
+
+Some report-format/schema defects surfaced only at terminal or Process Feedback validation after the substantive Reviewer/Verifier work was complete.
+
+Machine-gated evidence should be schema-validated when it is created/finalized.
+
+### AE-F05 — Assurance invalidation must follow mutation class
+
+Source mutation, contract mutation, evidence-only repair, and index-only materialization must have different invalidation effects.
+
+In particular:
+
+- source mutation invalidates candidate assurance;
+- contract mutation invalidates only assurance dependent on changed semantics;
+- evidence-only repair revalidates the affected evidence layer;
+- index-only materialization invalidates no assurance.
+
+## Current audit documents
+
+- `sdlc-transition-model.md` — lifecycle and recovery transition model.
+- `sdlc-assurance-evidence-model.md` — assurance/evidence dependency model.
+- `sdlc-remediation-plan.md` — draft implementation sequencing after architecture approval.
+
