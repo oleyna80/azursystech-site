@@ -335,10 +335,24 @@ Using `git reset --soft` as the recovery mechanism preserved stale index state a
 
 WB-037 repeatedly reached states where relevant test suites passed but a later real transition exposed a new contract mismatch.
 
-## Open questions
+## Resolved by Architecture Freeze v0.2
 
-1. Should the harness use a subprocess-only fake runtime adapter or invoke real Codex/Claude hook adapters in dedicated test sessions?
-2. How should remote publication be simulated while still exercising pre-push and published-object conformance?
-3. Should independent Reviewer/Verifier behavior be represented by deterministic fixture agents, subprocess roles, or both?
-4. Which E2E scenario becomes the mandatory CI gate for every governance/control-plane PR?
-5. How much historical schema compatibility should be included in every E2E run versus separate migration tests?
+- The core deterministic CI harness does not depend on live Codex/Claude sessions. Runtime adapter parity is tested separately with fixture events.
+- Remote publication is simulated with a local bare Git repository so real Git hooks/push/ref behavior can be exercised without GitHub or production mutation.
+- Reviewer/Verifier lifecycle behavior in the deterministic harness uses fixture reports/role executions. Real model quality and operational independence remain separate assurance concerns.
+- Governance/control-plane CI must eventually require the canonical happy path plus stale-index recovery, source rework, evidence-only repair, terminal repair, STOPPED, schema parity, transition reachability, and core negative publication/assurance cases.
+- Historical schema compatibility belongs to a separate compatibility/conformance suite rather than every happy-path E2E run.
+
+## Incremental harness rollout
+
+The harness is introduced before the main remediation sequence as a baseline diagnostic harness.
+
+Initially, currently known architectural blockers may be encoded as expected failures.
+
+After each remediation Work Block:
+
+- the owning expected failure is converted to PASS;
+- new transition fixtures are added before enforcement is tightened;
+- the full reachable path is rerun.
+
+The final hardening phase promotes the complete green E2E transaction to a required CI gate.
