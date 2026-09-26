@@ -506,10 +506,13 @@ Parser/schema result must be identical.
 9. Git source view is an input to the reader, not a reason to duplicate parsing logic.
 10. Closeout manifest is generated from typed canonical lifecycle/evidence bindings.
 
-## Open questions
+## Resolved by Architecture Freeze v0.2
 
-1. Which serialization should be canonical for each artifact class: JSON, constrained YAML frontmatter + Markdown body, or generated JSON sidecar plus human Markdown?
-2. Should machine-authoritative metadata be separated from human narrative for Critic/Reviewer/Verifier reports?
-3. Do specifications/tasklists need full structured schemas now, or should the first remediation focus only on fields used by enforcement?
-4. Which existing historical artifact schema versions must remain supported without migration?
-5. Should the Contract Reader expose a typed Python model, a language-neutral JSON canonical representation, or both?
+- Mutable authoritative lifecycle state uses JSON.
+- Durable human governance/evidence uses constrained YAML frontmatter + Markdown body.
+- All machine-authoritative metadata lives in frontmatter; Markdown body is narrative and is not parsed for control decisions.
+- No machine-authoritative JSON sidecar is introduced by default.
+- Initial remediation schema-defines only fields used by enforcement/traceability; it does not redesign all planning Markdown.
+- Historical published artifacts remain readable through explicit versioned/legacy readers; new writes use the current schema only.
+- Contract Reader returns typed Python objects and exposes a canonical JSON-compatible representation for parity tests.
+- The current implementation target is one shared Python module and one YAML implementation/library; a new schema framework dependency is optional, not architectural.
