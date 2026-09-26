@@ -230,3 +230,48 @@ Accepted direction:
 - exceptional recovery becomes a named lifecycle transition;
 - force push, protected/default branch mutation, credentials, production/live data and governance override remain hard stops unless explicitly authorized by the proper external/Owner boundary.
 
+## Schema & contract audit
+
+Detailed model: `docs/architecture/sdlc-schema-contract-model.md`.
+
+The schema audit confirms that multiple control-plane components have been interpreting the same artifacts with partially different assumptions.
+
+### SC-F01 — One artifact had multiple parsers
+
+The WB-037 specification used a valid multiline `source_write_set`, but the terminal guard parser initially accepted only a simpler representation.
+
+### SC-F02 — Path grammar was underspecified
+
+After multiline parsing was added, review exposed YAML alias/block-scalar markers, ambiguous scalar values, DEL/C1 characters, and other values that should fail closed for path fields.
+
+### SC-F03 — Governance types require strict typing
+
+The `required` assurance field needed exact boolean validation so strings, null, numbers, lists, or objects could not be interpreted through truthiness.
+
+### SC-F04 — Assurance report schema validation happened too late
+
+Critic/Reviewer/Verifier artifacts were sometimes substantively complete but rejected later due to missing/mismatched frontmatter metadata or candidate/execution binding.
+
+### SC-F05 — Process Feedback added a hidden late report contract
+
+Reviewer evidence could be finalized and only later fail because Process Feedback expected additional report structure.
+
+### SC-F06 — Traceability parsing leaked into prose
+
+Task/traceability checks have encountered false or ambiguous task markers in ordinary prose, indicating the need for structured task-entry parsing rather than broad regex-style interpretation.
+
+### SC-F07 — Local and published validation need parser parity
+
+Git-native hooks and published-object conformance should share the same parser/schema/core predicates and differ only where the Git view/topology itself differs.
+
+Accepted direction:
+
+- one canonical Contract Reader;
+- versioned strict schemas;
+- exact field types;
+- duplicate-key rejection;
+- one path-field grammar;
+- artifact validation at creation/finalization time;
+- the same parser/schema for worktree, index, local commits, and published Git objects;
+- transition semantics remain outside the parser.
+
