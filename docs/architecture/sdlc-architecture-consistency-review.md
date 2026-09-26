@@ -3,7 +3,7 @@ artifact_type: architecture_review
 status: in_progress
 scope: docs-only
 not_work_block: true
-reviewed_freeze_revision: v0.2
+reviewed_freeze_revision: v0.3
 ---
 
 # SDLC Architecture Consistency Review
@@ -311,9 +311,89 @@ Rename detection is not authoritative; a rename may be represented as delete + a
 
 The external string representation remains `content-sha256:<digest>`.
 
+
+
+### CR-015 — Candidate commit omits original Define Critic durability
+
+Severity: MATERIAL.
+
+Candidate-bound Critic disposition references the original Define Critic report, but freeze v0.3 candidate-package contents list only the disposition, Reviewer, Verifier, and test evidence.
+
+If the Define Critic report is not already durable in history, the candidate package can reference non-durable evidence.
+
+Resolution:
+
+Candidate package must include the exact Define Critic evidence referenced by the candidate-bound disposition, plus the enforcement-relevant contract artifacts it reviewed.
+
+### CR-016 — Generic EVIDENCE_REPAIR needs phase boundaries
+
+Severity: MATERIAL.
+
+The transition model still describes generic `EVIDENCE_REPAIR` without saying whether it may mutate candidate-bound evidence after `CANDIDATE_COMMITTED`.
+
+That would conflict with candidate-package immutability.
+
+Resolution:
+
+- before candidate commit, evidence-only repair may repair candidate-bound evidence and re-finalize that evidence;
+- after candidate commit, candidate-bound evidence repair uses `RECOVER_CANDIDATE_PACKAGE`;
+- after candidate commit, ordinary `EVIDENCE_REPAIR` / `TERMINAL_REPAIR` is limited to terminal-only evidence.
+
+### CR-017 — Push authority document is missing the local conformance dry-run prerequisite
+
+Severity: DOCUMENTATION_CONSISTENCY.
+
+Freeze v0.3 requires local published-conformance dry run before exact subject-branch push.
+
+The authority/control document still lists autonomous push based on branch/HEAD/non-force/history/assurance without this prerequisite.
+
+Resolution:
+
+Add exact local conformance READY for terminal history to CP-08 and subject-branch publication requirements.
+
+### CR-018 — Canonical delivery path should end in PUBLISHED_VERIFIED
+
+Severity: DOCUMENTATION_CONSISTENCY.
+
+Freeze/transition text distinguishes `PUBLISHED` from `PUBLISHED_VERIFIED`, but the headline happy path still ends at `PUBLISHED`.
+
+Resolution:
+
+Use:
+
+```text
+... → TERMINAL_COMMITTED → PUBLISHED → PUBLISHED_VERIFIED
+```
+
+Architecture-review readiness requires the latter.
+
+### CR-019 — Optional assurance artifacts need an explicit durable location
+
+Severity: MATERIAL.
+
+Optional evaluation/drift may be performed after candidate commit, but freeze v0.3 terminal contents do not explicitly state where their reports/dispositions become durable.
+
+Resolution:
+
+Optional assurance not promoted to candidate assurance is terminal evidence:
+
+- its report/disposition is included in terminal commit when executed/skipped after candidate commit;
+- closeout manifest references the exact optional evidence/disposition;
+- promoted optional assurance moves into the candidate package instead.
+
+### CR-020 — Remediation phase descriptions lag the new split rollout
+
+Severity: DOCUMENTATION_CONSISTENCY.
+
+The implementation order now introduces an E2E baseline harness first and splits schema work into foundation + final migration, but Phase F/Phase H text still reads as if each is a single later Work Block.
+
+Resolution:
+
+Synchronize the phase descriptions with the diagnostic-first split.
+
 ## Preliminary review result
 
-Freeze v0.2 is directionally coherent but is **not ready to mark frozen**.
+Freeze v0.3 is directionally coherent but is **not ready to mark frozen**.
 
 No architectural reset is required.
 
@@ -329,4 +409,4 @@ The findings are bounded clarifications of:
 
 Recommended next step:
 
-Produce freeze v0.3 incorporating CR-013/CR-014 and the already accepted CR-001 through CR-012 resolutions, synchronize supporting documents, then perform a second consistency pass.
+Produce freeze v0.4 incorporating CR-015 through CR-020, synchronize supporting documents, then perform another consistency pass.
