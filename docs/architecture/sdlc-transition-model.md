@@ -37,6 +37,7 @@ DEFINED
 → CLOSED_SUCCESS
 → TERMINAL_COMMITTED
 → PUBLISHED
+→ PUBLISHED_VERIFIED
 ```
 
 `IMPLEMENTING` is not a separate state unless it introduces a mechanically distinct contract. Normal implementation is represented by `OPEN + source_write_gate=READY`.
@@ -387,9 +388,19 @@ A source or substantive assurance defect uses normal REWORK instead.
 
 Use when only report structure/metadata is invalid.
 
+Before candidate commit:
+
+- candidate-bound evidence may be repaired and re-finalized;
+- `source_candidate_id` and source freeze remain valid when substantive verdict/binding meaning is unchanged.
+
+After candidate commit:
+
+- ordinary EVIDENCE_REPAIR is limited to terminal-only evidence;
+- candidate-bound evidence repair uses `RECOVER_CANDIDATE_PACKAGE`.
+
 Mutation:
 
-- affected evidence artifact only.
+- affected evidence artifact only within the phase-specific boundary.
 
 Invalidation:
 
@@ -512,4 +523,4 @@ Retains merge, deploy, release, destructive production operations, and exception
 - Recovery is exposed through named lifecycle capabilities calling a shared Git Transaction Layer.
 - One shared Python Contract Reader with one YAML implementation is the current target; the architecture does not mandate a specific schema framework dependency.
 - `source_candidate_id` is the authoritative frozen source identity; candidate/terminal commit SHAs are package/history provenance.
-- `PUBLISHED` and `PUBLISHED_VERIFIED` are distinct external publication states.
+- `PUBLISHED` and `PUBLISHED_VERIFIED` are distinct external publication states; architecture-review readiness requires the latter.
