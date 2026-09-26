@@ -1,6 +1,6 @@
 ---
 artifact_type: architecture_decision
-status: proposed
+status: frozen
 revision: v0.6
 scope: docs-only
 not_work_block: true
@@ -10,11 +10,20 @@ not_work_block: true
 
 ## Purpose
 
-This document resolves the open design questions from the SDLC revision audit and defines the proposed target architecture to be implemented through separate bounded Work Blocks.
+This document resolves the open design questions from the SDLC revision audit and defines the frozen target architecture to be implemented through separate bounded Work Blocks.
 
 It does not authorize implementation.
 
-The architecture becomes frozen only after Owner approval of this document. Until then, this branch remains an architecture/design SSOT.
+The Owner approved Architecture Freeze v0.6 on 2026-09-26. This document is now the frozen architecture contract for subsequent remediation Work Blocks.
+
+## Owner approval
+
+- **Decision:** APPROVED / FROZEN
+- **Revision:** v0.6
+- **Date:** 2026-09-26
+- **Authority:** Owner
+- **Effect:** future implementation Work Blocks must conform to this architecture unless an explicit architecture amendment is approved.
+- **Non-effect:** this approval does not itself authorize source implementation, merge, deployment, release, or any bypass of current repository controls.
 
 ## 1. Canonical lifecycle
 
