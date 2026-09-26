@@ -197,3 +197,36 @@ In particular:
 - `sdlc-assurance-evidence-model.md` — assurance/evidence dependency model.
 - `sdlc-remediation-plan.md` — draft implementation sequencing after architecture approval.
 
+## Authority & control-point audit
+
+Detailed model: `docs/architecture/sdlc-authority-control-model.md`.
+
+The authority audit separates ordinary engineering autonomy from Owner-controlled and external platform boundaries.
+
+### AC-F01 — Runtime adapters must not become policy engines
+
+Codex/Claude/runtime-specific hooks should normalize events into one shared evaluator. Equivalent normalized events must produce equivalent decisions.
+
+### AC-F02 — Session-root binding is a bootstrap concern
+
+Binding authority to the session's initial repository/worktree is a useful safety property, but command-local `cd` cannot safely substitute for explicit worktree handoff.
+
+### AC-F03 — Owner authorization must map to named lifecycle capabilities
+
+WB-037 showed that an explicitly authorized recovery could still be unexecutable because the runtime had no representation of the capability beyond a blocked Git command.
+
+### AC-F04 — Source mutability and publication authority are separate
+
+A frozen candidate should remain source-immutable while still becoming publishable after exact candidate assurance. Publication must not require reopening source write authority.
+
+### AC-F05 — Local hooks are cooperative guardrails
+
+Local hooks protect the normal engineering path from mistakes. Irreversible/high-impact authority boundaries must remain independently enforced by GitHub/platform permissions and Owner decisions.
+
+Accepted direction:
+
+- ordinary bounded implementation/rework/test/assurance/subject-branch publication remains autonomous;
+- merge and deploy remain separate Owner decisions;
+- exceptional recovery becomes a named lifecycle transition;
+- force push, protected/default branch mutation, credentials, production/live data and governance override remain hard stops unless explicitly authorized by the proper external/Owner boundary.
+
