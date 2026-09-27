@@ -326,9 +326,9 @@ Do not implement everything in one Work Block.
 
 Recommended diagnostic-first sequence after architecture approval:
 
-0. **SDLC E2E Baseline Harness** — build isolated fixture infrastructure and encode the current expected blockers without redesigning enforcement.
-1. **Contract Reader Foundation** — implement the minimum shared strict schemas/path grammar/parity required by existing enforcement.
-2. **Git Transaction & Index Recovery** — add deterministic index materialization and named recovery postconditions.
+0. **SDLC E2E Baseline Harness (WB-038)** — locally completed reporting-only; baseline reproduced the expected publication/index deadlock.
+1. **SDLC Publication Bootstrap / Git Transaction Recovery (WB-039)** — minimum bounded self-hosting remediation for exact candidate-package materialization and stale-index rebuild.
+2. **Contract Reader Foundation** — implement the minimum shared strict schemas/path grammar/parity required by existing enforcement.
 3. **Terminal Transaction & Closeout Ordering** — make terminal preparation/staging/closeout reachable and deterministic.
 4. **Assurance & Evidence Contract Cleanup** — separate candidate assurance from process/terminal evidence and generate closeout manifest.
 5. **Hook Responsibility Simplification** — remove duplicated orchestration/parser logic and keep hooks thin.
@@ -337,6 +337,24 @@ Recommended diagnostic-first sequence after architecture approval:
 The E2E harness is extended after every implementation Work Block. Each known blocker becomes a passing scenario when its owning remediation lands.
 
 The exact number and boundaries of Work Blocks may change if a proposed WB becomes too broad.
+
+## Temporary self-hosting bootstrap amendment
+
+WB-038 demonstrated that the current published control plane cannot publish a source-changing remediation after freeze because the required index-only candidate-package materialization is still denied as a source write.
+
+Therefore, implementation order is temporarily amended so that **WB-039 — SDLC Publication Bootstrap / Git Transaction Recovery** precedes Contract Reader Foundation.
+
+This is an implementation-order amendment only. Architecture Freeze v0.6 is unchanged.
+
+WB-039 must remain narrow:
+
+- implement exact candidate-package materialization and stale-index rebuild semantics;
+- preserve source bytes and `source_candidate_id`;
+- preserve valid candidate assurance when only index state changes;
+- fail closed on extra/forbidden/terminal-only paths;
+- avoid terminal transaction redesign, Contract Reader work, assurance-model redesign, and hook simplification unless separately approved.
+
+If WB-039 itself reaches the same self-hosting publication boundary after valid assurance, normal policy must not be bypassed. The only permitted exceptional path is an explicit Owner-controlled one-time bootstrap transaction with exact preconditions, candidate identity, allowed paths, postconditions, rollback, and validation.
 
 ## Staged migration rule
 
