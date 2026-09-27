@@ -1,6 +1,6 @@
 ---
 artifact_type: work_block_plan
-status: ready_for_define
+status: completed_reporting_only
 work_block_id: WB-038
 scope: planning-only
 not_active_work_block: true
@@ -365,3 +365,39 @@ Bootstrap prerequisites are satisfied. WB-038 is ready for Define in the clean w
 `~/Projects/WSL/azursystech-wb038`
 
 The active repository Work Block has not yet been opened. Define/Critic must occur before implementation.
+
+
+## Local execution result
+
+Status: **completed reporting-only; not published as a WB branch**.
+
+The following result is operator-reported from the preserved local WB-038 worktree and has not been independently verified from a remote WB-038 commit because no commit/push was reachable.
+
+Observed baseline:
+
+- B-001–B-005: PASS;
+- B-006–B-008: EXPECTED_BLOCK;
+- B-009: UNREACHABLE;
+- B-010: PASS;
+- repeated runs preserved the same classifications;
+- focused suite: 5/5;
+- candidate-bound Critic: APPROVE;
+- Reviewer: READY;
+- Verifier: READY;
+- frozen candidate: `content-sha256:a017c6a50cc289fcb695d2c63098b63f182ba85364daedf255bbf638c48454d9`.
+
+Local output artifacts:
+
+- `scripts/sdlc_e2e_baseline.py`;
+- `scripts/test-sdlc-e2e-baseline.py`;
+- `docs/reports/WB-038-sdlc-e2e-baseline.md`;
+- `docs/reports/WB-038-sdlc-e2e-baseline.json`;
+- reporting-only closeout: `docs/reports/closeout/WB-038.md`.
+
+Publication result:
+
+After valid candidate assurance, normal `git add -- scripts/sdlc_e2e_baseline.py` was denied because the frozen lifecycle had `write_gate=BLOCKED`. The index remained empty; no candidate commit or push was produced; HEAD remained the exact WB-036 terminal base.
+
+Conclusion:
+
+WB-038 succeeded as a diagnostic baseline. It confirmed a self-hosting publication deadlock in the current implementation and directly motivates WB-039 — SDLC Publication Bootstrap / Git Transaction Recovery.
