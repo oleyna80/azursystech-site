@@ -473,3 +473,25 @@ Before any publication decision:
 4. verify the only remaining untracked runtime evidence is the maintenance audit JSONL or explain any additional state.
 
 Subject-branch push remains not authorized until those checks are reviewed.
+
+
+## Post-commit conformance result — 2026-09-27
+
+The committed WB-039 implementation passes the focused Maintenance Mode suite:
+
+- `scripts/test-maintenance-mode.py`: 16 tests OK.
+
+Git conformance remains BLOCKED with:
+
+`active Work Block, event branch, or trusted base mismatch`.
+
+This result is expected from the current validator contract because WB-039 intentionally did not claim a normal lifecycle OPEN and the canonical inactive gate does not carry the active Work Block / subject branch / trusted base binding expected by normal Git conformance.
+
+Interpretation:
+
+- this is not an implementation-test failure;
+- it is a publication/conformance representation gap for Owner-authorized Maintenance Bootstrap;
+- do not mutate lifecycle state retroactively to satisfy the validator;
+- do not fabricate Critic/Reviewer/Verifier state.
+
+The remote subject branch does not currently exist. Any publication decision must therefore be an explicit Owner-controlled, exact non-force branch creation after verifying the committed tree and unrelated working-tree changes.
