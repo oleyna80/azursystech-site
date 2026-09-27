@@ -1,0 +1,206 @@
+---
+artifact_type: work_block_plan
+status: ready_for_define
+work_block_id: WB-039
+scope: planning-only
+not_active_work_block: true
+architecture_freeze: v0.6
+strategy: maintenance_mode
+---
+
+# WB-039 — SDLC Maintenance Mode / Repair Bootstrap
+
+## Objective
+
+Introduce an explicit Owner-controlled Maintenance Mode for SDLC control-plane remediation.
+
+The purpose is to let agents repair the control plane without being blocked by the cooperative local guards whose own implementation is under repair, while keeping consequential Owner/external hard stops fully enforced.
+
+WB-039 does **not** repair all SDLC defects itself.
+
+It establishes the safe repair window in which the subsequent remediation batches can run.
+
+## Architecture binding
+
+Normative architecture remains Architecture Freeze v0.6.
+
+Implementation strategy is defined by:
+
+- `docs/architecture/sdlc-maintenance-mode.md`;
+- `docs/architecture/sdlc-remediation-plan.md`;
+- `docs/architecture/sdlc-authority-control-model.md`;
+- WB-038 baseline findings in the audit branch.
+
+This Work Block changes implementation strategy, not frozen architecture.
+
+## Why WB-039 changed
+
+WB-038 proved a self-hosting publication deadlock.
+
+The initial narrow WB-039 plan attempted to repair only candidate/index publication while remaining fully constrained by the old cooperative guard system.
+
+Subsequent work showed that other cooperative controls also create remediation friction, including:
+
+- session-root blocking of deliberate worktree handoff;
+- direct-single-Git-command restriction;
+- complex mutating Bash restriction;
+- inactive/OPEN/freeze write-gate restrictions around control-plane repair.
+
+The previous WB-039 plan was never OPEN and changed no production source.
+
+It is therefore superseded before implementation.
+
+## Desired end state
+
+WB-039 succeeds when the repository has one explicit maintenance-mode mechanism with these properties:
+
+- activation is Owner-controlled;
+- activation is bound to an exact repository, remediation branch/worktree, trusted base, and bounded control-plane scope;
+- cooperative local guards can switch from ENFORCE to AUDIT/WARN for the maintenance scope;
+- hard external/Owner boundaries remain ENFORCED;
+- every downgraded decision is logged;
+- no operation can silently claim normal lifecycle approval while maintenance mode is active;
+- mode can be deactivated deterministically;
+- normal enforcement remains the default outside the maintenance scope.
+
+## Always-enforced boundaries
+
+WB-039 must not weaken:
+
+- force/non-fast-forward push prohibition;
+- merge boundary;
+- deploy/release boundary;
+- default/protected branch mutation boundary;
+- secrets/credentials boundary;
+- live production data boundary;
+- production infrastructure boundary;
+- destructive Git/filesystem operations unless separately Owner-authorized;
+- irreversible external side effects;
+- arbitrary cross-repository writes.
+
+## Cooperative controls eligible for maintenance downgrade
+
+Within the exact maintenance scope only, WB-039 may provide AUDIT/WARN behavior for:
+
+- inactive-WB coordination-only restriction;
+- source `write_gate=READY` requirement for local remediation edits;
+- post-freeze staging denial when exercising a maintenance repair transition;
+- normal lifecycle sequencing rules whose implementation is under repair;
+- direct-single-Git-command restriction;
+- complex mutating Bash restriction;
+- session-root/worktree binding for deliberate verified handoff inside the same repository;
+- candidate/terminal sequencing checks whose implementation is explicitly being repaired.
+
+The implementation must make this classification explicit rather than scatter ad-hoc exceptions across runtime adapters.
+
+## Recommended implementation direction
+
+Prefer one shared runtime-neutral maintenance policy signal consumed by existing shared policy/lifecycle layers.
+
+Do not implement separate maintenance semantics independently in Codex and Claude adapters.
+
+A concrete mechanism may be a small authoritative maintenance-state artifact or equivalent bounded configuration, provided it includes at least:
+
+- schema/version;
+- enabled/disabled state;
+- repository identity;
+- subject/remediation branch;
+- trusted base;
+- allowed path scope;
+- activated-by / Owner approval reference;
+- activation reason;
+- activation timestamp/date metadata;
+- allowed downgraded guard classes;
+- immutable always-enforced hard-stop classes.
+
+Exact file/module placement is a Define decision after repository inspection.
+
+## Admission model
+
+WB-039 itself may require a one-time bootstrap because the current normal lifecycle can block the work required to introduce Maintenance Mode.
+
+The Owner has approved the **strategy**, not arbitrary implementation.
+
+During Define:
+
+- prepare the exact bounded implementation scope;
+- document the bootstrap activation procedure;
+- distinguish normal reversible local writes from consequential boundaries;
+- obtain Critic review when an independent reviewer is available.
+
+If runtime capacity prevents Critic execution, that alone must not indefinitely block this maintenance-bootstrap Work Block.
+
+Any work performed before normal lifecycle OPEN must be explicitly marked as Maintenance Bootstrap work and must not claim normal lifecycle approval.
+
+## Implementation plan
+
+1. Reconcile/replace the previous local WB-039 Define artifacts with this plan.
+2. Identify the minimum shared policy/lifecycle locations required to represent Maintenance Mode.
+3. Add an explicit maintenance state/config contract.
+4. Add one shared evaluator that distinguishes:
+   - hard stop → DENY;
+   - cooperative normal guard under active maintenance scope → AUDIT/WARN;
+   - ordinary allowed operation → ALLOW.
+5. Wire runtime adapters/hooks to consume the shared decision without duplicating policy.
+6. Add structured audit logging for downgraded decisions.
+7. Add positive and negative tests proving:
+   - mode applies only to the exact remediation scope;
+   - mode does not follow the agent into unrelated repositories/worktrees;
+   - hard stops remain denied;
+   - cooperative guards become non-blocking only when explicitly enabled;
+   - disabling the mode restores normal enforcement.
+8. Run focused tests.
+9. Run the existing WB-038 harness where practical to verify that maintenance operations are no longer blocked merely by cooperative guardrails.
+10. Record exact activation/deactivation procedure for subsequent remediation batches.
+
+## Acceptance criteria
+
+- AC-001: Maintenance Mode is explicit, Owner-controlled, and disabled by default.
+- AC-002: mode is bound to exact repository/remediation scope and cannot silently apply elsewhere.
+- AC-003: external/Owner hard stops remain enforced while the mode is active.
+- AC-004: selected cooperative guards can be downgraded to AUDIT/WARN without being deleted or bypassed.
+- AC-005: downgraded decisions produce durable/structured audit evidence.
+- AC-006: runtime adapters do not implement divergent maintenance policies.
+- AC-007: mode activation/deactivation is deterministic and testable.
+- AC-008: deliberate same-repository worktree handoff is not blocked solely by stale session-root binding when maintenance scope is valid.
+- AC-009: local reversible control-plane repair is not blocked solely by inactive/write-gate/command-shape cooperative guards.
+- AC-010: normal enforcement is restored when maintenance mode is disabled.
+- AC-011: no force push, merge, deploy, production mutation, or secret mutation is enabled.
+- AC-012: WB-039 produces a documented maintenance activation procedure for the next remediation batch.
+
+## Verification
+
+Required tests should include:
+
+- mode disabled → current enforcement behavior unchanged;
+- wrong repository → DENY;
+- wrong branch/worktree scope → DENY;
+- path outside maintenance scope → DENY;
+- force push → DENY;
+- default/protected branch mutation → DENY;
+- merge/deploy/live-production classes → DENY;
+- session-root mismatch to verified same-repo maintenance checkout → AUDIT/WARN or explicit maintenance handoff;
+- inactive/write-gate local repair operation in scope → AUDIT/WARN;
+- maintenance disabled after repair → normal guard behavior restored.
+
+## Completion boundary
+
+After Maintenance Mode is implemented and its guard classification is verified:
+
+- stop WB-039;
+- report exact branch/HEAD and activation mechanism;
+- do not automatically begin the next remediation batch;
+- the next approved batch is Git Transaction / Index Recovery under Maintenance Mode.
+
+## Out of scope
+
+WB-039 does not itself implement:
+
+- `MATERIALIZE_CANDIDATE_PACKAGE`;
+- `REBUILD_CANDIDATE_INDEX`;
+- Contract Reader;
+- terminal transaction redesign;
+- assurance/evidence cleanup;
+- broad hook simplification beyond the minimum shared maintenance routing;
+- final CI hardening;
+- merge/deploy/release.
