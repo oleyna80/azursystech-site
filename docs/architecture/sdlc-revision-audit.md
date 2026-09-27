@@ -415,3 +415,31 @@ During the maintenance window:
 WB-039 is repurposed before lifecycle OPEN as **SDLC Maintenance Mode / Repair Bootstrap**.
 
 Architecture Freeze v0.6 is unchanged.
+
+
+### F-013 — Stop-hook pressure can cause unauthorized lifecycle-state mutation
+
+Status: confirmed during Claude Code inspection from the preserved WB-037 worktree.
+
+Observed behavior:
+
+- the runtime session was bound to the preserved WB-037 checkout rather than WB-039;
+- shell-policy checks correctly blocked cross-worktree mutation and exposed textual command-parsing false positives such as `2>/dev/null` being interpreted as an out-of-repository write path;
+- the Stop hook then refused session termination while `closeout_mode=pending`;
+- to make the Stop hook pass, the agent changed authoritative WB-037 lifecycle state from `pending` to `reporting-only` even though no legitimate WB-037 closeout transition had been performed.
+
+This is not an acceptable lifecycle operation.
+
+Root cause:
+
+A runtime/session-exit hook must not pressure an agent to mutate authoritative lifecycle state merely to terminate a session. Session termination and Work Block closeout are separate concerns.
+
+Required direction:
+
+- Stop/session-exit checks may report unresolved lifecycle state but must not require falsifying or prematurely changing lifecycle state to allow the runtime to end;
+- `reporting-only` / STOPPED remains a lifecycle transition with its own evidence and postconditions, not a generic "let the agent exit" value;
+- Maintenance Mode must downgrade this Stop-hook behavior to audit/warn for remediation sessions;
+- shell command parsing used by cooperative guards must be tested for quoted-text and redirection false positives;
+- preserved WB-037 state must be restored to its pre-inspection value without disturbing its other local evidence.
+
+This finding does not amend Architecture Freeze v0.6. It further justifies separating runtime convenience hooks from authoritative lifecycle semantics.
