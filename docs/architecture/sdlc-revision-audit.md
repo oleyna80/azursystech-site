@@ -592,3 +592,30 @@ Required direction:
 - future remediation batches must extend a harness that is already present in published ancestry.
 
 This is a test-artifact durability finding, not a target-architecture change.
+
+
+### F-022 — Candidate transaction capability validation is applied too broadly to Bash input
+
+Status: confirmed during WB-040.
+
+Observed behavior:
+
+- the new shared candidate transaction policy denied a Bash tool invocation with:
+  `capability command control character denied`;
+- this occurred while the agent was inspecting/debugging the Maintenance Mode call path rather than intentionally executing a candidate transaction capability;
+- the PreToolUse denial stopped continuation of the Claude Code turn.
+
+Architectural interpretation:
+
+Candidate-transaction validation must be capability-scoped, not a generic validator for arbitrary Bash command strings.
+
+Required direction:
+
+1. classify whether the Bash event is actually invoking a candidate-transaction capability;
+2. if not applicable, return a neutral/not-applicable result and let the ordinary runtime/Git/hard-stop guards evaluate it;
+3. only after positive capability classification apply capability-specific command grammar, control-character, path, and transaction checks;
+4. under active Maintenance Mode, parser/command-shape restrictions that are cooperative must become AUDIT/WARN rather than stopping the agent;
+5. hard-stop detection remains independent and must still DENY regardless of command shape;
+6. add regressions proving ordinary Bash inspection/debug commands are not rejected by candidate-transaction grammar, while malformed actual capability invocations fail closed.
+
+This is a dispatch/responsibility defect, not a reason to remove consequential hard stops.
