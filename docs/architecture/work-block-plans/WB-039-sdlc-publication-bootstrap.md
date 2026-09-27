@@ -1,6 +1,6 @@
 ---
 artifact_type: work_block_plan
-status: ready_for_define
+status: superseded_before_open
 work_block_id: WB-039
 scope: planning-only
 not_active_work_block: true
@@ -8,6 +8,18 @@ architecture_freeze: v0.6
 ---
 
 # WB-039 — SDLC Publication Bootstrap / Git Transaction Recovery
+
+## Superseded by maintenance-mode strategy
+
+This narrow WB-039 plan was superseded **before lifecycle OPEN** by the Owner-approved maintenance-mode strategy recorded in `docs/architecture/sdlc-maintenance-mode.md`.
+
+No production source implementation was authorized or performed under this superseded plan.
+
+The canonical WB-039 planning contract is now:
+
+`docs/architecture/work-block-plans/WB-039-sdlc-maintenance-mode-bootstrap.md`
+
+The Define work prepared locally for the narrow publication-bootstrap version must be reconciled/replaced before any future OPEN.
 
 ## Objective
 
