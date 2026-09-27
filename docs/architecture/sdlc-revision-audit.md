@@ -697,3 +697,33 @@ Required direction:
 
 This finding concerns command/path classification correctness. It does not authorize bypassing the source gate, broadening Maintenance Mode scope, or weakening hard stops.
 
+### F-026 — Re-opening an active Work Block can silently replace its planning/evidence base
+
+Status: confirmed from the published lifecycle implementation and observed in WB-040.
+
+Governance defines `base_commit` as the Work Block planning/evidence baseline. However, `.codex/scripts/lifecycle.py open_state()` unconditionally assigns:
+
+`value["base_commit"] = git_head(root)`
+
+and the CLI `open` path does not reject or specially handle an already active Work Block.
+
+Observed WB-040 effect:
+
+- the canonical WB-040 planning base is the published WB-039 commit
+  `96c6f35d0cb219ceaebd192d4d3993a19f40f172`;
+- a later lifecycle `open` during the corrective loop ran when HEAD was
+  `b5682bb050f8e8c2ce6b0e652ff17e9ee73ce85a`;
+- the active state now records that later implementation HEAD as `base_commit`
+  even though the Work Block identity, branch, specification, architecture, and
+  original planning base were not intentionally redefined.
+
+Required direction:
+
+- distinguish initial Work Block open from canonical corrective rework/recovery;
+- corrective rework must preserve the existing Work Block planning/evidence base unless Define explicitly changes it;
+- do not use a generic `open` transition as a substitute for `RECOVER_FOR_REWORK`;
+- reject or explicitly classify attempts to re-open an already active Work Block when doing so would silently replace its base;
+- add regression coverage proving Reviewer `CHANGES_REQUIRED` / `RECOVER_FOR_REWORK` preserves `work_block_id`, `subject_branch`, and `base_commit`.
+
+This finding is lifecycle state-integrity debt. It does not authorize manual mutation of the current WB-040 state.
+
