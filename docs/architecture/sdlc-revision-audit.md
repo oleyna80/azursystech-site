@@ -500,3 +500,29 @@ Required direction:
 - fix only hook/runtime facts required for safe Maintenance Mode operation now;
 - perform a separate documentation reconciliation after the control plane is stable;
 - remove transient priorities from global runtime instructions where they can become stale.
+
+
+### F-017 — Maintenance Mode does not yet reach Git-native commit enforcement
+
+Status: confirmed after local completion of WB-039.
+
+WB-039 successfully introduced and verified Maintenance Mode across the runtime cooperative adapter layer, including Claude and Codex parity, session-stop integrity, cwd-stable hook invocation, and quote-aware shell parsing.
+
+However, the verified source changes cannot be committed through the current normal path because:
+
+1. inactive source staging is denied by the Work Block/source gate; and
+2. the Git-native pre-commit transaction policy independently rejects inactive commits containing paths outside the coordination write-set.
+
+The Git-native commit validator is not routed through the Maintenance Mode evaluator.
+
+Architectural interpretation:
+
+This is not evidence that Maintenance Mode failed. It confirms that runtime cooperative authorization and Git-native transaction authorization are separate control planes, as Architecture Freeze v0.6 already models.
+
+Required direction:
+
+- do not broaden WB-039 into Git Transaction / Index Recovery;
+- preserve WB-039 as the completed runtime-maintenance bootstrap;
+- use one explicit Owner-controlled bootstrap transaction to make the verified WB-039 implementation durable, or leave it unpublished until such a transaction is approved;
+- after WB-039 is durable, the next remediation batch owns Git Transaction / Index Recovery and must make candidate/index/commit reachability normal rather than exceptional;
+- do not normalize `--no-verify` as an agent capability. Any such bootstrap is exceptional Owner authority, exact-path scoped, one-time, reversible, and independently verified.
