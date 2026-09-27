@@ -526,3 +526,24 @@ Required direction:
 - use one explicit Owner-controlled bootstrap transaction to make the verified WB-039 implementation durable, or leave it unpublished until such a transaction is approved;
 - after WB-039 is durable, the next remediation batch owns Git Transaction / Index Recovery and must make candidate/index/commit reachability normal rather than exceptional;
 - do not normalize `--no-verify` as an agent capability. Any such bootstrap is exceptional Owner authority, exact-path scoped, one-time, reversible, and independently verified.
+
+
+### F-018 — Normal Git conformance cannot represent an inactive Maintenance Bootstrap commit
+
+Status: confirmed after the Owner-created WB-039 bootstrap commit.
+
+The exact WB-039 implementation commit was created locally and the focused Maintenance Mode tests pass. However, the normal Git conformance validator returns:
+
+`active Work Block, event branch, or trusted base mismatch`.
+
+WB-039 deliberately remained outside normal lifecycle OPEN because the control plane under repair could not truthfully satisfy that lifecycle. The canonical inactive gate therefore lacks the active Work Block / subject branch / trusted base binding required by the normal conformance path.
+
+Required direction:
+
+- do not retroactively mutate lifecycle state merely to satisfy conformance;
+- do not fabricate Critic, Reviewer, Verifier, frozen candidate, or trusted-base evidence;
+- bootstrap publication must be represented as an explicit Owner-authorized exceptional transaction;
+- the next Git Transaction / Index Recovery remediation batch must introduce a normal machine-verifiable path for this class of transaction so future repair publication does not depend on exceptional Owner override;
+- published verification must bind the exact remote subject ref to the exact bootstrap commit SHA.
+
+This finding extends F-017 from commit reachability to publication/conformance reachability.
