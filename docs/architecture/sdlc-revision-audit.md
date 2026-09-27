@@ -345,3 +345,36 @@ Owner approved `docs/architecture/sdlc-architecture-freeze.md` revision v0.6 on 
 
 The audit branch remains the durable architecture SSOT. Further changes to the frozen decisions require an explicit architecture amendment. Implementation work must be performed through separate bounded Work Blocks derived from the frozen architecture.
 
+
+
+## Post-freeze implementation findings
+
+### F-011 — Self-hosting publication deadlock confirmed by WB-038
+
+Status: confirmed by local WB-038 execution; not yet published as a WB branch.
+
+WB-038 completed its diagnostic baseline locally without modifying production lifecycle/hooks/governance. Operator-reported results:
+
+- B-001–B-005 and B-010: PASS;
+- B-006–B-008: EXPECTED_BLOCK;
+- B-009: UNREACHABLE;
+- focused harness tests: 5/5;
+- candidate-bound Critic: APPROVE;
+- Reviewer: READY;
+- Verifier: READY;
+- frozen candidate: `content-sha256:a017c6a50cc289fcb695d2c63098b63f182ba85364daedf255bbf638c48454d9`.
+
+After assurance, normal staging of the harness source was denied because the frozen lifecycle had `write_gate=BLOCKED`. WB-038 therefore closed reporting-only with no candidate commit or push.
+
+Architectural interpretation:
+
+The baseline did not reveal a contradiction in Architecture Freeze v0.6. It confirmed the expected implementation gap: the current published control plane cannot self-host a source-changing remediation because index/candidate-package materialization after freeze is still treated as source mutation.
+
+Required remediation ownership:
+
+- immediate bootstrap remediation: Git Transaction / Publication Bootstrap;
+- target transitions: `MATERIALIZE_CANDIDATE_PACKAGE` and `REBUILD_CANDIDATE_INDEX`;
+- no broad hook weakening;
+- if the remediation WB itself reaches the same publication boundary after valid assurance, use only an explicit one-time Owner-controlled bootstrap transaction with exact candidate/path/postcondition binding.
+
+This finding temporarily changes remediation implementation order but does not amend Architecture Freeze v0.6.
