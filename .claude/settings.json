@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .agent/hooks/hard_stop_policy.py",
+            "command": "f=\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/.agent/hooks/hard_stop_policy.py\"; [ -f \"$f\" ] || { echo \"[hook-wiring-failure] unresolved hook entrypoint: $f\" 1>&2; exit 2; }; exec python3 \"$f\"",
             "timeout": 5000
           }
         ]
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/work_block_gate.py",
+            "command": "f=\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/.claude/hooks/work_block_gate.py\"; [ -f \"$f\" ] || { echo \"[hook-wiring-failure] unresolved hook entrypoint: $f\" 1>&2; exit 2; }; exec python3 \"$f\"",
             "timeout": 5000
           }
         ]
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/typecheck.sh",
+            "command": "f=\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/.claude/hooks/typecheck.sh\"; [ -f \"$f\" ] || { echo \"[hook-wiring-failure] unresolved hook entrypoint: $f\" 1>&2; exit 2; }; exec bash \"$f\"",
             "timeout": 30000
           }
         ]
@@ -39,7 +39,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/assurance_gate.py",
+            "command": "f=\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/.claude/hooks/assurance_gate.py\"; [ -f \"$f\" ] || { echo \"[hook-wiring-failure] unresolved hook entrypoint: $f\" 1>&2; exit 2; }; exec python3 \"$f\"",
             "timeout": 5000
           }
         ]

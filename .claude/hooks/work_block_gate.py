@@ -27,7 +27,84 @@ DEFAULT_COORDINATION = [
     "docs/architecture/drafts/**",
     "memory_bank/**",
 ]
-REDIRECTS = re.compile(r"(?<![<])(?:^|[^>])>{1,2}\s*([^\s;&|]+)")
+def unquoted_view(command: str) -> str:
+    """Return the command with quoted spans blanked, preserving offsets.
+
+    Quoted or search text (for example a pattern containing `2>/dev/null`) is
+    inert, so detection never mistakes it for an operator or a write target.
+    """
+    view = list(command)
+    quote: str | None = None
+    index = 0
+    while index < len(command):
+        character = command[index]
+        if quote is None:
+            if character in {"'", '"'}:
+                quote = character
+                view[index] = " "
+            index += 1
+            continue
+        if character == "\\" and quote == '"':
+            view[index] = " "
+            if index + 1 < len(command):
+                view[index + 1] = " "
+            index += 2
+            continue
+        if character == quote:
+            quote = None
+        view[index] = " "
+        index += 1
+    return "".join(view)
+
+
+def unquoted_redirects(command: str) -> list[str]:
+    """Return targets of unquoted redirections, keeping quoted targets intact.
+
+    A genuine redirect is still scoped even when its target is quoted; only a
+    redirect operator inside quoted text is treated as inert.
+    """
+    targets: list[str] = []
+    quote: str | None = None
+    index = 0
+    while index < len(command):
+        character = command[index]
+        if quote is not None:
+            if character == "\\" and quote == '"':
+                index += 2
+                continue
+            if character == quote:
+                quote = None
+            index += 1
+            continue
+        if character in {"'", '"'}:
+            quote = character
+            index += 1
+            continue
+        if character != ">":
+            index += 1
+            continue
+        index += 2 if command[index:index + 2] == ">>" else 1
+        if command[index:index + 1] == "&":
+            while index < len(command) and command[index] not in " \t;&|":
+                index += 1
+            continue
+        while index < len(command) and command[index] in " \t":
+            index += 1
+        if index < len(command) and command[index] in {"'", '"'}:
+            closer = command[index]
+            end = command.find(closer, index + 1)
+            if end == -1:
+                targets.append(command[index + 1:])
+                break
+            targets.append(command[index + 1:end])
+            index = end + 1
+            continue
+        start = index
+        while index < len(command) and command[index] not in " \t;&|":
+            index += 1
+        if index > start:
+            targets.append(command[start:index])
+    return targets
 MUTATING = re.compile(
     r"(^|[;&|]\s*)(rm|rmdir|mv|cp|install|touch|mkdir|ln|chmod|chown|"
     r"truncate|sed\s+-[^;\n]*i|perl\s+-[^;\n]*i|tee|"
@@ -269,7 +346,69 @@ def require_scope(paths: list[str], patterns: list[str], label: str) -> None:
         )
 
 
-def check_paths(paths: list[str], gate: dict, root: Path) -> None:
+
+def maintenance_override(root: Path, guard_class: str, operation: str, paths: list[str], reason: str) -> bool:
+    """Downgrade only a named cooperative guard under the exact Owner state."""
+    sys.path.insert(0, str(root / ".agent/hooks"))
+    try:
+        from maintenance_mode import decide
+    except ImportError:
+        return False
+    try:
+        return decide(
+            root,
+            guard_class=guard_class,
+            operation=operation,
+            paths=paths,
+            reason=reason,
+        ) == "AUDIT"
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return False
+
+
+def maintenance_command_paths(command: str, root: Path) -> list[str]:
+    """Extract only explicit repository paths; ambiguity fails closed."""
+    paths: list[str] = []
+    for target in unquoted_redirects(command):
+        try:
+            path = normalize(target, root)
+        except Denied:
+            continue
+        if path and path not in paths:
+            paths.append(path)
+    try:
+        tokens = shlex.split(command, posix=True)
+    except ValueError:
+        return paths
+    for token in tokens:
+        if token.startswith(("-", "$")) or token.startswith(chr(96)) or token in {";", "&&", "||", "|"}:
+            continue
+        candidate = token.strip().strip(chr(34) + chr(39))
+        if not candidate or candidate in {".", "./"}:
+            continue
+        if "/" not in candidate and not candidate.startswith("."):
+            continue
+        try:
+            path = normalize(candidate, root)
+        except Denied:
+            continue
+        if path not in paths:
+            paths.append(path)
+    return paths
+
+
+def maintenance_immutable_command(command: str) -> bool:
+    return bool(re.search(
+        r"\b(git\s+(push|merge|tag|branch\s+(-[dD]|--delete))|"
+        r"(deploy|release|publish|terraform\s+(apply|destroy)|"
+        r"kubectl\s+(apply|delete|patch|replace)|docker\s+(push|compose\s+(up|down)))\b",
+        command,
+        re.I,
+    ))
+
+
+
+def _normal_check_paths(paths: list[str], gate: dict, root: Path) -> None:
     scoped = [path for path in paths if path != GATE_PATH.as_posix()]
     if not scoped:
         return
@@ -287,13 +426,34 @@ def check_paths(paths: list[str], gate: dict, root: Path) -> None:
     require_scope(source, validate_source_gate(gate), "Source write")
 
 
+def check_paths(paths: list[str], gate: dict, root: Path) -> None:
+    try:
+        _normal_check_paths(paths, gate, root)
+        return
+    except Denied as exc:
+        scoped = [path for path in paths if path != GATE_PATH.as_posix()]
+        if not scoped:
+            raise
+        if "Worktree/SSO" in str(exc) or "binding" in str(exc).lower():
+            guard_class = "verified_same_repository_handoff"
+        elif canonical_inactive(gate):
+            guard_class = "inactive_coordination"
+        elif gate.get("write_gate", {}).get("status") == "BLOCKED":
+            guard_class = "post_freeze_staging"
+        else:
+            guard_class = "source_write_gate"
+        if maintenance_override(root, guard_class, "write", scoped, str(exc)):
+            return
+        raise
+
+
 def shell_paths(command: str, root: Path) -> list[str]:
     paths: list[str] = []
-    for match in REDIRECTS.finditer(command):
-        path = normalize(match.group(1), root)
+    for target in unquoted_redirects(command):
+        path = normalize(target, root)
         if path not in paths:
             paths.append(path)
-    if re.search(r";|&&|\|\||(?<!\|)\|(?!\|)", command):
+    if re.search(r";|&&|\|\||(?<!\|)\|(?!\|)", unquoted_view(command)):
         raise Denied(
             "Complex mutating Bash cannot be scoped safely; split the command or use Edit/Write."
         )
@@ -498,7 +658,7 @@ def inactive_commit_selector(arguments: list[str]) -> str | None:
 def direct_gate_repair_bash(command: str, root: Path) -> bool:
     if re.search(r"\bgit\s+(commit|push)\b", command, re.I):
         return False
-    if not (MUTATING.search(command) or REDIRECTS.search(command)):
+    if not (MUTATING.search(unquoted_view(command)) or unquoted_redirects(command)):
         return False
     paths = shell_paths(command, root)
     return bool(paths) and all(path == GATE_PATH.as_posix() for path in paths)
@@ -510,8 +670,25 @@ def check_bash(event: dict, gate: dict, root: Path) -> None:
     try:
         from git_transition_policy import Denied as DispatchDenied, runtime_git_dispatch
         runtime_git_dispatch(command, root)
-    except (ImportError, DispatchDenied) as exc:
+    except ImportError as exc:
         raise Denied(f"Shared Git dispatch policy denied: {exc}") from exc
+    except DispatchDenied as exc:
+        paths = maintenance_command_paths(command, root)
+        if (
+            "direct, single invocation" in str(exc)
+            and paths
+            and not maintenance_immutable_command(command)
+            and maintenance_override(
+                root,
+                "direct_single_git",
+                "git",
+                paths,
+                str(exc),
+            )
+        ):
+            pass
+        else:
+            raise Denied(f"Shared Git dispatch policy denied: {exc}") from exc
 
     # Git push is inspected by the shared provider-neutral Hard Stop guard.
     if re.search(r"\bgit\s+push\b", command, re.I):
@@ -562,8 +739,25 @@ def check_bash(event: dict, gate: dict, root: Path) -> None:
         require_scope(staged, allowed, "Staged commit")
         return
 
-    if MUTATING.search(command) or REDIRECTS.search(command):
-        check_paths(shell_paths(command, root), gate, root)
+    if MUTATING.search(unquoted_view(command)) or unquoted_redirects(command):
+        try:
+            paths = shell_paths(command, root)
+        except Denied as exc:
+            paths = maintenance_command_paths(command, root)
+            if (
+                paths
+                and not maintenance_immutable_command(command)
+                and maintenance_override(
+                    root,
+                    "complex_mutating_bash",
+                    "bash",
+                    paths,
+                    str(exc),
+                )
+            ):
+                return
+            raise
+        check_paths(paths, gate, root)
 
 
 def main() -> None:

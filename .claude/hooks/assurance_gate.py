@@ -10,6 +10,7 @@ import sys
 
 GATE_PATH = Path(".agent/active-work-block.json")
 EVALUATION_VALIDATOR = Path("scripts/validate-evaluation.py")
+STOP_GUARD_PATH = ".claude/hooks/assurance_gate.py"
 
 
 class GateError(Exception):
@@ -40,9 +41,34 @@ def load_gate(root: Path) -> dict:
         raise GateError("Closeout requires active-work-block schema_version=3.")
     if gate.get("authority_mode") != "github_capability":
         raise GateError("Closeout requires authority_mode=github_capability.")
-    if not str(gate.get("work_block_id") or "").strip():
-        raise GateError("Closeout requires a non-empty work_block_id.")
     return gate
+
+
+def session_stop_downgraded(root: Path) -> bool:
+    """Return whether Maintenance Mode downgrades this stop guard to AUDIT/WARN.
+
+    Runtime session termination is not a lifecycle transition. The guard whose
+    implementation is under repair may be downgraded only inside the exact
+    Owner-authorized maintenance scope; every other state keeps enforcement.
+    """
+    sys.path.insert(0, str(root / ".agent" / "hooks"))
+    try:
+        from maintenance_mode import decide
+    except ImportError:
+        return False
+    try:
+        return decide(
+            root,
+            guard_class="lifecycle_sequencing",
+            operation="session_stop",
+            paths=[STOP_GUARD_PATH],
+            reason=(
+                "Stop-hook lifecycle completion enforcement downgraded to "
+                "AUDIT/WARN for the remediation session"
+            ),
+        ) == "AUDIT"
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return False
 
 
 def report_path(root: Path, raw: object, label: str) -> Path:
@@ -133,6 +159,20 @@ def main() -> None:
         cwd = payload.get("cwd") if isinstance(payload, dict) else None
         root = root_from(cwd)
         gate = load_gate(root)
+
+        if not str(gate.get("work_block_id") or "").strip():
+            # No active Work Block: there is no closeout to enforce, and a
+            # runtime session must be able to stop without lifecycle mutation.
+            return
+
+        if session_stop_downgraded(root):
+            print(json.dumps({
+                "systemMessage": (
+                    "Maintenance Mode: Stop-hook lifecycle enforcement downgraded "
+                    "to AUDIT/WARN for this remediation session."
+                )
+            }, ensure_ascii=False))
+            return
 
         assurance = gate.get("assurance")
         if not isinstance(assurance, dict):
