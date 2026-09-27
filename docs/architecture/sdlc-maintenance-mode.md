@@ -310,3 +310,18 @@ In particular:
 - ending or restarting an agent session must remain possible without falsifying Work Block state.
 
 Maintenance tests must include a case where an active unresolved WB exists and the runtime can terminate/restart without mutating authoritative lifecycle state.
+
+
+## Runtime adapter bootstrap boundary
+
+A runtime is not required to be capable of modifying its own adapter.
+
+If an adapter surface is read-only inside that runtime:
+
+- do not remount, escalate privilege, or bypass the filesystem boundary;
+- keep shared policy in a runtime-neutral writable location where practical;
+- update the thin adapter from a separate writable context, another runtime, Owner/operator action, or an out-of-band Git/GitHub transaction;
+- restart/rebind the affected runtime after the adapter update;
+- verify equivalent normalized events produce equivalent maintenance decisions across adapters.
+
+Maintenance Mode is not complete until every supported runtime that participates in remediation either consumes the shared evaluator or is explicitly declared unsupported for maintenance sessions.
