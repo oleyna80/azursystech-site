@@ -1009,3 +1009,49 @@ Required direction:
 
 This is a control-plane ergonomics/path-classification issue, not a WB-040 blocker. Current work can avoid the redirect and proceed with direct read-only commands.
 
+### F-039 — Canonical reporting-only inactive state is not committable
+
+Status: confirmed during WB-040 reporting-only close.
+
+The canonical lifecycle transition `close --mode reporting-only` successfully produces an inactive lifecycle state with:
+
+- empty `work_block_id`, `subject_branch`, and `base_commit`;
+- `write_gate = BLOCKED`;
+- `closeout_mode = reporting-only`;
+- a non-empty lifecycle closeout note.
+
+However, the Git commit guards reject that exact lifecycle result as non-canonical.
+
+Observed WB-040 failure:
+
+`git-transition: BLOCKED: inactive state is not canonical`
+
+The failure path is:
+
+- `.agent/hooks/git_transition_policy.py` calls the inactive-state commit predicate;
+- the shared canonical inactive predicate accepts either the pristine default template or terminal inactive state;
+- terminal inactive state hard-requires `closeout_mode == success-closeout`;
+- therefore the valid lifecycle value `reporting-only` is representable but structurally uncommittable;
+- the same acceptance rule is duplicated by the commit-message guard.
+
+Impact:
+
+- WB-040 is logically closed locally but its close state and final Reviewer/closeout evidence cannot be made durable through the normal Git path;
+- the close artifacts remain fragile worktree/index state until the control-plane contract is repaired;
+- using `--no-verify`, changing `reporting-only` to `success-closeout`, or manually rewriting lifecycle state would falsify governance and is not acceptable.
+
+Required direction:
+
+- make canonical inactive commit validation admit the lifecycle's reporting-only inactive form;
+- preserve strict success-closeout requirements for terminal success;
+- require a non-empty reason/note for reporting-only closeout;
+- keep the accepted reporting-only state structurally constrained to the canonical inactive template plus the permitted closeout fields;
+- keep lifecycle implementation, shared commit predicate, and commit-msg predicate semantically identical;
+- add regression coverage proving:
+  - canonical reporting-only inactive state is committable;
+  - reporting-only with malformed active fields remains denied;
+  - success-closeout still requires its stricter frozen/assurance contract;
+  - pristine pending inactive state remains valid where intended.
+
+This is a lifecycle/control-plane consistency defect and should be repaired in a narrow successor Work Block before opening the broader Shell Command Authority Classification Work Block.
+
