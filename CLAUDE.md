@@ -162,3 +162,125 @@ Claude Code local/provider settings:
 - Real API keys, provider credentials, subscription tokens, and model endpoint overrides live outside the repository.
 - Codex MCP may be configured globally or locally by the developer; repo-local `.mcp.json` is optional and must not contain secrets.
 - If a GPT/Codex-backed subagent cannot access its MCP tool, it must report `UNVERIFIED` or `BLOCKED`, not silently fall back to direct shell invocation.
+
+---
+
+## Temporary WB-041 Bootstrap Operating Profile
+
+This section exists only to keep Claude Code productive while WB-041 repairs the current control-plane hook behavior. These are **operational workarounds for known defects**, not the target architecture. Do not copy these restrictions into the final command-authority design unless the approved WB-041 specification explicitly requires them.
+
+### Session and worktree binding
+
+- Treat the Claude Code session as bound to the worktree from which the session was started.
+- Do not attempt to rebind authority with command-local `cd`.
+- For WB-041, the intended worktree is:
+  `/home/azur/Projects/WSL/azursystech-wb041`
+- The intended branch is:
+  `fix/sdlc-control-plane-hooks-041`
+- If the session root does not match the intended worktree, stop and report the mismatch rather than attempting a shell-level workaround.
+
+### Git commands during WB-041 bootstrap
+
+Until WB-041 changes the command-authority layer:
+
+- Use **one direct Git invocation per Bash tool call**.
+- Do not combine Git commands with `&&`, `;`, pipes, shell variables, command substitution, nested shells, or wrapper commands.
+- Do not use command-local `cd` before Git.
+- Prefer direct read-only commands when inspecting repository state.
+
+Examples of acceptable bootstrap Git calls:
+
+```bash
+git status --short --branch
+git rev-parse HEAD
+git branch --show-current
+git diff -- path/to/file
+git diff --cached -- path/to/file
+git show HEAD:path/to/file
+```
+
+If a normal read-only Git workflow is denied only because it is compound, treat that as evidence for the existing WB-041 command-authority defect. Do not create a new finding ID and do not weaken hooks ad hoc.
+
+### Shell redirects
+
+Until F-038 is repaired:
+
+- Do not use shell redirects to `/dev/null` or other paths.
+- Do not use `>/dev/null`, `2>/dev/null`, `&>/dev/null`, temporary-file redirection, or equivalent output suppression.
+- Run the command directly and inspect its output instead.
+- Prefer repository-aware Read/Search tools when shell output suppression would otherwise be needed.
+
+The final WB-041 target may explicitly recognize exact `/dev/null` as a non-persistent sink. This temporary section must not be interpreted as a permanent prohibition.
+
+### Repository reading
+
+For specification, plan, governance, hook, and policy inspection:
+
+- Prefer Read/Search over shell pipelines.
+- Do not use shell pipelines merely to filter file content.
+- Use exact file paths and focused searches.
+- Read the durable audit SSOT before inventing or renumbering control-plane findings.
+
+Durable audit SSOT:
+
+`audit/sdlc-revision:docs/architecture/sdlc-revision-audit.md`
+
+Relevant existing findings include F-027, F-030, F-034, F-035, F-036, F-037, F-038, and F-039. Preserve those IDs and meanings.
+
+### WB-041 scope discipline
+
+WB-041 is:
+
+`Control Plane Hook Simplification & Command Authority`
+
+Primary architectural direction:
+
+- one shared semantic owner for supported shell grammar and command capability classification;
+- restricted supported grammar rather than an incomplete POSIX shell interpreter;
+- unsupported executable constructs fail closed;
+- executable command structure must be distinguished from inert argument/prompt/document text;
+- provider-specific Claude/Codex adapters should be thin consumers;
+- hard-stop precedence remains intact;
+- Maintenance Mode does not become another shell parser;
+- reporting-only local coordination commit must not create publication authority;
+- Stop-hook re-entrancy must not fabricate lifecycle or assurance state.
+
+Do not silently expand WB-041 into application, deployment, production, credential, unrelated lifecycle, or WB-040 repair work.
+
+### Known bootstrap defects are evidence, not stop reasons
+
+During DEFINE/implementation, the following already-known bootstrap failures may recur:
+
+- direct-single-Git restriction on compound read-only Git;
+- `/dev/null` classified as an external write;
+- dangerous command literals inside prompt/data classified as executable intent;
+- shell parser ambiguity around substitution, grouping, comments, empty quoted words, variables, and unsupported operators;
+- recursive Stop-hook pressure when assurance is intentionally pending.
+
+When one of these occurs:
+
+1. preserve the denial as evidence;
+2. use the narrow non-bypass bootstrap form described above when one exists;
+3. do not disable hooks;
+4. do not use `--no-verify`;
+5. do not mutate lifecycle state merely to make a command pass;
+6. do not create a duplicate audit finding;
+7. continue only when the operation remains within the approved WB-041 authority.
+
+### Hard boundaries remain unchanged
+
+This temporary profile does not authorize:
+
+- force or non-fast-forward push;
+- merge;
+- deploy or release;
+- protected/default branch mutation;
+- credentials or secrets access;
+- production/live infrastructure or data mutation;
+- destructive cleanup;
+- irreversible external effects;
+- prohibited cross-repository writes;
+- bypassing hooks or verification controls.
+
+Owner-controlled boundaries remain Owner-controlled.
+
