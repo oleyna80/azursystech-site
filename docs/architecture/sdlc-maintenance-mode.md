@@ -325,3 +325,18 @@ If an adapter surface is read-only inside that runtime:
 - verify equivalent normalized events produce equivalent maintenance decisions across adapters.
 
 Maintenance Mode is not complete until every supported runtime that participates in remediation either consumes the shared evaluator or is explicitly declared unsupported for maintenance sessions.
+
+
+## Runtime hook path stability
+
+Runtime hook commands must not depend on the mutable shell/tool cwd.
+
+For Claude Code and equivalent runtimes:
+
+- hook entrypoints must resolve from the repository/project root or another stable session bootstrap root;
+- changing cwd inside the runtime must not make hook files appear missing;
+- PreToolUse, PostToolUse, and Stop hooks must continue to execute after cwd changes;
+- failure to resolve a hook path must be distinguishable from a policy denial;
+- Maintenance Mode must not rely on a cwd-sensitive hook command.
+
+Regression coverage must include a runtime/session that changes cwd away from the repository root and then invokes each configured hook class.
