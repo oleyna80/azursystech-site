@@ -895,3 +895,97 @@ Required direction:
 
 This is a parser false-positive defect in the same corrective scope as F-028/F-029/F-032.
 
+### F-034 — Command substitution inside quoted argv data can execute hidden hard-stop operations
+
+Status: confirmed by independent Reviewer v7 during WB-040.
+
+The adapter-local lexer preserves double-quoted text as one argv token but does not model shell command substitution semantics inside that token.
+
+Observed examples:
+
+- `echo "$(git merge feature)"`
+- `echo "$(git push origin HEAD:main)"`
+- equivalent backtick substitution forms
+
+Both Claude and Codex adapters allowed these forms even though the shell executes the nested command before invoking `echo`.
+
+Required direction:
+
+- do not treat double-quoted text as inert argv data when shell expansion semantics can execute nested commands;
+- either use a parser/AST capable of distinguishing executable substitutions, or reject unsupported command-substitution syntax before authority classification;
+- preserve ordinary quoted literal support where no executable expansion occurs;
+- add parity regressions for `$(...)` and backtick command substitution.
+
+This is an effective-runtime hard-stop bypass and demonstrates a limit of the current lightweight splitter approach.
+
+### F-035 — Empty quoted words are lost, breaking shell comment semantics
+
+Status: confirmed by independent Reviewer v7 during WB-040.
+
+The adapter-local lexer drops an empty quoted word. This changes lexical state around a following `#` and can incorrectly reinterpret executable text as a shell comment.
+
+Observed example:
+
+`echo ''#; git push origin HEAD:main`
+
+The adapters reduced the command to an `echo` segment and allowed it, although shell tokenization treats the quote as beginning the word so the following `#` is not a comment introducer and later command text remains executable.
+
+Required direction:
+
+- preserve zero-length quoted words and their effect on lexical word state;
+- comment recognition must depend on real shell lexical position, not only the current accumulated token string;
+- add regressions for empty single/double quoted words adjacent to `#`.
+
+This is an effective-runtime bypass caused by incomplete lexical-state modeling.
+
+### F-036 — Variable expansion can synthesize an executable command outside the supported grammar
+
+Status: confirmed by independent Reviewer v7 during WB-040.
+
+The current adapter-local grammar does not reject command-position variable expansion.
+
+Observed examples:
+
+`G=git; "$G" merge feature`
+`G=git; "$G" push origin HEAD:main`
+
+Both adapters allowed the input even though shell expansion produces an executable `git` command.
+
+Required direction:
+
+- command-position expansion must not be treated as inert argv data;
+- either model shell expansion semantics with an appropriate parser/AST and conservative evaluator, or fail closed on unsupported executable expansion constructs;
+- distinguish safe argument expansion from expansion that can determine the executable itself only if that distinction can be proven.
+
+This is an effective-runtime hard-stop bypass and another sign that a hand-written argv splitter is not a sufficient shell security boundary.
+
+### F-037 — Lightweight shell splitting is not a sustainable security boundary
+
+Status: architectural conclusion confirmed across Reviewer rounds v4-v7.
+
+WB-040 attempted to incrementally harden adapter-local shell classification while preserving a narrow supported grammar. Independent review successively found bypass or false-positive classes involving:
+
+- quoted separators and malformed segments;
+- unquoted newlines;
+- grouping/subshell syntax;
+- shell comments;
+- command substitution;
+- empty quoted-word lexical state;
+- executable variable expansion;
+- unsupported operator runs such as single `&`, `&&&`, `|||`, and `;;`.
+
+The repeated pattern shows that continuing to patch a bespoke shell splitter one syntax feature at a time is not an economically or security-sound direction.
+
+Required architectural direction:
+
+- stop extending WB-040 with Reviewer v8-style parser patches;
+- define a dedicated Work Block for shell command authority classification;
+- choose one of two explicit strategies:
+  1. parse shell input with a mature shell parser/AST and classify executable nodes conservatively; or
+  2. reduce the agent Bash capability to a deliberately restricted command grammar whose unsupported constructs are rejected before execution;
+- centralize semantics so shared hard-stop policy and Claude/Codex adapters do not evolve as partially overlapping parsers;
+- preserve hard-stop precedence and Maintenance Mode invariants;
+- add property/regression tests around executable-vs-data boundaries rather than only enumerating known strings.
+
+WB-040 should treat this as a boundary discovery result, not continue implementation churn.
+
