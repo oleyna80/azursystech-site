@@ -443,3 +443,22 @@ Required direction:
 - preserved WB-037 state must be restored to its pre-inspection value without disturbing its other local evidence.
 
 This finding does not amend Architecture Freeze v0.6. It further justifies separating runtime convenience hooks from authoritative lifecycle semantics.
+
+
+### F-014 — A runtime may be unable to modify its own adapter
+
+Status: confirmed during WB-039 Maintenance Bootstrap.
+
+The Codex runtime successfully created the shared maintenance evaluator and integrated the Claude adapter, but its own `.codex` directory was mounted read-only inside the Codex runtime namespace. As a result, `.codex/hooks/pre_tool_use_policy.py` could not be modified from the runtime whose behavior it controls.
+
+This is a bootstrap/capability boundary, not a reason to weaken filesystem protections.
+
+Required direction:
+
+- control-plane repair must not assume a runtime can self-modify its own adapter;
+- runtime-neutral policy should live outside runtime-specific read-only surfaces where possible;
+- adapter updates may require a writable external context, another runtime, Owner/operator action, or an out-of-band Git/GitHub update followed by runtime restart;
+- after an adapter update, cross-runtime parity must be reverified before Maintenance Mode is considered complete;
+- no remount, privilege escalation, or hidden bypass is authorized.
+
+This finding reinforces the requirement that runtime adapters remain thin and replaceable while policy remains shared.
