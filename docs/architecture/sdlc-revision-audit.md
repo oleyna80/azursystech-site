@@ -462,3 +462,41 @@ Required direction:
 - no remount, privilege escalation, or hidden bypass is authorized.
 
 This finding reinforces the requirement that runtime adapters remain thin and replaceable while policy remains shared.
+
+
+### F-015 — Runtime hook commands depend on session cwd
+
+Status: confirmed during Claude Code inspection in the WB-039 checkout.
+
+Observed behavior:
+
+- Claude Code changed its persistent tool cwd into `web/`;
+- `.claude/settings.json` invokes repository hooks using relative paths such as `python3 .agent/hooks/hard_stop_policy.py` and `python3 .claude/hooks/work_block_gate.py`;
+- after cwd changed, the runtime looked for those hooks under `web/.agent` / `web/.claude`;
+- hook execution failed and the runtime failed closed, temporarily blocking Bash/Edit/Write;
+- the Stop hook likewise failed because `.claude/hooks/assurance_gate.py` was resolved relative to the wrong cwd.
+
+This is a real runtime-adapter defect, not an Architecture Freeze issue.
+
+Required direction:
+
+- Claude hook commands must resolve from the repository/project root, not the mutable shell cwd;
+- use the runtime's project-root variable (for example `$CLAUDE_PROJECT_DIR`) or an equivalent absolute root derivation;
+- hook path resolution must remain stable after command-local or persistent cwd changes;
+- add regression coverage that changes cwd before invoking PreToolUse/PostToolUse/Stop hooks;
+- session cwd changes must not disable or relocate the guardrail layer.
+
+### F-016 — Agent-facing operating documentation is materially stale
+
+Status: observed during Claude Code repository audit; documentation cleanup deferred from WB-039 except where needed for Maintenance Mode safety.
+
+Claude Code identified multiple stale or incomplete statements in `CLAUDE.md`, including intake configuration, locale count, intake-channel description, skill inventory, showcase inventory, and CI command descriptions. It also noted missing documentation for hook behavior, active Work Block gating, machine-authoritative SDLC artifacts, registry/map SSOT files, and the parallel Codex adapter surface.
+
+The audit did not independently verify every product/documentation claim and therefore this finding is recorded as a documentation-audit backlog, not as a completed correction set.
+
+Required direction:
+
+- do not expand WB-039 into a general `CLAUDE.md` rewrite;
+- fix only hook/runtime facts required for safe Maintenance Mode operation now;
+- perform a separate documentation reconciliation after the control plane is stable;
+- remove transient priorities from global runtime instructions where they can become stale.
