@@ -749,3 +749,49 @@ Required direction:
 
 This is Stop-hook/runtime-contract correctness and belongs to the later hook/control-plane hardening backlog unless it directly blocks WB-040 execution.
 
+### F-028 — Shell command segmentation loses newline command boundaries
+
+Status: confirmed by independent Reviewer v5 during WB-040.
+
+The quote-aware segmentation introduced for WB-040 uses `shlex` tokenization, but an unquoted newline is treated as ordinary whitespace rather than as a shell command separator. As a result, a compound input such as:
+
+`printf ok\ngit merge feature`
+
+can collapse into one argv stream beginning with `printf`. The immutable hard-stop classifier then inspects the first executable only and can miss the later prohibited Git operation.
+
+Observed effect:
+
+- both Claude and Codex adapters allowed the newline-separated `git merge` form during direct function execution;
+- equivalent newline-separated cross-repository Git forms were also missed;
+- Maintenance Mode was not involved in the bypass.
+
+Required direction:
+
+- preserve shell command boundaries for unquoted newlines as well as `;`, `&&`, `||`, and pipelines;
+- separators inside quoted or escaped data must remain data, not command boundaries;
+- the segmentation result must retain enough structure to inspect every actually executable simple command;
+- genuinely ambiguous/unparseable mutating command input must continue to fail closed;
+- add parity regressions for newline-separated hard stops and benign quoted-newline/literal cases.
+
+This is a hard-stop completeness defect and is in scope for the current WB-040 parser correction round.
+
+### F-029 — Shell tokenization loses quoted-separator provenance and can create false command boundaries
+
+Status: confirmed by independent Reviewer v5 during WB-040.
+
+The current quote-aware segmentation also loses lexical provenance after `shlex` removes quoting/escaping. A literal argument whose value is `;` can therefore become indistinguishable from an actual shell separator.
+
+Observed effect:
+
+- benign forms such as `echo ";" git merge feature` and escaped-literal equivalents were classified as hard-stop commands even though the separator-like token was data for `echo`, not an executable command boundary;
+- the false denial appears in both Claude and Codex adapters.
+
+Required direction:
+
+- command segmentation must distinguish actual shell control operators from tokens that merely contain the same character after quote/escape removal;
+- do not infer command boundaries from dequoted token value alone;
+- preserve fail-closed behavior for truly malformed executable segments;
+- add Claude/Codex parity regressions for quoted and escaped separator literals.
+
+This is a false-positive counterpart to F-028 and is in scope for the current WB-040 parser correction round.
+
