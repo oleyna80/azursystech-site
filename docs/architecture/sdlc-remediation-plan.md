@@ -29,7 +29,7 @@ Implementation planning order:
 5. **Hook Responsibility Simplification**
 6. **E2E Green + Final Schema Migration + Conformance Hardening**
 
-This order is now the planning baseline. Reordering or combining these batches requires an explicit architecture/planning amendment when it changes dependency assumptions or control-plane activation sequencing.
+This was the 2026-09-26 planning baseline. It was superseded by the 2026-09-27 Maintenance Mode remediation amendment later in this document. The active sequence is now: WB-038 baseline → WB-039 Maintenance Mode → WB-040 Git Transaction & Index Recovery → Contract Reader Foundation → Terminal Transaction & Closeout Ordering → Assurance & Evidence Contract Cleanup → Hook Responsibility Simplification → E2E Green / Final Schema Migration / Conformance Hardening.
 
 ## Bootstrap constraint before remediation implementation
 
