@@ -378,3 +378,40 @@ Required remediation ownership:
 - if the remediation WB itself reaches the same publication boundary after valid assurance, use only an explicit one-time Owner-controlled bootstrap transaction with exact candidate/path/postcondition binding.
 
 This finding temporarily changes remediation implementation order but does not amend Architecture Freeze v0.6.
+
+
+### F-012 — Cooperative guardrails became repair-path blockers
+
+Status: confirmed during WB-039 preparation.
+
+After WB-038 exposed the publication/index deadlock, WB-039 preparation showed a broader self-hosting issue: several local cooperative controls are useful on the normal engineering path but obstruct repair of the control plane itself.
+
+Observed examples:
+
+- a session bound to the preserved WB-038 worktree could not write to a newly created clean WB-039 checkout, even though the checkout was intentionally created for the next remediation step;
+- direct-single-Git-command restrictions rejected compound read/check flows;
+- complex mutating Bash restrictions blocked bounded remediation command shapes;
+- the existing inactive/write-gate/freeze model can prevent the very source changes needed to repair lifecycle and Git transaction semantics.
+
+The runtime usage limit that temporarily prevented an independent Critic from running is **not** part of this finding; it is an external capacity constraint.
+
+Root cause:
+
+The implementation treated cooperative local workflow guards as mandatory during repair of the same policy/lifecycle system. This created a self-hosting dependency loop.
+
+Owner decision:
+
+Adopt `docs/architecture/sdlc-maintenance-mode.md` as the remediation execution strategy.
+
+During the maintenance window:
+
+- external/Owner hard stops remain enforced;
+- selected cooperative guards become AUDIT/WARN inside the exact remediation scope;
+- no maintenance operation may claim normal lifecycle approval;
+- repairs proceed in bounded batches;
+- E2E runs after each batch;
+- guards are re-enabled incrementally and retained only when they preserve transition reachability.
+
+WB-039 is repurposed before lifecycle OPEN as **SDLC Maintenance Mode / Repair Bootstrap**.
+
+Architecture Freeze v0.6 is unchanged.
