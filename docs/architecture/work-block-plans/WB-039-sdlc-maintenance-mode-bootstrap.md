@@ -1,6 +1,6 @@
 ---
 artifact_type: work_block_plan
-status: partial_implementation_blocked
+status: implementation_verified_publication_blocked
 work_block_id: WB-039
 scope: planning-only
 not_active_work_block: true
@@ -323,3 +323,61 @@ Activation requirements:
 - verify normal enforcement is restored after deactivation.
 
 This decision authorizes the bounded activation needed to complete WB-039. It does not authorize merge, deploy/release, force push, protected/default branch mutation, secrets, production mutation, privilege escalation, remount, or destructive cleanup.
+
+
+## Final local implementation result — 2026-09-27
+
+Status: **implementation verified locally; publication/commit blocked by existing Git-native control path**.
+
+Operator-reported final WB-039 state:
+
+- Maintenance Mode was activated under explicit Owner authorization for the exact WB-039 repo/branch/base/path scope;
+- all downgraded decisions were logged with `normal_lifecycle_approval=false`;
+- Critic was not downgraded or marked SKIPPED to obtain normal OPEN;
+- normal lifecycle OPEN was not claimed;
+- Maintenance Mode was deterministically deactivated after verification;
+- final state is `enabled=false`, `activated_at=null`;
+- normal source-write enforcement is restored in both Claude and Codex adapters;
+- no force push, merge, deploy, remount, privilege escalation, or production mutation occurred.
+
+Implemented and verified locally:
+
+- cwd-stable Claude hook entrypoints using the project-root binding;
+- explicit hook-wiring-failure classification;
+- Stop/session integrity: canonical inactive state may terminate without lifecycle mutation; active unresolved state remains enforced unless explicitly downgraded by Maintenance Mode;
+- quote-aware redirect/MUTATING/separator parsing in Claude and Codex adapters;
+- Codex adapter integration with the shared runtime-neutral Maintenance Mode evaluator;
+- cross-runtime parity for equivalent in-scope/out-of-scope events;
+- durable Python and shell regression coverage.
+
+Reported post-change verification:
+
+- `scripts/test-maintenance-mode.py`: 16 tests OK;
+- hook-wiring fixtures: PASS=9 FAIL=0;
+- Claude gate fixtures: PASS=61 FAIL=0;
+- Codex gate fixtures: PASS=61 FAIL=0;
+- Claude hard-stop fixtures: PASS=19 FAIL=0;
+- Codex hard-stop fixtures: PASS=19 FAIL=0;
+- control-plane tests: PASS=19 FAIL=0;
+- Define traceability: READY — 10 requirements / 16 acceptance criteria / 13 tasks;
+- Python compilation: PASS;
+- `git diff --check`: clean;
+- JSON validation: valid;
+- adapter parity: in-scope both ALLOW, out-of-scope both DENY with equivalent reason.
+
+Residual publication boundary:
+
+The source changes still cannot be committed through the current normal/inactive Git path.
+
+Two independent barriers remain:
+
+1. the Work Block/source staging gate rejects source staging in canonical inactive state;
+2. the Git-native pre-commit transaction policy rejects any inactive commit containing paths outside the coordination write-set.
+
+The Git-native commit layer does not currently consume the Maintenance Mode evaluator, so activating Maintenance Mode cannot make the verified WB-039 implementation durable through the normal commit path.
+
+This is now the only blocking boundary for making WB-039 durable. The implementation itself is locally complete and verified.
+
+Do not misclassify this as failed Maintenance Mode behavior: the mode correctly repairs runtime cooperative adapters, but the Git-native transaction layer is a separate control plane that belongs to the next remediation concern.
+
+Before starting the normal Git Transaction / Index Recovery batch, WB-039 requires one explicit Owner-controlled bootstrap publication decision.
