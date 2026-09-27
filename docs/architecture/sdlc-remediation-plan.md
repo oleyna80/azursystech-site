@@ -326,35 +326,42 @@ Do not implement everything in one Work Block.
 
 Recommended diagnostic-first sequence after architecture approval:
 
-0. **SDLC E2E Baseline Harness (WB-038)** — locally completed reporting-only; baseline reproduced the expected publication/index deadlock.
-1. **SDLC Publication Bootstrap / Git Transaction Recovery (WB-039)** — minimum bounded self-hosting remediation for exact candidate-package materialization and stale-index rebuild.
-2. **Contract Reader Foundation** — implement the minimum shared strict schemas/path grammar/parity required by existing enforcement.
-3. **Terminal Transaction & Closeout Ordering** — make terminal preparation/staging/closeout reachable and deterministic.
-4. **Assurance & Evidence Contract Cleanup** — separate candidate assurance from process/terminal evidence and generate closeout manifest.
-5. **Hook Responsibility Simplification** — remove duplicated orchestration/parser logic and keep hooks thin.
-6. **E2E Green + Final Schema Migration + Conformance Hardening** — migrate remaining consumers and require the complete E2E path in CI.
+0. **SDLC E2E Baseline Harness (WB-038)** — completed reporting-only; baseline reproduced the expected publication/index deadlock.
+1. **SDLC Maintenance Mode / Repair Bootstrap (WB-039)** — introduce an Owner-controlled repair window that downgrades cooperative local guards to AUDIT/WARN while preserving consequential hard stops.
+2. **Git Transaction & Index Recovery** — implement exact candidate-package materialization and stale-index rebuild under Maintenance Mode.
+3. **Contract Reader Foundation** — implement the minimum shared strict schemas/path grammar/parity required by existing enforcement.
+4. **Terminal Transaction & Closeout Ordering** — make terminal preparation/staging/closeout reachable and deterministic.
+5. **Assurance & Evidence Contract Cleanup** — separate candidate assurance from process/terminal evidence and generate closeout manifest.
+6. **Hook Responsibility Simplification + Incremental Re-enable** — remove duplicated orchestration/parser logic, restore intended guards by responsibility group, and run E2E after each group.
+7. **E2E Green + Final Schema Migration + Conformance Hardening** — migrate remaining consumers and require the complete E2E path in CI.
 
 The E2E harness is extended after every implementation Work Block. Each known blocker becomes a passing scenario when its owning remediation lands.
 
 The exact number and boundaries of Work Blocks may change if a proposed WB becomes too broad.
 
-## Temporary self-hosting bootstrap amendment
+## Maintenance-mode remediation amendment
 
-WB-038 demonstrated that the current published control plane cannot publish a source-changing remediation after freeze because the required index-only candidate-package materialization is still denied as a source write.
+WB-038 demonstrated that the current published control plane cannot self-host source-changing remediation reliably while every cooperative local guard remains in hard-enforcement mode.
 
-Therefore, implementation order is temporarily amended so that **WB-039 — SDLC Publication Bootstrap / Git Transaction Recovery** precedes Contract Reader Foundation.
+Subsequent WB-039 preparation also showed that remediation friction is broader than candidate-index staging alone: session-root binding, command-shape restrictions, inactive/write-gate checks, and other local cooperative controls can prevent an agent from repairing the control plane that implements those same controls.
 
-This is an implementation-order amendment only. Architecture Freeze v0.6 is unchanged.
+Owner decision on 2026-09-27:
 
-WB-039 must remain narrow:
+- Architecture Freeze v0.6 remains unchanged.
+- Remediation switches to the Owner-approved strategy in `docs/architecture/sdlc-maintenance-mode.md`.
+- WB-039 is repurposed before lifecycle OPEN as **SDLC Maintenance Mode / Repair Bootstrap**.
+- The previous narrow WB-039 publication-bootstrap plan is superseded.
+- Git Transaction / Index Recovery becomes the first repair batch after Maintenance Mode is available.
 
-- implement exact candidate-package materialization and stale-index rebuild semantics;
-- preserve source bytes and `source_candidate_id`;
-- preserve valid candidate assurance when only index state changes;
-- fail closed on extra/forbidden/terminal-only paths;
-- avoid terminal transaction redesign, Contract Reader work, assurance-model redesign, and hook simplification unless separately approved.
+During Maintenance Mode:
 
-If WB-039 itself reaches the same self-hosting publication boundary after valid assurance, normal policy must not be bypassed. The only permitted exceptional path is an explicit Owner-controlled one-time bootstrap transaction with exact preconditions, candidate identity, allowed paths, postconditions, rollback, and validation.
+- consequential Owner/external hard stops remain enforced;
+- selected cooperative local guards may be downgraded to AUDIT/WARN only inside the exact remediation scope;
+- repair batches must remain bounded and reversible;
+- each repair batch extends/reruns the E2E harness;
+- guards are re-enabled incrementally after the underlying transitions are proven reachable.
+
+This is an implementation-strategy amendment only. It does not change the frozen target lifecycle or authority model.
 
 ## Staged migration rule
 
