@@ -666,3 +666,34 @@ Required direction:
 
 This finding does not authorize bypassing the current WB-040 source gate or changing Maintenance Mode bindings outside Owner-approved scope.
 
+### F-025 — Git restore/checkout revision arguments are misclassified as source paths
+
+Status: confirmed from the published WB-039 hook implementation and reproduced during WB-040 canonical rework.
+
+The Claude Bash path extractor currently treats every argument after `git checkout` or `git restore` as a write target:
+
+`targets = args[1:]`
+
+This is correct only for the simplest path-only forms. In revision-qualified forms such as:
+
+`git checkout HEAD -- <path...>`
+
+the revision token `HEAD` is incorrectly normalized and passed into source-scope validation as if it were a filesystem path.
+
+Observed WB-040 effect:
+
+- the two actual target files were inside the exact Maintenance Mode path scope;
+- `HEAD` was not;
+- the resulting scope mismatch prevented the Maintenance Mode cooperative override and left the original source-write denial in force;
+- the equivalent path-only form, with index equal to HEAD, does not introduce the false path and can restore the same bytes.
+
+Required direction:
+
+- parse Git restore/checkout argv semantically rather than treating all post-subcommand tokens as paths;
+- distinguish revisions, option arguments, the `--` separator, and actual pathspecs;
+- preserve fail-closed behavior for ambiguous mutating forms;
+- preserve Maintenance Mode exact path scoping and hard-stop precedence;
+- add regressions for revision-qualified checkout/restore forms and path-only equivalents.
+
+This finding concerns command/path classification correctness. It does not authorize bypassing the source gate, broadening Maintenance Mode scope, or weakening hard stops.
+
