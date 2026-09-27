@@ -989,3 +989,23 @@ Required architectural direction:
 
 WB-040 should treat this as a boundary discovery result, not continue implementation churn.
 
+### F-038 — Redirects to benign special sinks are treated as out-of-repository writes
+
+Status: observed during WB-040 reporting-only close verification.
+
+A read-only diagnostic command using shell redirection to `/dev/null` was denied by the source/path guard because redirect targets are included in the write-path set and `/dev/null` is outside the repository.
+
+Observed effect:
+
+- canonical reporting-only lifecycle close had already succeeded;
+- a subsequent verification command was blocked with `Write path is outside repository: /dev/null`;
+- lifecycle state was not rolled back or altered by the denial.
+
+Required direction:
+
+- decide explicitly whether known non-persistent special sinks such as `/dev/null` should be permitted for diagnostic output suppression;
+- if permitted, handle them as a narrow special-case capability rather than broadening arbitrary out-of-repository writes;
+- preserve denial for ordinary external filesystem paths and unknown device targets.
+
+This is a control-plane ergonomics/path-classification issue, not a WB-040 blocker. Current work can avoid the redirect and proceed with direct read-only commands.
+
