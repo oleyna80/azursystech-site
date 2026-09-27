@@ -167,6 +167,8 @@ Any work performed before normal lifecycle OPEN must be explicitly marked as Mai
 - AC-010: normal enforcement is restored when maintenance mode is disabled.
 - AC-011: no force push, merge, deploy, production mutation, or secret mutation is enabled.
 - AC-012: WB-039 produces a documented maintenance activation procedure for the next remediation batch.
+- AC-013: an unresolved active Work Block does not force authoritative lifecycle mutation merely to terminate/restart an agent session.
+- AC-014: cooperative shell-policy parsing does not treat quoted occurrences such as `2>/dev/null` inside search text as actual write targets.
 
 ## Verification
 
@@ -181,7 +183,9 @@ Required tests should include:
 - merge/deploy/live-production classes → DENY;
 - session-root mismatch to verified same-repo maintenance checkout → AUDIT/WARN or explicit maintenance handoff;
 - inactive/write-gate local repair operation in scope → AUDIT/WARN;
-- maintenance disabled after repair → normal guard behavior restored.
+- maintenance disabled after repair → normal guard behavior restored;
+- active unresolved WB + agent session stop/restart → no lifecycle-state mutation required;
+- quoted/search-text redirection tokens → no false write-path classification.
 
 ## Completion boundary
 
