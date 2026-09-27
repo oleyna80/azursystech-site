@@ -103,6 +103,48 @@ Therefore:
 - local enforcement should be deterministic and fail-closed for ambiguous normal-path requests;
 - local policy should not pretend to provide OS-level isolation it does not actually have.
 
+## Owner-controlled maintenance mode
+
+Maintenance Mode is a temporary AUTH-3 governance state used only to repair the SDLC control plane.
+
+It does not grant broader product or production authority.
+
+When active for an exact remediation scope:
+
+- external/consequential hard stops remain enforced;
+- selected local cooperative workflow guards may return AUDIT/WARN instead of DENY;
+- every downgrade is recorded;
+- local reversible repair may proceed without pretending the normal lifecycle approved it;
+- normal enforcement remains the default outside the declared repository/branch/worktree/path scope.
+
+Always-enforced boundaries include:
+
+- force/non-fast-forward push;
+- merge;
+- deploy/release;
+- protected/default branch mutation;
+- secrets/credentials;
+- live production data;
+- production infrastructure;
+- destructive Git/filesystem operations unless separately Owner-authorized;
+- irreversible external side effects;
+- arbitrary cross-repository mutation.
+
+Eligible cooperative guard classes include:
+
+- inactive-WB coordination-only restrictions;
+- source write-gate checks during bounded control-plane repair;
+- post-freeze local staging restrictions whose semantics are under repair;
+- command-shape restrictions such as direct-single-Git invocation and complex mutating Bash;
+- session-root binding for deliberate verified handoff within the same repository;
+- local lifecycle sequencing checks that are the explicit subject of the remediation.
+
+Maintenance Mode must be explicit, disabled by default, Owner-approved, and bound to an exact remediation scope.
+
+It is closed only after intended guards have been re-enabled and the canonical E2E path remains reachable under normal enforcement.
+
+Detailed contract: `docs/architecture/sdlc-maintenance-mode.md`.
+
 ## Canonical control points
 
 ### CP-01 — Bootstrap / admission
