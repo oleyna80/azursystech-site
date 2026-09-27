@@ -288,3 +288,25 @@ WB-039 is repurposed as:
 Its job is to introduce the maintenance-mode capability and prove that local cooperative guards can be downgraded without weakening external/Owner hard stops.
 
 After WB-039 establishes that repair window, subsequent remediation batches execute under Maintenance Mode until normal enforcement is restored.
+
+
+## Session termination and lifecycle integrity
+
+Runtime session termination is not a lifecycle transition.
+
+A Stop/session-exit hook may:
+
+- warn that an active Work Block is unresolved;
+- report the current lifecycle state;
+- point to the required closeout/recovery procedure.
+
+It must not require an agent to change authoritative lifecycle state merely so the runtime can stop.
+
+In particular:
+
+- `closeout_mode=reporting-only` is not a generic session-exit escape hatch;
+- STOPPED/reporting-only semantics require their normal lifecycle evidence/postconditions;
+- Maintenance Mode should downgrade Stop-hook lifecycle-completion enforcement to AUDIT/WARN for remediation sessions;
+- ending or restarting an agent session must remain possible without falsifying Work Block state.
+
+Maintenance tests must include a case where an active unresolved WB exists and the runtime can terminate/restart without mutating authoritative lifecycle state.
