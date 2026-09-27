@@ -169,6 +169,8 @@ Any work performed before normal lifecycle OPEN must be explicitly marked as Mai
 - AC-012: WB-039 produces a documented maintenance activation procedure for the next remediation batch.
 - AC-013: an unresolved active Work Block does not force authoritative lifecycle mutation merely to terminate/restart an agent session.
 - AC-014: cooperative shell-policy parsing does not treat quoted occurrences such as `2>/dev/null` inside search text as actual write targets.
+- AC-015: Claude runtime hook commands remain resolvable after session/tool cwd changes away from repository root.
+- AC-016: a missing/unresolvable hook entrypoint is reported as runtime wiring failure rather than being conflated with a policy denial.
 
 ## Verification
 
@@ -185,7 +187,9 @@ Required tests should include:
 - inactive/write-gate local repair operation in scope → AUDIT/WARN;
 - maintenance disabled after repair → normal guard behavior restored;
 - active unresolved WB + agent session stop/restart → no lifecycle-state mutation required;
-- quoted/search-text redirection tokens → no false write-path classification.
+- quoted/search-text redirection tokens → no false write-path classification;
+- change cwd to a nested repository directory → PreToolUse/PostToolUse/Stop hook entrypoints still resolve from the project root;
+- deliberately invalid hook path fixture → explicit wiring failure classification, not ordinary policy denial.
 
 ## Completion boundary
 
