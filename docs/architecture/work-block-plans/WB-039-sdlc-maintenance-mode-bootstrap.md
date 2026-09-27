@@ -381,3 +381,56 @@ This is now the only blocking boundary for making WB-039 durable. The implementa
 Do not misclassify this as failed Maintenance Mode behavior: the mode correctly repairs runtime cooperative adapters, but the Git-native transaction layer is a separate control plane that belongs to the next remediation concern.
 
 Before starting the normal Git Transaction / Index Recovery batch, WB-039 requires one explicit Owner-controlled bootstrap publication decision.
+
+
+## Owner one-time commit bootstrap authorization — 2026-09-27
+
+Owner authorizes one exact local commit bootstrap for the verified WB-039 implementation.
+
+This authorization is limited to the following 17 paths:
+
+- `.agent/hooks/maintenance_mode.py`
+- `.agent/hooks/tests/test_maintenance_mode.py`
+- `.agent/hooks/tests/test_hook_wiring.py`
+- `.codex/hooks/pre_tool_use_policy.py`
+- `.claude/hooks/work_block_gate.py`
+- `.claude/hooks/assurance_gate.py`
+- `.claude/settings.json`
+- `.claude/hooks/tests/hook-wiring-fixtures.sh`
+- `scripts/test-maintenance-mode.py`
+- `.agent/maintenance-mode.json`
+- `docs/specs/WB-039.md`
+- `docs/plans/WB-039.md`
+- `docs/tasklist/WB-039.tasklist.md`
+- `docs/reports/WB-039-define-quality.md`
+- `docs/reports/WB-039-critic.md`
+- `docs/reports/WB-039-maintenance-bootstrap.md`
+- `docs/reports/WB-039-tests.md`
+
+Explicit exclusions:
+
+- `.agent/maintenance-mode.audit.jsonl`
+- all `__pycache__/**` and `*.pyc`
+- `.agent/active-work-block.json`
+- all WB-037/WB-038 artifacts
+- any unrelated path
+
+Precondition:
+
+- branch remains `fix/sdlc-publication-bootstrap-039`;
+- HEAD remains `c4829e77e2e9ae6a694a7def87b381c54571fd6d`;
+- `.agent/maintenance-mode.json` has `enabled=false` and `activated_at=null`;
+- staged path set equals the 17-path allowlist exactly;
+- `git diff --cached --check` is clean.
+
+Authorized exceptional commit mechanism:
+
+- Owner may use `git commit --no-verify` once for this exact local commit because the current Git-native pre-commit policy cannot represent the approved Maintenance Bootstrap source commit.
+- This does not create agent authority to use `--no-verify` generally.
+- The commit message is `WB-039 maintenance mode bootstrap: shared evaluator wiring and hook repair` with trailer `Work-Block: WB-039`.
+
+Publication is **not** authorized by this commit authorization.
+
+After the local commit, the full WB-039 verification battery and Git conformance must be rerun against the new HEAD. Subject-branch push requires a separate Owner decision based on those results.
+
+No force push, merge, deploy, release, protected/default mutation, production mutation, remount, privilege escalation, or history rewrite is authorized.
