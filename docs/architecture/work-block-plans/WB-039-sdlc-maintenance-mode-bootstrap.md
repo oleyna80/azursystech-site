@@ -300,3 +300,26 @@ Inside the Codex runtime namespace, `.codex` is mounted read-only. Therefore the
 WB-039 is not complete until the Codex adapter is updated out-of-band or from a writable runtime/context and the cross-runtime behavior is reverified.
 
 The implementation was performed against audit head `ae0b7b1485b0c2c68a70fd844b6cd140b8116777`. Before completion it must reconcile with later audit additions, including the session-stop/lifecycle-integrity and quoted-redirection parser regressions.
+
+
+## Owner activation decision — 2026-09-27
+
+For the remaining WB-039 source-level bootstrap edits, use the explicit **Maintenance Mode** route rather than forcing a normal lifecycle OPEN.
+
+Reason:
+
+- WB-039 exists specifically because the current normal lifecycle/guard implementation blocks repair of that same control plane;
+- fabricating or downgrading Critic/lifecycle state to obtain normal OPEN would misrepresent normal lifecycle approval;
+- manual patch-only handoff is unnecessary because the bounded maintenance mechanism is already the approved bootstrap strategy.
+
+Activation requirements:
+
+- enable Maintenance Mode only for the exact WB-039 repository/branch/base/path scope;
+- record all downgraded cooperative decisions with `normal_lifecycle_approval=false`;
+- keep immutable hard-stop classes enforced;
+- do not set Critic to SKIPPED merely to obtain normal OPEN;
+- do not claim normal lifecycle OPEN for bootstrap work;
+- deactivate Maintenance Mode deterministically after the WB-039 implementation/verification step;
+- verify normal enforcement is restored after deactivation.
+
+This decision authorizes the bounded activation needed to complete WB-039. It does not authorize merge, deploy/release, force push, protected/default branch mutation, secrets, production mutation, privilege escalation, remount, or destructive cleanup.
