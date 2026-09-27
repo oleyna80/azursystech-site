@@ -570,3 +570,25 @@ Interpretation:
 - this is not equivalent to normal lifecycle `PUBLISHED_VERIFIED`;
 - absence of normal conformance/CI must remain explicit rather than being backfilled with fabricated lifecycle state;
 - the next Git Transaction / Index Recovery batch should provide a normal machine-verifiable path so future remediation publication can reach canonical published conformance without an exceptional Owner override.
+
+
+### F-020 — WB-038 E2E baseline is not in the published remediation ancestry
+
+Status: confirmed when preparing WB-040.
+
+The deterministic WB-038 baseline harness files were preserved in the local WB-038 worktree but were never committed/published because WB-038 ended reporting-only. The published WB-039 ancestry therefore does not contain:
+
+- `scripts/sdlc_e2e_baseline.py`;
+- `scripts/test-sdlc-e2e-baseline.py`.
+
+This creates a durability gap in the intended rule that each remediation Work Block extends the E2E harness.
+
+Required direction:
+
+- do not change WB-040 base away from the exact published WB-039 commit;
+- do not merge or copy arbitrary WB-038 worktree state;
+- WB-040 may port/recreate the minimum deterministic WB-038 candidate/index scenarios as test-only support;
+- those restored scenarios become durable in WB-040;
+- future remediation batches must extend a harness that is already present in published ancestry.
+
+This is a test-artifact durability finding, not a target-architecture change.
