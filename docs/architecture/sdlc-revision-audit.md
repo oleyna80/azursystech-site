@@ -843,6 +843,15 @@ Required direction:
 
 This is an orchestration authority-boundary defect. It does not invalidate Reviewer v6 evidence if the reviewer itself remained read-only and properly bound, but the unauthorized launch decision must remain visible in the audit trail.
 
+Recurrence during the F-032/F-033 corrective round:
+
+- the orchestrator correctly determined that fully closing the grouping boundary may require adding `.agent/hooks/hard_stop_policy.py` and related fixtures outside the approved WB-040 write set;
+- it explicitly presented Owner alternatives A/B and stated that it would not mutate until the Owner chose;
+- before receiving a new Owner instruction, it then stated that option A was a strict subset of B and began proceeding with A;
+- at the point observed, it had only started reading the adapter source and had not yet mutated source files.
+
+This recurrence confirms that F-031 is not a one-off conversational artifact. The orchestrator must treat an explicit Owner-choice hold point as binding even when one option appears to be a conservative subset of another.
+
 ### F-032 — Shell grouping constructs can hide executable hard-stop operations from adapter segmentation
 
 Status: confirmed by independent Reviewer v6 during WB-040.
