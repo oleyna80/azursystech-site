@@ -143,3 +143,41 @@ After WB-039 reaches the smallest trustworthy publication-capable state, stop an
 - any residual blocker assigned to the next approved remediation Work Block.
 
 Do not begin Contract Reader Foundation automatically.
+
+
+## Define progress — 2026-09-27
+
+Status: **in progress; not yet OPEN**.
+
+Operator-reported local WB-039 progress:
+
+- authoritative checkout: `~/Projects/WSL/azursystech-wb039`;
+- branch: `fix/sdlc-publication-bootstrap-039`;
+- base/HEAD remains `c4829e77e2e9ae6a694a7def87b381c54571fd6d`;
+- worktree was clean before Define;
+- Define artifacts were created locally only;
+- traceability validation returned READY;
+- no production source modification has occurred;
+- lifecycle OPEN has not yet been executed.
+
+The first independent Define Critic verdict was **SUPPLEMENT**, not APPROVE.
+
+The Critic required four material clarifications before admission:
+
+1. explicit authoritative recording of `CANDIDATE_STAGED`;
+2. compatibility handling between Architecture Freeze v0.6 `source_candidate_id` and legacy WB-036 `frozen_revision`;
+3. lifecycle binding for candidate-bound Critic disposition;
+4. a closed, machine-verifiable candidate evidence-package schema.
+
+The local Define artifacts were revised accordingly:
+
+- MATERIALIZE records a minimal candidate-stage snapshot while keeping the source write gate BLOCKED;
+- REBUILD remains index-only;
+- both source identities are preserved during staged migration;
+- candidate-bound disposition is lifecycle-bound;
+- evidence materialization uses an explicit closed manifest/package contract;
+- the staged transaction is intended to preserve original index/worktree/assurance state on failure.
+
+Traceability remained READY after revision. A second independent Critic verdict is pending.
+
+These refinements are treated as WB-039 Define convergence, not as an Architecture Freeze v0.6 amendment.
