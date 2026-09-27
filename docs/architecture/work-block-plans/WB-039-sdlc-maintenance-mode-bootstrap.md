@@ -1,6 +1,6 @@
 ---
 artifact_type: work_block_plan
-status: owner_authorized_bootstrap_define
+status: partial_implementation_blocked
 work_block_id: WB-039
 scope: planning-only
 not_active_work_block: true
@@ -238,3 +238,50 @@ This bootstrap authorization does **not** permit:
 Any operation performed under this bootstrap must be explicitly recorded as Maintenance Bootstrap work and must not claim normal lifecycle approval.
 
 When the Maintenance Mode mechanism is functional, subsequent repair batches must use its explicit scoped activation rather than ad-hoc exceptions.
+
+
+## Implementation progress — 2026-09-27
+
+Status: **partial implementation complete; blocked on Codex adapter self-modification boundary**.
+
+Operator-reported local WB-039 result:
+
+- branch: `fix/sdlc-publication-bootstrap-039`;
+- HEAD/base remains `c4829e77e2e9ae6a694a7def87b381c54571fd6d`;
+- normal lifecycle remains inactive; no normal OPEN is claimed;
+- Critic remained unavailable due external runtime usage limits;
+- work proceeded only under Owner-authorized Maintenance Bootstrap;
+- no force push, merge, deploy, production mutation, privilege escalation, or remount was used.
+
+Implemented locally:
+
+- shared runtime-neutral evaluator: `.agent/hooks/maintenance_mode.py`;
+- disabled-by-default state: `.agent/maintenance-mode.json`;
+- structured append-only maintenance audit log;
+- exact repository/branch/base/path-scope binding;
+- 8 cooperative guard classes;
+- 15 immutable hard-stop classes;
+- explicit `AUDIT` result with `normal_lifecycle_approval=false`;
+- deterministic deactivate behavior;
+- fail-closed handling for malformed state, repository/branch/base/scope mismatch, and path traversal;
+- Claude adapter integration in `.claude/hooks/work_block_gate.py`.
+
+Reported verification:
+
+- Maintenance Mode tests: 7 passed;
+- hard-stop fixtures: PASS=19 FAIL=0;
+- gate fixtures: PASS=61 FAIL=0;
+- control-plane tests: PASS=19 FAIL=0;
+- Git conformance: PASS=25 FAIL=0;
+- Define traceability: READY;
+- Python compilation: PASS;
+- `git diff --check`: PASS;
+- disabled-mode probe preserved normal inactive-lifecycle source-write denial.
+
+Residual blocker:
+
+Inside the Codex runtime namespace, `.codex` is mounted read-only. Therefore the Codex adapter `.codex/hooks/pre_tool_use_policy.py` could not be connected to the shared evaluator from that same Codex session.
+
+WB-039 is not complete until the Codex adapter is updated out-of-band or from a writable runtime/context and the cross-runtime behavior is reverified.
+
+The implementation was performed against audit head `ae0b7b1485b0c2c68a70fd844b6cd140b8116777`. Before completion it must reconcile with later audit additions, including the session-stop/lifecycle-integrity and quoted-redirection parser regressions.
