@@ -727,3 +727,25 @@ Required direction:
 
 This finding is lifecycle state-integrity debt. It does not authorize manual mutation of the current WB-040 state.
 
+### F-027 — Stop hook can recursively block session termination while assurance is intentionally pending
+
+Status: confirmed during WB-040 bounded rework stop.
+
+The Claude Stop guard correctly reports an active Work Block whose required Reviewer assurance is still `PENDING`. That first denial is consistent with lifecycle enforcement. However, when Claude Code re-invokes the Stop hook with its recursive-stop indicator active, the hook does not distinguish the re-entrant stop attempt and repeats the same denial until the runtime's consecutive-block cap forcibly ends the turn.
+
+Observed effect during WB-040:
+
+- canonical `RECOVER_FOR_REWORK` completed successfully and intentionally reset Reviewer/Verifier assurance to `PENDING`;
+- the orchestrator then attempted to stop as instructed;
+- the Stop hook rejected termination nine consecutive times with `assurance.review is still PENDING`;
+- the runtime ultimately overrode the hook after reaching its consecutive-block limit.
+
+Required direction:
+
+- preserve the first lifecycle warning/block when required assurance is genuinely incomplete;
+- make the Stop hook re-entrancy aware using the runtime-provided recursive-stop signal (for example `stop_hook_active`) so it does not create an infinite termination loop;
+- returning success for a re-entrant Stop must not mutate lifecycle state, fabricate assurance, or count as lifecycle approval;
+- add regression coverage for an active Work Block intentionally left at Reviewer/Verifier `PENDING` where the first Stop is enforced and the re-entrant Stop exits cleanly.
+
+This is Stop-hook/runtime-contract correctness and belongs to the later hook/control-plane hardening backlog unless it directly blocks WB-040 execution.
+
