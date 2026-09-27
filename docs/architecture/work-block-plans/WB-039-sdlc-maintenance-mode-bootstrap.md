@@ -172,6 +172,17 @@ Any work performed before normal lifecycle OPEN must be explicitly marked as Mai
 - AC-015: Claude runtime hook commands remain resolvable after session/tool cwd changes away from repository root.
 - AC-016: a missing/unresolvable hook entrypoint is reported as runtime wiring failure rather than being conflated with a policy denial.
 
+### Runtime wiring paths
+
+The WB-039 Define write-set may include runtime wiring/configuration paths strictly required to make Maintenance Mode robust, including:
+
+- `.claude/settings.json` for project-root-stable hook invocation;
+- `.claude/hooks/work_block_gate.py`;
+- `.codex/hooks/pre_tool_use_policy.py` when writable from the active runtime;
+- shared runtime-neutral maintenance evaluator/state/test paths.
+
+A general `CLAUDE.md` documentation rewrite is out of scope for WB-039.
+
 ## Verification
 
 Required tests should include:
