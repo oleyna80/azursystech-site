@@ -1,6 +1,6 @@
 ---
 artifact_type: work_block_plan
-status: ready_for_define
+status: owner_authorized_bootstrap_define
 work_block_id: WB-039
 scope: planning-only
 not_active_work_block: true
@@ -204,3 +204,33 @@ WB-039 does not itself implement:
 - broad hook simplification beyond the minimum shared maintenance routing;
 - final CI hardening;
 - merge/deploy/release.
+
+
+## Owner bootstrap authorization — 2026-09-27
+
+Owner authorized WB-039 to begin as the Maintenance Mode bootstrap.
+
+This authorization exists because the current cooperative guard implementation may prevent the normal lifecycle from opening or editing the files required to introduce Maintenance Mode.
+
+Authorized local activity is limited to:
+
+- replacing/reconciling the stale pre-maintenance WB-039 Define artifacts;
+- implementing the minimum shared Maintenance Mode mechanism;
+- adding focused tests and audit evidence;
+- performing reversible local control-plane edits inside the exact WB-039 remediation scope;
+- downgrading eligible cooperative guards only as required to bootstrap and verify Maintenance Mode.
+
+This bootstrap authorization does **not** permit:
+
+- force/non-fast-forward push;
+- merge;
+- deploy/release;
+- protected/default branch mutation;
+- secrets/credentials changes;
+- live production data or infrastructure mutation;
+- destructive cleanup/reset;
+- arbitrary cross-repository writes.
+
+Any operation performed under this bootstrap must be explicitly recorded as Maintenance Bootstrap work and must not claim normal lifecycle approval.
+
+When the Maintenance Mode mechanism is functional, subsequent repair batches must use its explicit scoped activation rather than ad-hoc exceptions.
