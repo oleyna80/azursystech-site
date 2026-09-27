@@ -639,3 +639,30 @@ Required direction:
 - add positive and negative regressions for both benign and prohibited option-bearing forms.
 
 Do not broaden this finding into general permission for arbitrary command shapes; it concerns correctness of hard-stop semantic classification.
+
+### F-024 — Maintenance Mode audit provenance is hard-coded to WB-039
+
+Status: confirmed from the published WB-039 implementation while WB-040 is using the same Maintenance Mode capability.
+
+The shared evaluator in `.agent/hooks/maintenance_mode.py` emits append-only audit records with:
+
+`"work_block_id": "WB-039"`
+
+instead of deriving the active remediation Work Block from the bound maintenance state or canonical lifecycle context.
+
+Impact:
+
+- a Maintenance Mode decision used during WB-040 can be recorded as belonging to WB-039;
+- the decision can remain correctly branch/base/path-bound while still carrying the wrong Work Block provenance;
+- this weakens durable attribution and makes later assurance/audit reconstruction ambiguous.
+
+Required direction:
+
+- make Maintenance Mode audit provenance bind to the actual authorized remediation Work Block;
+- do not infer the Work Block from free-form command text;
+- preserve exact repository, remediation branch, trusted-base, path-scope, authorization-reference, cooperative-guard, hard-stop, and `normal_lifecycle_approval=false` semantics;
+- add a regression proving a WB-040 activation cannot emit a WB-039 audit record;
+- treat this as audit/provenance correctness, not as lifecycle approval and not as authority expansion.
+
+This finding does not authorize bypassing the current WB-040 source gate or changing Maintenance Mode bindings outside Owner-approved scope.
+
