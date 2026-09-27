@@ -424,3 +424,15 @@ The SDLC revision is ready for production use when:
 - published conformance uses the same contract semantics as local lifecycle/hooks;
 - no lifecycle state requires a prohibited operation to reach its next valid state;
 - merge and deploy remain explicit Owner boundaries.
+
+
+## Current execution status — 2026-09-27
+
+- WB-038 — baseline harness: completed reporting-only; preserved locally.
+- WB-039 — Maintenance Mode / Repair Bootstrap: implementation verified and exact remote bootstrap publication verified at `96c6f35d0cb219ceaebd192d4d3993a19f40f172`.
+- WB-040 — Git Transaction & Index Recovery: Owner-authorized for Define and bounded implementation under Maintenance Mode.
+- Contract Reader Foundation remains the next batch after WB-040 unless WB-040 findings require a planning amendment.
+
+WB-040 canonical planning contract:
+
+`docs/architecture/work-block-plans/WB-040-sdlc-git-transaction-index-recovery.md`
