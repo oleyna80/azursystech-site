@@ -181,3 +181,37 @@ The local Define artifacts were revised accordingly:
 Traceability remained READY after revision. A second independent Critic verdict is pending.
 
 These refinements are treated as WB-039 Define convergence, not as an Architecture Freeze v0.6 amendment.
+
+
+## Define gate status — 2026-09-27
+
+Status: **READY pending independent Critic capacity; lifecycle not OPEN**.
+
+Operator-reported local state after reconciliation with audit head `48a27a7b3dbd4147b33f0e7b8f207cf9c6878652`:
+
+- branch: `fix/sdlc-publication-bootstrap-039`;
+- HEAD/base: `c4829e77e2e9ae6a694a7def87b381c54571fd6d`;
+- production source remains unchanged;
+- local Define artifacts only:
+  - `docs/specs/WB-039.md`;
+  - `docs/plans/WB-039.md`;
+  - `docs/tasklist/WB-039.tasklist.md`;
+  - `docs/reports/WB-039-define-quality.md`;
+- Define traceability: READY;
+- 4 requirements;
+- 4 acceptance criteria;
+- 6 tasks;
+- `git diff --check`: PASS.
+
+The refreshed local Define explicitly reconciles:
+
+- audit AC-001…AC-010;
+- atomic `MATERIALIZE_CANDIDATE_PACKAGE` semantics;
+- deterministic index replacement;
+- B-008 scope boundary;
+- completion-boundary reporting;
+- exact fields required for any one-time Owner-controlled bootstrap transaction.
+
+Independent Critic APPROVE is still required before lifecycle OPEN.
+
+The Critic gate is currently blocked only by runtime usage capacity: both the original Critic and a read-only replacement were unavailable due the same runtime usage limit. This is an operational capacity delay, not an SDLC architecture finding. No attempt was made to weaken or bypass the Define gate.
