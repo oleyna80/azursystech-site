@@ -843,3 +843,46 @@ Required direction:
 
 This is an orchestration authority-boundary defect. It does not invalidate Reviewer v6 evidence if the reviewer itself remained read-only and properly bound, but the unauthorized launch decision must remain visible in the audit trail.
 
+### F-032 — Shell grouping constructs can hide executable hard-stop operations from adapter segmentation
+
+Status: confirmed by independent Reviewer v6 during WB-040.
+
+The current adapter-local shell segmentation treats grouping syntax such as parentheses and brace groups as ordinary token text rather than execution structure.
+
+Observed WB-040 examples:
+
+- `(git merge feature)` was segmented as an argv beginning with `(git`;
+- `{ git merge feature; }` was segmented with `{` as the first executable token;
+- both Claude and Codex adapters allowed these forms even though the shell would execute the prohibited Git operation.
+
+Required direction:
+
+- segmentation/classification must account for shell grouping constructs that introduce executable command lists;
+- every executable simple command inside a subshell or brace group must remain visible to immutable hard-stop inspection;
+- grouping syntax must not be treated as a harmless executable token;
+- preserve fail-closed behavior for unsupported or ambiguous grouping forms;
+- add Claude/Codex parity regressions for subshell and brace-group hard stops.
+
+This is a hard-stop completeness defect in the same parser-ownership area as F-028/F-029.
+
+### F-033 — Shell comments are not respected by adapter segmentation and can create false executable commands
+
+Status: confirmed by independent Reviewer v6 during WB-040.
+
+The current hand-written segmentation continues scanning shell input after an unquoted `#` comment introducer. Separator characters and command text inside the comment can therefore be interpreted as executable structure.
+
+Observed WB-040 example:
+
+- `echo ok #; git merge feature` produced a later `git merge feature` segment;
+- both adapters denied the command even though the shell treats everything after `#` as comment text;
+- the shared hard-stop policy allowed the same input.
+
+Required direction:
+
+- outside quotes and escapes, shell comment syntax must terminate lexical interpretation to end-of-line where POSIX shell rules apply;
+- comment markers inside quoted/escaped data must remain data;
+- unquoted newline after a comment must resume parsing for the next command line;
+- add parity regressions for comment text containing separator-like and hard-stop-like strings.
+
+This is a parser false-positive defect in the same corrective scope as F-028/F-029/F-032.
+
