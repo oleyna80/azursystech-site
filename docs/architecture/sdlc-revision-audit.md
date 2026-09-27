@@ -619,3 +619,23 @@ Required direction:
 6. add regressions proving ordinary Bash inspection/debug commands are not rejected by candidate-transaction grammar, while malformed actual capability invocations fail closed.
 
 This is a dispatch/responsibility defect, not a reason to remove consequential hard stops.
+
+
+### F-023 — Hard-stop command normalization may overclassify benign Git option forms
+
+Status: observed during WB-040 after hard-stop coverage expansion.
+
+WB-040 expanded provider-neutral hard-stop detection to cover Git options before the subcommand, default-branch checkout/switch, Git repository redirection options such as `-C`, `--git-dir`, `--work-tree`, Terraform `-chdir` apply, and GitHub CLI secret/release operations.
+
+The expanded rule correctly closes several bypass shapes, but the current conservative treatment of `git -C` can also deny benign commands because `-C` is overloaded by Git and is not itself proof of cross-repository or destructive intent.
+
+Required direction:
+
+- preserve hard-stop precedence over cooperative Maintenance Mode downgrades;
+- do not weaken force-push, merge, deploy/release, protected/default mutation, credential/secret, production, destructive, or cross-repository boundaries;
+- normalize Git argv semantically before classification rather than treating the mere presence of an option token as the final authority decision;
+- distinguish repository-redirection `git -C <path> ...` from subcommand-local option forms such as `git commit -C <commit>`;
+- when a repository-redirection target is used, classify the resolved target repository against the bound repository before deciding cross-repository hard stop;
+- add positive and negative regressions for both benign and prohibited option-bearing forms.
+
+Do not broaden this finding into general permission for arbitrary command shapes; it concerns correctness of hard-stop semantic classification.
