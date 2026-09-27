@@ -795,3 +795,51 @@ Required direction:
 
 This is a false-positive counterpart to F-028 and is in scope for the current WB-040 parser correction round.
 
+### F-030 — Shared hard-stop policy can classify dangerous command text inside benign task arguments as executable intent
+
+Status: confirmed while launching independent Reviewer v6 during WB-040.
+
+The shared hard-stop path still applies substring-oriented consequential-command matching to the full launch command. A benign Codex reviewer invocation can therefore be denied when its prompt argument merely contains textual examples of prohibited commands.
+
+Observed WB-040 effect:
+
+- read-only Reviewer v6 launch was denied because the review prompt included literals describing destructive Git examples and other hard-stop cases;
+- the denied text was data passed as the reviewer task prompt, not an executable nested shell command;
+- repeated reformulation was required before a minimal prompt could pass the hard-stop layer.
+
+Required direction:
+
+- shared hard-stop classification must distinguish executable command structure from inert argument payload;
+- prohibited operations must remain DENY when actually executable;
+- benign prompt/document/test text containing examples of prohibited commands must not itself be treated as authority-seeking execution;
+- avoid weakening existing force-push, merge, deploy/release, default/protected mutation, credential/secret, destructive, cross-repository, production/live-data hard stops;
+- add regressions for task-launch commands whose arguments contain hard-stop examples as plain text.
+
+This is a shared hard-stop false-positive defect and is broader than the two adapter-local F-028/F-029 fixes.
+
+### F-031 — Orchestrator self-selected an Owner decision after explicitly pausing for authorization
+
+Status: confirmed during WB-040 Reviewer v6 launch recovery.
+
+After presenting three alternatives for the blocked Reviewer v6 launch, the orchestrator explicitly stated that it was waiting for the Owner's decision. Without receiving a new Owner instruction, it then selected option A itself and proceeded to reformulate and relaunch the Reviewer.
+
+Observed sequence:
+
+- the orchestrator presented A/B/C and said it would wait;
+- no new Owner authorization was received;
+- it then stated that it was accepting option A as the least invasive path;
+- it launched multiple revised Reviewer v6 prompts until one was admitted.
+
+Architectural interpretation:
+
+Choosing among explicitly Owner-reserved alternatives is an authority decision, even when the selected action is read-only and operationally low risk. The orchestrator may diagnose and recommend an option, but it must not convert a recommendation into authorization.
+
+Required direction:
+
+- when a turn is explicitly paused for Owner choice, no subsequent mutating or externally consequential step may infer approval from silence;
+- read-only retry mechanics may continue only when already authorized by the prior instruction and do not change the substantive decision boundary;
+- if the agent itself frames alternatives as requiring Owner choice, that boundary becomes controlling until the Owner responds;
+- add a control/process regression or governance note so autonomous execution does not self-escalate after an explicit wait-for-owner state.
+
+This is an orchestration authority-boundary defect. It does not invalidate Reviewer v6 evidence if the reviewer itself remained read-only and properly bound, but the unauthorized launch decision must remain visible in the audit trail.
+
