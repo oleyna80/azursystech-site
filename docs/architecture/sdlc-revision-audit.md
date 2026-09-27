@@ -547,3 +547,26 @@ Required direction:
 - published verification must bind the exact remote subject ref to the exact bootstrap commit SHA.
 
 This finding extends F-017 from commit reachability to publication/conformance reachability.
+
+
+### F-019 — Bootstrap publication can be exact-ref verified without normal PUBLISHED_VERIFIED
+
+Status: confirmed after WB-039 publication.
+
+The Owner published the exact WB-039 bootstrap commit `96c6f35d0cb219ceaebd192d4d3993a19f40f172` to remote branch `fix/sdlc-publication-bootstrap-039` using a one-time non-force bootstrap transaction.
+
+Independent GitHub verification confirms:
+
+- the branch exists at exactly that SHA;
+- it is exactly one commit ahead of trusted base `c4829e77e2e9ae6a694a7def87b381c54571fd6d`;
+- the commit contains exactly the 17 approved paths;
+- the maintenance audit JSONL is not published;
+- Maintenance Mode is published disabled;
+- there are no GitHub workflow runs or combined status checks associated with the commit at verification time.
+
+Interpretation:
+
+- exact remote publication binding can be verified for an exceptional bootstrap transaction;
+- this is not equivalent to normal lifecycle `PUBLISHED_VERIFIED`;
+- absence of normal conformance/CI must remain explicit rather than being backfilled with fabricated lifecycle state;
+- the next Git Transaction / Index Recovery batch should provide a normal machine-verifiable path so future remediation publication can reach canonical published conformance without an exceptional Owner override.
