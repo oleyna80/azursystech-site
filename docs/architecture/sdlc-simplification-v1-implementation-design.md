@@ -230,6 +230,147 @@ Likely retirement targets include:
 
 Hard Stops and any narrow repository-level safety boundary must be mapped explicitly before deletion.
 
+## 13. Legacy failure regression requirements
+
+The branch `audit/sdlc-revision` is a required regression source for the replacement policy.
+
+The new controller does not inherit that branch's full architecture. It must, however, prove that the concrete blocking and deadlock cases recorded there cannot recur.
+
+### Transition reachability
+
+Every normal state must have a legal next transition for every supported outcome.
+
+The policy must not create a state where individually reasonable guards make the intended next step unreachable.
+
+Regression coverage must include:
+
+- unresolved optional/negative assurance without impossible closeout;
+- Reviewer/Verifier rework;
+- reporting-only/cancelled termination;
+- candidate creation, assurance, closeout, and subject-branch publication.
+
+### Candidate and Git transaction ordering
+
+A source candidate is a committed Git revision before Reviewer/Verifier assurance begins.
+
+This removes the old freeze/index deadlock class where source became immutable before the candidate could be durably staged/committed.
+
+The controller must not require post-assurance source staging or index reconstruction merely to publish the already-assured candidate.
+
+### Effective Git paths, not command arguments
+
+Authorization and candidate checks use Git-observed changed/staged/committed paths.
+
+Directory or shorthand command arguments are not trusted as the effective path selection.
+
+A candidate must fail validation if the actual changed path set escapes the approved implementation/coordination boundaries.
+
+### Coordination authority is explicit
+
+Durable coordination writes must have a bounded `coordination_scope`.
+
+The controller must not require ad-hoc Work Block amendments merely to write legitimate Orchestrator-log, closeout, or engineering-memory records.
+
+Write authority remains separate from planning-subject invalidation.
+
+### Base and Work Block identity are immutable while active
+
+Opening an already active Work Block must fail.
+
+`base_commit`, Work Block identity, initiative identity, subject branch, and admitted scopes may not be silently replaced by a later HEAD.
+
+A material redefinition requires an explicit transition back to DEFINE and a new planning-subject revision; identity fields that define the Work Block itself remain stable.
+
+### Session termination is not lifecycle closeout
+
+Stop/session hooks may report unresolved work but must never require lifecycle mutation merely to let an agent session terminate.
+
+They must not pressure an agent to fabricate `reporting-only`, READY assurance, or any other authority state.
+
+Runtime re-entrant stop behavior must terminate safely without mutating lifecycle state.
+
+### Worktree/session binding must allow deliberate handoff
+
+The active pointer is per-worktree.
+
+A stale runtime session binding must not make a deliberately selected valid worktree permanently unusable.
+
+Repository/worktree handoff must be explicit and verifiable rather than inferred from command-local `cd`.
+
+### Runtime adapters are thin and root-stable
+
+Runtime-specific adapters must:
+
+- resolve controller entrypoints from the repository/project root, not mutable shell cwd;
+- normalize structured events only;
+- call one shared policy evaluator;
+- not duplicate lifecycle policy;
+- not assume a runtime can modify its own adapter.
+
+Equivalent normalized Claude/Codex events must receive equivalent policy decisions.
+
+### Do not build a shell interpreter
+
+The audit recorded repeated bypasses and false positives from hand-written shell tokenization, including:
+
+- newlines;
+- quoted/escaped separators;
+- grouping and subshells;
+- comments;
+- command substitution;
+- empty quoted words;
+- command-position variable expansion;
+- hard-stop examples appearing only as inert prompt/text arguments;
+- Git option forms;
+- revision arguments misclassified as paths;
+- benign redirects such as `/dev/null`.
+
+The replacement must not use a lightweight bespoke shell parser as a security boundary.
+
+Preferred enforcement is:
+
+1. structured tool/path events for ordinary writes;
+2. deterministic Git postcondition/path checks for candidate formation;
+3. narrow exact handling for known consequential operations such as subject-branch push;
+4. external/Owner/platform enforcement for true Hard Stops;
+5. fail closed only where a consequential operation is actually ambiguous, rather than treating arbitrary shell text as executable intent.
+
+### Recovery and control-plane repair
+
+Owner-authorized repair must not require fabricating normal lifecycle approval.
+
+If an exceptional repair/cutover transaction is needed, represent it explicitly as an Owner-controlled exceptional path with exact scope and postconditions.
+
+The new production controller should minimize the need for a standing Maintenance Mode; self-modification remains separated from normal execution by the Owner-controlled cutover model.
+
+### Runtime state must not conflict with Git-native commitability
+
+A canonical controller transition must produce a state that normal Git commit/push policy can represent.
+
+No valid controller state may become uncommittable solely because another local validator uses a different definition of canonical state.
+
+One shared state/schema reader should back controller, hook, and Git-native checks.
+
+### E2E reachability tests are mandatory
+
+Component unit tests are insufficient.
+
+The replacement must include synthetic end-to-end transactions covering at least:
+
+- normal planning/Critic/implementation/candidate/Reviewer/Verifier/closeout;
+- Reviewer rework;
+- Verifier evidence-only retry with unchanged candidate;
+- material planning-subject revision;
+- coordination-only post-assurance commit;
+- exact autonomous non-force subject-branch push;
+- Owner-controlled merge boundary;
+- per-worktree handoff;
+- agent stop/restart with pending assurance;
+- malformed/ambiguous state fail-closed;
+- out-of-scope actual Git path rejection.
+
+The E2E harness must assert transition reachability, not only isolated deny rules.
+
 ## Next design step
 
 Produce a concrete target-state contract and transition model for the simplified controller before changing code.
