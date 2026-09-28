@@ -8,11 +8,13 @@ Depends on:
 
 ## 1. Principle
 
-The target SDLC is autonomous by default.
+The target SDLC is autonomy-capable by design, but the baseline operating profile is human-governed delivery.
 
-Given an admitted event and a bounded authority envelope, the Orchestrator may drive the engineering lifecycle from intake through planning, implementation, independent assurance, publication, merge, deployment, verification, and feedback without human intervention when every required predicate is satisfied.
+In the baseline configuration, the Owner remains an active participant: ideas may originate with the Owner, intent/spec/plan are discussed and refined with the Owner when useful, the Orchestrator autonomously drives implementation and assurance, and the system normally stops at a reviewed/published subject branch or PR-ready boundary for the Owner's final integration/deployment decision.
 
-The safety model is not "ask the Owner at every stage."
+The same SDLC must also support a higher-autonomy profile in which an admitted event and bounded authority envelope allow the Orchestrator to drive the complete lifecycle through merge, deployment, verification, and feedback without human intervention when every required predicate is satisfied.
+
+The safety model is neither "ask the Owner at every stage" nor "remove the Owner from the process."
 
 The safety model is:
 
@@ -94,9 +96,9 @@ Normal subject-branch work cannot modify the effective profile.
 
 Changing the profile is itself an Owner/platform governance action outside the active autonomous run.
 
-## 4. Autonomous lifecycle
+## 4. Baseline human-governed lifecycle
 
-Inside the admitted envelope, the Orchestrator proceeds without asking for approval between normal stages:
+In the baseline profile, normal engineering progression is autonomous between meaningful Owner checkpoints:
 
 ```text
 event
@@ -115,9 +117,10 @@ event
 -> Verifier
 -> durable closeout/learning
 -> publish subject branch
--> PR/integration action if profile permits
--> merge if profile permits
--> deploy if profile permits
+-> PR ready / CI green
+-> Owner review/checklist checkpoint
+-> Owner-authorized merge
+-> Owner-authorized deploy
 -> deployment verification
 -> feedback
 ```
@@ -126,7 +129,9 @@ The Orchestrator may create and coordinate multiple Work Blocks when the approve
 
 It may invoke Architect or additional analysis roles when useful without asking the Owner merely because another agent is needed.
 
-## 5. Autonomous rework
+The Owner checkpoint is not a substitute for Critic/Reviewer/Verifier. It is a business/operational release decision after the engineering system has already produced an assured candidate and deterministic CI evidence.
+
+## 5. Autonomous internal rework
 
 Normal negative findings are part of autonomous execution, not human escalation.
 
@@ -193,7 +198,7 @@ The safe response is explicit re-planning or `OWNER_DECISION_REQUIRED`.
 
 ## 8. Owner decision boundary
 
-Human intervention is required only when the next valid action is outside the pre-authorized envelope or when the intent itself requires a human business/risk decision.
+In the baseline profile, the Owner participates at the release/integration checkpoint even when the engineering path is otherwise fully autonomous. In higher-autonomy profiles, human intervention is required only when the next valid action is outside the pre-authorized envelope or when the intent itself requires a human business/risk decision.
 
 Typical reasons:
 
@@ -250,7 +255,7 @@ The Orchestrator cannot use a staging capability to infer production authority.
 
 Failed deployment does not authorize arbitrary repair. Recovery follows the admitted rollback/retry policy; otherwise it stops for the missing authority.
 
-## 11. Full autonomous path
+## 11. Full autonomous delivery profile
 
 When a profile permits the complete delivery chain, the system may execute:
 
@@ -272,27 +277,28 @@ event
 
 with no human interaction.
 
-This is a normal supported operating mode, not an exception.
+This is a supported higher-autonomy operating mode, not the baseline default.
 
-Human approval remains available as one possible admission/authority mechanism, not as a mandatory stage in every run.
+Human approval remains the normal release boundary in the baseline profile. Full autonomous delivery is enabled only for event/change classes whose profile has explicitly earned that authority.
 
 ## 12. Profile examples
 
 These are examples, not mandatory names.
 
-### Engineering autonomy
+### Baseline human-governed delivery
 
-May:
+May autonomously:
 
 - plan;
 - implement;
 - assure;
 - publish subject branch;
-- create/update PR.
+- create/update PR;
+- gather deterministic CI/release-checklist evidence.
 
-Stops before merge.
+Then stops for the Owner's integration/deployment decision.
 
-### Integrated delivery
+### Supervised integrated delivery
 
 Adds:
 
@@ -310,7 +316,45 @@ Adds:
 
 This profile requires the strongest protected policy and platform controls, because no live Owner confirmation is expected during a normal successful run.
 
-## 13. Relationship to controller state
+## 13. Autonomy maturity path
+
+Full autonomy is a maturity target, not an assumption.
+
+The intended progression is:
+
+```text
+Level 0 — human-governed baseline
+Owner participates in intent/release decisions.
+Agent autonomously performs the engineering cycle through assured PR-ready output.
+
+Level 1 — supervised autonomy
+Agent proposes merge/deploy after all gates are green.
+Owner performs or explicitly authorizes the consequential action.
+
+Level 2 — bounded autonomous delivery
+Selected low-risk/event classes may merge and/or deploy automatically under a protected profile.
+
+Level 3 — full admitted autonomous delivery
+For explicitly admitted production change classes, the event can traverse the complete cycle through deployment and post-deploy verification without human interaction.
+```
+
+Promotion to a higher level is based on demonstrated reliability, not on changing prompts.
+
+Evidence should include:
+
+- deterministic E2E control-plane tests;
+- repeated successful real/synthetic lifecycle runs;
+- no unresolved gate-bypass or deadlock regressions;
+- stable Critic/Reviewer/Verifier behavior;
+- correct CI and GitHub integration;
+- reliable deployment and rollback verification for the target environment;
+- successful Owner review of earlier supervised runs.
+
+The SDLC can be considered fully AI-native/production-mature for a given admitted change class when it can repeatedly complete the full event-to-deployment path within its authority envelope, produce the intended result, and respect every safety/assurance boundary without requiring human correction.
+
+A single successful autonomous run is evidence, but not sufficient by itself to promote all change classes to full autonomy.
+
+## 14. Relationship to controller state
 
 The four-state Work Block lifecycle remains:
 
@@ -335,7 +379,27 @@ source_candidate_sha
 
 without creating a second lifecycle state machine.
 
-## 14. Authority-profile binding
+## 15. Delivery authority after Work Block publication
+
+The Work Block controller may still return to INACTIVE after successful subject-branch publication.
+
+Therefore merge/deploy authority for higher-autonomy profiles must not depend solely on transient active Work Block state after publication.
+
+For autonomous integration/deployment, a trusted external delivery authority context must persist the admitted run/profile binding across the publication boundary.
+
+Preferred implementation direction:
+
+- event/dispatcher creates a run identity and pins the profile;
+- the Work Block state references that run/profile while active;
+- GitHub PR/Actions or the trusted dispatcher carries the same immutable run/profile identity into merge/deploy;
+- protected workflows/environments verify the profile and exact commit/PR facts before consequential actions;
+- subject-branch code cannot edit or upgrade its own effective delivery authority.
+
+This is not a second engineering lifecycle state machine. It is the external authority context for integration/deployment after the Work Block has completed its local engineering lifecycle.
+
+In the baseline human-governed profile, this external context may simply resolve to `OWNER_APPROVAL_REQUIRED` for merge/deploy.
+
+## 16. Authority-profile binding
 
 The active autonomous run must have a pinned profile identity that the Orchestrator cannot change.
 
@@ -352,7 +416,7 @@ It is not a list of permissions copied into mutable Work Block state.
 
 Runtime/Git/controller adapters consume the resolved policy but cannot widen it.
 
-## 15. Event-driven execution contract
+## 17. Event-driven execution contract
 
 An event-driven runner may automatically:
 
@@ -371,7 +435,7 @@ A crash/restart resumes only from durable Git artifacts plus valid local control
 
 Lost transient assurance is rerun rather than fabricated.
 
-## 16. Required safeguards
+## 18. Required safeguards
 
 Full autonomy requires all of the following:
 
@@ -389,7 +453,7 @@ Full autonomy requires all of the following:
 
 No single agent prompt is treated as a sufficient security boundary.
 
-## 17. Acceptance scenarios
+## 19. Acceptance scenarios
 
 The implementation/E2E suite must eventually cover:
 
@@ -406,7 +470,7 @@ The implementation/E2E suite must eventually cover:
 - failed deploy follows only admitted rollback/retry behavior;
 - full admitted event -> deploy -> verification path completes without human interaction.
 
-## 18. Design consequence
+## 19. Design consequence
 
 The target AzurSysTech SDLC is therefore:
 
