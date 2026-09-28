@@ -1,6 +1,6 @@
 # SDLC Simplification v1 — Enforcement Matrix
 
-Status: enforcement design checkpoint accepted; exact state/event schemas pending  
+Status: enforcement design accepted; exact state/event contract completed  
 Basis: approved SDLC Simplification v1 baseline and implementation-design direction  
 Policy owner: shared controller v1 replacement
 
@@ -1089,14 +1089,10 @@ The following implementation-design decisions are accepted as the baseline for t
 
 This checkpoint is architecture/design only and grants no implementation authority.
 
-The next design pass must define:
+The exact state/event contract is defined in `docs/architecture/sdlc-simplification-v1-state-event-contract.md`.
 
-1. the exact persisted active-state schema and validation invariants;
-2. the normalized event schema shared by Claude Code, Codex, Git hooks, and CLI/controller policy;
-3. the exact adapter mapping from each runtime-native hook payload into that normalized event model.
+## 13. Next step
 
-## 13. Next decisions
+Enforcement placement and the exact state/event contract are resolved.
 
-Before code changes, resolve:
-
-All enforcement-placement questions in this document are resolved. The next design pass is the exact state/event schema contract.
+The next artifact is the implementation plan and acceptance-test inventory for adapting the inert `controller v1` and performing a later Owner-controlled cutover.
