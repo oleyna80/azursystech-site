@@ -1,312 +1,486 @@
 # SDLC Simplification v1 — Proposal
 
-Status: revised after Critic SUPPLEMENT; pending short closure review  
+Status: accepted architectural baseline with high-level refinements in progress  
 Scope: AzurSysTech Agentic SDLC  
 Intent: simplify the current SDLC without losing useful engineering control.
 
-## Core principle
+## Core principles
 
 Project memory lives in repository documentation and Git, not in chat sessions.
 
-Every major stage must end with a durable artifact that the next executor can read without requiring prior conversation context.
+Durable project artifacts contain decisions, requirements, architecture, plans, implementation, and reusable conclusions. Agent discussion and intermediate review reports are working material, not project memory.
 
-Canonical flow:
+The control plane should enforce only the workflow invariants that prevent meaningful errors or unauthorized actions. It should not become a second system that agents must constantly manage.
 
-**Idea → Intent → Spec → Plan → Tasklist when useful → Critic → Implementation → Source Candidate → Reviewer → Verifier → Closeout → Merge/Deploy → Feedback**
+The default high-level flow is:
 
-The control plane should support this flow, not become a separate complex system that agents must constantly manage.
+**Idea → Intent → Spec → Plan → Critic → Work Block(s) → Implementation → Source Candidate → Reviewer → Verifier → Closeout → Merge/Deploy → Feedback**
 
-## 1. One canonical development pipeline
+A Tasklist may be used when it materially helps execution, but it is not mandatory as a separate artifact.
 
-Adopt one default lifecycle:
+## 1. Initiative before Work Blocks
 
-1. Idea
-2. Intent
-3. Requirements + Design / Spec
-4. Implementation Plan
-5. Executable Tasklist when separately useful
-6. Independent pre-code Critic
-7. Implementation
-8. Source candidate commit
-9. Reviewer
-10. Verifier
-11. Closeout
-12. Merge / Release / Deploy
-13. Post-deploy feedback
+A Work Block is an implementation unit, not the container for an idea from its earliest stage.
 
-Do not add extra stages unless they solve a concrete recurring problem.
+Before implementation, one initiative is represented by one durable directory, for example:
 
-## 2. Documentation is the project memory
+```text
+docs/changes/ai-phone-secretary/
+  idea.md
+  intent.md
+  spec.md
+  plan.md
+  orchestrator-log.md
+  work-blocks/
+```
 
-Durable project knowledge should be stored in Git.
+The directory is the durable entrypoint for the initiative.
 
-Suggested responsibility by artifact family:
+### idea.md
 
-- `docs/intents/**` — problem, goal, business reason, constraints.
-- `docs/specs/**` — normative requirements, design, interfaces, acceptance criteria, out-of-scope.
-- `docs/plans/**` — implementation strategy and sequencing.
-- `docs/tasklist/**` — executable decomposition for coding agents.
-- `docs/reports/**` — factual review, verification, closeout and deployment evidence.
-- `docs/architecture/**` — long-lived architecture and ADR-like decisions.
-- `docs/engineering-memory/**` — durable systemic lessons and process feedback.
+Captures the original idea, problem, opportunity, or requested change.
 
-Chat history is not authoritative project memory.
+It may begin as a rough statement. No implementation lifecycle is opened merely because an idea exists.
 
-A new agent session should be able to recover the work context from the repository.
+### intent.md
 
-## 3. Simplify the Work Block lifecycle
+Captures what we decided to achieve and why:
 
-A Work Block should track only data that materially helps execution and assurance.
+- goal;
+- business value;
+- constraints;
+- non-goals;
+- relevant context;
+- expected outcome.
 
-The Work Block should be the repository entrypoint for the current unit of work: a small manifest/index, not another copy of requirements or design.
+### spec.md
 
-Minimum useful state:
+Defines what the resulting system must do:
+
+- requirements;
+- behavior;
+- interfaces/contracts;
+- acceptance criteria;
+- architecture constraints;
+- non-goals where clarification is useful.
+
+### plan.md
+
+Defines how the approved design will be implemented:
+
+- implementation strategy;
+- sequencing;
+- affected components;
+- dependencies;
+- testing approach;
+- migration/operational considerations;
+- known risks.
+
+### Tasklist
+
+A separate Tasklist is optional.
+
+Use one only when decomposition materially helps execution, parallel ownership, recovery, traceability, or coordination. Otherwise the Plan may contain the executable steps directly.
+
+## 2. Critic is an independent reusable role
+
+The Critic exists to prevent the Orchestrator from becoming the sole judge of its own decisions.
+
+The Orchestrator may invoke the Critic at any point where independent challenge is useful, including:
+
+- Intent;
+- Spec;
+- Plan;
+- Work Block decomposition;
+- material implementation decisions;
+- closeout questions.
+
+For material design decisions, the Critic should challenge assumptions, analyze risks, identify contradictions, and test whether the proposed direction remains consistent with the previous durable artifacts.
+
+The Critic may also be consulted by the Coder, Reviewer, or Verifier when they encounter ambiguity or cannot safely decide how to proceed.
+
+A Coder may use Critic feedback to understand the problem or compare options, but may not independently redefine approved scope, architecture, acceptance criteria, or authority boundaries. Material design changes return to the Orchestrator.
+
+## 3. Mandatory pre-code Critic gate
+
+The Critic is flexible as an advisory role, but one checkpoint is mandatory and mechanically enforced:
+
+> The Orchestrator may not send an implementation plan into source-code execution until an independent Critic has reviewed the implementation-ready package and blocking concerns are resolved.
+
+The implementation-ready package is normally:
+
+**Intent + Spec + Plan + Tasklist when separately useful**
+
+The exact files may vary for small work, but the durable package must contain enough information to understand objective, scope, expected behavior, implementation strategy, and acceptance.
+
+Source implementation writes remain blocked until the Critic gate is READY.
+
+If a material change occurs after Critic approval, the gate returns to PENDING before coding continues.
+
+Material changes include:
+
+- architecture;
+- scope;
+- acceptance criteria;
+- approved write-set;
+- security/authority boundaries;
+- substantial implementation strategy.
+
+Purely mechanical edits do not require another Critic pass.
+
+This is the primary mandatory Critic control. It should remain simple.
+
+## 4. Work Block begins at implementation
+
+After the implementation-ready package is accepted, the Orchestrator decomposes the Plan into one or more Work Blocks.
+
+One initiative may produce several Work Blocks.
+
+Example:
+
+```text
+docs/changes/ai-phone-secretary/
+  ...
+  work-blocks/
+    wb-01-sip-ingress.md
+    wb-02-ai-bridge.md
+    wb-03-knowledge-base.md
+```
+
+A Work Block is:
+
+> a bounded unit of implementation with its own execution scope, write-set, branch/base, source candidate, and assurance state.
+
+The Work Block does not duplicate Intent, Spec, or Plan. It links back to them.
+
+Minimum useful Work Block information:
 
 - Work Block ID;
-- Intent reference;
-- Spec path/revision;
-- Plan reference;
-- Tasklist reference when separate;
+- objective;
+- source initiative references;
+- dependencies;
 - subject branch;
 - base commit;
 - approved write-set;
 - current stage;
 - source candidate SHA when created;
-- Critic report/status;
-- Reviewer report/status;
-- Verifier report/status;
-- closeout report/status.
+- Critic gate status;
+- Reviewer status;
+- Verifier status;
+- closeout status.
 
-The manifest points to authoritative artifacts instead of duplicating their contents.
+The Work Block is therefore a small implementation manifest, not a second specification.
 
-A fresh agent should be able to locate the complete approved package from this one entrypoint.
-
-Avoid lifecycle states that exist mainly to manage the control plane itself.
-
-Target conceptual state machine:
+Target conceptual Work Block state:
 
 **PLANNING → IMPLEMENTING → CANDIDATE → VERIFIED → CLOSED**
 
-GitHub/CI then handles:
+GitHub/CI then owns external integration state:
 
 **PR → MERGED → DEPLOYED**
 
-## 4. Simplify hooks and authority enforcement
+## 5. Default executor chain
 
-Hooks should protect real authority boundaries, not attempt to understand every shell expression.
+The normal Work Block execution chain is:
 
-Keep strict enforcement for:
+**Orchestrator → Architect if needed → Critic → Coder → Reviewer → Verifier → Orchestrator closeout**
 
-- source implementation writes before the mandatory independent Critic gate is ready;
-- writes outside the approved Work Block scope;
-- force push;
-- merge/release/deploy without authority;
-- credentials and secrets;
-- production/live infrastructure or data;
-- destructive external operations;
-- protected/default branch mutation.
+### Orchestrator
 
-Reduce control-plane friction for harmless local engineering operations.
+Owns:
 
-Do not require hooks to become a complete shell interpreter.
+- understanding the task;
+- planning;
+- Work Block decomposition;
+- coordination;
+- escalation;
+- final durable knowledge capture.
 
-Prefer clear authority checks and conservative restricted grammar where command interpretation is actually necessary.
+The Orchestrator may use an Architect when architecture complexity justifies it.
 
-The pre-code Critic gate should remain mechanically minimal: source implementation writes are not admitted until the Critic has reviewed the implementation-ready package and all blocking findings are resolved. Git/CI cannot reliably prove this timing after the fact.
+The Orchestrator does not self-approve the implementation plan.
 
-## 5. Keep clear agent roles
+### Architect — optional
 
-The default logical roles are:
+Used when architecture, interfaces, migration strategy, security design, or cross-system dependencies require specialist analysis.
 
-### Architect / Orchestrator
+Architect output becomes input to the Orchestrator and Critic. Architect is not a mandatory stage for every Work Block.
 
-Owns the transition from idea to executable plan.
+### Critic
 
-Produces or maintains:
-- Intent;
-- Spec;
-- Plan;
-- Tasklist;
-- coordination state.
+Independent challenger and risk analyst.
 
-The Orchestrator must not be the sole judge of its own design.
+Mandatory before source implementation starts.
 
-### Critic — mandatory before code
-
-The Critic is a required independent role before implementation begins.
-
-Its purpose is to review the complete implementation-ready package before source code is written:
-
-**Intent → Spec → Plan → Tasklist when separately useful**.
-
-The Critic should challenge:
-
-- missing requirements;
-- contradictions;
-- architecture mistakes;
-- scope drift;
-- untestable acceptance criteria;
-- unnecessary complexity;
-- missed security/operational constraints;
-- incorrect assumptions;
-- implementation plans that do not satisfy the design.
-
-The Critic is retained because early independent review prevents a large class of expensive implementation errors.
-
-A material Critic objection returns the work to planning/design.
-
-Implementation starts only after the Critic gate is ready.
-
-A purely mechanical task decomposition created after Critic review does not require another Critic pass. Any material change to Intent, Spec, Plan, acceptance criteria, architecture, authority boundary, or approved write-set returns to the Critic before source implementation continues.
+May also be called voluntarily by any relevant executor when additional independent reasoning is useful.
 
 ### Coder
 
-Implements from repository artifacts:
+Implements the approved Work Block.
 
-**Spec → Plan → Tasklist**
+Consumes the durable initiative artifacts and Work Block manifest.
 
-The Coder may decide local implementation details but must not silently change architecture, scope, public contracts or acceptance criteria.
+The Coder may decide local implementation details inside the approved scope.
 
-Material design problems return to the Orchestrator/Critic loop.
+If implementation exposes a material design problem, the Coder stops that decision path and escalates to the Orchestrator. The Critic may be consulted during this process.
 
 ### Reviewer
 
-Reviews the exact candidate commit for:
+Reviews the exact source candidate for:
 
 - correctness;
 - architecture conformity;
-- regressions;
+- regression risk;
 - scope adherence;
 - maintainability.
 
 ### Verifier
 
-Checks the exact candidate against acceptance criteria and deterministic evidence:
+Independently checks the exact source candidate against:
 
-- tests;
+- acceptance criteria;
+- deterministic tests;
 - expected behavior;
-- required integration checks;
-- relevant CI/evaluation evidence.
+- required integration/evaluation evidence.
 
-Do not create extra permanent agent roles unless a recurring engineering need justifies them.
+### Orchestrator closeout
 
-## 6. Bind final assurance to a candidate commit
+After Reviewer and Verifier are ready, the Orchestrator:
+
+1. captures material conclusions in durable project documentation;
+2. updates the Orchestrator log;
+3. records residual risks/follow-up where useful;
+4. confirms that no implementation-path changes occurred after assurance;
+5. closes the Work Block;
+6. removes temporary agent reports.
+
+## 6. Temporary Critic / Reviewer / Verifier reports
+
+Critic, Reviewer, and Verifier reports are working evidence, not durable project documentation by default.
+
+Every newly created report should include:
+
+- role;
+- Work Block or initiative context;
+- creation date;
+- creation time;
+- timezone;
+- subject revision/candidate where relevant;
+- verdict/result.
+
+Reports must remain available from creation until Work Block closeout so the process can survive pauses and session restarts.
+
+They should live in a persistent runtime location associated with the repository/worktree and be excluded from Git.
+
+The exact storage path is an implementation detail.
+
+Temporary reports are not committed.
+
+At Work Block closeout:
+
+- the Orchestrator first transfers material decisions, risks, and reusable conclusions into durable documentation and the Orchestrator log;
+- only then are temporary reports removed.
+
+There is no machine-level prohibition against deleting these reports. Their retention until closeout is a workflow rule, not a security boundary.
+
+## 7. Durable project memory
+
+Only information that remains useful after the working discussion should be committed.
+
+Typical durable memory includes:
+
+- `idea.md`;
+- `intent.md`;
+- `spec.md`;
+- `plan.md`;
+- optional Tasklist;
+- Work Block manifests where they remain useful;
+- source code;
+- tests;
+- architecture decisions;
+- operational documentation;
+- engineering memory;
+- concise Orchestrator log entries;
+- deployment/release documentation where it has durable value.
+
+The Orchestrator log records decisions and conclusions, not full agent conversations.
+
+Example purpose:
+
+- what changed after Critic feedback;
+- why an architecture choice was made;
+- which risk was accepted;
+- which follow-up was created;
+- why a Work Block was split or redirected.
+
+The project should preserve the result of reasoning, not every intermediate discussion.
+
+## 8. Simplify lifecycle.py
+
+The lifecycle mechanism should validate workflow state, not agent-runtime internals.
+
+For ordinary Work Blocks, `lifecycle.py` should not require or manage:
+
+- durable Critic/Reviewer/Verifier report files;
+- report paths as promotion authority;
+- execution IDs;
+- context IDs;
+- native subagent topology;
+- capability probes;
+- adapter/runtime provenance;
+- report deletion;
+- complex report ancestry.
+
+Modern harnesses normally provide the Orchestrator with native subagent capability. The SDLC should use that capability directly rather than building a second proof system around it.
+
+The lifecycle only needs enough state to enforce important transitions.
+
+Before implementation, conceptually:
+
+```text
+critic_required = true
+critic_status = READY
+```
+
+Before successful closeout, conceptually:
+
+```text
+source_candidate_sha = <sha>
+reviewer_status = READY
+verifier_status = READY
+```
+
+The exact schema remains an implementation detail.
+
+If a runtime cannot provide required subagent functionality, that is a runtime limitation to surface explicitly, not a reason to make every Work Block carry universal topology/capability ceremony.
+
+## 9. Bind final assurance to the source candidate
 
 After implementation, create a concrete source candidate SHA.
 
-Then perform:
+Then:
 
-**source candidate SHA → Reviewer → Verifier → Closeout**
+**Source Candidate → Reviewer → Verifier → Closeout**
 
-Reviewer and Verifier evidence belongs to that exact source candidate.
+Reviewer and Verifier inspect that exact candidate.
 
-The source candidate is distinct from later report/coordination/closeout commits.
+If any implementation path in the approved write-set changes after assurance:
 
-If any path inside the implementation write-set changes after assurance, the candidate-specific Reviewer/Verifier evidence is invalid and a new source candidate must be created and assured.
+- the old assurance becomes stale;
+- a new source candidate is created;
+- Reviewer/Verifier are rerun as required.
 
-Report-only, coordination-only, or closeout-only commits do not invalidate source assurance when a deterministic diff against the source candidate proves that no implementation write-set path changed.
+Later documentation, coordination, or closeout-only commits do not invalidate source assurance when a deterministic Git diff proves that no implementation path changed.
 
-The source candidate SHA is the primary identity of the thing being reviewed.
+The source candidate SHA is the identity of the implementation that was actually assured.
 
-## 7. Keep CI deterministic
+## 10. Keep hooks narrow
 
-CI should primarily execute deterministic checks such as:
+Hooks should enforce clear authority and workflow boundaries, not interpret arbitrary shell language.
+
+Keep strict enforcement for:
+
+- source implementation writes before the mandatory Critic gate is ready;
+- writes outside the approved Work Block write-set;
+- protected/default branch mutation;
+- force/history rewriting;
+- merge/release/deploy without required Owner authority;
+- credentials/secrets;
+- destructive operations;
+- production/live infrastructure mutation;
+- live-data mutation.
+
+Ordinary local read-only engineering operations should not require complex lifecycle negotiation.
+
+Prefer native event data and direct capability boundaries over broad shell-string parsing.
+
+The control plane should not attempt to become a general shell interpreter.
+
+## 11. Deterministic CI
+
+CI primarily validates deterministic evidence:
 
 - unit/integration tests;
 - lint;
 - type checking;
 - build;
 - security/static checks;
-- inexpensive contract/traceability checks;
+- focused contract checks;
 - essential control-plane invariants.
 
-AI review should normally happen at the Work Block candidate / PR level rather than becoming a mandatory opaque step in every CI execution.
+AI Critic/Reviewer/Verifier work belongs to the agentic workflow around planning and candidate assurance, not as an opaque mandatory AI call inside every CI run.
 
-CI remains evidence, not project memory.
+## 12. Feedback and project learning
 
-## 8. Keep post-deploy learning lightweight
+Feedback is event-driven.
 
-After completion, retain only useful durable knowledge:
+Create durable architecture or engineering-memory updates when there is a reusable lesson, systemic problem, operational constraint, or important decision.
 
-- closeout report;
-- architecture decision when architecture changed;
-- engineering/process feedback when a systemic problem was discovered;
-- deployment evidence when operationally useful;
-- a new Intent/Work Block for unfinished or follow-up work.
+Do not create permanent governance artifacts for every temporary agent observation or one-off local inconvenience.
 
-Do not create permanent governance findings for every local inconvenience or one-off hook false positive.
+## 13. Fresh-session recovery
 
-## Artifact handoff model
+Before implementation exists, a fresh agent should be able to recover context by:
 
-Each executor should primarily consume the artifact produced by the preceding stage.
+1. reading repository agent instructions;
+2. locating the initiative under `docs/changes/<slug>/`;
+3. reading `idea.md`, `intent.md`, `spec.md`, `plan.md`, and Tasklist if present;
+4. reading the concise Orchestrator log.
 
-| Stage | Primary artifact | Primary executor |
-|---|---|---|
-| Idea | raw input / request | Owner |
-| Intent | `docs/intents/**` | Owner + Orchestrator |
-| Requirements + Design | `docs/specs/**` | Orchestrator |
-| Implementation planning | `docs/plans/**` | Orchestrator |
-| Task decomposition | `docs/tasklist/**` when useful | Orchestrator |
-| Pre-code review | Critic report over the implementation-ready package | Critic |
-| Implementation | code + tests + commits | Coder |
-| Source candidate | exact Git SHA | Orchestrator |
-| Code review | Reviewer report bound to source candidate | Reviewer |
-| Verification | Verifier report bound to source candidate | Verifier |
-| Closeout | Closeout report | Orchestrator |
-| Merge / deploy | Git/CI/release evidence | Owner + automation |
-| Learning | architecture / engineering-memory artifact | Orchestrator + Owner |
+During implementation, it should additionally:
 
-## Executor bootstrap rule
+5. identify the active Work Block;
+6. inspect its branch/base/write-set/stage;
+7. inspect current source candidate and assurance status where applicable;
+8. continue from repository state without requiring prior chat history.
 
-A fresh agent should be able to start with:
+## 14. Proposed simplification targets in the current control plane
 
-1. read repository agent instructions;
-2. identify the current Work Block manifest;
-3. follow the manifest references to Intent, Spec, Plan, and Tasklist when separate;
-4. inspect the approved branch/base/write-set and current stage;
-5. inspect the source candidate and assurance reports when they exist;
-6. continue from repository evidence.
+For ordinary Work Blocks, review and simplify or remove:
 
-It should not need previous chat history to reconstruct project intent.
-
-## Proposed simplification targets in the current SDLC
-
-Review whether the current implementation can be reduced in these areas:
-
-- complex Maintenance Mode behavior;
-- excessive shell-command classification;
-- capability/topology evidence for ordinary Work Blocks;
-- multiple inactive-state variants;
-- transition-specific commit rules with little business meaning;
-- duplicated Claude/Codex parsing logic;
-- local read-only operations being blocked by hooks;
-- mandatory reports that duplicate deterministic Git/test evidence;
+- mandatory `define_quality` ceremony;
+- universal topology/capability bindings;
+- execution/context ID requirements;
+- prepare/finalize Reviewer/Verifier lifecycle ceremony;
+- dual active/terminal publication state machines;
+- canonical inactive-child ancestry;
+- mandatory ordinary-WB synchronization through `FILE_REGISTRY.yml` / `PROJECT_MAP.md`;
+- mandatory multi-dimension Process Feedback forms;
+- broad shell-command parsing;
+- report-path-based lifecycle blocking;
+- machine enforcement of temporary-report retention/deletion;
 - lifecycle transitions that do not represent a meaningful engineering state change.
 
-This proposal does not require deleting all of these mechanisms blindly.
+This does not authorize blind deletion.
 
-The implementation Work Block should remove or simplify them only where they are not necessary for the target model or a real authority boundary.
+Implementation should preserve mechanisms that protect a concrete consequential boundary and simplify those whose operational cost exceeds their value.
 
-## Non-goals
+## 15. Non-goals
 
 This proposal is not:
 
-- an instruction to weaken production/security boundaries;
-- an instruction to remove Critic/Reviewer/Verifier;
-- an implementation plan yet;
-- authorization to rewrite the current control plane immediately;
-- authorization to merge/deploy anything.
-
-This proposal has received an independent Critic `SUPPLEMENT`. The four blocking clarifications from that review are incorporated here. Before implementation, the Critic should perform a short closure review confirming those findings are resolved.
+- an instruction to weaken security or production boundaries;
+- an instruction to remove independent Critic/Reviewer/Verifier reasoning;
+- an implementation specification;
+- authorization to rewrite the control plane immediately;
+- authorization to merge/release/deploy without Owner control;
+- a requirement that every initiative use the same number of files or Work Blocks.
 
 ## Desired outcome
 
-AzurSysTech SDLC should remain agent-friendly and auditable while being simple enough that:
+AzurSysTech SDLC should be explainable as:
 
-- project context is recovered from Git;
-- agents know which artifact to read and which artifact to produce;
-- the Orchestrator is independently challenged on the complete implementation-ready package before coding;
-- the Work Block acts as a compact manifest that lets a fresh session find the authoritative artifacts;
-- coding agents spend their time implementing rather than negotiating the control plane;
-- final assurance is tied to a concrete source candidate and is not invalidated by report-only closeout commits;
-- Owner authority remains clear at consequential boundaries.
+> **idea → durable project artifact → independent challenge where it matters → bounded implementation → candidate assurance → durable conclusions**
+
+The resulting process should ensure that:
+
+- project memory is recoverable from Git without chat history;
+- one initiative has one understandable documentation directory;
+- Work Blocks retain their original meaning as implementation units;
+- the Orchestrator can call Critic whenever useful but cannot send an unreviewed plan to implementation;
+- Coders can ask Critic for help without gaining authority to redefine the project;
+- temporary agent reports support active work without polluting Git history;
+- lifecycle state stays small and practical;
+- final assurance is bound to an exact source candidate;
+- consequential Owner/security boundaries remain strict;
+- agents spend most of their time designing, implementing, reviewing, and verifying the product rather than servicing the control plane.
