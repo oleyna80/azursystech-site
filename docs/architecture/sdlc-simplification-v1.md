@@ -1,6 +1,6 @@
 # SDLC Simplification v1 — Proposal
 
-Status: accepted architectural baseline with high-level refinements in progress  
+Status: accepted architectural baseline; general model agreed, pending one holistic Critic review before implementation design  
 Scope: AzurSysTech Agentic SDLC  
 Intent: simplify the current SDLC without losing useful engineering control.
 
@@ -11,6 +11,8 @@ Project memory lives in repository documentation and Git, not in chat sessions.
 Durable project artifacts contain decisions, requirements, architecture, plans, implementation, and reusable conclusions. Agent discussion and intermediate review reports are working material, not project memory.
 
 The control plane should enforce only the workflow invariants that prevent meaningful errors or unauthorized actions. It should not become a second system that agents must constantly manage.
+
+Owner authority remains explicit. The Owner decides whether to start a major initiative, approves material business-goal or scope changes when required, controls merge/release/deploy, authorizes consequential production/live-data actions, and accepts material residual risk.
 
 The default high-level flow is:
 
@@ -134,6 +136,8 @@ This is the primary mandatory Critic control. It should remain simple.
 
 After the implementation-ready package is accepted, the Orchestrator decomposes the Plan into one or more Work Blocks.
 
+Work Block decomposition is itself a material Orchestrator decision. The Critic should review the decomposition before implementation begins when one initiative is split into multiple Work Blocks or when the chosen boundaries materially affect dependencies, sequencing, assurance, or scope.
+
 One initiative may produce several Work Blocks.
 
 Example:
@@ -170,6 +174,8 @@ Minimum useful Work Block information:
 - closeout status.
 
 The Work Block is therefore a small implementation manifest, not a second specification.
+
+During implementation, the repository should expose one simple active-work pointer so a fresh session can immediately identify the current initiative and active Work Block. This should be a minimal state/pointer, not another registry or duplicated project map.
 
 Target conceptual Work Block state:
 
@@ -254,6 +260,14 @@ After Reviewer and Verifier are ready, the Orchestrator:
 5. closes the Work Block;
 6. removes temporary agent reports.
 
+The process is not strictly linear. Normal rework loops are:
+
+- Critic finds a material issue → Orchestrator updates Intent/Spec/Plan/Work Block decomposition → Critic rechecks the changed decision;
+- Coder discovers a material design problem → Coder stops that decision path and escalates to Orchestrator, optionally consulting Critic;
+- Reviewer or Verifier rejects the source candidate → Coder fixes the implementation → a new source candidate is created → affected assurance is rerun.
+
+These loops should not require a separate complex lifecycle state machine.
+
 ## 6. Temporary Critic / Reviewer / Verifier reports
 
 Critic, Reviewer, and Verifier reports are working evidence, not durable project documentation by default.
@@ -303,7 +317,9 @@ Typical durable memory includes:
 - concise Orchestrator log entries;
 - deployment/release documentation where it has durable value.
 
-The Orchestrator log records decisions and conclusions, not full agent conversations.
+The Orchestrator log is a navigation and decision-memory artifact, not an event stream.
+
+It records decisions and conclusions, not full agent conversations, command history, every subagent launch, or every intermediate thought.
 
 Example purpose:
 
@@ -314,6 +330,8 @@ Example purpose:
 - why a Work Block was split or redirected.
 
 The project should preserve the result of reasoning, not every intermediate discussion.
+
+For small deterministic changes, artifact structure may be collapsed when doing so does not lose objective, scope, acceptance, implementation strategy, or durable context. A small change does not automatically require separate `idea.md`, `intent.md`, `spec.md`, and `plan.md` files. The Critic requirement still applies whenever the Orchestrator prepares an implementation plan that is about to be sent into source execution.
 
 ## 8. Simplify lifecycle.py
 
@@ -374,6 +392,14 @@ Later documentation, coordination, or closeout-only commits do not invalidate so
 
 The source candidate SHA is the identity of the implementation that was actually assured.
 
+Commit semantics should remain simple and recognizable:
+
+1. implementation commits — build the Work Block;
+2. source candidate commit — the exact implementation revision sent to Reviewer/Verifier;
+3. post-assurance documentation/closeout commits — durable knowledge and coordination only, with no implementation-path changes.
+
+This distinction should be enough to reason about assurance invalidation without terminal-child ancestry or publication-state machinery.
+
 ## 10. Keep hooks narrow
 
 Hooks should enforce clear authority and workflow boundaries, not interpret arbitrary shell language.
@@ -410,7 +436,21 @@ CI primarily validates deterministic evidence:
 
 AI Critic/Reviewer/Verifier work belongs to the agentic workflow around planning and candidate assurance, not as an opaque mandatory AI call inside every CI run.
 
-## 12. Feedback and project learning
+## 12. Merge, deploy, rollback, and Owner authority
+
+Merge/release/deploy remain consequential Owner-controlled actions.
+
+The SDLC does not need a second publication state machine to mirror GitHub or deployment infrastructure.
+
+For deployments where operational traceability is useful, retain only minimal durable evidence:
+
+- deployed source/release SHA;
+- deployment result;
+- rollback target or rollback method when the deployment is consequential.
+
+A large deployment report is not required for every normal deploy.
+
+## 13. Feedback and project learning
 
 Feedback is event-driven.
 
@@ -418,7 +458,7 @@ Create durable architecture or engineering-memory updates when there is a reusab
 
 Do not create permanent governance artifacts for every temporary agent observation or one-off local inconvenience.
 
-## 13. Fresh-session recovery
+## 14. Fresh-session recovery
 
 Before implementation exists, a fresh agent should be able to recover context by:
 
@@ -434,7 +474,7 @@ During implementation, it should additionally:
 7. inspect current source candidate and assurance status where applicable;
 8. continue from repository state without requiring prior chat history.
 
-## 14. Proposed simplification targets in the current control plane
+## 15. Proposed simplification targets in the current control plane
 
 For ordinary Work Blocks, review and simplify or remove:
 
@@ -455,7 +495,7 @@ This does not authorize blind deletion.
 
 Implementation should preserve mechanisms that protect a concrete consequential boundary and simplify those whose operational cost exceeds their value.
 
-## 15. Non-goals
+## 16. Non-goals
 
 This proposal is not:
 
@@ -464,7 +504,8 @@ This proposal is not:
 - an implementation specification;
 - authorization to rewrite the control plane immediately;
 - authorization to merge/release/deploy without Owner control;
-- a requirement that every initiative use the same number of files or Work Blocks.
+- a requirement that every initiative use the same number of files or Work Blocks;
+- a requirement to create heavyweight planning artifacts for small deterministic changes.
 
 ## Desired outcome
 
@@ -482,5 +523,9 @@ The resulting process should ensure that:
 - temporary agent reports support active work without polluting Git history;
 - lifecycle state stays small and practical;
 - final assurance is bound to an exact source candidate;
+- normal rework loops are explicit without creating extra lifecycle bureaucracy;
+- a fresh session can find the active initiative/Work Block through one simple pointer;
+- implementation, source-candidate, and post-assurance commit semantics are easy to distinguish;
+- deployments retain only the operational evidence that remains useful;
 - consequential Owner/security boundaries remain strict;
 - agents spend most of their time designing, implementing, reviewing, and verifying the product rather than servicing the control plane.
