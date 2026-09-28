@@ -470,12 +470,10 @@ The implementation/E2E suite must eventually cover:
 - failed deploy follows only admitted rollback/retry behavior;
 - full admitted event -> deploy -> verification path completes without human interaction.
 
-## 19. Design consequence
+## 20. Design consequence
 
 The target AzurSysTech SDLC is therefore:
 
-> autonomous progression inside a pre-authorized envelope, with independent assurance and deterministic promotion gates.
+> autonomy-capable progression inside a pinned authority envelope, with a human-governed baseline and higher autonomous delivery profiles enabled by demonstrated maturity.
 
-The Owner governs the envelope and exceptional decisions.
-
-The Orchestrator executes the work.
+The Owner remains a normal participant in the baseline flow and governs the authority envelope. The Orchestrator executes normal engineering progression autonomously. Full event-to-deployment autonomy is an earned operating mode, not the initial default.
