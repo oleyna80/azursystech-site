@@ -134,8 +134,9 @@ No timestamps, report paths, execution IDs, runtime IDs, capability records, dis
 
 `planning_subject.revision`
 
-- exact full Git commit SHA containing the reviewed planning subject;
-- identifies the revision Critic reviewed;
+- exact full Git commit SHA containing the current authoritative planning subject;
+- before Critic READY it is the subject offered for review;
+- Critic authority is represented separately by `critic.subject_revision`;
 - changes only through explicit `revise`.
 
 `planning_subject.paths`
@@ -300,7 +301,7 @@ Parallel Work Blocks may branch from the same committed planning subject.
 
 The static pre-WB planning surface is a controller constant shared by runtime and Git policy; adapters do not maintain their own copies.
 
-## 7. State invariants by lifecycle state
+## 6. State invariants by lifecycle state
 
 ### INACTIVE
 
@@ -621,6 +622,8 @@ Policy checks:
 - every commit after candidate through local SHA is coordination-only and changes neither implementation paths nor planning-subject paths.
 
 A pre-push invocation containing multiple ref updates evaluates each update independently and denies the whole push if any update is denied.
+
+The normal path remains `controller publish`. A direct Git push that passes pre-push does not itself mutate local controller state. `controller publish` is therefore idempotent: if the exact remote subject ref already equals the validated local publish tip, it performs remote verification and completes the ASSURE -> INACTIVE transition without issuing another push.
 
 ## 14. Context-only subagent event
 
