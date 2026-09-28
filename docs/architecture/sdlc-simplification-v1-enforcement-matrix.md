@@ -83,9 +83,9 @@ Owns deterministic repository validation after commit/PR:
 
 CI does not create Critic/Reviewer/Verifier authority and does not invoke opaque AI review as a required control-plane gate. Its enforcement is deterministic.
 
-### Owner / external platform
+### Pinned autonomy profile / Owner / external platform
 
-Owns consequential boundaries that local files cannot safely grant:
+Own consequential boundaries that mutable subject-branch files cannot safely grant:
 
 - merge;
 - deploy/release;
@@ -363,19 +363,19 @@ Merge is not implied.
 
 ### Merge
 
-Canonical owner: Owner / GitHub platform.
+Canonical authority: pinned autonomy profile + GitHub platform, with Owner fallback when the profile does not pre-authorize merge.
 
 Project-local controller:
 
 - may report candidate eligibility;
 - may deny a clearly identified unauthorized local merge attempt as defense in depth;
-- must not treat merge as autonomous authority.
+- may execute merge autonomously only when the pinned profile explicitly grants merge and all platform/CI predicates pass.
 
-Local hooks cannot grant merge authority. GitHub/Owner remains the authoritative merge boundary.
+Local hooks cannot invent merge authority. The pinned protected profile plus GitHub permissions/checks form the authoritative merge boundary; otherwise the run requires Owner authority.
 
 ### Deploy / release / live mutation
 
-Canonical owner: Owner / deployment platform / production credentials.
+Canonical authority: pinned autonomy profile + deployment platform/credentials, with Owner fallback when the profile does not pre-authorize the exact target.
 
 Controller may expose provenance:
 
@@ -383,7 +383,7 @@ Controller may expose provenance:
 - merged/released SHA;
 - deployed SHA.
 
-Controller does not grant the consequential action. Runtime/local policy may deny a clearly structured unauthorized attempt, but platform credentials/permissions and Owner authorization remain the final boundary.
+Controller does not invent the consequential action. It verifies the pinned profile binding. Runtime/local policy may deny a clearly structured unauthorized attempt; platform credentials/permissions enforce the final boundary. A live Owner decision is needed only when the current profile lacks the required capability.
 
 ### Exceptional controller repair / cutover
 
@@ -1083,7 +1083,7 @@ The following implementation-design decisions are accepted as the baseline for t
 - no bespoke general shell parser is part of the target security model;
 - blocking Stop hooks are removed from SDLC authority;
 - CI is deterministic only;
-- merge, deploy/release, credentials, production/live data, protected/default branch administration, and exceptional history rewrite remain Owner/platform boundaries;
+- merge, deploy/release, production/live data, and other consequential actions remain protected profile/platform boundaries; they may be autonomous only when the pinned profile explicitly grants the exact capability;
 - Maintenance Mode is not part of the normal target lifecycle;
 - legacy blocking cases from `audit/sdlc-revision` are required regression inputs.
 
@@ -1096,3 +1096,10 @@ The exact state/event contract is defined in `docs/architecture/sdlc-simplificat
 Enforcement placement and the exact state/event contract are resolved.
 
 The next artifact is the implementation plan and acceptance-test inventory for adapting the inert `controller v1` and performing a later Owner-controlled cutover.
+
+
+## 14. Autonomous progression overlay
+
+The enforcement matrix is consumed by an autonomous Orchestrator. Normal lifecycle progression and rework are not approval checkpoints. A trusted event admission path pins an autonomy profile for the run; enforcement surfaces verify that the requested consequence stays within that profile.
+
+When the profile permits merge and/or deployment, the Orchestrator may perform those actions automatically after the required engineering and platform predicates pass. When it does not, the exact boundary returns `OWNER_DECISION_REQUIRED`. See `docs/architecture/sdlc-simplification-v1-autonomous-orchestration.md`.
