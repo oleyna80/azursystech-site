@@ -638,12 +638,180 @@ Required regressions:
 - stale original-session project root cannot redirect authority away from the event worktree;
 - controller state never appears in staged/committed paths.
 
-## 8. Next decisions
+## 8. Commit linkage, candidate, and publication contract
+
+### Work-Block commit trailer
+
+Retain the `Work-Block:` commit trailer as mandatory traceability while a Work Block is active.
+
+Example:
+
+```text
+Work-Block: WB-042
+```
+
+The trailer is not authority.
+
+The Git `commit-msg` hook checks only:
+
+- active per-worktree controller state is valid;
+- current branch matches the active subject branch;
+- exactly one `Work-Block:` trailer is present;
+- trailer value exactly matches `work_block_id`.
+
+When controller state is canonical INACTIVE, the trailer is not required.
+
+Planning commits created before a Work Block is opened do not require a Work Block trailer.
+
+Squash/rebase/merge strategy may change the final main-branch commit identity; the durable candidate-to-merge relation is tracked separately and does not depend on preserving the trailer in the final merge commit.
+
+### Candidate command
+
+The target lifecycle has one explicit candidate transition from EXECUTE to ASSURE.
+
+Conceptual command:
+
+```text
+controller candidate
+```
+
+It does not stage or commit source.
+
+The candidate must already be a committed Git revision.
+
+Preconditions:
+
+- active state is EXECUTE;
+- current attached branch exactly equals `subject_branch`;
+- worktree and index are clean;
+- current HEAD is a valid commit;
+- `base_commit` is an ancestor of HEAD;
+- current planning-subject binding still matches the Critic-approved revision;
+- Critic is READY for that exact planning revision;
+- actual Git-changed paths since the admitted baseline are contained in `implementation_write_set + coordination_scope`;
+- no authoritative planning-subject path has changed since `planning_subject_revision` without returning to DEFINE.
+
+Result:
+
+```text
+source_candidate_sha = HEAD
+reviewer_status = PENDING
+reviewer_candidate_sha = null
+verifier_status = PENDING
+verifier_candidate_sha = null
+EXECUTE -> ASSURE
+```
+
+No custom content hash or Git-tree candidate identity is created.
+
+This ordering is mandatory:
+
+```text
+implementation
+-> stage
+-> commit
+-> candidate
+-> Reviewer
+-> Verifier
+```
+
+There is no post-freeze staging phase.
+
+### Post-assurance coordination commits
+
+After `source_candidate_sha` is established, source implementation is immutable until a rework transition.
+
+Coordination-only commits may be created after assurance when needed for:
+
+- Orchestrator log;
+- closeout documentation;
+- reusable engineering-memory notes;
+- publication/deployment notes that do not redefine the assured planning subject.
+
+A post-assurance commit must not modify:
+
+- any path matched by `implementation_write_set`;
+- any authoritative `planning_subject.paths`.
+
+Allowed paths must be matched by `coordination_scope`.
+
+If one actual path ambiguously matches both implementation and coordination scope, the operation fails closed. Scope definitions should therefore be non-overlapping.
+
+Reviewer/Verifier binding remains attached to `source_candidate_sha`, not to later coordination-only HEAD commits.
+
+### Publication relation
+
+The normal publishable branch tip may be later than the assured candidate:
+
+```text
+source_candidate_sha
+  -> zero or more coordination-only commits
+  -> publish_tip_sha
+```
+
+Publication validation requires:
+
+- `source_candidate_sha` is an ancestor of the exact pushed tip;
+- Reviewer READY and Verifier READY both bind to `source_candidate_sha`;
+- every commit after `source_candidate_sha` and up to the pushed tip changes only allowed post-assurance coordination paths;
+- no post-candidate commit changes an implementation path or authoritative planning-subject path, even if a later commit would revert the net tree change;
+- pushed ref is the exact non-default subject branch;
+- update is non-force / fast-forward;
+- no external Hard Stop applies.
+
+Checking each post-candidate commit prevents a source-change-then-revert history from being treated as equivalent to clean coordination-only history.
+
+### Preferred publication operation
+
+Do not depend on arbitrary Bash parsing for the normal publication path.
+
+The target CLI should expose a dedicated publication operation, conceptually:
+
+```text
+controller publish
+```
+
+It validates the shared controller/Git predicates and performs only the exact allowed subject-branch publication form.
+
+A Git pre-push hook remains a deterministic backstop for direct Git usage.
+
+Normal successful procedure:
+
+```text
+ASSURE
+-> Reviewer READY
+-> Verifier READY
+-> optional durable coordination-only closeout commit(s)
+-> controller publish
+-> remote exact-ref verification
+-> success close
+-> INACTIVE
+```
+
+If publication fails, the active ASSURE state remains intact and the operation can be retried. The controller must not clear active authority before successful publication when publication is part of the normal Work Block delivery procedure.
+
+Reporting-only/cancelled closeout remains separate and must not claim publication or assurance success.
+
+### Required regressions
+
+- implementation can be staged and committed before candidate creation;
+- candidate creation never requires post-candidate staging;
+- candidate command rejects dirty worktree/index;
+- candidate command rejects changed planning subject with stale Critic binding;
+- candidate command rejects actual Git paths outside admitted scopes;
+- Reviewer/Verifier remain bound to candidate after safe coordination-only commits;
+- post-candidate implementation-path commit is rejected;
+- post-candidate planning-subject commit is rejected;
+- source-change-then-revert history after candidate is rejected;
+- exact non-force subject push succeeds;
+- failed push leaves ASSURE state active;
+- direct Git push receives the same core decision through pre-push;
+- Work-Block trailer mismatch/duplicate is rejected without adding lifecycle semantics to commit-msg.
+
+## 9. Next decisions
 
 Before code changes, resolve:
 
-1. whether `Work-Block:` commit trailers remain mandatory;
-2. exact candidate-creation command/postconditions;
-3. exact publication relation between assured candidate SHA and later coordination-only commits;
-4. minimal local Hard Stop classifier versus boundaries delegated entirely to platform/Owner;
-5. exact runtime hook set retained for Claude and Codex.
+1. minimal local Hard Stop classifier versus boundaries delegated entirely to platform/Owner;
+2. exact runtime hook set retained for Claude and Codex;
+3. exact lifecycle CLI verb set and negative-result transition commands.
