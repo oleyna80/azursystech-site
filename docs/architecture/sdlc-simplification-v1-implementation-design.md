@@ -504,6 +504,16 @@ That design should define:
 
 ## 15. Autonomous orchestration binding
 
-The target SDLC is autonomous by default within a pre-authorized envelope. The active Work Block must pin the autonomy profile selected by the trusted event admission path. The Orchestrator may drive normal lifecycle transitions, rework, publication, integration, and deployment without human confirmation when that profile permits the exact consequence.
+The target SDLC is autonomy-capable by design. The baseline profile is human-governed delivery: the Orchestrator drives normal lifecycle transitions, rework, publication, PR preparation, and deterministic evidence autonomously, while merge/deploy remain the normal Owner checkpoint. The active Work Block must pin the autonomy profile selected by the trusted event admission path. Higher-autonomy profiles may additionally permit integration and deployment without live human confirmation for admitted change classes.
 
 The Orchestrator must not select a more permissive profile, change the effective profile revision, or modify the protected policy source governing its own run. See `docs/architecture/sdlc-simplification-v1-autonomous-orchestration.md`.
+
+
+## 16. Autonomy rollout strategy
+
+Implementation must support the full authority-profile model from the start, but the initial production configuration uses the human-governed baseline profile. Higher autonomy is enabled by policy/configuration after evidence from E2E tests and supervised real runs, not by changing controller code or weakening gates.
+
+The initial rollout therefore proves two things separately:
+
+1. the baseline human-governed path is reliable for daily use;
+2. the same architecture can execute the full event-to-deployment path under a higher-autonomy profile without bypassing any guardrail.
