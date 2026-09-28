@@ -145,7 +145,7 @@ This is the primary mandatory Critic control. It should remain simple.
 
 ## 4. Work Block begins at implementation
 
-After the implementation-ready package is accepted, the Orchestrator decomposes the Plan into one or more Work Blocks.
+After the Plan is prepared, the Orchestrator defines or decomposes it into one or more Work Blocks before the mandatory Critic review. The Critic then reviews the complete implementation-ready package, including the material Work Block definition/decomposition. Source execution for a Work Block may begin only after the Critic gate is READY for that reviewed planning subject.
 
 Work Block decomposition is itself a material Orchestrator decision. The Critic should review the decomposition before implementation begins when one initiative is split into multiple Work Blocks or when the chosen boundaries materially affect dependencies, sequencing, assurance, or scope.
 
