@@ -808,10 +808,263 @@ Reporting-only/cancelled closeout remains separate and must not claim publicatio
 - direct Git push receives the same core decision through pre-push;
 - Work-Block trailer mismatch/duplicate is rejected without adding lifecycle semantics to commit-msg.
 
-## 9. Next decisions
+## 9. Local Hard Stops and retained runtime hooks
+
+### Protection guarantee
+
+The target control plane guarantees that an unauthorized or out-of-scope local mutation cannot become an accepted candidate or normal publication merely because a runtime hook missed the transient working-tree mutation.
+
+The authoritative promotion boundaries are:
+
+```text
+structured pre-write hook
+    -> Git pre-commit actual staged paths
+    -> controller candidate actual committed Git state
+    -> Reviewer/Verifier candidate binding
+    -> Git pre-push / controller publish exact ref facts
+    -> Owner/platform merge/deploy boundaries
+```
+
+Runtime hooks provide early prevention and ergonomics. Git/controller/platform boundaries provide the deterministic promotion guarantees.
+
+### Bash is not an authority parser
+
+A project-local Bash hook is not required to prove all possible shell side effects.
+
+In particular, the SDLC does not claim that arbitrary shell execution cannot transiently modify a working tree outside scope.
+
+Such mutation remains:
+
+- unapproved;
+- reversible/local;
+- unable to pass normal pre-commit/candidate publication checks.
+
+Runtime sandbox/approval mechanisms and user/Owner permissions remain additional protection against destructive local shell behavior.
+
+A small direct-command accident guard may remain for obvious dangerous forms, but it is defense-in-depth only and must not be used as proof that shell execution is safe.
+
+### Local deterministic Hard Stops
+
+Keep deterministic local denial where the controlling layer has reliable facts:
+
+- commit on default branch -> Git pre-commit DENY;
+- staged path outside admitted scopes -> Git pre-commit DENY;
+- prohibited local/secret-bearing files staged -> Git pre-commit DENY;
+- force/non-fast-forward/ref deletion/default or protected subject publication -> Git pre-push/controller publish DENY;
+- candidate mismatch or stale assurance at publication -> Git pre-push/controller publish DENY;
+- malformed/ambiguous controller authority state -> controller/Git hooks DENY.
+
+### External Hard Stops
+
+Final authority remains outside project-local hooks for:
+
+- merge;
+- deploy/release;
+- production/live-data mutation;
+- live infrastructure mutation;
+- credentials/secrets changes;
+- protected/default branch administration;
+- exceptional force/history rewrite;
+- destructive external operations.
+
+Runtime adapters may deny a clearly structured unauthorized attempt as defense in depth, but local text/state cannot grant these capabilities.
+
+### Claude Code hooks retained
+
+Target authority hooks:
+
+- `PreToolUse` for structured mutation tools such as Edit/Write/MultiEdit or equivalent runtime-native file-write events;
+- optional `SubagentStart` context injection only.
+
+Not part of target authority:
+
+- blocking Stop assurance gate;
+- PostToolUse lifecycle gates;
+- Bash shell parser as lifecycle/security proof.
+
+A project-specific PostToolUse typecheck may remain as developer feedback, but it is outside SDLC authority.
+
+Hook command location must be root-stable. Target worktree authority is derived from the hook event's `cwd`.
+
+### Codex hooks retained
+
+Target authority hooks:
+
+- `PreToolUse` for structured mutation tools such as `apply_patch`, Edit, Write, or equivalent structured file mutation events;
+- optional `SubagentStart` context injection only.
+
+Not part of target authority:
+
+- blocking Stop assurance gate;
+- Bash shell parser as lifecycle/security proof;
+- runtime capability/topology gate.
+
+Equivalent normalized structured writes must receive the same controller decision as Claude Code.
+
+### Git hooks retained
+
+Target Git hooks:
+
+- `pre-commit` — actual staged-path containment, valid controller state/branch, candidate-safe Git invariants;
+- `commit-msg` — Work-Block traceability only;
+- `pre-push` — actual ref update, candidate/assurance/publication predicates.
+
+All three call shared controller/schema functions and must remain thin.
+
+## 10. Target lifecycle CLI
+
+The target lifecycle CLI is intentionally small and explicit.
+
+### `status`
+
+Read-only.
+
+Reports:
+
+- state presence;
+- lifecycle state;
+- active WB identity;
+- branch binding;
+- planning/Critic binding;
+- candidate and Reviewer/Verifier status.
+
+It creates no authority.
+
+### `open`
+
+Creates a new DEFINE state from canonical INACTIVE or a valid missing-state bootstrap condition.
+
+Binds:
+
+- Work Block ID;
+- initiative reference;
+- subject branch;
+- base commit;
+- current planning-subject revision/paths;
+- implementation write set;
+- coordination scope.
+
+It fails when another Work Block is active.
+
+### `critic`
+
+Records Critic disposition for the exact current planning subject.
+
+Supported outcomes:
+
+- `ready` -> bind `critic_subject_revision` and transition DEFINE -> EXECUTE;
+- `blocked` -> remain DEFINE without source authority.
+
+No report/runtime/session identity is required.
+
+### `revise`
+
+Explicit material planning revision.
+
+May be invoked from DEFINE, EXECUTE, or ASSURE.
+
+It:
+
+- preserves Work Block ID, initiative, branch, and base commit;
+- installs a new planning-subject revision/paths;
+- may explicitly replace implementation/coordination scopes when the new planning revision changes them;
+- resets Critic to PENDING;
+- clears candidate and Reviewer/Verifier bindings;
+- transitions to DEFINE.
+
+There is no silent re-open of an active Work Block.
+
+### `candidate`
+
+Performs the committed candidate transition defined above:
+
+```text
+EXECUTE -> ASSURE
+source_candidate_sha = HEAD
+```
+
+It never stages or commits files.
+
+### `reviewer`
+
+Supported outcomes:
+
+- `ready` -> bind Reviewer READY to exact candidate;
+- `rework` -> clear candidate assurance and return to EXECUTE;
+- `scope-change` -> clear candidate assurance, reset Critic, return to DEFINE.
+
+### `verifier`
+
+Supported outcomes:
+
+- `ready` -> bind Verifier READY to exact candidate, requiring Reviewer READY first;
+- `rework` -> clear candidate assurance and return to EXECUTE;
+- `scope-change` -> clear candidate assurance, reset Critic, return to DEFINE;
+- `evidence-problem` -> remain ASSURE, preserve candidate and valid Reviewer READY, reset Verifier only.
+
+### `publish`
+
+Normal successful terminal operation.
+
+It:
+
+1. requires ASSURE;
+2. requires Reviewer and Verifier READY for `source_candidate_sha`;
+3. validates post-candidate history as coordination-only;
+4. validates exact subject-branch non-force publication;
+5. performs the exact allowed subject-branch push;
+6. verifies the remote ref equals the pushed local tip;
+7. only after successful verification clears active authority to canonical INACTIVE.
+
+If push or verification fails, ASSURE state remains unchanged.
+
+This avoids a separate persistent PUBLISHED lifecycle state and removes the old terminal/publication projection machinery.
+
+### `close`
+
+Non-success terminal operation only:
+
+- `reporting-only`;
+- `cancelled`.
+
+It clears active local authority without claiming candidate assurance/publication success.
+
+Normal successful delivery uses `publish`, not `close --success`.
+
+### Removed legacy verbs/concepts
+
+No target equivalent is required for:
+
+- `prepare`;
+- `freeze`;
+- `prepare-reviewer`;
+- `finalize-reviewer`;
+- `prepare-verifier`;
+- `finalize-verifier`;
+- capability refresh/probe;
+- dispatch records;
+- assurance retry flag;
+- terminal prepare/finalize publication states.
+
+## 11. CLI transition regressions
+
+The E2E suite must prove:
+
+- `open` cannot replace an active Work Block;
+- `critic ready` cannot bind a stale planning revision;
+- no implementation write becomes valid before EXECUTE;
+- `revise` is the only normal way to change material planning/scopes after open;
+- `candidate` requires a committed clean valid Git state;
+- Reviewer rework returns to EXECUTE without changing the planning revision;
+- scope change returns to DEFINE and requires a new Critic binding;
+- Verifier evidence-only retry preserves candidate and Reviewer READY;
+- `publish` fails without exact assurance;
+- failed publication leaves ASSURE active;
+- successful publication returns directly to INACTIVE;
+- reporting-only/cancelled close never claims success.
+
+## 12. Next decisions
 
 Before code changes, resolve:
 
-1. minimal local Hard Stop classifier versus boundaries delegated entirely to platform/Owner;
-2. exact runtime hook set retained for Claude and Codex;
-3. exact lifecycle CLI verb set and negative-result transition commands.
+All previously listed enforcement-placement questions are resolved. The next design pass should consolidate the exact active-state schema against these decisions and define the normalized event schema consumed by runtime/Git adapters.
