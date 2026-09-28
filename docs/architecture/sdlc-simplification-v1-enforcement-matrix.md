@@ -1,6 +1,6 @@
 # SDLC Simplification v1 — Enforcement Matrix
 
-Status: draft implementation contract  
+Status: enforcement design checkpoint accepted; exact state/event schemas pending  
 Basis: approved SDLC Simplification v1 baseline and implementation-design direction  
 Policy owner: shared controller v1 replacement
 
@@ -1063,8 +1063,40 @@ The E2E suite must prove:
 - successful publication returns directly to INACTIVE;
 - reporting-only/cancelled close never claims success.
 
-## 12. Next decisions
+## 12. Accepted enforcement checkpoint
+
+The following implementation-design decisions are accepted as the baseline for the next design pass:
+
+- one shared local controller policy engine;
+- thin, runtime-specific Claude Code and Codex adapters;
+- per-worktree controller state stored in Git private worktree metadata;
+- missing state means no local authority, not INACTIVE;
+- mandatory Work-Block commit trailer while a Work Block is active, for traceability only;
+- implementation is committed before candidate formation;
+- source candidate identity is the exact Git commit SHA;
+- Reviewer and Verifier bind to the exact source candidate SHA;
+- post-assurance commits are coordination-only and must preserve implementation and planning-subject immutability;
+- normal publication is exact non-force subject-branch publication after assurance;
+- successful publish returns directly to INACTIVE after remote-ref verification;
+- runtime hooks protect structured pre-write operations but are not the sole promotion boundary;
+- Git hooks are authoritative for staged paths, commit linkage, and ref updates;
+- no bespoke general shell parser is part of the target security model;
+- blocking Stop hooks are removed from SDLC authority;
+- CI is deterministic only;
+- merge, deploy/release, credentials, production/live data, protected/default branch administration, and exceptional history rewrite remain Owner/platform boundaries;
+- Maintenance Mode is not part of the normal target lifecycle;
+- legacy blocking cases from `audit/sdlc-revision` are required regression inputs.
+
+This checkpoint is architecture/design only and grants no implementation authority.
+
+The next design pass must define:
+
+1. the exact persisted active-state schema and validation invariants;
+2. the normalized event schema shared by Claude Code, Codex, Git hooks, and CLI/controller policy;
+3. the exact adapter mapping from each runtime-native hook payload into that normalized event model.
+
+## 13. Next decisions
 
 Before code changes, resolve:
 
-All previously listed enforcement-placement questions are resolved. The next design pass should consolidate the exact active-state schema against these decisions and define the normalized event schema consumed by runtime/Git adapters.
+All enforcement-placement questions in this document are resolved. The next design pass is the exact state/event schema contract.
