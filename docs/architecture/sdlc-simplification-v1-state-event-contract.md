@@ -146,32 +146,54 @@ No timestamps, report paths, execution IDs, runtime IDs, capability records, dis
 - duplicates forbidden;
 - each path must exist at `planning_subject.revision`;
 - includes the exact Intent/Spec/Plan/material Work Block artifacts that define implementation authority;
+- every planning-subject path must be matched by `coordination_scope` and must not be matched by `implementation_write_set`;
 - `idea.md` is not included unless explicitly made authoritative for that Work Block.
 
-Planning-subject immutability is checked by comparing each path's Git object/content at `planning_subject.revision` with the corresponding path at the candidate/publication revision.
+Planning-subject immutability is checked by both:
 
-A later HEAD is allowed to advance for implementation commits without changing `planning_subject.revision`.
+1. comparing each path's Git object/content at `planning_subject.revision` with the corresponding path at the candidate/publication revision; and
+2. requiring that no commit after `planning_subject.revision` through the candidate/publication tip changes any planning-subject path.
+
+This deliberately rejects a planning change followed by a revert. A material planning change must use `revise`, receive a new planning revision, and return through Critic.
+
+`planning_subject.revision` must be an ancestor of the candidate. A later HEAD is allowed to advance for implementation commits without changing `planning_subject.revision`.
 
 ### Write scopes
 
 `implementation_write_set`
 
-- non-empty list of repository-relative exact paths or `/**`-style bounded patterns;
+- non-empty list using the exact path grammar defined below;
 - defines implementation mutation authority;
 - source candidate changes must be contained by it, except explicitly admitted coordination paths.
 
 `coordination_scope`
 
-- list of repository-relative exact paths or bounded patterns;
+- list using the exact path grammar defined below;
 - should be narrow;
 - does not grant source implementation authority;
 - does not by itself make a planning-subject mutation harmless.
+
+Scope path grammar is intentionally small:
+
+- exact repository-relative file/path, for example `web/lib/example.ts`;
+- directory-prefix pattern ending exactly in `/**`, for example `web/app/example/**`.
+
+No other glob syntax is supported. `*`, `?`, `[`, and `]` are invalid anywhere except the terminal literal `/**`.
+
+All paths/prefixes:
+
+- use POSIX `/` separators;
+- are non-empty and not absolute;
+- contain no `.` or `..` segments;
+- are canonicalized and sorted;
+- contain no duplicates.
 
 For an actual path:
 
 - matching `planning_subject.paths` means planning authority rules take precedence;
 - matching both implementation and coordination scopes is invalid/ambiguous and fails closed;
-- path traversal, absolute paths, empty patterns, and unknown pattern grammar are invalid.
+- a structured-write target that resolves through a symlink outside the target worktree is denied;
+- planning-subject paths must be covered by coordination scope and excluded from implementation scope.
 
 ### Critic
 
@@ -243,7 +265,42 @@ Rules:
 - evidence-only failure resets Verifier to PENDING/null without changing candidate or Reviewer READY;
 - source rework and scope-change outcomes are transitions, not persisted failure states.
 
-## 5. State invariants by lifecycle state
+## 5. Pre-Work-Block planning authority
+
+The accepted lifecycle creates Idea/Intent/Spec/Plan and material Work Block definition before source execution authority exists.
+
+To avoid adding an initiative lifecycle state, the controller has one static planning surface:
+
+```text
+docs/changes/**
+```
+
+When state is missing (`NO_LOCAL_AUTHORITY`) or canonical INACTIVE:
+
+- structured writes may be allowed only inside `docs/changes/**`;
+- Git commits may contain only `docs/changes/**`;
+- the current branch must be attached and non-default;
+- no Work-Block trailer is required;
+- source/code/control-plane writes remain denied.
+
+This is planning-document authority only. It does not grant implementation, merge, deploy, or control-plane modification authority.
+
+Normal intended flow:
+
+```text
+non-default planning branch
+-> Idea / Intent / Spec / Plan / Work Block definition commits
+-> exact planning commit
+-> open Work Block
+-> Critic
+-> EXECUTE
+```
+
+Parallel Work Blocks may branch from the same committed planning subject.
+
+The static pre-WB planning surface is a controller constant shared by runtime and Git policy; adapters do not maintain their own copies.
+
+## 7. State invariants by lifecycle state
 
 ### INACTIVE
 
@@ -305,7 +362,7 @@ Additional rules:
 - implementation and planning-subject mutations are denied;
 - admitted post-candidate coordination-only commits may occur.
 
-## 6. Lifecycle transitions
+## 7. Lifecycle transitions
 
 Persisted transitions are exactly:
 
@@ -338,7 +395,7 @@ ASSURE --close reporting-only/cancelled--> INACTIVE
 
 No generic `open` transition exists from an active state.
 
-## 7. Normalized enforcement event envelope
+## 8. Normalized enforcement event envelope
 
 Event schema version: `1`.
 
@@ -385,7 +442,7 @@ diagnostic
 
 Lifecycle CLI transitions do not masquerade as runtime enforcement events. They call the controller transition API directly.
 
-## 8. Common event fields
+## 9. Common event fields
 
 `event_version`
 
@@ -406,7 +463,8 @@ Lifecycle CLI transitions do not masquerade as runtime enforcement events. They 
 
 - absolute canonical path resolved by the adapter from runtime/Git facts;
 - used to locate the per-worktree Git-private controller state;
-- not persisted in state.
+- not persisted in state;
+- the shared controller independently verifies that the target worktree belongs to the same Git common repository as the invoked controller/hook installation before granting authority.
 
 `branch`
 
@@ -427,7 +485,7 @@ Lifecycle CLI transitions do not masquerade as runtime enforcement events. They 
 - unknown keys fail validation;
 - raw runtime `tool_input`, shell command text, prompt text, model/session IDs, and report paths do not enter the canonical policy event.
 
-## 9. Structured write event
+## 10. Structured write event
 
 Shape:
 
@@ -455,13 +513,14 @@ Rules:
 
 Policy checks:
 
-- valid per-worktree state;
-- active branch binding;
+- same-repository worktree binding;
+- valid per-worktree state, or static pre-WB planning authority when state is missing/INACTIVE;
+- active branch binding when a Work Block is active;
 - lifecycle stage;
 - path classification: planning / implementation / coordination / outside;
 - applicable deterministic local Hard Stop.
 
-## 10. Git pre-commit event
+## 11. Git pre-commit event
 
 Git adapter gathers facts from Git, not command text.
 
@@ -487,7 +546,8 @@ Shape:
 
 Policy checks:
 
-- valid active or canonical INACTIVE state as applicable;
+- same-repository worktree binding;
+- valid active state, canonical INACTIVE, or missing-state pre-WB planning case as applicable;
 - default branch mutation denied;
 - active branch binding;
 - staged paths inside admitted scopes when active;
@@ -496,7 +556,7 @@ Policy checks:
 
 The pre-commit policy does not inspect shell history or the command that produced the index.
 
-## 11. Git commit-message event
+## 12. Git commit-message event
 
 Shape:
 
@@ -522,9 +582,9 @@ Policy checks when a Work Block is active:
 - exact match to `work_block_id`;
 - branch match.
 
-When canonical INACTIVE, no Work-Block trailer is required by SDLC authority.
+When canonical INACTIVE or missing-state pre-WB planning, no Work-Block trailer is required by SDLC authority.
 
-## 12. Git pre-push event
+## 13. Git pre-push event
 
 One normalized event represents one ref update.
 
@@ -562,7 +622,7 @@ Policy checks:
 
 A pre-push invocation containing multiple ref updates evaluates each update independently and denies the whole push if any update is denied.
 
-## 13. Context-only subagent event
+## 14. Context-only subagent event
 
 Optional shape:
 
@@ -589,7 +649,7 @@ Response may include read-only contextual fields such as:
 
 It never changes state and never grants authority.
 
-## 14. Normalized policy decision
+## 15. Normalized policy decision
 
 Decision schema version: `1`.
 
@@ -620,7 +680,7 @@ Adapters map this object into their runtime-native hook response format.
 
 Equivalent normalized Claude/Codex events must produce the same `decision` and `code`.
 
-## 15. Initial decision codes
+## 16. Initial decision codes
 
 Minimum stable codes:
 
@@ -665,7 +725,7 @@ CONTEXT_UNAVAILABLE
 
 Additional codes require a distinct deterministic policy outcome, not merely a different prose explanation.
 
-## 16. Adapter mapping requirements
+## 17. Adapter mapping requirements
 
 ### Claude Code
 
@@ -695,7 +755,7 @@ Git hooks do not pass raw stdin/argv directly into controller policy.
 
 The Git adapter first converts Git-native facts into the exact normalized event shape, then calls the shared evaluator.
 
-## 17. Validation and canonicalization
+## 18. Validation and canonicalization
 
 State/event validation must be strict:
 
@@ -711,7 +771,7 @@ State/event validation must be strict:
 
 Canonical JSON serialization remains useful for atomic state persistence, but canonical serialization is not a candidate identity mechanism.
 
-## 18. Regression requirements
+## 19. Regression requirements
 
 At minimum test:
 
@@ -749,12 +809,36 @@ At minimum test:
 - nested cwd resolves correct worktree;
 - missing/corrupt state grants no mutation authority.
 
-## 19. Remaining design questions
+## 20. Work Block identifier grammar
 
-Before implementation planning, resolve only:
+Retain the existing repository-compatible grammar:
 
-1. whether planning-subject immutability after Critic should be checked only by candidate content comparison or also by committed-history inspection to forbid change-and-revert history;
-2. exact path-pattern grammar for `implementation_write_set` and `coordination_scope`;
-3. exact Work Block identifier grammar retained for new initiatives.
+```text
+^WB-(?:[0-9]{3}|[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(?:-[a-z0-9]+)*)$
+```
 
-All other state/event contract questions are closed by this document.
+Examples:
+
+```text
+WB-042
+WB-2026-09-28-sdlc-controller
+```
+
+The controller owns this grammar as one constant shared by state validation and commit-message validation.
+
+Identifier naming style is traceability, not authority. No new identifier format is introduced as part of this simplification.
+
+## 21. Design checkpoint
+
+The exact state/event contract is now resolved for implementation planning, including:
+
+- state envelope and active fields;
+- lifecycle/status invariants;
+- pre-WB planning authority;
+- planning-subject immutability;
+- scope path grammar;
+- normalized event/decision schemas;
+- runtime/Git adapter responsibility;
+- Work Block identifier grammar.
+
+The next step is to derive the implementation plan and acceptance-test inventory from this contract before modifying controller code.
