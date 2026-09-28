@@ -58,6 +58,11 @@ When `lifecycle_state != INACTIVE`, `active` has exactly this shape:
   "subject_branch": "feat/example",
   "base_commit": "0123456789abcdef0123456789abcdef01234567",
 
+  "authority_profile": {
+    "id": "engineering-autonomy",
+    "revision": "fedcba9876543210fedcba9876543210fedcba98"
+  },
+
   "planning_subject": {
     "revision": "89abcdef0123456789abcdef0123456789abcdef",
     "paths": [
@@ -129,6 +134,16 @@ No timestamps, report paths, execution IDs, runtime IDs, capability records, dis
 - must be an ancestor of the admitted subject history at open time;
 - immutable while active;
 - `open` may never silently rebase it to a later HEAD.
+
+`authority_profile`
+
+- exact immutable binding selected by the trusted event admission path;
+- `id` is a non-empty profile identifier;
+- `revision` is the exact trusted policy revision used for this run;
+- immutable while active;
+- the Orchestrator cannot replace or upgrade it through `open`, `revise`, or any ordinary lifecycle transition;
+- the protected profile definition is read from the trusted governance source at the pinned revision, not copied into mutable Work Block state;
+- missing/unresolvable profile authority fails closed for consequential actions.
 
 ### Planning subject
 
@@ -788,7 +803,8 @@ At minimum test:
 - Verifier READY without Reviewer READY;
 - source candidate outside ASSURE;
 - active state missing candidate in ASSURE;
-- immutable identity fields preserved across transitions.
+- immutable identity fields, including authority profile binding, preserved across transitions;
+- Orchestrator attempts to replace/upgrade its authority profile are rejected.
 
 ### Planning subject
 
@@ -835,7 +851,7 @@ Identifier naming style is traceability, not authority. No new identifier format
 
 The exact state/event contract is now resolved for implementation planning, including:
 
-- state envelope and active fields;
+- state envelope and active fields, including immutable authority-profile binding;
 - lifecycle/status invariants;
 - pre-WB planning authority;
 - planning-subject immutability;
@@ -845,3 +861,12 @@ The exact state/event contract is now resolved for implementation planning, incl
 - Work Block identifier grammar.
 
 The next step is to derive the implementation plan and acceptance-test inventory from this contract before modifying controller code.
+
+
+## 22. Authority profile source
+
+The profile binding is admitted externally to the normal Work Block lifecycle. The subject-branch Orchestrator may consume but not author the effective profile for its own run.
+
+The implementation plan must choose one protected governance source for profile definitions and one trusted event-admission mapping from trigger class to profile ID/revision. That source must be outside normal implementation/coordination write authority and protected from self-escalation.
+
+Merge/deploy actions are evaluated against this pinned profile plus live platform facts; they do not require additional Work Block lifecycle states.
