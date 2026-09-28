@@ -1,6 +1,6 @@
 # SDLC Simplification v1 — Proposal
 
-Status: proposal for Critic review  
+Status: revised after Critic SUPPLEMENT; pending short closure review  
 Scope: AzurSysTech Agentic SDLC  
 Intent: simplify the current SDLC without losing useful engineering control.
 
@@ -12,7 +12,7 @@ Every major stage must end with a durable artifact that the next executor can re
 
 Canonical flow:
 
-**Idea → Intent → Spec → Plan → Tasklist → Implementation → Candidate → Review/Verification → Closeout → Merge/Deploy → Feedback**
+**Idea → Intent → Spec → Plan → Tasklist when useful → Critic → Implementation → Source Candidate → Reviewer → Verifier → Closeout → Merge/Deploy → Feedback**
 
 The control plane should support this flow, not become a separate complex system that agents must constantly manage.
 
@@ -24,13 +24,15 @@ Adopt one default lifecycle:
 2. Intent
 3. Requirements + Design / Spec
 4. Implementation Plan
-5. Executable Tasklist
-6. Implementation
-7. Candidate commit
-8. Review + Verification
-9. Closeout
-10. Merge / Release / Deploy
-11. Post-deploy feedback
+5. Executable Tasklist when separately useful
+6. Independent pre-code Critic
+7. Implementation
+8. Source candidate commit
+9. Reviewer
+10. Verifier
+11. Closeout
+12. Merge / Release / Deploy
+13. Post-deploy feedback
 
 Do not add extra stages unless they solve a concrete recurring problem.
 
@@ -56,19 +58,28 @@ A new agent session should be able to recover the work context from the reposito
 
 A Work Block should track only data that materially helps execution and assurance.
 
+The Work Block should be the repository entrypoint for the current unit of work: a small manifest/index, not another copy of requirements or design.
+
 Minimum useful state:
 
 - Work Block ID;
-- specification path/revision;
+- Intent reference;
+- Spec path/revision;
+- Plan reference;
+- Tasklist reference when separate;
 - subject branch;
 - base commit;
 - approved write-set;
 - current stage;
-- candidate commit;
-- Critic status for pre-code design;
-- Reviewer status;
-- Verifier status;
-- closeout status.
+- source candidate SHA when created;
+- Critic report/status;
+- Reviewer report/status;
+- Verifier report/status;
+- closeout report/status.
+
+The manifest points to authoritative artifacts instead of duplicating their contents.
+
+A fresh agent should be able to locate the complete approved package from this one entrypoint.
 
 Avoid lifecycle states that exist mainly to manage the control plane itself.
 
@@ -86,6 +97,7 @@ Hooks should protect real authority boundaries, not attempt to understand every 
 
 Keep strict enforcement for:
 
+- source implementation writes before the mandatory independent Critic gate is ready;
 - writes outside the approved Work Block scope;
 - force push;
 - merge/release/deploy without authority;
@@ -99,6 +111,8 @@ Reduce control-plane friction for harmless local engineering operations.
 Do not require hooks to become a complete shell interpreter.
 
 Prefer clear authority checks and conservative restricted grammar where command interpretation is actually necessary.
+
+The pre-code Critic gate should remain mechanically minimal: source implementation writes are not admitted until the Critic has reviewed the implementation-ready package and all blocking findings are resolved. Git/CI cannot reliably prove this timing after the fact.
 
 ## 5. Keep clear agent roles
 
@@ -121,7 +135,9 @@ The Orchestrator must not be the sole judge of its own design.
 
 The Critic is a required independent role before implementation begins.
 
-Its purpose is to review the Orchestrator's Intent / Spec / Plan before source code is written.
+Its purpose is to review the complete implementation-ready package before source code is written:
+
+**Intent → Spec → Plan → Tasklist when separately useful**.
 
 The Critic should challenge:
 
@@ -139,7 +155,9 @@ The Critic is retained because early independent review prevents a large class o
 
 A material Critic objection returns the work to planning/design.
 
-Implementation starts only after the pre-code package is considered ready.
+Implementation starts only after the Critic gate is ready.
+
+A purely mechanical task decomposition created after Critic review does not require another Critic pass. Any material change to Intent, Spec, Plan, acceptance criteria, architecture, authority boundary, or approved write-set returns to the Critic before source implementation continues.
 
 ### Coder
 
@@ -174,19 +192,21 @@ Do not create extra permanent agent roles unless a recurring engineering need ju
 
 ## 6. Bind final assurance to a candidate commit
 
-After implementation, create a concrete candidate SHA.
+After implementation, create a concrete source candidate SHA.
 
 Then perform:
 
-**candidate SHA → Reviewer → Verifier → Closeout**
+**source candidate SHA → Reviewer → Verifier → Closeout**
 
-Reviewer and Verifier evidence belongs to that exact candidate.
+Reviewer and Verifier evidence belongs to that exact source candidate.
 
-If source behavior changes after assurance, the relevant assurance must be rerun.
+The source candidate is distinct from later report/coordination/closeout commits.
 
-Avoid over-invalidating assurance for unrelated index-only, report-only or ambient-file changes.
+If any path inside the implementation write-set changes after assurance, the candidate-specific Reviewer/Verifier evidence is invalid and a new source candidate must be created and assured.
 
-The candidate commit is the primary identity of the thing being reviewed.
+Report-only, coordination-only, or closeout-only commits do not invalidate source assurance when a deterministic diff against the source candidate proves that no implementation write-set path changed.
+
+The source candidate SHA is the primary identity of the thing being reviewed.
 
 ## 7. Keep CI deterministic
 
@@ -225,13 +245,13 @@ Each executor should primarily consume the artifact produced by the preceding st
 | Idea | raw input / request | Owner |
 | Intent | `docs/intents/**` | Owner + Orchestrator |
 | Requirements + Design | `docs/specs/**` | Orchestrator |
-| Pre-code review | Critic report | Critic |
 | Implementation planning | `docs/plans/**` | Orchestrator |
-| Task decomposition | `docs/tasklist/**` | Orchestrator |
+| Task decomposition | `docs/tasklist/**` when useful | Orchestrator |
+| Pre-code review | Critic report over the implementation-ready package | Critic |
 | Implementation | code + tests + commits | Coder |
-| Candidate | exact Git SHA | Orchestrator |
-| Code review | Reviewer report | Reviewer |
-| Verification | Verifier report | Verifier |
+| Source candidate | exact Git SHA | Orchestrator |
+| Code review | Reviewer report bound to source candidate | Reviewer |
+| Verification | Verifier report bound to source candidate | Verifier |
 | Closeout | Closeout report | Orchestrator |
 | Merge / deploy | Git/CI/release evidence | Owner + automation |
 | Learning | architecture / engineering-memory artifact | Orchestrator + Owner |
@@ -241,12 +261,11 @@ Each executor should primarily consume the artifact produced by the preceding st
 A fresh agent should be able to start with:
 
 1. read repository agent instructions;
-2. identify the current Work Block;
-3. read Intent/Spec;
-4. read Plan;
-5. read Tasklist;
-6. inspect current Git/candidate state;
-7. continue from repository evidence.
+2. identify the current Work Block manifest;
+3. follow the manifest references to Intent, Spec, Plan, and Tasklist when separate;
+4. inspect the approved branch/base/write-set and current stage;
+5. inspect the source candidate and assurance reports when they exist;
+6. continue from repository evidence.
 
 It should not need previous chat history to reconstruct project intent.
 
@@ -278,7 +297,7 @@ This proposal is not:
 - authorization to rewrite the current control plane immediately;
 - authorization to merge/deploy anything.
 
-The first step is independent Critic review of this proposal.
+This proposal has received an independent Critic `SUPPLEMENT`. The four blocking clarifications from that review are incorporated here. Before implementation, the Critic should perform a short closure review confirming those findings are resolved.
 
 ## Desired outcome
 
@@ -286,7 +305,8 @@ AzurSysTech SDLC should remain agent-friendly and auditable while being simple e
 
 - project context is recovered from Git;
 - agents know which artifact to read and which artifact to produce;
-- the Orchestrator is independently challenged before coding;
+- the Orchestrator is independently challenged on the complete implementation-ready package before coding;
+- the Work Block acts as a compact manifest that lets a fresh session find the authoritative artifacts;
 - coding agents spend their time implementing rather than negotiating the control plane;
-- final assurance is tied to a concrete candidate;
+- final assurance is tied to a concrete source candidate and is not invalidated by report-only closeout commits;
 - Owner authority remains clear at consequential boundaries.
