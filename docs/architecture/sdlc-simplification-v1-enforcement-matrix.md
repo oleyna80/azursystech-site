@@ -429,7 +429,104 @@ There must not be separate definitions of:
 
 A valid controller transition must remain representable and committable by the Git-native enforcement layer.
 
-## 6. Next decisions
+## 6. Runtime-specific hook contract
+
+The controller contract is runtime-neutral, but hook wiring is not identical between Claude Code and Codex.
+
+The implementation must therefore keep two thin adapters with one normalized controller event model.
+
+### Common normalized events
+
+Both adapters should map their native hook payloads into a minimal common shape such as:
+
+```text
+runtime
+event
+repository_root
+worktree_root
+cwd
+tool_name
+operation
+paths
+tool_input
+reentrant_stop
+agent_type
+```
+
+Only fields required by the specific event are populated.
+
+Runtime/session/model identifiers may be logged for diagnostics but do not create authority.
+
+### Claude Code adapter
+
+Use Claude Code `PreToolUse` for structured pre-write enforcement.
+
+Claude Code can deny a tool call before execution and supplies structured `tool_name` / `tool_input` data. The adapter should use only the subset needed for supported structured events.
+
+Claude Code project-root and worktree facts require special handling:
+
+- hook script resolution should be stable and independent of mutable shell cwd;
+- `${CLAUDE_PROJECT_DIR}` identifies the project root where the session started;
+- hook input `cwd` follows the current directory/worktree;
+- therefore project-root script location and target worktree authority are distinct facts;
+- the adapter must derive the target worktree from the structured hook `cwd`, not assume `${CLAUDE_PROJECT_DIR}` is the active worktree.
+
+`SubagentStart` is context-only for this SDLC. It may inject Work Block context but cannot open authority or satisfy assurance.
+
+No blocking Stop hook is required by the target SDLC. If a Stop hook is retained for advisory UX, it must never mutate lifecycle state and must honor the runtime re-entrancy signal.
+
+Claude-specific richer decisions such as ask/defer/input rewriting are not part of the canonical SDLC policy contract unless a later requirement explicitly needs them.
+
+### Codex adapter
+
+Use Codex `PreToolUse` for structured pre-write enforcement.
+
+Current Codex hook payloads expose `cwd`, `tool_name`, `tool_input`, and optional subagent context, so the adapter can normalize the same core write events as Claude Code.
+
+Codex hook output supports blocking before tool execution. The target SDLC should use the smallest portable subset: allow/no decision or deny/block with a reason.
+
+`SubagentStart` may emit additional context and is context-only for this SDLC. It does not grant write authority or prove Critic/Reviewer/Verifier independence.
+
+Codex also exposes a Stop re-entrancy signal. No blocking Stop hook is required by the target SDLC.
+
+Codex project-local hook launch must resolve the active repository/worktree robustly from Git/runtime facts rather than depend on a mutable nested cwd path string. The adapter then passes that worktree identity to the shared controller.
+
+### Portable protection baseline
+
+The SDLC relies on runtime hooks only for protections both runtimes can implement reliably:
+
+1. pre-execution denial of structured file mutations outside the current controller authority;
+2. branch/worktree/state binding for those structured mutations;
+3. optional context injection for subagents;
+4. advisory diagnostics.
+
+The SDLC does not rely on runtime hooks alone for:
+
+- commit eligibility;
+- staged-path containment;
+- candidate identity;
+- assurance-to-candidate binding at Git publication;
+- push ref safety;
+- merge/deploy/production authority.
+
+Those protections are enforced again at Git-native or external boundaries.
+
+### Runtime parity rule
+
+Equivalent normalized events must produce the same shared-controller decision regardless of runtime.
+
+Adapter-specific tests must prove:
+
+- Claude structured write allow/deny parity with Codex;
+- nested cwd behavior;
+- worktree behavior;
+- malformed payload fail-closed behavior for authority-bearing events;
+- subagent context does not grant authority;
+- Stop/session termination does not change lifecycle state.
+
+Runtime-specific features may improve UX but must not become a required invariant unless both the enforcement matrix and regression suite explicitly adopt that dependency.
+
+## 7. Next decisions
 
 Before code changes, resolve:
 
