@@ -12,7 +12,7 @@ Durable project artifacts contain decisions, requirements, architecture, plans, 
 
 The control plane should enforce only the workflow invariants that prevent meaningful errors or unauthorized actions. It should not become a second system that agents must constantly manage.
 
-Owner authority remains explicit, but it may be granted in advance through a protected autonomy profile. The Owner governs which event classes and consequential capabilities are pre-authorized. The Orchestrator may autonomously progress, merge, release, deploy, and verify when the pinned profile and platform predicates permit those exact actions. Human intervention is required only when the next valid action exceeds the admitted authority envelope or requires a material business/risk decision.
+Owner authority remains explicit. The baseline operating profile is human-governed delivery: the Orchestrator may autonomously progress through planning, implementation, assurance, publication, PR preparation, and deterministic CI evidence, while the Owner remains the normal integration/deployment decision point. Higher-autonomy profiles may pre-authorize merge, release, deploy, and verification for specific event/change classes once the system has demonstrated sufficient maturity. The Orchestrator may never widen its own profile.
 
 The default high-level flow is:
 
@@ -587,4 +587,4 @@ The resulting process should ensure that:
 
 The complete autonomy model is defined in `docs/architecture/sdlc-simplification-v1-autonomous-orchestration.md`.
 
-The intended operating mode is autonomous progression inside a pinned pre-authorized authority envelope. Normal internal stage progression and rework do not require human confirmation. The Orchestrator may continue through merge and deployment when the admitted profile explicitly permits those actions; it may not widen or replace its own profile.
+The intended architecture is autonomy-capable with graduated operating modes. In the baseline human-governed profile, normal internal progression and rework are autonomous, but the Owner remains the normal release/integration checkpoint. Higher-autonomy profiles may continue through merge and deployment when explicitly permitted. Full event-to-deployment autonomy is a maturity target demonstrated through tests and repeated successful supervised cycles, not an assumption of the initial rollout.
