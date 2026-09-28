@@ -42,6 +42,7 @@ Own:
 - runtime event normalization;
 - exact structured write target extraction when provided natively;
 - stable repository/worktree binding;
+- root-stable controller/hook resolution independent of mutable shell cwd;
 - calling the shared controller;
 - translating decisions back to Claude/Codex;
 - early warning/denial before an invalid structured write happens.
@@ -52,7 +53,10 @@ Do not own:
 - assurance report validation;
 - shell AST/security parsing;
 - merge/release/deploy authorization;
-- session-stop lifecycle transitions.
+- session-stop lifecycle transitions;
+- subagent authority.
+
+Subagent-start hooks may provide the active Work Block context to a delegated agent, but they do not open write authority, satisfy Critic/Reviewer/Verifier gates, or prove independence/topology.
 
 ### Git hooks
 
@@ -77,7 +81,7 @@ Owns deterministic repository validation after commit/PR:
 - E2E lifecycle reachability;
 - project build/test/static checks.
 
-CI does not create Critic/Reviewer/Verifier authority.
+CI does not create Critic/Reviewer/Verifier authority and does not invoke opaque AI review as a required control-plane gate. Its enforcement is deterministic.
 
 ### Owner / external platform
 
@@ -302,8 +306,9 @@ Canonical owner: runtime behavior, not lifecycle.
 
 Runtime hook may:
 
-- warn that a Work Block remains active;
-- expose current stage/pending assurance.
+- warn once that a Work Block remains active;
+- expose current stage/pending assurance;
+- allow a runtime-provided re-entrant Stop/termination attempt to complete without lifecycle mutation.
 
 Runtime hook must not:
 
@@ -313,6 +318,8 @@ Runtime hook must not:
 - recursively block re-entrant Stop indefinitely.
 
 Restart reads the same per-worktree state.
+
+Hook entrypoints must resolve from the bound repository/project root rather than the runtime's mutable current working directory.
 
 ### Closeout
 
@@ -361,9 +368,10 @@ Canonical owner: Owner / GitHub platform.
 Project-local controller:
 
 - may report candidate eligibility;
+- may deny a clearly identified unauthorized local merge attempt as defense in depth;
 - must not treat merge as autonomous authority.
 
-Local hooks cannot grant merge authority.
+Local hooks cannot grant merge authority. GitHub/Owner remains the authoritative merge boundary.
 
 ### Deploy / release / live mutation
 
@@ -375,7 +383,7 @@ Controller may expose provenance:
 - merged/released SHA;
 - deployed SHA.
 
-Controller does not grant the consequential action.
+Controller does not grant the consequential action. Runtime/local policy may deny a clearly structured unauthorized attempt, but platform credentials/permissions and Owner authorization remain the final boundary.
 
 ### Exceptional controller repair / cutover
 
