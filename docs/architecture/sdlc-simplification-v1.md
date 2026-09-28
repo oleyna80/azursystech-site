@@ -16,7 +16,9 @@ Owner authority remains explicit. The Owner decides whether to start a major ini
 
 The default high-level flow is:
 
-**Idea → Intent → Spec → Plan → Critic → Work Block(s) → Implementation → Source Candidate → Reviewer → Verifier → Closeout → Merge/Deploy → Feedback**
+**Idea → Intent → Spec → Plan → Work Block definition/decomposition → Critic → Implementation → Source Candidate → Reviewer → Verifier → Closeout → Merge/Deploy → Feedback**
+
+The Orchestrator may invoke the Critic earlier at any stage, but the mandatory implementation gate occurs only after the implementation-ready package, including material Work Block boundaries, is known.
 
 A Tasklist may be used when it materially helps execution, but it is not mandatory as a separate artifact.
 
@@ -111,11 +113,20 @@ The Critic is flexible as an advisory role, but one checkpoint is mandatory and 
 
 The implementation-ready package is normally:
 
-**Intent + Spec + Plan + Tasklist when separately useful**
+**Intent + Spec + Plan + Work Block definition/decomposition + Tasklist when separately useful**
 
 The exact files may vary for small work, but the durable package must contain enough information to understand objective, scope, expected behavior, implementation strategy, and acceptance.
 
-Source implementation writes remain blocked until the Critic gate is READY.
+Source implementation writes remain blocked until the Critic gate is READY for the exact reviewed planning subject.
+
+The Critic gate is bound to a concrete planning revision:
+
+```text
+critic_status
+critic_subject_revision
+```
+
+A READY status without a matching current subject revision grants no implementation authority.
 
 If a material change occurs after Critic approval, the gate returns to PENDING before coding continues.
 
@@ -165,7 +176,8 @@ Minimum useful Work Block information:
 - dependencies;
 - subject branch;
 - base commit;
-- approved write-set;
+- implementation_write_set;
+- coordination_scope;
 - current stage;
 - source candidate SHA when created;
 - Critic gate status;
@@ -174,6 +186,13 @@ Minimum useful Work Block information:
 - closeout status.
 
 The Work Block is therefore a small implementation manifest, not a second specification.
+
+Authority is intentionally split into two scopes:
+
+- `implementation_write_set` — source, tests, and other implementation paths whose changes affect the assured candidate;
+- `coordination_scope` — a small set of Work Block/initiative coordination and durable documentation paths that may change during closeout without redefining the source candidate.
+
+The coordination scope must remain narrow. It does not recreate the old broad coordination write-set, FILE_REGISTRY/PROJECT_MAP synchronization, or publication machinery.
 
 During implementation, the repository should expose one simple active-work pointer so a fresh session can immediately identify the current initiative and active Work Block. This should be a minimal state/pointer, not another registry or duplicated project map.
 
@@ -282,13 +301,17 @@ Every newly created report should include:
 - subject revision/candidate where relevant;
 - verdict/result.
 
-Reports must remain available from creation until Work Block closeout so the process can survive pauses and session restarts.
+Reports must remain available from creation until Work Block closeout so the process can survive ordinary pauses and session restarts.
 
-They should live in a persistent runtime location associated with the repository/worktree and be excluded from Git.
+They should live in a persistent local runtime location associated with the repository/worktree and be excluded from Git.
 
 The exact storage path is an implementation detail.
 
 Temporary reports are not committed.
+
+The SDLC does not guarantee continuation of transient gate evidence after a fresh clone, lost worktree, machine loss, or deleted local runtime state. Durable project context must still be recoverable from Git. If transient Critic/Reviewer/Verifier evidence is lost, the relevant check is simply run again against the current durable subject or candidate.
+
+No gate receipt is required in Git solely to preserve transient agent output.
 
 At Work Block closeout:
 
@@ -358,15 +381,22 @@ Before implementation, conceptually:
 ```text
 critic_required = true
 critic_status = READY
+critic_subject_revision = <planning-subject-sha>
 ```
 
 Before successful closeout, conceptually:
 
 ```text
 source_candidate_sha = <sha>
+
 reviewer_status = READY
+reviewer_candidate_sha = <same-source-candidate-sha>
+
 verifier_status = READY
+verifier_candidate_sha = <same-source-candidate-sha>
 ```
+
+READY is fail-closed: unresolved blocking findings mean the gate is not READY. A raw SUPPLEMENT disposition does not itself open the gate.
 
 The exact schema remains an implementation detail.
 
@@ -382,13 +412,13 @@ Then:
 
 Reviewer and Verifier inspect that exact candidate.
 
-If any implementation path in the approved write-set changes after assurance:
+If any implementation path in the `implementation_write_set` changes after assurance:
 
 - the old assurance becomes stale;
 - a new source candidate is created;
 - Reviewer/Verifier are rerun as required.
 
-Later documentation, coordination, or closeout-only commits do not invalidate source assurance when a deterministic Git diff proves that no implementation path changed.
+Later documentation, coordination, or closeout-only commits inside the approved `coordination_scope` do not invalidate source assurance when a deterministic Git diff proves that no `implementation_write_set` path changed.
 
 The source candidate SHA is the identity of the implementation that was actually assured.
 
@@ -406,8 +436,8 @@ Hooks should enforce clear authority and workflow boundaries, not interpret arbi
 
 Keep strict enforcement for:
 
-- source implementation writes before the mandatory Critic gate is ready;
-- writes outside the approved Work Block write-set;
+- source implementation writes before the mandatory Critic gate is READY for the current planning subject revision;
+- writes outside the approved `implementation_write_set` or narrow `coordination_scope`;
 - protected/default branch mutation;
 - force/history rewriting;
 - merge/release/deploy without required Owner authority;
@@ -469,8 +499,8 @@ Before implementation exists, a fresh agent should be able to recover context by
 
 During implementation, it should additionally:
 
-5. identify the active Work Block;
-6. inspect its branch/base/write-set/stage;
+5. identify the active Work Block through a per-worktree active pointer;
+6. inspect its branch/base/implementation_write_set/coordination_scope/stage;
 7. inspect current source candidate and assurance status where applicable;
 8. continue from repository state without requiring prior chat history.
 
@@ -488,6 +518,7 @@ For ordinary Work Blocks, review and simplify or remove:
 - mandatory multi-dimension Process Feedback forms;
 - broad shell-command parsing;
 - report-path-based lifecycle blocking;
+- gate receipts committed solely to preserve transient agent reports;
 - machine enforcement of temporary-report retention/deletion;
 - lifecycle transitions that do not represent a meaningful engineering state change.
 
@@ -522,7 +553,10 @@ The resulting process should ensure that:
 - Coders can ask Critic for help without gaining authority to redefine the project;
 - temporary agent reports support active work without polluting Git history;
 - lifecycle state stays small and practical;
-- final assurance is bound to an exact source candidate;
+- Critic approval is bound to an exact planning subject revision;
+- Reviewer/Verifier approval is bound to the exact source candidate;
+- implementation and coordination authority remain separate without recreating the old coordination machinery;
+- transient assurance may be rerun after local-state loss instead of being permanently archived in Git;
 - normal rework loops are explicit without creating extra lifecycle bureaucracy;
 - a fresh session can find the active initiative/Work Block through one simple pointer;
 - implementation, source-candidate, and post-assurance commit semantics are easy to distinguish;
