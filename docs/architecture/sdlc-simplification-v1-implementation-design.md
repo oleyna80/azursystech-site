@@ -39,7 +39,7 @@ The replacement must preserve:
 - reporting-only/cancelled safe closeout where useful;
 - Owner Hard Stops;
 - exact non-force subject-branch publication may be autonomous only after required assurance;
-- merge/release/deploy remain Owner-controlled.
+- merge/release/deploy require explicit authority, which may be pre-authorized by the pinned autonomy profile; live Owner confirmation is not required when the profile and platform predicates permit the action.
 
 ## 3. Runtime evidence is not authority
 
@@ -392,7 +392,7 @@ CLI            ─┘
 
 CI -----------------> deterministic contract/E2E validation
 
-Owner/platform -----> consequential external authority
+Pinned autonomy profile + Owner/platform -----> consequential external authority
 ```
 
 ### Runtime hooks
@@ -500,3 +500,10 @@ That design should define:
 6. exact temporary-report location/lifecycle;
 7. legacy-to-new cutover sequence;
 8. deterministic acceptance tests.
+
+
+## 15. Autonomous orchestration binding
+
+The target SDLC is autonomous by default within a pre-authorized envelope. The active Work Block must pin the autonomy profile selected by the trusted event admission path. The Orchestrator may drive normal lifecycle transitions, rework, publication, integration, and deployment without human confirmation when that profile permits the exact consequence.
+
+The Orchestrator must not select a more permissive profile, change the effective profile revision, or modify the protected policy source governing its own run. See `docs/architecture/sdlc-simplification-v1-autonomous-orchestration.md`.
