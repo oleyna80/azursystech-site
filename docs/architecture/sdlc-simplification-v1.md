@@ -12,7 +12,7 @@ Durable project artifacts contain decisions, requirements, architecture, plans, 
 
 The control plane should enforce only the workflow invariants that prevent meaningful errors or unauthorized actions. It should not become a second system that agents must constantly manage.
 
-Owner authority remains explicit. The Owner decides whether to start a major initiative, approves material business-goal or scope changes when required, controls merge/release/deploy, authorizes consequential production/live-data actions, and accepts material residual risk.
+Owner authority remains explicit, but it may be granted in advance through a protected autonomy profile. The Owner governs which event classes and consequential capabilities are pre-authorized. The Orchestrator may autonomously progress, merge, release, deploy, and verify when the pinned profile and platform predicates permit those exact actions. Human intervention is required only when the next valid action exceeds the admitted authority envelope or requires a material business/risk decision.
 
 The default high-level flow is:
 
@@ -486,7 +486,7 @@ AI Critic/Reviewer/Verifier work belongs to the agentic workflow around planning
 
 ## 12. Merge, deploy, rollback, and Owner authority
 
-Merge/release/deploy remain consequential Owner-controlled actions.
+Merge/release/deploy remain consequential authority-controlled actions. They may be executed autonomously when an Owner-defined protected autonomy profile pre-authorizes the exact action and all deterministic/platform predicates pass.
 
 The SDLC does not need a second publication state machine to mirror GitHub or deployment infrastructure.
 
@@ -552,7 +552,7 @@ This proposal is not:
 - an instruction to remove independent Critic/Reviewer/Verifier reasoning;
 - an implementation specification;
 - authorization to rewrite the control plane immediately;
-- authorization to merge/release/deploy without Owner control;
+- authorization to merge/release/deploy without the required pinned autonomy profile and platform authority;
 - a requirement that every initiative use the same number of files or Work Blocks;
 - a requirement to create heavyweight planning artifacts for small deterministic changes.
 
@@ -579,5 +579,12 @@ The resulting process should ensure that:
 - a fresh session can find the active initiative/Work Block through one simple pointer;
 - implementation, source-candidate, and post-assurance commit semantics are easy to distinguish;
 - deployments retain only the operational evidence that remains useful;
-- consequential Owner/security boundaries remain strict;
+- consequential authority/security boundaries remain strict even when the Owner has pre-authorized autonomous execution;
 - agents spend most of their time designing, implementing, reviewing, and verifying the product rather than servicing the control plane.
+
+
+## Autonomous orchestration
+
+The complete autonomy model is defined in `docs/architecture/sdlc-simplification-v1-autonomous-orchestration.md`.
+
+The intended operating mode is autonomous progression inside a pinned pre-authorized authority envelope. Normal internal stage progression and rework do not require human confirmation. The Orchestrator may continue through merge and deployment when the admitted profile explicitly permits those actions; it may not widen or replace its own profile.
