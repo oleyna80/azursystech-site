@@ -371,6 +371,121 @@ The replacement must include synthetic end-to-end transactions covering at least
 
 The E2E harness must assert transition reachability, not only isolated deny rules.
 
+## 14. Enforcement surface decisions
+
+The simplified controller is the single canonical local SDLC policy engine.
+
+Runtime adapters, Git hooks, bootstrap helpers, and CI may collect different facts, but they must not independently reimplement lifecycle or authority rules.
+
+The enforcement model is:
+
+```text
+Claude adapter ─┐
+Codex adapter  ─┼──> shared controller policy/state
+Git hooks      ─┤
+CLI            ─┘
+                     │
+                     ├─ lifecycle transitions
+                     ├─ write-scope decisions
+                     ├─ candidate/assurance binding
+                     └─ local publication predicates
+
+CI -----------------> deterministic contract/E2E validation
+
+Owner/platform -----> consequential external authority
+```
+
+### Runtime hooks
+
+Runtime-specific hooks are thin adapters.
+
+They may:
+
+- resolve the repository/worktree root independently of mutable shell cwd;
+- normalize structured read/write tool events;
+- pass known repository, branch, path, and operation facts to the shared policy;
+- translate ALLOW/DENY/advisory results into the runtime-native response format.
+
+They must not:
+
+- become independent lifecycle policy engines;
+- persist Critic/Reviewer/Verifier authority on their own;
+- use runtime/model/session/topology provenance as authority;
+- implement a bespoke general shell parser as a security boundary;
+- mutate lifecycle state from Stop/session-exit handling.
+
+A Stop hook may surface unresolved work once. Re-entrant termination must be allowed without changing lifecycle or assurance state.
+
+Subagent-start hooks may provide context but do not grant authority.
+
+### Git-native hooks
+
+Git hooks enforce invariants for which Git has authoritative facts.
+
+- commit-time checks use the actual staged path set, not shell command arguments;
+- candidate formation uses committed Git identity and actual changed paths;
+- push checks use the actual ref update and exact assured candidate;
+- commit-message linkage may remain if it provides useful bounded traceability.
+
+Git hooks call shared controller/schema/policy code rather than maintaining a second lifecycle implementation.
+
+No valid controller transition may produce a state that the Git-native policy cannot represent.
+
+### Shell commands
+
+Arbitrary shell text is not itself a trustworthy authority model.
+
+The replacement must not continue the legacy pattern of incrementally parsing shell syntax to infer every possible side effect.
+
+Use, in order:
+
+1. structured runtime events when the runtime exposes the affected path/operation;
+2. exact handling of a small number of consequential known operations where the command form can be proven;
+3. deterministic Git postconditions for source/candidate boundaries;
+4. runtime sandbox/OS/platform controls for effects not safely inferable from project-local text.
+
+Unknown ordinary shell syntax is not automatically equivalent to a Hard Stop. Unknown consequential authority requests fail closed at the boundary that actually owns that consequence.
+
+### Bootstrap and per-worktree state
+
+Active controller authority is per-worktree.
+
+Bootstrap may create canonical INACTIVE state when absence is safely recoverable, but it must not reconstruct active Work Block authority, assurance, or planning identity from guesses.
+
+Deliberate worktree handoff must be explicit and verifiable. A stale session-root binding must not permanently block a valid new worktree.
+
+### CI
+
+CI is deterministic only.
+
+It validates:
+
+- controller schema/state contracts;
+- policy allow/deny contracts;
+- runtime-adapter parity;
+- Git-hook behavior;
+- transition reachability;
+- E2E Work Block transactions;
+- malformed-state and boundary regressions.
+
+CI does not call AI Critic/Reviewer/Verifier as an authority mechanism.
+
+### Maintenance and repair
+
+Maintenance Mode is not part of the normal target lifecycle.
+
+The legacy Maintenance Mode remains historical migration evidence. Future controller repair or activation uses an explicit Owner-controlled exceptional/cutover procedure with exact scope and postconditions when normal self-hosted execution cannot truthfully represent the repair.
+
+### Governance/document synchronization
+
+`AGENTS.md`, governance documents, workflow instructions, runtime READMEs, bootstrap documentation, and CI are synchronized only after the target controller contract is stable.
+
+During implementation, the accepted architecture/design documents remain the target contract; legacy runtime documentation continues to describe the still-live system until cutover.
+
+The detailed placement contract is maintained in:
+
+`docs/architecture/sdlc-simplification-v1-enforcement-matrix.md`.
+
 ## Next design step
 
 Produce a concrete target-state contract and transition model for the simplified controller before changing code.
