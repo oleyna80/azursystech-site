@@ -190,7 +190,22 @@ The Work Block is therefore a small implementation manifest, not a second specif
 Authority is intentionally split into two scopes:
 
 - `implementation_write_set` — source, tests, and other implementation paths whose changes affect the assured candidate;
-- `coordination_scope` — a small set of Work Block/initiative coordination and durable documentation paths that may change during closeout without redefining the source candidate.
+- `coordination_scope` — a small set of Work Block/initiative coordination and durable documentation paths that the workflow is allowed to update outside source implementation.
+
+These scopes define write authority only. They do not determine whether a change invalidates a previous Critic/Reviewer/Verifier decision.
+
+The authoritative planning subject is the reviewed planning package, including as applicable:
+
+- Intent;
+- Spec;
+- Plan;
+- material Work Block definition/decomposition;
+- acceptance criteria;
+- architecture constraints.
+
+If any authoritative planning-subject content changes after Critic READY, the Critic gate becomes PENDING for the new planning revision. If such a change affects the meaning, requirements, expected behavior, or assurance basis of an already-created source candidate, the corresponding Reviewer/Verifier evidence is stale and must be rerun as required.
+
+By contrast, harmless coordination updates such as `orchestrator-log`, closeout records, engineering-memory notes, or deployment notes do not invalidate assurance when they do not change the authoritative planning subject or any `implementation_write_set` path.
 
 The coordination scope must remain narrow. It does not recreate the old broad coordination write-set, FILE_REGISTRY/PROJECT_MAP synchronization, or publication machinery.
 
@@ -418,7 +433,10 @@ If any implementation path in the `implementation_write_set` changes after assur
 - a new source candidate is created;
 - Reviewer/Verifier are rerun as required.
 
-Later documentation, coordination, or closeout-only commits inside the approved `coordination_scope` do not invalidate source assurance when a deterministic Git diff proves that no `implementation_write_set` path changed.
+Later documentation, coordination, or closeout-only commits inside the approved `coordination_scope` do not invalidate source assurance only when both conditions hold:
+
+- no `implementation_write_set` path changed; and
+- no authoritative planning-subject content changed in a way that alters the candidate's requirements, expected behavior, acceptance basis, or architecture constraints.
 
 The source candidate SHA is the identity of the implementation that was actually assured.
 
