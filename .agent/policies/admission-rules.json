@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "triggers": {
+    "manual-owner": {
+      "max_profile": "human-governed",
+      "base_ref": "main"
+    }
+  }
+}
