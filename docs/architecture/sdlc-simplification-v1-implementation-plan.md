@@ -1,6 +1,6 @@
 # SDLC Simplification v1 — Implementation Plan
 
-Status: implementation plan; holistic Critic SUPPLEMENT addressed in contracts, focused closure review still required before source implementation
+Status: implementation plan; original Must findings closed, focused closure SUPPLEMENT dependency-order correction incorporated; final delta-only Critic check required before source implementation
 Branch: docs/sdlc-simplification-v1
 
 Depends on:
@@ -279,7 +279,59 @@ Runner cannot bypass controller/Git/platform gates.
 
 ## Implementation plan
 
+### WB-0 — Minimal trusted admission foundation, inert
+
+Objective:
+
+Implement the smallest stable admission contract required by pre-WB planning, `open`, trusted `base_commit`, and WB-3 E2E before the controller core depends on it.
+
+This is not the full orchestration system.
+
+Primary paths:
+
+```text
+.agent/policies/autonomy-profiles.json
+.agent/policies/admission-rules.json
+.agent/orchestration/__init__.py
+.agent/orchestration/admission.py
+.agent/orchestration/tests/test_admission.py
+```
+
+Responsibilities:
+
+1. define the immutable `AdmissionRecord` contract containing at minimum:
+   - `admission_id`;
+   - repository identity;
+   - trigger class;
+   - authority profile id/revision;
+   - base ref;
+   - exact base commit;
+   - subject branch;
+2. define one stable admission-store/resolver interface consumed later by controller/open/policy;
+3. implement an inert/local test store suitable for disposable repository E2E;
+4. implement exact validation that profile/base/subject facts match the resolved admission record;
+5. implement trusted base resolution from configured base ref before subject-branch planning;
+6. implement canonical baseline `manual-owner -> human-governed` admission rule;
+7. make `.agent/policies/**` protected from ordinary Work Block authority;
+8. keep dispatcher, role scheduling, PR/merge/deploy continuation, and higher-autonomy execution out of this WB.
+
+The interface must be backend-independent. WB-4 may replace/add the production trusted registry/dispatcher backend without changing the controller-facing admission contract.
+
+Exit criteria:
+
+- admission record/schema/resolver tests green;
+- exact base pinning proven in disposable Git fixtures;
+- invalid/mismatched admission/profile/base/subject fails closed;
+- baseline manual-owner fixture can create a valid inert admission;
+- no live hook or production orchestration wiring changes;
+- no merge/deploy authority exists.
+
 ### WB-1 — Core controller contract, inert
+
+Dependency:
+
+- consumes the stable admission resolver/interface delivered by WB-0;
+- does not implement a parallel admission model.
 
 Primary paths:
 - .agent/controllers/v1/state.py
@@ -338,7 +390,9 @@ Exit:
 
 ### WB-3 — E2E transaction + legacy regression harness
 
-Use disposable Git repositories/worktrees and inert controller directly.
+Use disposable Git repositories/worktrees, the real WB-0 admission interface/test store, and the inert controller directly.
+
+WB-3 must not fabricate admission state through controller test-only shortcuts.
 
 Happy path:
     trusted admission / base pin
@@ -392,7 +446,7 @@ Exit:
 - happy path needs no bootstrap/bypass;
 - no test depends on legacy session/report/topology ceremony.
 
-### WB-4 — Autonomy profiles + orchestration foundation
+### WB-4 — Full orchestration and delivery-continuation foundation
 
 Primary paths:
 - .agent/policies/autonomy-profiles.json
@@ -401,21 +455,22 @@ Primary paths:
 - tests
 
 Work:
-1. protected profile schema;
-2. protected trigger-to-profile/base admission rules;
-3. human-governed baseline profile;
-4. immutable `admission_id` + profile/base binding/resolver;
-5. trusted admission registry/interface;
-6. orchestration runner around controller;
-7. logical Critic/Coder/Reviewer/Verifier separation;
-8. overlapping-writer serialization;
-9. autonomous role progression/rework;
-10. OWNER_DECISION_REQUIRED contract;
-11. external delivery authority context across publication keyed by `admission_id`;
-12. higher-autonomy fixture profiles, not live-enabled.
+1. retain the WB-0 admission record/resolver contract unchanged;
+2. add the production trusted admission registry/dispatcher backend;
+3. add richer trigger mappings/higher-autonomy fixture profiles without enabling them live;
+4. implement orchestration runner around controller;
+5. implement logical Critic/Coder/Reviewer/Verifier separation;
+6. implement overlapping-writer serialization within one orchestration run;
+7. implement autonomous role progression/rework;
+8. implement OWNER_DECISION_REQUIRED contract;
+9. implement external delivery authority continuation across publication keyed by `admission_id`;
+10. implement PR/merge/deploy simulation fixtures for higher autonomy.
+
+WB-4 must not require controller schema or admission-interface redesign.
 
 Admission rule:
-- every run is admitted before planning;
+- WB-0 already makes every run admitted before planning;
+- WB-4 extends the trusted backend/dispatcher but does not change this controller-facing contract;
 - manual Owner flow uses trusted trigger class `manual-owner` and baseline profile;
 - local/untrusted initiation cannot select a stronger profile than `admission-rules.json` permits;
 - higher profiles require trusted dispatcher/platform admission;
@@ -532,6 +587,13 @@ Before Level 3 for a change class:
 
 ## Acceptance criteria
 
+### Admission foundation
+- AC-000a admission record/resolver interface exists before controller implementation consumes it.
+- AC-000b trusted admission pins exact base commit and subject branch before planning.
+- AC-000c controller-facing admission validation rejects repository/profile/base/subject mismatch.
+- AC-000d baseline manual-owner admission works through the same interface used by WB-3.
+- AC-000e WB-4 can add a production registry/dispatcher backend without changing controller state schema or admission resolver contract.
+
 ### Core
 - AC-001 only four lifecycle states validate.
 - AC-002 missing state differs from INACTIVE and grants no source authority.
@@ -603,6 +665,7 @@ Before Level 3 for a change class:
 ## Acceptance-test inventory
 
 Minimum suites:
+- orchestration/tests/test_admission.py — admission record/resolver, base pinning, mismatch fail-closed
 - test_state.py — schema, transitions, profile immutability
 - test_storage.py — Git-private state, atomicity, missing/corrupt/CAS
 - test_gitfacts.py — staged/history/ancestry/ref facts
@@ -620,6 +683,8 @@ Git-hook shell fixtures test invocation/exit behavior only. Lifecycle semantics 
 
     Architecture package
       -> holistic Critic
+      -> focused closure corrections
+      -> WB-0 minimal admission foundation
       -> WB-1 core
       -> WB-2 adapters/Git
       -> WB-3 E2E/regressions
@@ -629,7 +694,7 @@ Git-hook shell fixtures test invocation/exit behavior only. Lifecycle semantics 
       -> WB-7 stabilization
       -> WB-8 graduated autonomy
 
-WB-1 through WB-4 remain inert relative to current production enforcement.
+WB-0 through WB-4 remain inert relative to current production enforcement.
 
 WB-6 is the first Work Block allowed to change live authority wiring.
 
@@ -653,17 +718,29 @@ Mitigation: minimal portable subset, separate adapters, Git-native backstops.
 ### Excess autonomy too early
 Mitigation: human-governed baseline, graduated profiles, evidence-based promotion.
 
+### Cross-run writer concurrency before Level 2/3
+
+Current one-writer scheduling guarantee is within one orchestration run.
+
+This is sufficient for the baseline and is not a WB-0/WB-1 blocker.
+
+Before concurrent Level 2/3 admitted runs are enabled, explicitly decide whether the invariant is repository-wide. If yes, add a lightweight trusted admission/orchestration reservation keyed by repository + implementation scope so overlapping write-capable runs serialize across admissions. Do not add a global registry to the baseline unless this higher-autonomy requirement is activated.
+
 ## Practical next step
 
-Holistic Critic commit `cd684f75f97fb860096f16f7deb2994ea036ee8d` returned SUPPLEMENT with four Must findings.
+Holistic Critic `cd684f75f97fb860096f16f7deb2994ea036ee8d` identified four Must findings; those are closed.
 
-After the contract corrections in the current package:
+Focused closure Critic `872d3e66c93544ac14e87312b4ef252e607cae93` confirmed M1-M4 CLOSED and identified one implementation-order blocker: trusted admission was required by WB-1/WB-3 but scheduled only in WB-4.
 
-1. run a focused independent closure review against M1-M4 only;
+This plan resolves that blocker by adding WB-0 Minimal Trusted Admission Foundation before controller implementation.
+
+Next:
+
+1. run one final delta-only independent Critic check on this implementation-order correction;
 2. require READY for the exact corrected package revision;
 3. freeze the implementation-ready package;
-4. define WB-1 from this plan;
-5. begin inert controller implementation.
+4. define and execute WB-0;
+5. then define WB-1 against the stable admission interface.
 
 ## Out of scope
 
