@@ -34,7 +34,7 @@ The replacement must preserve:
 - Critic approval bound to the exact authoritative planning subject revision;
 - Reviewer and Verifier approval bound to the exact source candidate;
 - invalidation after authoritative planning-subject or implementation changes;
-- one writer per overlapping implementation scope;
+- one writer per overlapping implementation scope, enforced by orchestration scheduling rather than persisted runtime topology;
 - Reviewer/Verifier rework;
 - reporting-only/cancelled safe closeout where useful;
 - Owner Hard Stops;
@@ -60,39 +60,46 @@ If local transient evidence is lost, the relevant check is rerun.
 
 ## 4. Target authority record
 
-The target active Work Block state should remain close to:
+The exact persisted authority record is no longer open design work. It is defined by `docs/architecture/sdlc-simplification-v1-state-event-contract.md`.
+
+The active record contains only the fields required to protect the accepted invariants, including:
 
 ```text
 work_block_id
 initiative_ref
+admission_id
 
 subject_branch
 base_commit
 
-planning_subject_revision
+authority_profile.id
+authority_profile.revision
+
+planning_subject.revision
+planning_subject.paths
 
 implementation_write_set
 coordination_scope
 
-stage
-
-critic_status
-critic_subject_revision
+critic.status
+critic.subject_revision
 
 source_candidate_sha
 
-reviewer_status
-reviewer_candidate_sha
+reviewer.status
+reviewer.candidate_sha
 
-verifier_status
-verifier_candidate_sha
-
-closeout_status
+verifier.status
+verifier.candidate_sha
 ```
 
-Schema/version metadata may be added where technically required.
+Lifecycle state remains in the top-level four-state envelope.
 
-The exact persisted shape remains implementation-design work, but extra fields require a concrete invariant they protect.
+There is no persisted `closeout_status`, write gate, history archive, session/runtime identity, topology/capability proof, report path, or dispatch/evidence list.
+
+`admission_id`, authority profile binding, subject branch and trusted `base_commit` are immutable for the active Work Block.
+
+The detailed admission envelope remains outside Work Block state and is resolved from the trusted admission registry.
 
 ## 5. Scope and invalidation semantics
 
@@ -277,9 +284,9 @@ Write authority remains separate from planning-subject invalidation.
 
 Opening an already active Work Block must fail.
 
-`base_commit`, Work Block identity, initiative identity, subject branch, and admitted scopes may not be silently replaced by a later HEAD.
+`base_commit`, Work Block identity, initiative identity, `admission_id`, authority profile and subject branch may not be silently replaced by a later HEAD. `base_commit` is pinned by trusted admission before subject-branch planning and is not accepted from arbitrary Work Block input.
 
-A material redefinition requires an explicit transition back to DEFINE and a new planning-subject revision; identity fields that define the Work Block itself remain stable.
+A material redefinition uses the reachable two-phase transaction `revise begin -> DEFINE planning edit/commit -> revise bind -> Critic`. `revise begin` occurs before the new planning commit exists; `revise bind` installs the new committed planning revision/paths/scopes. Identity/admission/base fields remain stable.
 
 ### Session termination is not lifecycle closeout
 
@@ -504,9 +511,29 @@ That design should define:
 
 ## 15. Autonomous orchestration binding
 
-The target SDLC is autonomy-capable by design. The baseline profile is human-governed delivery: the Orchestrator drives normal lifecycle transitions, rework, publication, PR preparation, and deterministic evidence autonomously, while merge/deploy remain the normal Owner checkpoint. The active Work Block must pin the autonomy profile selected by the trusted event admission path. Higher-autonomy profiles may additionally permit integration and deployment without live human confirmation for admitted change classes.
+The target SDLC is autonomy-capable by design. The baseline profile is human-governed delivery: the Orchestrator drives normal lifecycle transitions, rework, publication, PR preparation, and deterministic evidence autonomously, while merge/deploy remain the normal Owner checkpoint.
 
-The Orchestrator must not select a more permissive profile, change the effective profile revision, or modify the protected policy source governing its own run. See `docs/architecture/sdlc-simplification-v1-autonomous-orchestration.md`.
+Every normal run is admitted before planning. Trusted admission creates immutable `admission_id`, profile revision, subject branch and base commit bindings.
+
+Canonical protected policy is:
+
+```text
+.agent/policies/autonomy-profiles.json
+.agent/policies/admission-rules.json
+```
+
+read from one exact pinned commit of the trusted default/policy branch.
+
+The active Work Block stores `admission_id` plus matching profile/base bindings. The Orchestrator cannot select a more permissive profile, replace its admission/base, or modify `.agent/policies/**` inside ordinary subject work.
+
+The orchestration layer, not controller state, owns logical-role independence and overlapping-writer serialization:
+
+- Coder cannot satisfy Critic/Reviewer/Verifier;
+- unavailable independent assurance blocks;
+- write-capable Coders with overlapping `implementation_write_set` are serialized;
+- disjoint Work Blocks may execute concurrently.
+
+See `docs/architecture/sdlc-simplification-v1-autonomous-orchestration.md`.
 
 
 ## 16. Autonomy rollout strategy
@@ -517,3 +544,17 @@ The initial rollout therefore proves two things separately:
 
 1. the baseline human-governed path is reliable for daily use;
 2. the same architecture can execute the full event-to-deployment path under a higher-autonomy profile without bypassing any guardrail.
+
+
+## 17. Holistic Critic closure refinements
+
+Holistic Critic commit `cd684f75f97fb860096f16f7deb2994ea036ee8d` returned SUPPLEMENT without requiring architectural redesign.
+
+The implementation contracts now explicitly resolve its four Must findings:
+
+1. missing-state open, atomic Critic READY, and successful terminal publish semantics are synchronized;
+2. material revision is reachable through `revise begin -> DEFINE -> commit -> revise bind -> Critic`;
+3. schema v2 contains immutable opaque `admission_id`, canonical protected profile/admission policy files, trusted base pinning, and external delivery correlation;
+4. orchestration owns logical assurance separation and overlapping-writer serialization without reintroducing runtime/session/topology authority.
+
+Before WB-1 source implementation, only a focused independent closure review of these four corrections is required.
