@@ -183,3 +183,85 @@ The next independent Critic should perform a focused closure review only:
 5. confirm no correction reintroduced a legacy deadlock or a second authority system.
 
 If READY, the implementation-ready package may be frozen and WB-1 source implementation may begin.
+
+
+## Second closure review — implementation-order blocker
+
+Focused Critic commit:
+
+```text
+872d3e66c93544ac14e87312b4ef252e607cae93
+```
+
+Verdict: SUPPLEMENT.
+
+The Critic confirmed original M1-M4 CLOSED and identified one new implementation-order blocker: trusted admission was already required by the exact contracts and WB-3 happy path, but its registry/interface was scheduled only in WB-4.
+
+### Correction
+
+Implementation plan now introduces:
+
+```text
+WB-0 — Minimal Trusted Admission Foundation
+```
+
+before controller implementation.
+
+WB-0 contains only the stable admission dependency required by later work:
+
+- canonical protected policy files;
+- immutable `AdmissionRecord` contract;
+- admission store/resolver interface;
+- inert/local test storage;
+- trusted base-ref -> exact base-commit pinning;
+- baseline `manual-owner -> human-governed` admission;
+- mismatch/fail-closed validation.
+
+Dependency order is now:
+
+```text
+WB-0 minimal admission foundation
+-> WB-1 controller core
+-> WB-2 runtime/Git adapters
+-> WB-3 E2E using the real WB-0 admission interface
+-> WB-4 full orchestration / production admission backend / delivery continuation
+```
+
+WB-4 retains:
+
+- production trusted dispatcher/registry backend;
+- logical-role scheduling;
+- overlapping-writer scheduling;
+- autonomous rework;
+- delivery continuation across PR/merge/deploy;
+- higher-autonomy fixtures.
+
+WB-4 must not redesign the WB-0 controller-facing admission contract.
+
+Correction commit:
+
+```text
+4963142caee97b20f108832469f41c7b70777d03
+```
+
+### Non-blocking cross-run writer observation
+
+The current one-writer invariant remains scoped to one orchestration run for the baseline.
+
+Before concurrent Level 2/3 admitted runs are enabled, the design must explicitly decide whether writer exclusion becomes repository-wide across admissions.
+
+If repository-wide exclusion is required, add a lightweight trusted reservation in the admission/orchestration layer keyed by repository + implementation scope. This is explicitly not a WB-0/WB-1 blocker and does not justify adding a global execution registry to the baseline.
+
+## Final delta-review request
+
+The next independent Critic review may be delta-only.
+
+It should verify only that:
+
+1. the admission foundation exists before every Work Block/test that requires trusted admission;
+2. WB-1 consumes that stable interface rather than inventing admission behavior;
+3. WB-3 exercises the actual WB-0 admission interface/test store;
+4. WB-4 extends the backend/orchestration layer without requiring schema/controller redesign;
+5. no new live authority or higher-autonomy capability was moved into WB-0.
+
+If READY, freeze the implementation-ready package and begin WB-0 source implementation.
