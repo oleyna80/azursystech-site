@@ -6,11 +6,15 @@ class ControllerError(Exception):
 
 
 class ValidationError(ControllerError):
-    """Input or authority identity is invalid."""
+    """Input, persisted state, or authority identity is invalid."""
 
 
 class TransitionDenied(ControllerError):
-    """A lifecycle transition's preconditions are not satisfied."""
+    """A lifecycle transition's deterministic preconditions are not satisfied."""
+
+
+class GitFactError(ControllerError):
+    """Required Git facts cannot be resolved deterministically."""
 
 
 class DurabilityUncertain(ControllerError):
@@ -18,4 +22,4 @@ class DurabilityUncertain(ControllerError):
 
 
 class StopAndPreserve(ControllerError):
-    """State must be preserved for operator diagnosis."""
+    """State/Git work must be preserved for explicit recovery."""
