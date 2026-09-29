@@ -133,10 +133,7 @@ class AdmissionTests(unittest.TestCase):
             self._admit(requested_profile="autonomous-production")
 
     def test_existing_subject_branch_must_still_equal_admitted_base(self):
-        subprocess.run(
-            ["git", "-C", str(self.root), "branch", "feat/test", self.policy_revision],
-            check=True,
-        )
+        subprocess.run(["git", "-C", str(self.root), "branch", "feat/test", self.policy_revision], check=True)
         subprocess.run(["git", "-C", str(self.root), "switch", "-q", "feat/test"], check=True)
         (self.root / "later.txt").write_text("later\n", encoding="utf-8")
         self._commit("advance subject")
@@ -152,13 +149,9 @@ class AdmissionTests(unittest.TestCase):
             self.store.put(changed)
 
     def test_protected_policy_surface(self):
-        self.assertTrue(
-            admission.is_protected_policy_path(".agent/policies/autonomy-profiles.json")
-        )
+        self.assertTrue(admission.is_protected_policy_path(".agent/policies/autonomy-profiles.json"))
         self.assertTrue(admission.is_protected_policy_path(".agent/policies"))
-        self.assertFalse(
-            admission.is_protected_policy_path(".agent/orchestration/admission.py")
-        )
+        self.assertFalse(admission.is_protected_policy_path(".agent/orchestration/admission.py"))
 
     def test_invalid_record_fails_closed(self):
         with self.assertRaises(admission.AdmissionValidationError):
