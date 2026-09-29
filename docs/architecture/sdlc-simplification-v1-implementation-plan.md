@@ -36,9 +36,9 @@ This plan covers:
 4. lifecycle CLI;
 5. Claude/Codex runtime adapters;
 6. Git-native pre-commit, commit-msg and pre-push enforcement;
-7. minimal trusted admission foundation required by planning/open;
-8. deterministic E2E/regression harness;
-9. full orchestration-runner interface required for future event-driven execution;
+7. deterministic E2E/regression harness;
+8. protected autonomy-profile contract and baseline admission;
+9. orchestration-runner interface required for future event-driven execution;
 10. Owner-controlled cutover from the legacy control plane;
 11. baseline human-governed production rollout;
 12. later bounded/full autonomy enablement without controller redesign.
@@ -66,8 +66,7 @@ The implementation produces:
 - thin Git hook adapters;
 - deterministic controller/Git E2E tests;
 - protected autonomy-profile registry and trigger mapping;
-- minimal trusted admission record/resolver/store interface with immutable `admission_id` correlation;
-- full orchestration runner and later delivery-continuation interface;
+- trusted admission registry/runner interface with immutable `admission_id` correlation;
 - baseline human-governed profile;
 - cutover procedure;
 - updated CI/governance/runtime documentation;
@@ -258,42 +257,11 @@ It may autonomously allow planning, implementation, assurance, subject publicati
 
 Merge/deploy remain Owner decisions in the baseline profile.
 
-### Minimal admission foundation
-
-Canonical shared package:
-
-    .agent/admission/
-
-This package is below both the controller and the full orchestration runner in the dependency graph.
-
-Responsibilities:
-
-- exact `AdmissionRecord` model matching the accepted contract;
-- immutable `admission_id` generation/validation;
-- canonical policy loading from:
-  - `.agent/policies/autonomy-profiles.json`;
-  - `.agent/policies/admission-rules.json`;
-- trusted trigger -> maximum profile/base-policy resolution;
-- trusted `base_ref -> base_commit` pinning before subject planning;
-- subject-branch/base consistency checks;
-- admission record resolver interface;
-- store interface;
-- inert/test store implementation used by WB-0 through WB-3.
-
-It does not:
-
-- schedule Critic/Coder/Reviewer/Verifier;
-- run the SDLC;
-- merge/deploy;
-- own Work Block lifecycle transitions.
-
-The controller consumes only the stable admission record/resolver contract. The orchestration runner later consumes the same contract.
-
-### Full orchestration boundary
+### Orchestration/admission boundary
 Canonical package:
     .agent/orchestration/
 
-Separate from controller and built on top of `.agent/admission/`.
+Separate from controller.
 
 Responsibilities:
 - accept trusted event/admission context;
@@ -358,48 +326,6 @@ Exit criteria:
 - no live hook or production orchestration wiring changes;
 - no merge/deploy authority exists.
 
-### WB-0 — Minimal trusted admission foundation, inert
-
-Objective:
-
-Implement the smallest stable admission dependency required by schema/open/pre-WB planning before the controller core depends on it.
-
-Primary paths:
-
-- `.agent/admission/**` — new shared foundation;
-- `.agent/policies/autonomy-profiles.json`;
-- `.agent/policies/admission-rules.json`;
-- admission foundation tests.
-
-Work:
-
-1. define exact `AdmissionRecord` fields:
-   - `admission_id`;
-   - repository identity;
-   - trigger class;
-   - authority profile id/revision;
-   - base ref;
-   - exact base commit;
-   - subject branch;
-2. implement strict record validation and immutable correlation semantics;
-3. implement canonical policy readers against one exact pinned policy commit;
-4. implement trigger -> maximum profile/base-policy resolution;
-5. implement trusted base-ref resolution to exact `base_commit`;
-6. implement subject-branch/base consistency validation;
-7. define `AdmissionStore` / `AdmissionResolver` interfaces;
-8. provide inert/test storage usable in disposable repositories without creating a production dispatcher;
-9. provide a minimal admission creation path for tests/manual-owner fixtures that exercises the real interface rather than fabricating controller inputs;
-10. keep all admission foundation code inert relative to live hooks/runtime.
-
-Exit criteria:
-
-- admission record creation/resolution tests green;
-- controller-independent tests prove arbitrary later `base_commit` substitution is rejected;
-- stronger profile selection than admission rules permit is rejected;
-- mismatched repository/subject/profile/base resolution fails closed;
-- WB-1 can consume the stable resolver interface;
-- no orchestration runner or live authority is introduced.
-
 ### WB-1 — Core controller contract, inert
 
 Dependency:
@@ -416,23 +342,19 @@ Primary paths:
 - cli.py
 - tests
 
-Dependencies:
-- WB-0 admission foundation READY.
-
 Work:
 1. replace current state with schema v2;
 2. remove history/evidence/capability/write-gate fields;
 3. implement Git-private per-worktree state;
 4. implement strict path grammar;
-5. implement pre-WB planning authority using the WB-0 admission resolver;
-6. validate `open` against exact admission_id/repository/subject/profile/base binding;
-7. implement Git fact helpers;
-8. implement lifecycle transitions including `revise begin` -> DEFINE and `revise bind` after committed planning changes;
-9. implement committed candidate creation;
-10. implement post-candidate history validation;
-11. implement normalized decisions/codes;
-12. implement target CLI;
-13. keep package inert.
+5. implement pre-WB planning authority;
+6. implement Git fact helpers;
+7. implement lifecycle transitions including `revise begin` -> DEFINE and `revise bind` after committed planning changes;
+8. implement committed candidate creation;
+9. implement post-candidate history validation;
+10. implement normalized decisions/codes;
+11. implement target CLI;
+12. keep package inert.
 
 Exit:
 - unit tests green;
@@ -441,10 +363,6 @@ Exit:
 - no authority change.
 
 ### WB-2 — Runtime and Git adapters, still inert
-
-Dependencies:
-- WB-0 admission foundation READY;
-- WB-1 controller core READY.
 
 Primary paths:
 - adapters.py
@@ -656,15 +574,6 @@ Level 3 — full admitted autonomous delivery:
     -> post-deploy verification
     -> feedback
 
-Before enabling Level 2/3 multi-run event concurrency, resolve one additional concurrency policy:
-
-- decide whether the one-writer invariant is per orchestration run or repository-wide across simultaneous admitted runs;
-- if repository-wide, add a lightweight trusted reservation/serialization mechanism keyed by repository + normalized implementation scope;
-- prove stale reservation recovery and disjoint-run concurrency;
-- do not infer repository-wide safety from the current same-run scheduler.
-
-This is not a WB-0/WB-1 or baseline cutover blocker.
-
 Before Level 3 for a change class:
 - deterministic E2E successful;
 - stable supervised real runs;
@@ -684,13 +593,6 @@ Before Level 3 for a change class:
 - AC-000c controller-facing admission validation rejects repository/profile/base/subject mismatch.
 - AC-000d baseline manual-owner admission works through the same interface used by WB-3.
 - AC-000e WB-4 can add a production registry/dispatcher backend without changing controller state schema or admission resolver contract.
-
-### Admission foundation
-- AC-000a trusted admission foundation exists before controller implementation depends on it.
-- AC-000b admission record resolver binds admission_id/repository/subject/profile/base exactly.
-- AC-000c base_commit is pinned from trusted base policy before planning and cannot be replaced by a later subject-selected base.
-- AC-000d stronger profile selection than admission rules permit is rejected.
-- AC-000e WB-3 uses the real inert admission interface/store rather than fabricating admission-bound controller state.
 
 ### Core
 - AC-001 only four lifecycle states validate.
@@ -764,8 +666,7 @@ Before Level 3 for a change class:
 
 Minimum suites:
 - orchestration/tests/test_admission.py — admission record/resolver, base pinning, mismatch fail-closed
-- admission/tests/ — record schema, trigger/profile/base resolution, resolver/store, non-escalation
-- test_state.py — schema, transitions, admission/profile/base immutability
+- test_state.py — schema, transitions, profile immutability
 - test_storage.py — Git-private state, atomicity, missing/corrupt/CAS
 - test_gitfacts.py — staged/history/ancestry/ref facts
 - test_events.py — normalized event/decision schemas
