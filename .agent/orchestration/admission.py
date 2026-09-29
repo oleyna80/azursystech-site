@@ -218,6 +218,9 @@ def _resolve_rule(
 
     selected = requested_profile or max_profile
     if selected != max_profile:
+        # WB-0 intentionally has no privilege hierarchy. A trigger may select only
+        # its exact configured profile; richer selection belongs to later trusted
+        # orchestration policy, never to subject-controlled input.
         raise AdmissionPolicyError("requested profile exceeds trigger admission rule")
     if selected not in profile_map:
         raise AdmissionPolicyError("requested profile does not exist")
