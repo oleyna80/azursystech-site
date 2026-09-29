@@ -106,14 +106,17 @@ Controller checks:
 
 - state is canonical INACTIVE or local state is missing/NO_LOCAL_AUTHORITY;
 - attached non-default subject branch;
-- exact `base_commit`;
+- exact trusted `admission_id` record for this repository/subject branch;
+- `base_commit` taken from that admission record, not subject-controlled input;
+- exact pinned authority-profile id/revision from the same admission record;
 - Work Block and initiative identity;
 - non-empty `implementation_write_set`;
 - bounded `coordination_scope`;
 - valid `planning_subject_revision`;
-- no conflicting active Work Block in the same worktree.
+- no conflicting active Work Block in the same worktree;
+- subject branch was created/verified against the admitted base commit.
 
-Runtime hook role: none beyond invoking/allowing the lifecycle CLI.
+Runtime hook role: none beyond invoking/allowing the lifecycle CLI. Admission is resolved by the trusted orchestration/admission layer before `open`.
 
 Git hook role: none.
 
@@ -874,6 +877,7 @@ Keep deterministic local denial where the controlling layer has reliable facts:
 - force/non-fast-forward/ref deletion/default or protected subject publication -> Git pre-push/controller publish DENY;
 - candidate mismatch or stale assurance at publication -> Git pre-push/controller publish DENY;
 - malformed/ambiguous controller authority state -> controller/Git hooks DENY.
+- ordinary Work Block mutation of `.agent/policies/**` -> shared policy/Git hooks DENY.
 
 ### External Hard Stops
 
@@ -1148,3 +1152,36 @@ The orchestration scheduler must not run multiple write-capable Coders concurren
 Non-overlapping Work Blocks may run concurrently.
 
 No global runtime registry or execution/session IDs are required; scheduler tests must prove deterministic overlap detection and serialization within an orchestration run.
+
+
+## 16. Trusted admission policy surface
+
+Canonical protected policy files are:
+
+```text
+.agent/policies/autonomy-profiles.json
+.agent/policies/admission-rules.json
+```
+
+Trusted admission reads both from one exact pinned commit of the trusted repository policy/default branch.
+
+`admission-rules.json` maps trusted trigger classes to maximum profile/base policy.
+
+The admission layer creates an immutable external record containing at minimum:
+
+```text
+admission_id
+repository
+trigger_class
+profile_id
+profile_revision
+base_ref
+base_commit
+subject_branch
+```
+
+The active Work Block stores only the opaque `admission_id` plus matching profile/base fields.
+
+Ordinary Work Blocks cannot grant themselves write authority to `.agent/policies/**`. Policy changes are separate Owner-controlled governance actions and affect only later admissions.
+
+Candidate containment always begins at the admission-pinned `base_commit`; a later subject-selected base cannot hide pre-open source changes.
