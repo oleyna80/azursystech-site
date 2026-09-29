@@ -265,3 +265,32 @@ It should verify only that:
 5. no new live authority or higher-autonomy capability was moved into WB-0.
 
 If READY, freeze the implementation-ready package and begin WB-0 source implementation.
+
+
+## Plan normalization after concurrent edit overlap
+
+The implementation-order correction itself remains the WB-0 design introduced in commit:
+
+```text
+4963142caee97b20f108832469f41c7b70777d03
+```
+
+A later overlapping documentation edit temporarily duplicated the WB-0 section with a second module-layout variant. That duplication has been removed.
+
+Canonical implementation plan was normalized back to the single WB-0 contract from `4963142...` in:
+
+```text
+729eebc3fd9715598e53e438042221b893abf82f
+```
+
+The normalized plan now has exactly one sequence:
+
+```text
+WB-0 minimal trusted admission foundation
+-> WB-1 controller core
+-> WB-2 runtime/Git adapters
+-> WB-3 E2E using the WB-0 interface
+-> WB-4 full orchestration and delivery continuation
+```
+
+This cleanup changes no architecture or admission semantics. The final delta-only Critic should review the current branch head, not the transient duplicated plan.
