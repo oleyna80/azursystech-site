@@ -1,6 +1,6 @@
 # SDLC Simplification v1 — Implementation Plan
 
-Status: implementation plan; no code authority until holistic Critic READY
+Status: implementation plan; holistic Critic SUPPLEMENT addressed in contracts, focused closure review still required before source implementation
 Branch: docs/sdlc-simplification-v1
 
 Depends on:
@@ -65,8 +65,8 @@ The implementation produces:
 - thin Claude and Codex adapters;
 - thin Git hook adapters;
 - deterministic controller/Git E2E tests;
-- protected autonomy-profile registry;
-- trusted admission/runner interface;
+- protected autonomy-profile registry and trigger mapping;
+- trusted admission registry/runner interface with immutable `admission_id` correlation;
 - baseline human-governed profile;
 - cutover procedure;
 - updated CI/governance/runtime documentation;
@@ -90,6 +90,8 @@ No PR, merge, release, deploy or rollback Work Block states are added.
 - Baseline production profile is human-governed delivery.
 - Higher autonomy is enabled by protected profile/configuration, not controller-code changes.
 - Orchestrator cannot choose or upgrade its own high-authority profile.
+- Every normal run has a trusted admission record created before planning; active state stores immutable `admission_id` + matching profile/base binding.
+- `base_commit` is pinned by trusted admission from the configured base ref before subject-branch planning; it is not a subject-selected diff boundary.
 - Missing authority means OWNER_DECISION_REQUIRED.
 - Platform credentials/permissions remain final consequential boundaries.
 
@@ -127,7 +129,7 @@ Owns:
 - schema v2 validation;
 - exact lifecycle invariants;
 - pure transitions;
-- immutable WB/profile identity;
+- immutable WB/admission/profile/base identity;
 - Critic/Reviewer/Verifier status semantics.
 
 Remove:
@@ -238,8 +240,16 @@ Remove from production controller architecture.
 If temporary role-result parsing needs a helper, create a narrowly named module without persistent session/report provenance.
 
 ### Autonomy policy source
-Preferred protected machine-readable source:
+Canonical protected machine-readable sources:
+
     .agent/policies/autonomy-profiles.json
+    .agent/policies/admission-rules.json
+
+Trusted admission reads both from one exact pinned commit of the trusted repository default/policy branch.
+
+`admission-rules.json` maps trusted trigger classes to the maximum available profile and base policy.
+
+Ordinary Work Blocks cannot include `.agent/policies/**` in implementation or coordination authority.
 
 Initial profile: human-governed.
 
@@ -248,16 +258,19 @@ It may autonomously allow planning, implementation, assurance, subject publicati
 Merge/deploy remain Owner decisions in the baseline profile.
 
 ### Orchestration/admission boundary
-Preferred package:
+Canonical package:
     .agent/orchestration/
 
 Separate from controller.
 
 Responsibilities:
 - accept trusted event/admission context;
-- pin run/profile identity;
+- generate/store trusted external `admission_id` records;
+- pin repository/trigger/profile/base/subject identity;
 - drive normal controller transitions;
-- dispatch Critic/Coder/Reviewer/Verifier;
+- dispatch Critic/Coder/Reviewer/Verifier as distinct logical roles;
+- reject self-substitution when independent assurance is unavailable;
+- serialize overlapping write-capable Coders while allowing disjoint scopes in parallel;
 - handle autonomous rework loops;
 - preserve OWNER_DECISION_REQUIRED;
 - carry delivery authority context across PR/merge/deploy when higher profiles are enabled.
@@ -284,7 +297,7 @@ Work:
 4. implement strict path grammar;
 5. implement pre-WB planning authority;
 6. implement Git fact helpers;
-7. implement lifecycle transitions;
+7. implement lifecycle transitions including `revise begin` -> DEFINE and `revise bind` after committed planning changes;
 8. implement committed candidate creation;
 9. implement post-candidate history validation;
 10. implement normalized decisions/codes;
@@ -328,7 +341,8 @@ Exit:
 Use disposable Git repositories/worktrees and inert controller directly.
 
 Happy path:
-    pre-WB planning
+    trusted admission / base pin
+    -> pre-WB planning
     -> open
     -> Critic READY
     -> EXECUTE
@@ -341,11 +355,13 @@ Happy path:
     -> INACTIVE
 
 Rework:
-- Critic BLOCKED -> revise -> READY;
+- proactive EXECUTE revision -> revise begin -> DEFINE edit/commit -> revise bind -> Critic;
+- proactive ASSURE revision -> revise begin -> DEFINE edit/commit -> revise bind -> Critic;
+- Critic BLOCKED -> DEFINE edit/commit -> revise bind -> READY;
 - Reviewer rework -> EXECUTE -> new candidate;
 - Verifier rework -> EXECUTE -> new candidate;
 - Verifier evidence problem keeps same candidate/Reviewer;
-- scope change -> DEFINE -> new planning revision -> Critic.
+- Reviewer/Verifier scope change -> DEFINE edit/commit -> revise bind -> Critic.
 
 Worktree/recovery:
 - isolated linked-worktree state;
@@ -363,7 +379,13 @@ Git transaction:
 - failed push preserves ASSURE;
 - idempotent publish after valid direct push.
 
-Legacy blocker mapping must cover applicable F-001..F-039, especially freeze/index deadlock, coordination deadlock, Stop pressure, cwd-sensitive hooks, re-open/base replacement, canonical-state disagreement and shell-parser failure classes.
+Legacy blocker mapping must maintain an explicit machine/test-readable inventory:
+
+    finding_id -> target test(s) -> COVERED | SUPERSEDED | NOT_APPLICABLE -> rationale
+
+for every F-001..F-039.
+
+It must explicitly cover freeze/index deadlock, coordination deadlock, Stop pressure, cwd-sensitive hooks, re-open/base replacement, canonical-state disagreement and shell-parser failure classes.
 
 Exit:
 - every normal state has a reachable continuation;
@@ -374,24 +396,31 @@ Exit:
 
 Primary paths:
 - .agent/policies/autonomy-profiles.json
+- .agent/policies/admission-rules.json
 - .agent/orchestration/**
 - tests
 
 Work:
 1. protected profile schema;
-2. human-governed baseline profile;
-3. immutable profile binding/resolver;
-4. trusted admission interface;
-5. orchestration runner around controller;
-6. autonomous role progression/rework;
-7. OWNER_DECISION_REQUIRED contract;
-8. external delivery authority context across publication;
-9. higher-autonomy fixture profiles, not live-enabled.
+2. protected trigger-to-profile/base admission rules;
+3. human-governed baseline profile;
+4. immutable `admission_id` + profile/base binding/resolver;
+5. trusted admission registry/interface;
+6. orchestration runner around controller;
+7. logical Critic/Coder/Reviewer/Verifier separation;
+8. overlapping-writer serialization;
+9. autonomous role progression/rework;
+10. OWNER_DECISION_REQUIRED contract;
+11. external delivery authority context across publication keyed by `admission_id`;
+12. higher-autonomy fixture profiles, not live-enabled.
 
 Admission rule:
-- local/untrusted initiation can select only baseline profile;
+- every run is admitted before planning;
+- manual Owner flow uses trusted trigger class `manual-owner` and baseline profile;
+- local/untrusted initiation cannot select a stronger profile than `admission-rules.json` permits;
 - higher profiles require trusted dispatcher/platform admission;
-- subject-branch work cannot upgrade effective profile.
+- admission resolves base ref -> exact base commit before subject branch/worktree creation;
+- subject-branch work cannot change `.agent/policies/**`, upgrade effective profile, replace `admission_id`, or move `base_commit` forward.
 
 Exit:
 - runner completes engineering lifecycle through PR-ready/publish in tests;
@@ -510,14 +539,14 @@ Before Level 3 for a change class:
 - AC-004 corrupt authority state fails closed.
 - AC-005 state persistence is atomic and compare-before-write.
 - AC-006 active identity fields cannot silently change.
-- AC-007 authority profile binding is immutable.
+- AC-007 `admission_id`, authority profile and trusted `base_commit` bindings are immutable.
 
 ### Planning / Critic
-- AC-008 pre-WB writes limited to docs/changes/** on non-default branch.
+- AC-008 pre-WB writes require a valid trusted admission and are limited to docs/changes/** on the exact admitted non-default subject branch.
 - AC-009 source denied before Critic READY.
 - AC-010 Critic READY binds exact planning revision.
 - AC-011 planning change/revert without revise cannot reach candidate.
-- AC-012 revise resets dependent gates and preserves immutable identity/profile.
+- AC-012 `revise begin` is reachable before planning edits from EXECUTE/ASSURE; DEFINE planning edits can then commit; `revise bind` installs the new revision/scopes; immutable WB/admission/profile/base identity is preserved.
 
 ### Execution / candidate
 - AC-013 implementation structured writes require EXECUTE and scope.
@@ -555,12 +584,14 @@ Before Level 3 for a change class:
 ### Autonomy
 - AC-038 baseline autonomously progresses through PR-ready/publish.
 - AC-039 baseline requires Owner for merge/deploy.
-- AC-040 Orchestrator cannot upgrade its own profile.
-- AC-041 higher profiles require trusted admission.
+- AC-040 Orchestrator cannot replace/upgrade its own `admission_id`, profile or base binding.
+- AC-041 higher profiles require trusted admission through canonical admission rules.
 - AC-042 normal assurance rework loops need no Owner intervention.
 - AC-043 subjective/business decisions return OWNER_DECISION_REQUIRED.
 - AC-044 simulated full event-to-deploy uses same controller/gates.
 - AC-045 higher autonomy is enabled by protected profile/dispatcher/platform configuration, not weakened controller invariants.
+- AC-045a Coder output cannot satisfy Critic/Reviewer/Verifier; unavailable independent assurance blocks.
+- AC-045b write-capable Coders with overlapping implementation scopes are serialized; disjoint scopes may run concurrently.
 
 ### Migration
 - AC-046 replacement is tested while inert.
@@ -580,8 +611,8 @@ Minimum suites:
 - test_cli.py — lifecycle verbs and Git-derived facts
 - test_adapters_hook.py — Claude/Codex parity, cwd/worktree, malformed payload
 - test_e2e_transaction.py — happy path, rework, publish
-- test_legacy_regressions.py — mapped F-001..F-039
-- orchestration/tests/ — baseline progression, Owner decision, profile non-escalation, simulated higher autonomy
+- test_legacy_regressions.py — explicit F-001..F-039 status/rationale mapping plus target tests
+- orchestration/tests/ — baseline progression, Owner decision, admission/profile/base non-escalation, logical-role independence, overlapping-writer serialization, simulated higher autonomy
 
 Git-hook shell fixtures test invocation/exit behavior only. Lifecycle semantics stay in shared Python tests.
 
@@ -624,9 +655,12 @@ Mitigation: human-governed baseline, graduated profiles, evidence-based promotio
 
 ## Practical next step
 
-Before source implementation:
-1. run one holistic independent Critic over the complete architecture and this plan;
-2. resolve blocking/material findings only;
+Holistic Critic commit `cd684f75f97fb860096f16f7deb2994ea036ee8d` returned SUPPLEMENT with four Must findings.
+
+After the contract corrections in the current package:
+
+1. run a focused independent closure review against M1-M4 only;
+2. require READY for the exact corrected package revision;
 3. freeze the implementation-ready package;
 4. define WB-1 from this plan;
 5. begin inert controller implementation.
