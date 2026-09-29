@@ -50,13 +50,17 @@ Examples:
 
 The event itself does not grant arbitrary repository or production authority.
 
-Admission resolves:
+Admission creates one immutable external record keyed by opaque `admission_id` and resolves:
 
-- the exact repository/project;
-- the starting branch/base policy;
-- the applicable autonomy profile;
+- exact repository/project;
+- trusted trigger class;
+- starting base ref and exact `base_commit`;
+- exact subject branch;
+- applicable autonomy profile id/revision;
 - any event-specific intent/scope constraints;
-- the maximum external actions allowed for this run.
+- maximum external actions allowed for this run.
+
+The trusted admission layer creates or verifies the subject branch from the admitted `base_commit` before planning begins. The Orchestrator does not supply a later base value to reduce the candidate diff.
 
 The Orchestrator receives that admitted context. It does not choose a more permissive profile.
 
@@ -90,9 +94,20 @@ A profile may also restrict:
 
 Absence of a capability means DENY / OWNER_DECISION_REQUIRED, never implicit permission.
 
-The profile is loaded from a trusted/protected source and pinned for the run.
+Canonical policy files are:
 
-Normal subject-branch work cannot modify the effective profile.
+```text
+.agent/policies/autonomy-profiles.json
+.agent/policies/admission-rules.json
+```
+
+Trusted admission reads both from one exact pinned commit of the trusted repository default/policy branch.
+
+`admission-rules.json` maps trusted trigger classes to the maximum profile/base policy available to that class.
+
+The profile is pinned for the run from that trusted revision.
+
+Normal subject-branch work cannot modify `.agent/policies/**` or the effective profile. Ordinary implementation/coordination scopes cannot override this protected-policy denial.
 
 Changing the profile is itself an Owner/platform governance action outside the active autonomous run.
 
@@ -169,13 +184,13 @@ The Orchestrator continues these loops autonomously while the required correctio
 
 Autonomy does not mean self-approval.
 
-The Orchestrator may dispatch Critic, Reviewer, and Verifier automatically, but mandatory assurance roles remain logically independent from the implementation decision they check.
+The Orchestrator may dispatch Critic, Reviewer, and Verifier automatically, but mandatory assurance roles remain logically independent from the implementation decision they check. Coder output cannot be reused as Critic/Reviewer/Verifier approval, and one logical role cannot silently substitute for another.
 
 The controller records only their bound status/result identity, not runtime/session/model provenance.
 
 The Orchestrator cannot mark a gate READY merely because an assurance agent is unavailable or inconvenient.
 
-If required independent assurance cannot be obtained, the run is blocked rather than silently downgraded.
+If required independent assurance cannot be obtained, the run is blocked rather than silently downgraded. Logical independence is owned by orchestration scheduling; the controller does not reintroduce runtime/session/topology provenance.
 
 ## 7. Anti-self-expansion rules
 
@@ -387,11 +402,11 @@ Therefore merge/deploy authority for higher-autonomy profiles must not depend so
 
 For autonomous integration/deployment, a trusted external delivery authority context must persist the admitted run/profile binding across the publication boundary.
 
-Preferred implementation direction:
+Required correlation model:
 
-- event/dispatcher creates a run identity and pins the profile;
-- the Work Block state references that run/profile while active;
-- GitHub PR/Actions or the trusted dispatcher carries the same immutable run/profile identity into merge/deploy;
+- trusted admission creates an opaque `admission_id` and pins the profile/base;
+- the Work Block state stores that immutable `admission_id` plus matching profile/base fields while active;
+- GitHub PR/Actions or the trusted dispatcher carries the same immutable `admission_id` into merge/deploy and re-resolves authority from the trusted external admission record;
 - protected workflows/environments verify the profile and exact commit/PR facts before consequential actions;
 - subject-branch code cannot edit or upgrade its own effective delivery authority.
 
@@ -399,24 +414,51 @@ This is not a second engineering lifecycle state machine. It is the external aut
 
 In the baseline human-governed profile, this external context may simply resolve to `OWNER_APPROVAL_REQUIRED` for merge/deploy.
 
-## 16. Authority-profile binding
+## 16. Admission/profile binding
 
-The active autonomous run must have a pinned profile identity that the Orchestrator cannot change.
-
-The implementation design should add a minimal immutable binding, conceptually:
+The active run stores the minimal immutable correlation/binding:
 
 ```text
-authority_profile_id
-authority_profile_revision
+admission_id
+authority_profile.id
+authority_profile.revision
+base_commit
 ```
 
-The binding identifies the protected policy admitted for the run.
+The external trusted admission registry owns the detailed envelope keyed by `admission_id`.
 
-It is not a list of permissions copied into mutable Work Block state.
+These fields must match the external record and cannot change through normal Work Block transitions.
+
+They are not a mutable list of permissions copied into Work Block state.
 
 Runtime/Git/controller adapters consume the resolved policy but cannot widen it.
 
-## 17. Event-driven execution contract
+## 17. Orchestration scheduling invariants
+
+The orchestration layer owns execution discipline that is intentionally not persisted as controller topology/session authority.
+
+### Logical-role separation
+
+For the same planning subject/candidate:
+
+- Coder cannot satisfy Critic, Reviewer, or Verifier;
+- Critic, Reviewer, and Verifier are dispatched as distinct logical assurance roles;
+- unavailable assurance blocks the gate rather than falling back to self-review;
+- role outputs are typed by orchestration role and routed only to the matching lifecycle transition.
+
+### Overlapping-writer serialization
+
+Before dispatching a write-capable Coder, the scheduler compares its `implementation_write_set` with active write-capable Coders in the same orchestration run.
+
+Under the shared path grammar, exact-path overlap and directory-`/**` prefix overlap are deterministic.
+
+If scopes overlap, the writers are serialized.
+
+If scopes are disjoint, Work Blocks may execute in parallel.
+
+No global runtime registry or persisted execution/session IDs are required.
+
+## 18. Event-driven execution contract
 
 An event-driven runner may automatically:
 
@@ -435,11 +477,12 @@ A crash/restart resumes only from durable Git artifacts plus valid local control
 
 Lost transient assurance is rerun rather than fabricated.
 
-## 18. Required safeguards
+## 19. Required safeguards
 
 Full autonomy requires all of the following:
 
-- immutable/pinned authority profile for the run;
+- immutable `admission_id` plus pinned authority profile/base for the run;
+- canonical protected policy source and trusted trigger-to-profile mapping;
 - controller state and scope enforcement;
 - Critic before source execution;
 - exact candidate-bound Reviewer/Verifier;
@@ -453,24 +496,26 @@ Full autonomy requires all of the following:
 
 No single agent prompt is treated as a sufficient security boundary.
 
-## 19. Acceptance scenarios
+## 20. Acceptance scenarios
 
 The implementation/E2E suite must eventually cover:
 
-- event -> autonomous planning -> Critic -> implementation -> assurance -> subject publication;
+- event -> trusted admission -> autonomous planning -> Critic -> implementation -> assurance -> subject publication;
 - autonomous Reviewer/Verifier rework loop;
 - blocked Critic causing autonomous re-plan;
 - profile without merge permission stops exactly at merge;
 - profile with merge permission merges when all predicates pass;
 - non-production profile cannot deploy production;
 - production profile can complete deploy when exact predicates pass;
-- Orchestrator cannot change its own effective profile;
-- attempted profile/policy modification inside subject work is denied;
+- Orchestrator cannot change its own admission/profile/base binding;
+- attempted `.agent/policies/**` modification inside ordinary subject work is denied;
+- overlapping write-capable Coders are serialized while disjoint scopes may run in parallel;
+- Coder output cannot satisfy Critic/Reviewer/Verifier and unavailable independent assurance blocks;
 - missing capability returns OWNER_DECISION_REQUIRED rather than workaround;
 - failed deploy follows only admitted rollback/retry behavior;
 - full admitted event -> deploy -> verification path completes without human interaction.
 
-## 20. Design consequence
+## 21. Design consequence
 
 The target AzurSysTech SDLC is therefore:
 
