@@ -104,7 +104,7 @@ Canonical owner: shared controller.
 
 Controller checks:
 
-- state is INACTIVE;
+- state is canonical INACTIVE or local state is missing/NO_LOCAL_AUTHORITY;
 - attached non-default subject branch;
 - exact `base_commit`;
 - Work Block and initiative identity;
@@ -125,20 +125,27 @@ Explicitly not checked:
 - report path;
 - subagent topology.
 
-### Approve Critic / enter EXECUTE
+### Critic result / enter EXECUTE
 
 Canonical owner: shared controller.
 
-Controller checks:
+`critic ready` is one atomic controller transition. There is no required persisted `DEFINE + READY` intermediate state.
+
+Preconditions:
 
 - lifecycle state is DEFINE;
-- `critic_status == READY`;
-- `critic_subject_revision == planning_subject_revision`.
+- no material revision is awaiting `revise bind`;
+- Critic result is READY for the exact current committed `planning_subject.revision`;
+- Git shows no later commit changing any current planning-subject path after that bound revision.
 
-Result:
+Atomic result:
 
-- transition to EXECUTE;
+- `critic.status = READY`;
+- `critic.subject_revision = planning_subject.revision`;
+- transition DEFINE -> EXECUTE;
 - implementation writes become eligible.
+
+`critic blocked` keeps DEFINE with Critic BLOCKED/null and grants no source authority.
 
 Runtime hook role:
 
@@ -198,18 +205,29 @@ Rules:
 
 Canonical owner: shared controller.
 
-Controller checks:
+Material revision is a reachable two-phase transaction using the same `revise` lifecycle command.
 
-- explicit transition to DEFINE;
-- new `planning_subject_revision` differs from prior revision.
+`revise begin` from EXECUTE or ASSURE:
 
-Result:
+- transitions immediately to DEFINE;
+- preserves Work Block identity, admission/profile binding, subject branch, base commit, initiative_ref, and the previous planning binding for traceability;
+- resets Critic to PENDING/null;
+- clears candidate and Reviewer/Verifier bindings;
+- opens DEFINE planning authority under the immutable `initiative_ref/**` planning surface.
 
-- `critic_status = PENDING`;
-- `critic_subject_revision = null`;
-- candidate and candidate-bound assurance are cleared when already present.
+While in DEFINE the Orchestrator may edit and commit planning artifacts before a new planning revision is bound.
 
-Runtime/Git hooks must not silently update the planning revision from current HEAD.
+`revise bind` in DEFINE:
+
+- requires a committed clean planning revision;
+- installs the new `planning_subject.revision`;
+- may install new exact planning paths and revised implementation/coordination scopes;
+- requires all planning paths to remain under `initiative_ref/**`;
+- remains in DEFINE with Critic PENDING/null.
+
+Critic must then review that committed bound planning revision before DEFINE -> EXECUTE.
+
+Runtime/Git hooks must never silently infer/bind a new planning revision from HEAD.
 
 ### Commit during implementation
 
@@ -321,24 +339,27 @@ Restart reads the same per-worktree state.
 
 Hook entrypoints must resolve from the bound repository/project root rather than the runtime's mutable current working directory.
 
-### Closeout
+### Closeout preparation and terminal completion
 
 Canonical owner: shared controller.
 
-Successful closeout requires:
+There is no separate successful `close` transition.
 
-- ASSURE;
-- Reviewer READY for exact candidate;
-- Verifier READY for exact candidate;
-- required durable conclusions already transferred to project docs/logs;
-- no implementation-path change since candidate assurance.
+While ASSURE is active, the Orchestrator may prepare durable closeout/engineering-memory notes through allowed coordination-only commits.
 
-Result:
+Normal successful terminal path is exclusively:
 
-- active state cleared;
-- lifecycle returns to INACTIVE.
+```text
+ASSURE
+-> Reviewer READY
+-> Verifier READY
+-> optional coordination-only closeout commit(s)
+-> publish
+-> remote verification
+-> INACTIVE
+```
 
-Reporting-only/cancelled closeout may occur from supported active states without claiming success.
+The `close` command is reserved for `reporting-only` or `cancelled` outcomes and must not claim successful delivery.
 
 No historical assurance archive is retained in runtime state.
 
@@ -1103,3 +1124,27 @@ The next artifact is the implementation plan and acceptance-test inventory for a
 The enforcement matrix is consumed by an autonomous Orchestrator. Normal lifecycle progression and rework are not approval checkpoints. A trusted event admission path pins an autonomy profile for the run; enforcement surfaces verify that the requested consequence stays within that profile.
 
 When the profile permits merge and/or deployment, the Orchestrator may perform those actions automatically after the required engineering and platform predicates pass. When it does not, the exact boundary returns `OWNER_DECISION_REQUIRED`. See `docs/architecture/sdlc-simplification-v1-autonomous-orchestration.md`.
+
+
+## 15. Orchestration execution invariants
+
+The controller intentionally does not persist runtime/session/topology proof. The orchestration layer therefore owns two execution-discipline invariants.
+
+### Logical assurance independence
+
+For one planning subject/candidate:
+
+- Coder output cannot satisfy Critic, Reviewer, or Verifier;
+- Critic/Reviewer/Verifier are dispatched as distinct logical assurance roles;
+- one assurance role cannot be substituted by Coder self-attestation;
+- if the required independent role cannot run, the gate remains unavailable rather than being self-approved.
+
+This is orchestration scheduling discipline, not controller state provenance.
+
+### Overlapping writer serialization
+
+The orchestration scheduler must not run multiple write-capable Coders concurrently when their `implementation_write_set` values overlap under the shared exact-path / terminal-`/**` grammar.
+
+Non-overlapping Work Blocks may run concurrently.
+
+No global runtime registry or execution/session IDs are required; scheduler tests must prove deterministic overlap detection and serialization within an orchestration run.
