@@ -68,6 +68,7 @@ def open_with_resolver(
     if not gitfacts.is_ancestor(root, record.base_commit, head):
         raise StopAndPreserve("admitted base_commit is not ancestor of subject history")
 
+    # Planning is already committed before open; bind the exact current HEAD.
     planning_revision = head
     _verify_planning_paths(root, planning_revision, planning_paths)
 
@@ -102,6 +103,7 @@ def critic(root: Path, outcome: str) -> dict:
         head = gitfacts.head_sha(root)
         if not gitfacts.is_ancestor(root, planning_revision, head):
             verified = False
+        # A later unbound commit to the derived planning surface invalidates READY.
         for commit in gitfacts.commits_between(root, planning_revision, head):
             if any(
                 state.derived_planning_path(active["initiative_ref"], changed)

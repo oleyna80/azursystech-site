@@ -125,6 +125,7 @@ class CliTests(unittest.TestCase):
         candidate = cli.candidate(self.root)
         self.assertEqual(candidate["active"]["source_candidate_sha"], expected)
 
+        # New attempt: reviewer rework then dirty tree cannot freeze.
         cli.reviewer(self.root, "rework")
         source.write_text("dirty\n", encoding="utf-8")
         with self.assertRaises(StopAndPreserve):
@@ -162,6 +163,7 @@ class CliTests(unittest.TestCase):
         self.assertEqual(assured["active"]["verifier"]["status"], "READY")
         self.assertEqual(cli.close(self.root, "cancelled"), state.INACTIVE)
 
+
     def test_publish_to_local_bare_remote_verifies_then_clears_state(self):
         remote = Path(self.temp.name) / "remote.git"
         subprocess.run(["git", "init", "--bare", "-q", str(remote)], check=True)
@@ -176,6 +178,7 @@ class CliTests(unittest.TestCase):
         cli.reviewer(self.root, "ready")
         cli.verifier(self.root, "ready")
 
+        # Safe coordination-only commit after the assured source candidate.
         memory = self.root / "docs/engineering-memory"
         memory.mkdir(parents=True, exist_ok=True)
         (memory / "closeout.md").write_text("done\n", encoding="utf-8")

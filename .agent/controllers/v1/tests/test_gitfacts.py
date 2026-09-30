@@ -62,7 +62,7 @@ class GitFactsTests(unittest.TestCase):
         (self.root / "src/app.py").write_text("dirty\n", encoding="utf-8")
         self.assertFalse(gitfacts.is_clean(self.root))
         subprocess.run(["git", "-C", str(self.root), "checkout", "--", "src/app.py"], check=True)
-        tip = gitfacts.head_sha(self.root)
+        tip = s.commit_all(self.root, "empty-ish") if False else gitfacts.head_sha(self.root)
         self.assertTrue(gitfacts.is_ancestor(self.root, self.base, tip))
 
 

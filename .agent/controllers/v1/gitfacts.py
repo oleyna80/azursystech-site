@@ -185,7 +185,10 @@ def planning_subject_unchanged(root: Path, planning_revision: str, tip: str, pat
 
 def remote_ref_sha(root: Path, remote: str, ref: str) -> str | None:
     root = worktree_root(root)
-    output = _git(root, "ls-remote", "--heads", remote, ref)
+    try:
+        output = _git(root, "ls-remote", "--heads", remote, ref)
+    except StopAndPreserve:
+        raise
     if not output:
         return None
     first = output.splitlines()[0].split()

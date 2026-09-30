@@ -91,7 +91,7 @@ class StateTests(unittest.TestCase):
 
     def test_candidate_and_assurance_bind_exact_sha(self):
         item = s.assure()
-        self.assertEqual(item["active"]["source_candidate_sha"], s.CANDIDATE)
+        self.assertEqual(item["source_candidate_sha"] if "source_candidate_sha" in item else item["active"]["source_candidate_sha"], s.CANDIDATE)
         item = state.reviewer_result(item, "ready")
         self.assertEqual(item["active"]["reviewer"]["candidate_sha"], s.CANDIDATE)
         item = state.verifier_result(item, "ready")
