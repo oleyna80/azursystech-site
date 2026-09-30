@@ -45,6 +45,29 @@ class GitFactsTests(unittest.TestCase):
         tip = s.commit_all(self.root, "change")
         self.assertEqual(gitfacts.changed_paths(self.root, self.base, tip), ("src/app.py",))
 
+    def test_deletions_are_present_in_staged_changed_and_commit_paths(self):
+        doomed = self.root / "outside.txt"
+        doomed.write_text("delete me\n", encoding="utf-8")
+        with subprocess.Popen(["git", "-C", str(self.root), "add", "outside.txt"]) as proc:
+            self.assertEqual(proc.wait(), 0)
+        delete_base = s.commit_all(self.root, "add outside")
+        doomed.unlink()
+        subprocess.run(["git", "-C", str(self.root), "add", "-u"], check=True)
+        self.assertEqual(gitfacts.staged_paths(self.root), ("outside.txt",))
+        delete_tip = s.commit_all(self.root, "delete outside")
+        self.assertEqual(gitfacts.changed_paths(self.root, delete_base, delete_tip), ("outside.txt",))
+        self.assertEqual(gitfacts.commit_paths(self.root, delete_tip), ("outside.txt",))
+
+    def test_merge_commit_is_detected(self):
+        subprocess.run(["git", "-C", str(self.root), "switch", "-qc", "side"], check=True)
+        (self.root / "side.txt").write_text("side\n", encoding="utf-8")
+        s.commit_all(self.root, "side")
+        subprocess.run(["git", "-C", str(self.root), "switch", "-q", "feat/test"], check=True)
+        (self.root / "main.txt").write_text("main\n", encoding="utf-8")
+        s.commit_all(self.root, "main")
+        subprocess.run(["git", "-C", str(self.root), "merge", "--no-ff", "side", "-qm", "merge"], check=True)
+        self.assertTrue(gitfacts.is_merge_commit(self.root, gitfacts.head_sha(self.root)))
+
     def test_planning_change_then_revert_is_still_detected(self):
         plan = self.root / "docs/changes/test/plan.md"
         plan.write_text("v2\n", encoding="utf-8")
