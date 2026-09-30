@@ -254,12 +254,14 @@ def _prepush_event(root: Path, current: dict, remote: str, remote_sha: str | Non
     )
 
 
-def publish(root: Path) -> dict:
-    """Publish only to trusted origin using Git-derived default-branch facts."""
+def publish(root: Path, *, branch_protection_resolver=None) -> dict:
+    """Publish only with trusted remote/default/protection facts."""
 
     root = gitfacts.worktree_root(root)
     remote = policy.PUBLISH_REMOTE
     default_branch = gitfacts.remote_default_branch(root, remote)
+    if branch_protection_resolver is None:
+        raise StopAndPreserve("publish requires trusted branch-protection resolver")
     path, current = storage.load_for_worktree(root)
     if current is None:
         raise TransitionDenied("publish requires active Work Block")
@@ -270,7 +272,15 @@ def publish(root: Path) -> dict:
     remote_ref = f"refs/heads/{active['subject_branch']}"
     before = gitfacts.remote_ref_sha(root, remote, remote_ref)
     event = _prepush_event(root, current, remote, before)
-    verdict = policy.evaluate(event, current, default_branch=default_branch)
+    protected = branch_protection_resolver(remote, active["subject_branch"])
+    if not isinstance(protected, bool):
+        raise StopAndPreserve("branch-protection resolver returned unknown status")
+    verdict = policy.evaluate(
+        event,
+        current,
+        default_branch=default_branch,
+        subject_branch_is_protected=protected,
+    )
     if not verdict.allowed:
         raise TransitionDenied(f"{verdict.code}: {verdict.reason}")
 
@@ -329,7 +339,9 @@ def main(argv: list[str] | None = None) -> int:
         elif args.operation == "verifier":
             result = verifier(root, payload["outcome"])
         elif args.operation == "publish":
-            result = publish(root)
+            raise StopAndPreserve(
+                "standalone publish has no trusted branch-protection provider; use trusted integration layer"
+            )
         elif args.operation == "close":
             result = close(root, payload["outcome"])
         else:
