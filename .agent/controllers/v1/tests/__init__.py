@@ -1,1 +1,1 @@
-"""Controller v1 regression tests."""
+"""Tests for inert controller core."""

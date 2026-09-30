@@ -1,4 +1,4 @@
-"""Validated atomic state persistence and bounded inactive-only recovery."""
+"""Per-worktree validated atomic state persistence."""
 
 from __future__ import annotations
 
@@ -9,74 +9,94 @@ from pathlib import Path
 
 from .canonical import canonical_json_bytes
 from .errors import DurabilityUncertain, StopAndPreserve, ValidationError
-from .state import INACTIVE, validate
+from . import gitfacts
+from .state import validate
+
+MISSING = object()
+IMMUTABLE_ACTIVE_FIELDS = (
+    "work_block_id",
+    "initiative_ref",
+    "admission_id",
+    "subject_branch",
+    "base_commit",
+    "authority_profile",
+)
+
+
+def resolve_path(root: Path) -> Path:
+    return gitfacts.state_path(root)
 
 
 def read(path: Path) -> dict:
     if path.is_symlink():
-        raise StopAndPreserve("authority file is a symlink")
+        raise StopAndPreserve("authority state path is a symlink")
     try:
-        value = json.loads(path.read_bytes())
-    except (OSError, ValueError) as exc:
-        raise StopAndPreserve("authority state is missing or corrupt") from exc
+        raw = path.read_bytes()
+    except FileNotFoundError as exc:
+        raise StopAndPreserve("authority state is missing") from exc
+    except OSError as exc:
+        raise StopAndPreserve("authority state cannot be read") from exc
+    try:
+        value = json.loads(raw)
+    except (ValueError, UnicodeDecodeError) as exc:
+        raise StopAndPreserve("authority state is corrupt") from exc
     validate(value)
     return value
 
 
-def _preserves_history(previous: dict, proposed: dict) -> None:
-    old_history = previous["history"]
-    new_history = proposed["history"]
-    if new_history[:len(old_history)] != old_history:
-        raise ValidationError("completed closeout history is immutable")
+def read_optional(path: Path) -> dict | None:
+    if path.is_symlink():
+        raise StopAndPreserve("authority state path is a symlink")
+    if not path.exists():
+        return None
+    return read(path)
+
+
+def load_for_worktree(root: Path) -> tuple[Path, dict | None]:
+    path = resolve_path(root)
+    return path, read_optional(path)
+
+
+def _preserve_immutable_binding(previous: dict, proposed: dict) -> None:
     old_active = previous["active"]
     new_active = proposed["active"]
-    if old_active is None:
-        if previous["lifecycle_state"] == "INACTIVE" and proposed["lifecycle_state"] == "INACTIVE":
-            if proposed != previous:
-                raise ValidationError("inactive state cannot be silently revised")
+    if old_active is None or new_active is None:
         return
-    if new_active is not None:
-        if old_active["work_block_id"] != new_active["work_block_id"]:
-            raise ValidationError("active Work Block identity cannot change")
-        if old_active["subject_branch"] != new_active["subject_branch"] or old_active["write_set"] != new_active["write_set"]:
-            raise ValidationError("subject branch and admitted write-set cannot change while active")
-        if old_active["controller_generation"] != new_active["controller_generation"] or old_active["controller_tree"] != new_active["controller_tree"]:
-            raise ValidationError("controller binding cannot change while active")
-        for key in ("dispatches", "evidence"):
-            if new_active[key][:len(old_active[key])] != old_active[key]:
-                raise ValidationError(f"completed {key} are immutable")
-        old_start = old_active["assurance_evidence_start"]
-        new_start = new_active["assurance_evidence_start"]
-        if previous["lifecycle_state"] == "EXECUTE" and proposed["lifecycle_state"] == "ASSURE":
-            if new_start != len(old_active["evidence"]):
-                raise ValidationError("new assurance boundary must follow the previous evidence")
-        elif new_start != old_start:
-            raise ValidationError("assurance boundary changes only on candidate freeze")
-    elif proposed["lifecycle_state"] == "INACTIVE":
-        if len(new_history) != len(old_history) + 1 or new_history[-1]["work_block"] != old_active:
-            raise ValidationError("closeout must preserve exact active evidence")
-    else:
-        raise ValidationError("active authority cannot disappear")
+    for key in IMMUTABLE_ACTIVE_FIELDS:
+        if old_active[key] != new_active[key]:
+            raise ValidationError(f"active {key} binding is immutable")
 
 
-def write(path: Path, proposed: dict, *, expected: dict | None = None, after_replace=None) -> None:
-    """Validate first, then same-directory fsync and replace; re-read on uncertainty."""
+def write(
+    path: Path,
+    proposed: dict,
+    *,
+    expected: dict | object = MISSING,
+    after_replace=None,
+) -> None:
+    """Validate, compare, atomic replace, fsync, and read back."""
+
     validate(proposed)
     payload = canonical_json_bytes(proposed)
     if path.is_symlink():
-        raise StopAndPreserve("authority file is a symlink")
-    if path.exists():
-        previous = read(path)
-        if expected is not None and previous != expected:
+        raise StopAndPreserve("authority state path is a symlink")
+
+    existing = read_optional(path)
+    if expected is MISSING:
+        if existing is not None:
+            raise StopAndPreserve("authority appeared since read")
+    else:
+        if existing is None:
+            raise StopAndPreserve("authority disappeared since read")
+        if existing != expected:
             raise StopAndPreserve("authority changed since read")
-        _preserves_history(previous, proposed)
-    elif expected is not None:
-        raise StopAndPreserve("authority disappeared since read")
-    elif proposed != INACTIVE:
-        raise StopAndPreserve("initial authority must be canonical inactive")
+        _preserve_immutable_binding(existing, proposed)
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = None
+    if path.parent.is_symlink():
+        raise StopAndPreserve("authority state directory is a symlink")
+
+    temporary: Path | None = None
     replaced = False
     try:
         with tempfile.NamedTemporaryFile("wb", dir=path.parent, delete=False) as output:
@@ -94,29 +114,20 @@ def write(path: Path, proposed: dict, *, expected: dict | None = None, after_rep
             os.fsync(descriptor)
         finally:
             os.close(descriptor)
+        if read(path) != proposed:
+            raise DurabilityUncertain("post-replace readback differs")
+    except DurabilityUncertain:
+        raise
     except Exception as exc:
         if replaced:
             try:
                 current = read(path)
             except Exception:
-                raise DurabilityUncertain("replacement may have occurred; read-back failed") from exc
+                raise DurabilityUncertain("replacement may have occurred; readback failed") from exc
             if current != proposed:
-                raise DurabilityUncertain("replacement may have occurred; read-back differs") from exc
-            raise DurabilityUncertain("read-back matches, but persistence durability is uncertain") from exc
+                raise DurabilityUncertain("replacement may have occurred; readback differs") from exc
+            raise DurabilityUncertain("readback matches but durable persistence is uncertain") from exc
         raise
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)
-
-
-def recover_inactive(path: Path, *, inactive_proven: bool) -> dict:
-    """Only a missing state with independently proven inactive authority is recoverable."""
-    if not inactive_proven:
-        raise StopAndPreserve("inactive authority was not proven")
-    if path.exists() or path.is_symlink():
-        existing = read(path)
-        if existing == INACTIVE:
-            return existing
-        raise StopAndPreserve("existing authority cannot be reconstructed or overwritten")
-    write(path, dict(INACTIVE))
-    return read(path)
