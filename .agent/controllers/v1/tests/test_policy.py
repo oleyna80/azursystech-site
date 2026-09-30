@@ -87,6 +87,7 @@ class PolicyTests(unittest.TestCase):
             assure,
         ).allowed)
 
+
     def test_execute_allows_mixed_implementation_and_coordination_targets(self):
         result = policy.evaluate(
             ev(
