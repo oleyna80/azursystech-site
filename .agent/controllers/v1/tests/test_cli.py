@@ -228,6 +228,7 @@ class CliTests(unittest.TestCase):
         s.commit_all(self.root, "main coordination")
 
         subprocess.run(["git", "-C", str(self.root), "switch", "-q", "coord-side"], check=True)
+        memory.mkdir(parents=True, exist_ok=True)
         (memory / "merge-note.md").write_text("side\n", encoding="utf-8")
         s.commit_all(self.root, "side coordination")
 
