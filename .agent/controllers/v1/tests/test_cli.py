@@ -43,6 +43,7 @@ class CliTests(unittest.TestCase):
             full.write_text(path + "\n", encoding="utf-8")
         (self.root / ".agent/controllers/v1").mkdir(parents=True)
         (self.root / ".agent/controllers/v1/state.py").write_text("initial\n", encoding="utf-8")
+        (self.root / "outside.txt").write_text("outside base\n", encoding="utf-8")
         self.base = s.commit_all(self.root, "planning base")
         self.record = MutableRecord()
         self.record.base_commit = self.base
@@ -139,6 +140,14 @@ class CliTests(unittest.TestCase):
         with self.assertRaises(StopAndPreserve):
             cli.candidate(self.root)
 
+    def test_candidate_rejects_out_of_scope_deletion(self):
+        self.open()
+        cli.critic(self.root, "ready")
+        (self.root / "outside.txt").unlink()
+        s.commit_all(self.root, "delete outside")
+        with self.assertRaises(StopAndPreserve):
+            cli.candidate(self.root)
+
     def test_candidate_rejects_planning_change_then_revert(self):
         self.open()
         cli.critic(self.root, "ready")
@@ -166,8 +175,9 @@ class CliTests(unittest.TestCase):
 
     def test_publish_to_local_bare_remote_verifies_then_clears_state(self):
         remote = Path(self.temp.name) / "remote.git"
-        subprocess.run(["git", "init", "--bare", "-q", str(remote)], check=True)
+        subprocess.run(["git", "init", "--bare", "-q", "--initial-branch=main", str(remote)], check=True)
         subprocess.run(["git", "-C", str(self.root), "remote", "add", "origin", str(remote)], check=True)
+        subprocess.run(["git", "-C", str(self.root), "push", "-q", "origin", "HEAD:refs/heads/main"], check=True)
 
         self.open()
         cli.critic(self.root, "ready")
@@ -184,7 +194,7 @@ class CliTests(unittest.TestCase):
         (memory / "closeout.md").write_text("done\n", encoding="utf-8")
         publish_tip = s.commit_all(self.root, "closeout")
 
-        result = cli.publish(self.root, remote="origin", default_branch="main")
+        result = cli.publish(self.root)
         self.assertEqual(result, state.INACTIVE)
         self.assertEqual(
             subprocess.check_output(
@@ -194,6 +204,57 @@ class CliTests(unittest.TestCase):
             publish_tip,
         )
         self.assertNotEqual(candidate_sha, publish_tip)
+
+    def test_publish_rejects_post_candidate_merge_even_when_parent_commits_are_coordination_only(self):
+        remote = Path(self.temp.name) / "remote-merge.git"
+        subprocess.run(["git", "init", "--bare", "-q", "--initial-branch=main", str(remote)], check=True)
+        subprocess.run(["git", "-C", str(self.root), "remote", "add", "origin", str(remote)], check=True)
+        subprocess.run(["git", "-C", str(self.root), "push", "-q", "origin", "HEAD:refs/heads/main"], check=True)
+
+        self.open()
+        cli.critic(self.root, "ready")
+        source = self.root / ".agent/controllers/v1/state.py"
+        source.write_text("candidate\n", encoding="utf-8")
+        candidate_sha = s.commit_all(self.root, "candidate")
+        cli.candidate(self.root)
+        cli.reviewer(self.root, "ready")
+        cli.verifier(self.root, "ready")
+
+        memory = self.root / "docs/engineering-memory"
+        memory.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["git", "-C", str(self.root), "branch", "coord-side", candidate_sha], check=True)
+
+        (memory / "merge-note.md").write_text("main\n", encoding="utf-8")
+        s.commit_all(self.root, "main coordination")
+
+        subprocess.run(["git", "-C", str(self.root), "switch", "-q", "coord-side"], check=True)
+        (memory / "merge-note.md").write_text("side\n", encoding="utf-8")
+        s.commit_all(self.root, "side coordination")
+
+        subprocess.run(["git", "-C", str(self.root), "switch", "-q", "feat/test"], check=True)
+        result = subprocess.run(
+            ["git", "-C", str(self.root), "merge", "--no-ff", "coord-side", "-m", "merge coordination"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        (memory / "merge-note.md").write_text("resolved\n", encoding="utf-8")
+        source.write_text("merge-resolution-source-change\n", encoding="utf-8")
+        subprocess.run(
+            ["git", "-C", str(self.root), "add", "docs/engineering-memory/merge-note.md", ".agent/controllers/v1/state.py"],
+            check=True,
+        )
+        subprocess.run(["git", "-C", str(self.root), "commit", "-qm", "merge coordination resolved"], check=True)
+
+        with self.assertRaises(TransitionDenied):
+            cli.publish(self.root)
+        self.assertEqual(cli.status(self.root)["lifecycle_state"], "ASSURE")
+
+    def test_publish_does_not_accept_payload_selected_remote_or_default_branch(self):
+        with self.assertRaises(TypeError):
+            cli.publish(self.root, remote="evil")
+        with self.assertRaises(TypeError):
+            cli.publish(self.root, default_branch="fake")
 
     def test_failed_publish_preserves_assure_state(self):
         self.open()
@@ -205,8 +266,9 @@ class CliTests(unittest.TestCase):
         cli.reviewer(self.root, "ready")
         cli.verifier(self.root, "ready")
         before = cli.status(self.root)
+        subprocess.run(["git", "-C", str(self.root), "remote", "rename", "origin", "missing-origin"], check=True)
         with self.assertRaises(StopAndPreserve):
-            cli.publish(self.root, remote="missing-remote", default_branch="main")
+            cli.publish(self.root)
         self.assertEqual(cli.status(self.root), before)
         self.assertEqual(before["lifecycle_state"], "ASSURE")
 
