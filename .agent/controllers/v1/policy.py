@@ -156,7 +156,13 @@ def post_candidate_history_allowed(root: Path, state: dict, tip: str) -> bool:
     return True
 
 
-def _prepush(event: Event, state: dict | None, *, default_branch: str | None) -> Decision:
+def _prepush(
+    event: Event,
+    state: dict | None,
+    *,
+    default_branch: str | None,
+    subject_branch_is_protected: bool | None,
+) -> Decision:
     if state is None or state["lifecycle_state"] != "ASSURE":
         return decision("DENY", "PUSH_STAGE_DENIED", "push requires active ASSURE state")
     active = state["active"]
@@ -164,6 +170,9 @@ def _prepush(event: Event, state: dict | None, *, default_branch: str | None) ->
         return decision("DENY", "BRANCH_MISMATCH", "push branch differs from active subject branch")
     if default_branch is None or active["subject_branch"] == default_branch:
         return decision("DENY", "PUSH_REF_DENIED", "default/unknown branch publication is denied")
+    if subject_branch_is_protected is not False:
+        code = "PUSH_PROTECTED_BRANCH_DENIED" if subject_branch_is_protected else "PUSH_PROTECTED_STATUS_UNKNOWN"
+        return decision("DENY", code, "protected-branch status must be trusted and false")
 
     facts = event.facts
     if facts["remote_name"] != PUBLISH_REMOTE:
@@ -198,6 +207,7 @@ def evaluate(
     admission=None,
     repository_id: str | None = None,
     default_branch: str | None = None,
+    subject_branch_is_protected: bool | None = None,
 ) -> Decision:
     """Return one deterministic normalized decision; malformed authority fails closed."""
 
@@ -211,7 +221,12 @@ def evaluate(
         if event.kind == "git_commit_message":
             return _commit_message(event, state)
         if event.kind == "git_pre_push":
-            return _prepush(event, state, default_branch=default_branch)
+            return _prepush(
+                event,
+                state,
+                default_branch=default_branch,
+                subject_branch_is_protected=subject_branch_is_protected,
+            )
         if event.kind == "subagent_context":
             if state is None or state["lifecycle_state"] == "INACTIVE":
                 return decision("ADVISORY", "CONTEXT_UNAVAILABLE", "no active Work Block context")
