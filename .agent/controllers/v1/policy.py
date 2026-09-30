@@ -15,6 +15,7 @@ from .state import (
 )
 
 PRE_WB_PREFIX = "docs/changes/"
+PUBLISH_REMOTE = "origin"
 PROTECTED_PREFIX = ".agent/policies/"
 FORBIDDEN_EXACT = frozenset({".env", ".env.local", ".npmrc"})
 FORBIDDEN_SUFFIXES = (".pem", ".key", ".p12", ".pfx")
@@ -143,6 +144,8 @@ def post_candidate_history_allowed(root: Path, state: dict, tip: str) -> bool:
         return False
     planning = set(active["planning_subject"]["paths"])
     for commit in gitfacts.commits_between(root, candidate, tip):
+        if gitfacts.is_merge_commit(root, commit):
+            return False
         for path in gitfacts.commit_paths(root, commit):
             if path in planning:
                 return False
@@ -163,6 +166,8 @@ def _prepush(event: Event, state: dict | None, *, default_branch: str | None) ->
         return decision("DENY", "PUSH_REF_DENIED", "default/unknown branch publication is denied")
 
     facts = event.facts
+    if facts["remote_name"] != PUBLISH_REMOTE:
+        return decision("DENY", "PUSH_REMOTE_DENIED", "publication remote must be trusted origin")
     expected_ref = f"refs/heads/{active['subject_branch']}"
     if facts["local_sha"] == gitfacts.ZERO_SHA:
         return decision("DENY", "PUSH_DELETE_DENIED", "ref deletion is denied")
