@@ -194,7 +194,7 @@ class CliTests(unittest.TestCase):
         (memory / "closeout.md").write_text("done\n", encoding="utf-8")
         publish_tip = s.commit_all(self.root, "closeout")
 
-        result = cli.publish(self.root)
+        result = cli.publish(self.root, branch_protection_resolver=lambda _remote, _branch: False)
         self.assertEqual(result, state.INACTIVE)
         self.assertEqual(
             subprocess.check_output(
@@ -247,7 +247,28 @@ class CliTests(unittest.TestCase):
         subprocess.run(["git", "-C", str(self.root), "commit", "-qm", "merge coordination resolved"], check=True)
 
         with self.assertRaises(TransitionDenied):
+            cli.publish(self.root, branch_protection_resolver=lambda _remote, _branch: False)
+        self.assertEqual(cli.status(self.root)["lifecycle_state"], "ASSURE")
+
+    def test_publish_requires_trusted_unprotected_branch_fact(self):
+        remote = Path(self.temp.name) / "remote-protection.git"
+        subprocess.run(["git", "init", "--bare", "-q", "--initial-branch=main", str(remote)], check=True)
+        subprocess.run(["git", "-C", str(self.root), "remote", "add", "origin", str(remote)], check=True)
+        subprocess.run(["git", "-C", str(self.root), "push", "-q", "origin", "HEAD:refs/heads/main"], check=True)
+
+        self.open()
+        cli.critic(self.root, "ready")
+        source = self.root / ".agent/controllers/v1/state.py"
+        source.write_text("implementation\n", encoding="utf-8")
+        s.commit_all(self.root, "implementation")
+        cli.candidate(self.root)
+        cli.reviewer(self.root, "ready")
+        cli.verifier(self.root, "ready")
+
+        with self.assertRaises(StopAndPreserve):
             cli.publish(self.root)
+        with self.assertRaises(TransitionDenied):
+            cli.publish(self.root, branch_protection_resolver=lambda _remote, _branch: True)
         self.assertEqual(cli.status(self.root)["lifecycle_state"], "ASSURE")
 
     def test_publish_does_not_accept_payload_selected_remote_or_default_branch(self):
@@ -268,7 +289,7 @@ class CliTests(unittest.TestCase):
         before = cli.status(self.root)
         subprocess.run(["git", "-C", str(self.root), "remote", "rename", "origin", "missing-origin"], check=True)
         with self.assertRaises(StopAndPreserve):
-            cli.publish(self.root)
+            cli.publish(self.root, branch_protection_resolver=lambda _remote, _branch: False)
         self.assertEqual(cli.status(self.root), before)
         self.assertEqual(before["lifecycle_state"], "ASSURE")
 
