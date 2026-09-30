@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 
-from v1 import events, policy, state
+from v1 import events, gitfacts, policy, state
 from v1.tests import support as s
 
 
@@ -138,6 +138,51 @@ class PolicyTests(unittest.TestCase):
                   facts={"head_sha": "a" * 40})
         self.assertEqual(policy.evaluate(main, s.execute(), default_branch="main").code,
                          "COMMIT_DEFAULT_BRANCH_DENIED")
+
+    def test_precommit_protected_deletion_is_denied_from_git_paths(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            s.init_repo(root)
+            protected = root / ".agent/policies/admission-rules.json"
+            protected.parent.mkdir(parents=True)
+            protected.write_text("{}\n", encoding="utf-8")
+            s.commit_all(root, "protected base")
+            protected.unlink()
+            subprocess.run(["git", "-C", str(root), "add", "-u"], check=True)
+            paths = gitfacts.staged_paths(root)
+            self.assertEqual(paths, (".agent/policies/admission-rules.json",))
+            event = ev(
+                "git_pre_commit",
+                paths=paths,
+                source="git",
+                facts={"head_sha": gitfacts.head_sha(root)},
+                root=str(root),
+            )
+            result = policy.evaluate(event, s.execute(), default_branch="main")
+            self.assertEqual(result.code, "COMMIT_FORBIDDEN_PATH")
+
+    def test_post_candidate_implementation_deletion_is_denied(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            s.init_repo(root)
+            source = root / ".agent/controllers/v1/state.py"
+            source.parent.mkdir(parents=True)
+            source.write_text("v1\n", encoding="utf-8")
+            for path in s.PLANNING_PATHS:
+                full = root / path
+                full.parent.mkdir(parents=True, exist_ok=True)
+                full.write_text(path + "\n", encoding="utf-8")
+            base = s.commit_all(root, "candidate")
+            item = s.assured()
+            item["active"]["base_commit"] = base
+            item["active"]["planning_subject"]["revision"] = base
+            item["active"]["critic"]["subject_revision"] = base
+            item["active"]["source_candidate_sha"] = base
+            item["active"]["reviewer"]["candidate_sha"] = base
+            item["active"]["verifier"]["candidate_sha"] = base
+            source.unlink()
+            deleted_tip = s.commit_all(root, "delete implementation")
+            self.assertFalse(policy.post_candidate_history_allowed(root, item, deleted_tip))
 
     def test_post_candidate_history_allows_coordination_only_and_rejects_source_revert(self):
         with tempfile.TemporaryDirectory() as folder:
