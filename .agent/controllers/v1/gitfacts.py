@@ -99,7 +99,7 @@ def _nul_paths(raw: bytes) -> tuple[str, ...]:
 def staged_paths(root: Path) -> tuple[str, ...]:
     root = worktree_root(root)
     result = subprocess.run(
-        ["git", "-C", str(root), "diff", "--cached", "--name-only", "-z", "--diff-filter=ACMRTUXB"],
+        ["git", "-C", str(root), "diff", "--cached", "--name-only", "-z", "--diff-filter=ACMDRTUXB"],
         check=True,
         capture_output=True,
     )
@@ -111,7 +111,7 @@ def changed_paths(root: Path, base: str, tip: str) -> tuple[str, ...]:
     base_sha = resolve_commit(root, base)
     tip_sha = resolve_commit(root, tip)
     result = subprocess.run(
-        ["git", "-C", str(root), "diff", "--name-only", "-z", "--diff-filter=ACMRTUXB", f"{base_sha}..{tip_sha}"],
+        ["git", "-C", str(root), "diff", "--name-only", "-z", "--diff-filter=ACMDRTUXB", f"{base_sha}..{tip_sha}"],
         check=True,
         capture_output=True,
     )
@@ -126,12 +126,22 @@ def commits_between(root: Path, start_exclusive: str, tip_inclusive: str) -> tup
     return tuple(line for line in raw.splitlines() if line)
 
 
+def is_merge_commit(root: Path, commit: str) -> bool:
+    root = worktree_root(root)
+    sha = resolve_commit(root, commit)
+    line = _git(root, "rev-list", "--parents", "-n", "1", sha)
+    parts = line.split()
+    if not parts or parts[0] != sha:
+        raise StopAndPreserve("cannot determine commit parents")
+    return len(parts) > 2
+
+
 def commit_paths(root: Path, commit: str) -> tuple[str, ...]:
     root = worktree_root(root)
     sha = resolve_commit(root, commit)
     result = subprocess.run(
         ["git", "-C", str(root), "diff-tree", "--no-commit-id", "--name-only", "-r", "-z",
-         "--diff-filter=ACMRTUXB", sha],
+         "--diff-filter=ACMDRTUXB", sha],
         check=True,
         capture_output=True,
     )
@@ -181,6 +191,19 @@ def planning_subject_unchanged(root: Path, planning_revision: str, tip: str, pat
         except ValidationError:
             return False
     return not any_commit_touches(root, planning_sha, tip_sha, path_list)
+
+
+def remote_default_branch(root: Path, remote: str) -> str:
+    root = worktree_root(root)
+    output = _git(root, "ls-remote", "--symref", remote, "HEAD")
+    for line in output.splitlines():
+        if not line.startswith("ref: refs/heads/") or not line.endswith("\tHEAD"):
+            continue
+        ref = line[len("ref: "):].split("\t", 1)[0]
+        branch_name = ref.removeprefix("refs/heads/")
+        if branch_name and ref == f"refs/heads/{branch_name}":
+            return branch_name
+    raise StopAndPreserve("remote default branch cannot be determined")
 
 
 def remote_ref_sha(root: Path, remote: str, ref: str) -> str | None:
