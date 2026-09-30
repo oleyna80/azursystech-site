@@ -254,10 +254,12 @@ def _prepush_event(root: Path, current: dict, remote: str, remote_sha: str | Non
     )
 
 
-def publish(root: Path, *, remote: str = "origin", default_branch: str = "main") -> dict:
-    """Validate, publish exact subject tip, verify remote, then ASSURE -> INACTIVE."""
+def publish(root: Path) -> dict:
+    """Publish only to trusted origin using Git-derived default-branch facts."""
 
     root = gitfacts.worktree_root(root)
+    remote = policy.PUBLISH_REMOTE
+    default_branch = gitfacts.remote_default_branch(root, remote)
     path, current = storage.load_for_worktree(root)
     if current is None:
         raise TransitionDenied("publish requires active Work Block")
@@ -327,8 +329,7 @@ def main(argv: list[str] | None = None) -> int:
         elif args.operation == "verifier":
             result = verifier(root, payload["outcome"])
         elif args.operation == "publish":
-            result = publish(root, remote=payload.get("remote", "origin"),
-                             default_branch=payload.get("default_branch", "main"))
+            result = publish(root)
         elif args.operation == "close":
             result = close(root, payload["outcome"])
         else:
