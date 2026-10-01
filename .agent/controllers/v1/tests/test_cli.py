@@ -337,6 +337,20 @@ class CliTests(unittest.TestCase):
             cli.publish(self.root, default_branch="fake")
 
     def test_failed_publish_preserves_assure_state(self):
+        remote = Path(self.temp.name) / "remote-failure.git"
+        subprocess.run(
+            ["git", "init", "--bare", "-q", "--initial-branch=main", str(remote)],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.root), "remote", "add", "origin", str(remote)],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.root), "push", "-q", "origin", "HEAD:refs/heads/main"],
+            check=True,
+        )
+
         self.open()
         cli.critic(self.root, "ready")
         source = self.root / ".agent/controllers/v1/state.py"
