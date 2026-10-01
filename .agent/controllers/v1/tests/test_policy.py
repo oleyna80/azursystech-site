@@ -161,6 +161,43 @@ class PolicyTests(unittest.TestCase):
             result = policy.evaluate(event, s.execute(), default_branch="main")
             self.assertEqual(result.code, "COMMIT_FORBIDDEN_PATH")
 
+    def test_precommit_protected_rename_into_scope_is_denied(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            s.init_repo(root)
+            protected = root / ".agent/policies/admission-rules.json"
+            protected.parent.mkdir(parents=True)
+            protected.write_text("{}\n", encoding="utf-8")
+            destination = root / ".agent/controllers/v1/from-policy.json"
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            s.commit_all(root, "protected rename base")
+
+            subprocess.run(
+                [
+                    "git", "-C", str(root), "mv",
+                    ".agent/policies/admission-rules.json",
+                    ".agent/controllers/v1/from-policy.json",
+                ],
+                check=True,
+            )
+            paths = gitfacts.staged_paths(root)
+            self.assertEqual(
+                paths,
+                (
+                    ".agent/controllers/v1/from-policy.json",
+                    ".agent/policies/admission-rules.json",
+                ),
+            )
+            event = ev(
+                "git_pre_commit",
+                paths=paths,
+                source="git",
+                facts={"head_sha": gitfacts.head_sha(root)},
+                root=str(root),
+            )
+            result = policy.evaluate(event, s.execute(), default_branch="main")
+            self.assertEqual(result.code, "COMMIT_FORBIDDEN_PATH")
+
     def test_post_candidate_implementation_deletion_is_denied(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
