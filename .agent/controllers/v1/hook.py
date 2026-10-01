@@ -17,7 +17,7 @@ from .events import Decision, decision
 
 
 def controller_repository_root() -> Path:
-    return gitfacts.worktree_root(Path(__file__).resolve())
+    return gitfacts.worktree_root(Path(__file__).resolve().parent)
 
 
 def resolve_bound_worktree(cwd: Path, *, installation_root: Path | None = None) -> Path:
