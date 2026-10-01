@@ -73,6 +73,32 @@ class GitAdapterTests(unittest.TestCase):
         result = git_adapter.evaluate_commit_message(self.root, s.execute(), message)
         self.assertEqual(result.code, "COMMIT_MESSAGE_ALLOWED")
 
+    def test_commit_message_dot_git_path_resolves_in_linked_worktree(self):
+        import subprocess
+        linked = Path(self.temp.name) / "linked"
+        subprocess.run(
+            ["git", "-C", str(self.root), "worktree", "add", "-qb", "feat/linked-msg", str(linked)],
+            check=True,
+        )
+        git_message = Path(
+            subprocess.check_output(
+                [
+                    "git", "-C", str(linked), "rev-parse", "--path-format=absolute",
+                    "--git-path", "COMMIT_EDITMSG",
+                ],
+                text=True,
+            ).strip()
+        )
+        git_message.write_text(
+            "linked commit\n\nWork-Block: WB-001\n",
+            encoding="utf-8",
+        )
+        event = git_adapter.commit_message_event(
+            linked,
+            Path(".git/COMMIT_EDITMSG"),
+        )
+        self.assertEqual(event.facts["work_block_trailers"], ["WB-001"])
+
     def test_duplicate_work_block_trailers_are_preserved_for_policy_denial(self):
         message = self.root / "COMMIT_EDITMSG.fixture"
         message.write_text(
