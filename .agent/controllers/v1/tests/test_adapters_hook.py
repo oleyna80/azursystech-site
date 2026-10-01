@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 from v1 import adapters, hook, policy, state, storage
-from v1.errors import ValidationError
+from v1.errors import StopAndPreserve, ValidationError
 from v1.tests import support as s
 
 
@@ -134,7 +134,7 @@ class RuntimeAdapterTests(unittest.TestCase):
         s.init_repo(other, branch="feat/other")
         (other / "x").write_text("x\n", encoding="utf-8")
         s.commit_all(other, "base")
-        with self.assertRaises(Exception):
+        with self.assertRaises(StopAndPreserve):
             hook.resolve_bound_worktree(other, installation_root=self.root)
 
     def test_subagent_context_is_context_only(self):
