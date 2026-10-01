@@ -148,6 +148,21 @@ class CliTests(unittest.TestCase):
         with self.assertRaises(StopAndPreserve):
             cli.candidate(self.root)
 
+    def test_candidate_rejects_out_of_scope_rename_into_implementation(self):
+        self.open()
+        cli.critic(self.root, "ready")
+        subprocess.run(
+            [
+                "git", "-C", str(self.root), "mv",
+                "outside.txt",
+                ".agent/controllers/v1/from-outside.txt",
+            ],
+            check=True,
+        )
+        s.commit_all(self.root, "rename outside into implementation")
+        with self.assertRaises(StopAndPreserve):
+            cli.candidate(self.root)
+
     def test_candidate_rejects_planning_change_then_revert(self):
         self.open()
         cli.critic(self.root, "ready")
@@ -204,6 +219,49 @@ class CliTests(unittest.TestCase):
             publish_tip,
         )
         self.assertNotEqual(candidate_sha, publish_tip)
+
+    def test_publish_rejects_post_candidate_implementation_rename_into_coordination(self):
+        remote = Path(self.temp.name) / "remote-rename.git"
+        subprocess.run(
+            ["git", "init", "--bare", "-q", "--initial-branch=main", str(remote)],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.root), "remote", "add", "origin", str(remote)],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.root), "push", "-q", "origin", "HEAD:refs/heads/main"],
+            check=True,
+        )
+
+        self.open()
+        cli.critic(self.root, "ready")
+        source = self.root / ".agent/controllers/v1/state.py"
+        source.write_text("candidate\n", encoding="utf-8")
+        s.commit_all(self.root, "candidate")
+        cli.candidate(self.root)
+        cli.reviewer(self.root, "ready")
+        cli.verifier(self.root, "ready")
+
+        memory = self.root / "docs/engineering-memory"
+        memory.mkdir(parents=True, exist_ok=True)
+        subprocess.run(
+            [
+                "git", "-C", str(self.root), "mv",
+                ".agent/controllers/v1/state.py",
+                "docs/engineering-memory/state.py",
+            ],
+            check=True,
+        )
+        s.commit_all(self.root, "rename implementation into coordination")
+
+        with self.assertRaises(TransitionDenied):
+            cli.publish(
+                self.root,
+                branch_protection_resolver=lambda _remote, _branch: False,
+            )
+        self.assertEqual(cli.status(self.root)["lifecycle_state"], "ASSURE")
 
     def test_publish_rejects_post_candidate_merge_even_when_parent_commits_are_coordination_only(self):
         remote = Path(self.temp.name) / "remote-merge.git"
