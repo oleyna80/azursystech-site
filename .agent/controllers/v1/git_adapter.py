@@ -47,12 +47,34 @@ def pre_commit_event(root: Path) -> Event:
     )
 
 
+def _message_file(root: Path, message_file: Path) -> Path:
+    if message_file.is_absolute():
+        return message_file.resolve(strict=True)
+    direct = root / message_file
+    if direct.exists():
+        return direct.resolve(strict=True)
+    parts = message_file.parts
+    if parts and parts[0] == ".git":
+        relative = Path(*parts[1:]).as_posix()
+        try:
+            result = subprocess.run(
+                [
+                    "git", "-C", str(root), "rev-parse", "--path-format=absolute",
+                    "--git-path", relative,
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        except (OSError, subprocess.CalledProcessError) as exc:
+            raise StopAndPreserve("cannot resolve Git commit-message path") from exc
+        return Path(result.stdout.strip()).resolve(strict=True)
+    raise StopAndPreserve("commit message path cannot be resolved")
+
+
 def _work_block_trailers(root: Path, message_file: Path) -> list[str]:
     root = _root(root)
-    if not message_file.is_absolute():
-        message_file = (root / message_file).resolve(strict=True)
-    else:
-        message_file = message_file.resolve(strict=True)
+    message_file = _message_file(root, message_file)
     try:
         result = subprocess.run(
             ["git", "-C", str(root), "interpret-trailers", "--parse", str(message_file)],
