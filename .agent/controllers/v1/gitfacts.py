@@ -99,7 +99,7 @@ def _nul_paths(raw: bytes) -> tuple[str, ...]:
 def staged_paths(root: Path) -> tuple[str, ...]:
     root = worktree_root(root)
     result = subprocess.run(
-        ["git", "-C", str(root), "diff", "--cached", "--name-only", "-z", "--diff-filter=ACMDRTUXB"],
+        ["git", "-C", str(root), "diff", "--cached", "--no-renames", "--name-only", "-z", "--diff-filter=ACMDRTUXB"],
         check=True,
         capture_output=True,
     )
@@ -111,7 +111,7 @@ def changed_paths(root: Path, base: str, tip: str) -> tuple[str, ...]:
     base_sha = resolve_commit(root, base)
     tip_sha = resolve_commit(root, tip)
     result = subprocess.run(
-        ["git", "-C", str(root), "diff", "--name-only", "-z", "--diff-filter=ACMDRTUXB", f"{base_sha}..{tip_sha}"],
+        ["git", "-C", str(root), "diff", "--no-renames", "--name-only", "-z", "--diff-filter=ACMDRTUXB", f"{base_sha}..{tip_sha}"],
         check=True,
         capture_output=True,
     )
@@ -140,7 +140,7 @@ def commit_paths(root: Path, commit: str) -> tuple[str, ...]:
     root = worktree_root(root)
     sha = resolve_commit(root, commit)
     result = subprocess.run(
-        ["git", "-C", str(root), "diff-tree", "--no-commit-id", "--name-only", "-r", "-z",
+        ["git", "-C", str(root), "diff-tree", "--no-commit-id", "--no-renames", "--name-only", "-r", "-z",
          "--diff-filter=ACMDRTUXB", sha],
         check=True,
         capture_output=True,
