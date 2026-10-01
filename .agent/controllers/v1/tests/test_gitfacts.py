@@ -58,6 +58,29 @@ class GitFactsTests(unittest.TestCase):
         self.assertEqual(gitfacts.changed_paths(self.root, delete_base, delete_tip), ("outside.txt",))
         self.assertEqual(gitfacts.commit_paths(self.root, delete_tip), ("outside.txt",))
 
+    def test_rename_is_exposed_as_source_and_destination_paths(self):
+        old = self.root / "outside.txt"
+        old.write_text("rename me\n", encoding="utf-8")
+        rename_base = s.commit_all(self.root, "add outside")
+        destination = self.root / "src/renamed.txt"
+        subprocess.run(
+            ["git", "-C", str(self.root), "mv", "outside.txt", "src/renamed.txt"],
+            check=True,
+        )
+        self.assertEqual(
+            gitfacts.staged_paths(self.root),
+            ("outside.txt", "src/renamed.txt"),
+        )
+        rename_tip = s.commit_all(self.root, "rename outside into src")
+        self.assertEqual(
+            gitfacts.changed_paths(self.root, rename_base, rename_tip),
+            ("outside.txt", "src/renamed.txt"),
+        )
+        self.assertEqual(
+            gitfacts.commit_paths(self.root, rename_tip),
+            ("outside.txt", "src/renamed.txt"),
+        )
+
     def test_merge_commit_is_detected(self):
         subprocess.run(["git", "-C", str(self.root), "switch", "-qc", "side"], check=True)
         (self.root / "side.txt").write_text("side\n", encoding="utf-8")
