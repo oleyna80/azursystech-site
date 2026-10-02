@@ -29,8 +29,25 @@ class TrustedDispatcher:
         {"repository", "trigger_class", "subject_branch", "policy_revision", "admission_id"}
     )
 
-    def __init__(self, store: admission.AdmissionStore) -> None:
+    def __init__(
+        self,
+        store: admission.AdmissionStore,
+        *,
+        allowed_trigger_classes: frozenset[str] | set[str] | None = None,
+    ) -> None:
         self.store = store
+        allowed = (
+            frozenset({"manual-owner"})
+            if allowed_trigger_classes is None
+            else frozenset(allowed_trigger_classes)
+        )
+        if not allowed or any(
+            not isinstance(item, str) or not item for item in allowed
+        ):
+            raise admission.AdmissionValidationError(
+                "trusted dispatcher trigger envelope is invalid"
+            )
+        self.allowed_trigger_classes = allowed
 
     @classmethod
     def parse_request(cls, raw: Mapping[str, object]) -> DispatchRequest:
@@ -65,6 +82,10 @@ class TrustedDispatcher:
     def admit(self, repo_root: Path, request: DispatchRequest) -> admission.AdmissionRecord:
         if not isinstance(request, DispatchRequest):
             raise admission.AdmissionValidationError("trusted dispatcher requires DispatchRequest")
+        if request.trigger_class not in self.allowed_trigger_classes:
+            raise admission.AdmissionPolicyError(
+                "trigger class is not enabled by this trusted dispatcher"
+            )
         return admission.create_admission(
             repo_root=repo_root,
             repository=request.repository,
