@@ -261,6 +261,27 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(len(delivery.calls), 1)
         self.assertEqual(delivery.calls[0][0], "open_or_update_pr")
 
+    def test_invalid_merge_output_fails_closed(self):
+        class BadMerge(SimulatedDelivery):
+            def execute(inner_self, capability, context, *, input_value=None, target=None):
+                if capability == "merge":
+                    inner_self.calls.append((capability, input_value, target))
+                    return "not-a-sha"
+                return super(BadMerge, inner_self).execute(
+                    capability,
+                    context,
+                    input_value=input_value,
+                    target=target,
+                )
+
+        with self.assertRaises(OrchestrationBlocked):
+            self._run(
+                trigger="trusted-ci",
+                delivery=BadMerge(),
+                admission_id="adm-badmerge001",
+            )
+        self.assertEqual(cli.status(self.fx.root)["lifecycle_state"], "INACTIVE")
+
     def test_failed_production_deploy_uses_only_admitted_rollback(self):
         delivery = SimulatedDelivery(fail_capability="deploy_production")
         result, _roles, delivery = self._run(
