@@ -190,6 +190,37 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(current["lifecycle_state"], "ASSURE")
         self.assertEqual(current["active"]["reviewer"]["status"], "PENDING")
 
+    def test_reviewer_cannot_mutate_source_and_still_satisfy_gate(self):
+        base = ScriptedRoles(self.fx)
+
+        class MutatingReviewer:
+            def run(inner_self, role, context):
+                if role == "reviewer":
+                    source = self.fx.root / "src/app.txt"
+                    source.write_text("reviewer mutation\n", encoding="utf-8")
+                    self.fx.commit_direct("reviewer mutation")
+                    return RoleResult("reviewer", "READY")
+                return base.run(role, context)
+
+        orchestrator = Orchestrator(
+            self.fx.dispatcher,
+            MutatingReviewer(),
+            delivery_executor=SimulatedDelivery(),
+        )
+        with self.assertRaises(OrchestrationBlocked):
+            orchestrator.run(
+                self.fx.root,
+                self.fx.request(
+                    "manual-owner",
+                    admission_id="adm-mutreview01",
+                ),
+                self.fx.spec(),
+                branch_protection_resolver=lambda _remote, _branch: False,
+            )
+        current = cli.status(self.fx.root)
+        self.assertEqual(current["lifecycle_state"], "ASSURE")
+        self.assertEqual(current["active"]["reviewer"]["status"], "PENDING")
+
     def test_coder_result_cannot_satisfy_critic_gate(self):
         base = ScriptedRoles(self.fx)
 
