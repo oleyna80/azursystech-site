@@ -19,6 +19,7 @@ from .admission import (
 
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 DELIVERY_CAPABILITIES = frozenset({
+    "subject_branch_publish",
     "open_or_update_pr",
     "merge",
     "deploy_nonproduction",
