@@ -88,6 +88,16 @@ class RoleExecutor(Protocol):
         """
 
 
+class OwnerAuthorizationResolver(Protocol):
+    def approved(
+        self,
+        admission_id: str,
+        capability: str,
+        published_tip_sha: str,
+    ) -> bool:
+        """Return explicit trusted Owner approval for one exact-tip capability."""
+
+
 class DeliveryExecutor(Protocol):
     def execute(
         self,
@@ -126,12 +136,14 @@ class Orchestrator:
         delivery_executor: DeliveryExecutor | None = None,
         scheduler: WriterScheduler | None = None,
         external_access: ExternalImportBroker | None = None,
+        owner_authorization_resolver: OwnerAuthorizationResolver | None = None,
     ) -> None:
         self.dispatcher = dispatcher
         self.roles = roles
         self.delivery_executor = delivery_executor
         self.scheduler = scheduler or WriterScheduler()
         self.external_access = external_access
+        self.owner_authorization_resolver = owner_authorization_resolver
 
     def _bound_root(self, repo_root: Path) -> Path:
         root = gitfacts.worktree_root(repo_root)
@@ -388,7 +400,27 @@ class Orchestrator:
             raise OrchestrationBlocked(
                 "orchestration store lacks Owner authorization provenance"
             )
-        return bool(method(admission_id, capability, published_tip_sha))
+        if bool(method(admission_id, capability, published_tip_sha)):
+            return True
+        if self.owner_authorization_resolver is None:
+            return False
+        approved = self.owner_authorization_resolver.approved(
+            admission_id,
+            capability,
+            published_tip_sha,
+        )
+        if not isinstance(approved, bool):
+            raise OrchestrationBlocked(
+                "Owner authorization resolver returned unknown status"
+            )
+        if not approved:
+            return False
+        self._put_owner_authorization(
+            admission_id,
+            capability,
+            published_tip_sha,
+        )
+        return True
 
     def _put_owner_authorization(
         self,
@@ -956,29 +988,16 @@ class Orchestrator:
         admission_id: str,
         spec: WorkBlockSpec,
         branch_protection_resolver,
-        owner_approvals: frozenset[str] | set[str] | tuple[str, ...] | None = None,
     ) -> RunResult:
         """Resume an existing admission without recreating or widening it.
 
-        Owner approvals are accepted only for delivery capabilities and are bound
-        immutably to the already-recorded published tip for this admission.
+        Delivery Owner approvals, when needed, come only from the separately
+        injected trusted OwnerAuthorizationResolver and are then persisted against
+        the immutable published tip.
         """
 
         root = self._bound_root(repo_root)
         record = self.dispatcher.store.resolve(admission_id)
-        approvals = frozenset(owner_approvals or ())
-        if approvals:
-            binding = self._publication_or_none(admission_id)
-            if binding is None:
-                raise OrchestrationBlocked(
-                    "delivery Owner approval requires immutable publication provenance"
-                )
-            for capability in approvals:
-                self._put_owner_authorization(
-                    admission_id,
-                    capability,
-                    binding.published_tip_sha,
-                )
         gitfacts.require_clean(root)
         subprocess.run(
             ["git", "-C", str(root), "switch", "-q", record.subject_branch],
