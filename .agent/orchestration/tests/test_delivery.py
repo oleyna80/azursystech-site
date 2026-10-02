@@ -89,6 +89,14 @@ class DeliveryAuthorityTests(unittest.TestCase):
                 admission_id=result.admission_id,
                 repository_id=REPOSITORY_ID,
             )
+        decision = delivery.authorize(
+            self.fx.root,
+            self.fx.registry,
+            context,
+            "merge",
+        )
+        self.assertEqual(decision.status, "DENY")
+        self.assertIn("remote subject ref", decision.reason)
 
     def test_forged_published_tip_is_denied(self):
         _result, context = self._published_context()
