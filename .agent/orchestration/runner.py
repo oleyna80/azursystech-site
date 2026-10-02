@@ -139,12 +139,29 @@ class Orchestrator:
             controller_state=cli.status(root),
             reason=reason,
         )
+        assurance_role = role in {"critic", "reviewer", "verifier"}
+        before_head = None
+        if assurance_role:
+            gitfacts.require_clean(root)
+            before_head = gitfacts.head_sha(root)
         try:
             result = self.roles.run(role, context)
         except RoleUnavailable as exc:
+            if assurance_role:
+                gitfacts.require_clean(root)
+                if gitfacts.head_sha(root) != before_head:
+                    raise OrchestrationBlocked(
+                        f"{role} mutated Git history before becoming unavailable"
+                    ) from exc
             raise OrchestrationBlocked(
                 f"required independent {role} role is unavailable"
             ) from exc
+        if assurance_role:
+            gitfacts.require_clean(root)
+            if gitfacts.head_sha(root) != before_head:
+                raise OrchestrationBlocked(
+                    f"{role} must not mutate Git history or worktree"
+                )
         if not isinstance(result, RoleResult) or result.role != role:
             raise OrchestrationBlocked(
                 f"{role} gate cannot be satisfied by another logical role"
