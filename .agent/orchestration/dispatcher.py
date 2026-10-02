@@ -86,6 +86,9 @@ class TrustedDispatcher:
             raise admission.AdmissionPolicyError(
                 "trigger class is not enabled by this trusted dispatcher"
             )
+        external_guard = getattr(self.store, "assert_external_to", None)
+        if external_guard is not None:
+            external_guard(repo_root)
         return admission.create_admission(
             repo_root=repo_root,
             repository=request.repository,
