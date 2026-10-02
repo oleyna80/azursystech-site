@@ -47,6 +47,18 @@ class RegistryDispatcherTests(unittest.TestCase):
         with self.assertRaises(admission.AdmissionValidationError):
             TrustedDispatcher.parse_request(raw)
 
+    def test_default_dispatcher_does_not_enable_higher_triggers(self):
+        fx = OrchestrationRepo()
+        try:
+            baseline = TrustedDispatcher(fx.registry)
+            with self.assertRaises(admission.AdmissionPolicyError):
+                baseline.admit(
+                    fx.root,
+                    fx.request("trusted-release", admission_id="adm-nohigh0001"),
+                )
+        finally:
+            fx.cleanup()
+
     def test_protected_trigger_policy_selects_exact_profile(self):
         fx = OrchestrationRepo()
         try:
