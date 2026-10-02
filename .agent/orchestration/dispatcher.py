@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import re
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Mapping
+from typing import Mapping, Protocol
 
 from . import admission
+
+
+_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
 @dataclass(frozen=True, slots=True)
@@ -14,19 +19,55 @@ class DispatchRequest:
     repository: str
     trigger_class: str
     subject_branch: str
-    policy_revision: str
     admission_id: str | None = None
+
+
+class PolicyRevisionResolver(Protocol):
+    def resolve(self, repo_root: Path) -> str:
+        """Return exact trusted policy commit SHA for this repository."""
+
+
+@dataclass(frozen=True, slots=True)
+class GitPolicyRevisionResolver:
+    """Resolve policy from a configured trusted Git ref, never caller input."""
+
+    trusted_ref: str = "refs/remotes/origin/main"
+
+    def resolve(self, repo_root: Path) -> str:
+        root = Path(repo_root).resolve(strict=True)
+        try:
+            result = subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(root),
+                    "rev-parse",
+                    "--verify",
+                    f"{self.trusted_ref}^{{commit}}",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        except subprocess.CalledProcessError as exc:
+            detail = exc.stderr.strip() or exc.stdout.strip() or "trusted policy ref unavailable"
+            raise admission.AdmissionGitError(detail) from exc
+        revision = result.stdout.strip()
+        if _SHA_RE.fullmatch(revision) is None:
+            raise admission.AdmissionGitError("trusted policy resolver returned invalid SHA")
+        return revision
 
 
 class TrustedDispatcher:
     """Map a trusted external event to the pinned WB-0 admission contract.
 
-    Profile selection is not accepted from the request. The protected
-    admission-rules policy selects the exact profile for the trusted trigger class.
+    Profile/policy revision selection is not accepted from the request. The
+    configured trusted policy resolver pins the exact policy commit, then WB-0
+    admission rules select the exact profile for the trusted trigger class.
     """
 
     _FIELDS = frozenset(
-        {"repository", "trigger_class", "subject_branch", "policy_revision", "admission_id"}
+        {"repository", "trigger_class", "subject_branch", "admission_id"}
     )
 
     def __init__(
@@ -34,6 +75,7 @@ class TrustedDispatcher:
         store: admission.AdmissionStore,
         *,
         allowed_trigger_classes: frozenset[str] | set[str] | None = None,
+        policy_revision_resolver: PolicyRevisionResolver | None = None,
     ) -> None:
         self.store = store
         allowed = (
@@ -48,6 +90,9 @@ class TrustedDispatcher:
                 "trusted dispatcher trigger envelope is invalid"
             )
         self.allowed_trigger_classes = allowed
+        self.policy_revision_resolver = (
+            policy_revision_resolver or GitPolicyRevisionResolver()
+        )
 
     @classmethod
     def parse_request(cls, raw: Mapping[str, object]) -> DispatchRequest:
@@ -58,7 +103,7 @@ class TrustedDispatcher:
             raise admission.AdmissionValidationError(
                 "dispatch request contains unsupported authority fields"
             )
-        required = {"repository", "trigger_class", "subject_branch", "policy_revision"}
+        required = {"repository", "trigger_class", "subject_branch"}
         if not required.issubset(raw):
             raise admission.AdmissionValidationError("dispatch request is incomplete")
         for field in required:
@@ -75,7 +120,6 @@ class TrustedDispatcher:
             repository=raw["repository"],
             trigger_class=raw["trigger_class"],
             subject_branch=raw["subject_branch"],
-            policy_revision=raw["policy_revision"],
             admission_id=admission_id,
         )
 
@@ -89,12 +133,13 @@ class TrustedDispatcher:
         external_guard = getattr(self.store, "assert_external_to", None)
         if external_guard is not None:
             external_guard(repo_root)
+        policy_revision = self.policy_revision_resolver.resolve(repo_root)
         return admission.create_admission(
             repo_root=repo_root,
             repository=request.repository,
             trigger_class=request.trigger_class,
             subject_branch=request.subject_branch,
-            policy_revision=request.policy_revision,
+            policy_revision=policy_revision,
             store=self.store,
             admission_id=request.admission_id,
         )
