@@ -87,6 +87,27 @@ class RuntimeAdapterTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             adapters.normalize_structured_write("claude", raw)
 
+    def test_ambiguous_path_whitespace_is_denied_not_trimmed(self):
+        with self.assertRaises(ValidationError):
+            adapters.normalize_structured_write(
+                "claude",
+                self.raw("Write", {"file_path": " file.py"}),
+            )
+        with self.assertRaises(ValidationError):
+            adapters.normalize_structured_write(
+                "codex",
+                self.raw(
+                    "apply_patch",
+                    {
+                        "command": (
+                            "*** Begin Patch\n"
+                            "*** Add File: file.py \n"
+                            "*** End Patch\n"
+                        )
+                    },
+                ),
+            )
+
     def test_absolute_path_inside_worktree_normalizes_and_outside_denies(self):
         inside = self.root / ".agent/controllers/v1/state.py"
         event = adapters.normalize_structured_write(
