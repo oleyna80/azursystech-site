@@ -40,6 +40,30 @@ class ExternalAccessTests(unittest.TestCase):
             destination_scope=destination_scope,
         )
 
+    def test_direct_grant_construction_cannot_request_write_mode(self):
+        with self.assertRaises(ExternalAccessDenied):
+            ExternalImportGrant(
+                grant_id="ext-write",
+                source_root=self.external,
+                destination_scope=(".claude/skills/**",),
+                mode="write",
+            )
+
+    def test_read_view_lists_and_reads_without_import_api(self):
+        broker = ExternalImportBroker(self.fx.root, [self._grant()])
+        view = broker.read_view()
+        self.assertEqual(
+            view.list_files("ext-skills"),
+            ("foo/SKILL.md", "foo/helper.txt"),
+        )
+        self.assertEqual(
+            view.read_text("ext-skills", "foo/SKILL.md"),
+            "skill foo\n",
+        )
+        self.assertFalse(hasattr(view, "import_file"))
+        self.assertFalse(hasattr(view, "import_tree"))
+        self.assertFalse(hasattr(view, "_broker"))
+
     def test_granted_external_read_succeeds_without_mutation_authority(self):
         grant = self._grant()
         broker = ExternalImportBroker(self.fx.root, [grant])
@@ -79,6 +103,56 @@ class ExternalAccessTests(unittest.TestCase):
         broker = ExternalImportBroker(self.fx.root, [grant])
         self.assertFalse(hasattr(broker, "add_grant"))
         self.assertEqual(tuple(item.grant_id for item in broker.grants()), ("ext-skills",))
+
+    def test_recursive_import_rejects_symlink_directory_even_when_target_is_inside_grant(self):
+        real = self.external / "real"
+        real.mkdir()
+        (real / "inside.txt").write_text("inside\n", encoding="utf-8")
+        (self.external / "linked").symlink_to(real, target_is_directory=True)
+        broker = ExternalImportBroker(self.fx.root, [self._grant()])
+        with self.assertRaises(ExternalAccessDenied):
+            broker.list_files("ext-skills")
+
+    def test_destination_parent_symlink_escape_is_denied(self):
+        outside = Path(self.fx.temp.name) / "destination-outside"
+        outside.mkdir()
+        link_parent = self.fx.root / ".claude"
+        link_parent.symlink_to(outside, target_is_directory=True)
+
+        grant = self._grant()
+        broker = ExternalImportBroker(self.fx.root, [grant])
+        base = ScriptedRoles(self.fx)
+
+        class SymlinkDestinationRoles:
+            def run(inner_self, role, context):
+                if role != "coder":
+                    return base.run(role, context)
+                with self.assertRaises(ExternalAccessDenied):
+                    context.external_access.import_file(
+                        "ext-skills",
+                        "foo/SKILL.md",
+                        ".claude/skills/foo/SKILL.md",
+                    )
+                base._coder(context)
+                return RoleResult("coder", "DONE")
+
+        runner = Orchestrator(
+            self.fx.dispatcher,
+            SymlinkDestinationRoles(),
+            delivery_executor=SimulatedDelivery(),
+            external_access=broker,
+        )
+        result = runner.run(
+            self.fx.root,
+            self.fx.request(
+                "manual-owner",
+                admission_id="adm-destlink001",
+            ),
+            self.fx.spec(implementation_write_set=("src/**", ".claude/skills/**")),
+            branch_protection_resolver=lambda _remote, _branch: False,
+        )
+        self.assertEqual(result.status, "OWNER_DECISION_REQUIRED")
+        self.assertFalse((outside / "skills/foo/SKILL.md").exists())
 
     def test_import_tree_reaches_only_admitted_implementation_destination(self):
         grant = self._grant()
@@ -211,6 +285,45 @@ class ExternalAccessTests(unittest.TestCase):
         )
         self.assertEqual(result.status, "OWNER_DECISION_REQUIRED")
         self.assertFalse((self.fx.root / "src/copied-skill.md").exists())
+
+    def test_non_coder_roles_receive_read_only_external_view(self):
+        broker = ExternalImportBroker(self.fx.root, [self._grant()])
+        base = ScriptedRoles(self.fx)
+        seen = []
+
+        class InspectingRoles:
+            def run(inner_self, role, context):
+                if role in {"planner", "critic", "reviewer", "verifier", "closeout"}:
+                    self.assertIsNotNone(context.external_access)
+                    self.assertFalse(hasattr(context.external_access, "import_file"))
+                    self.assertEqual(
+                        context.external_access.read_text(
+                            "ext-skills", "foo/SKILL.md"
+                        ),
+                        "skill foo\n",
+                    )
+                    seen.append(role)
+                if role == "coder":
+                    self.assertTrue(hasattr(context.external_access, "import_file"))
+                return base.run(role, context)
+
+        runner = Orchestrator(
+            self.fx.dispatcher,
+            InspectingRoles(),
+            delivery_executor=SimulatedDelivery(),
+            external_access=broker,
+        )
+        result = runner.run(
+            self.fx.root,
+            self.fx.request(
+                "manual-owner",
+                admission_id="adm-readview001",
+            ),
+            self.fx.spec(),
+            branch_protection_resolver=lambda _remote, _branch: False,
+        )
+        self.assertEqual(result.status, "OWNER_DECISION_REQUIRED")
+        self.assertTrue({"planner", "critic", "reviewer", "verifier", "closeout"}.issubset(seen))
 
     def test_external_broker_bound_to_other_worktree_is_rejected(self):
         other = OrchestrationRepo()
