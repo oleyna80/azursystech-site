@@ -27,24 +27,33 @@ class AdapterDenied(ValidationError):
     """Native event cannot be normalized into trusted authority facts."""
 
 
-def _root(raw: Mapping[str, object]) -> Path:
-    cwd = raw.get("cwd")
-    if not isinstance(cwd, str) or not cwd:
+def _context(raw: Mapping[str, object]) -> tuple[Path, Path]:
+    cwd_raw = raw.get("cwd")
+    if not isinstance(cwd_raw, str) or not cwd_raw:
         raise AdapterDenied("runtime event is missing cwd")
-    return gitfacts.worktree_root(Path(cwd))
+    try:
+        cwd = Path(cwd_raw).resolve(strict=True)
+    except OSError as exc:
+        raise AdapterDenied("runtime cwd cannot be resolved") from exc
+    root = gitfacts.worktree_root(cwd)
+    return root, cwd
 
 
-def _repo_path(root: Path, raw: object) -> str:
-    if not isinstance(raw, str) or not raw.strip():
+def _repo_path(root: Path, cwd: Path, raw: object) -> str:
+    if not isinstance(raw, str) or raw == "":
         raise AdapterDenied("structured mutation is missing exact target path")
-    value = raw.strip()
-    path = Path(value)
-    if path.is_absolute():
-        try:
-            path = path.resolve(strict=False).relative_to(root)
-        except ValueError as exc:
-            raise AdapterDenied("structured mutation path is outside target worktree") from exc
-    pure = PurePosixPath(path.as_posix())
+    if raw != raw.strip():
+        raise AdapterDenied("structured mutation path has ambiguous leading/trailing whitespace")
+
+    native = Path(raw)
+    candidate = native if native.is_absolute() else cwd / native
+    try:
+        resolved = candidate.resolve(strict=False)
+        relative = resolved.relative_to(root)
+    except (OSError, ValueError) as exc:
+        raise AdapterDenied("structured mutation path resolves outside target worktree") from exc
+
+    pure = PurePosixPath(relative.as_posix())
     if not pure.parts or any(part in {"", ".", ".."} for part in pure.parts):
         raise AdapterDenied("structured mutation path is unsafe")
     normalized = pure.as_posix()
@@ -61,14 +70,14 @@ def _payload(raw: Mapping[str, object]) -> tuple[str, Mapping[str, object]]:
     return tool.lower(), payload
 
 
-def _single_path(payload: Mapping[str, object], root: Path) -> tuple[str, ...]:
-    return (_repo_path(root, payload.get("file_path") or payload.get("path")),)
+def _single_path(payload: Mapping[str, object], root: Path, cwd: Path) -> tuple[str, ...]:
+    return (_repo_path(root, cwd, payload.get("file_path") or payload.get("path")),)
 
 
-def _multi_edit_paths(payload: Mapping[str, object], root: Path) -> tuple[str, ...]:
+def _multi_edit_paths(payload: Mapping[str, object], root: Path, cwd: Path) -> tuple[str, ...]:
     direct = payload.get("file_path") or payload.get("path")
     if isinstance(direct, str) and direct.strip():
-        return (_repo_path(root, direct),)
+        return (_repo_path(root, cwd, direct),)
     edits = payload.get("edits")
     if not isinstance(edits, list) or not edits:
         raise AdapterDenied("MultiEdit payload has no exact target paths")
@@ -76,35 +85,35 @@ def _multi_edit_paths(payload: Mapping[str, object], root: Path) -> tuple[str, .
     for edit in edits:
         if not isinstance(edit, Mapping):
             raise AdapterDenied("MultiEdit entry is not structured")
-        paths.append(_repo_path(root, edit.get("file_path") or edit.get("path")))
+        paths.append(_repo_path(root, cwd, edit.get("file_path") or edit.get("path")))
     return tuple(sorted(set(paths)))
 
 
-def _patch_paths(payload: Mapping[str, object], root: Path) -> tuple[str, ...]:
+def _patch_paths(payload: Mapping[str, object], root: Path, cwd: Path) -> tuple[str, ...]:
     patch = payload.get("command") or payload.get("patch") or payload.get("input")
     if not isinstance(patch, str):
         raise AdapterDenied("structured patch payload is missing patch text")
     raw_paths = PATCH_PATH.findall(patch) + PATCH_MOVE.findall(patch)
     if not raw_paths:
         raise AdapterDenied("structured patch exposes no exact target paths")
-    return tuple(sorted({_repo_path(root, value) for value in raw_paths}))
+    return tuple(sorted({_repo_path(root, cwd, value) for value in raw_paths}))
 
 
 def normalize_structured_write(runtime: str, raw: Mapping[str, object]) -> Event:
     if runtime not in {"claude", "codex"} or not isinstance(raw, Mapping):
         raise AdapterDenied("unsupported runtime")
-    root = _root(raw)
+    root, cwd = _context(raw)
     branch = gitfacts.branch(root)
     tool, payload = _payload(raw)
 
     if tool in WRITE_TOOLS:
-        paths = _single_path(payload, root)
+        paths = _single_path(payload, root, cwd)
         tool_class = "write"
     elif tool in EDIT_TOOLS:
-        paths = _multi_edit_paths(payload, root)
+        paths = _multi_edit_paths(payload, root, cwd)
         tool_class = "edit"
     elif tool in PATCH_TOOLS:
-        paths = _patch_paths(payload, root)
+        paths = _patch_paths(payload, root, cwd)
         tool_class = "patch"
     else:
         raise AdapterDenied(
@@ -125,7 +134,7 @@ def normalize_structured_write(runtime: str, raw: Mapping[str, object]) -> Event
 def normalize_subagent_context(runtime: str, raw: Mapping[str, object]) -> Event:
     if runtime not in {"claude", "codex"} or not isinstance(raw, Mapping):
         raise AdapterDenied("unsupported runtime")
-    root = _root(raw)
+    root, _cwd = _context(raw)
     branch = gitfacts.branch(root)
     return validate_event({
         "event_version": 1,
@@ -160,8 +169,6 @@ def runtime_response(runtime: str, decision: Decision) -> dict:
             "permissionDecisionReason": decision.reason,
         }
     }
-    if runtime == "claude" and not decision.allowed:
-        payload["continue"] = False
     return payload
 
 
