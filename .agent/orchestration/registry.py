@@ -16,7 +16,15 @@ from .admission import (
 
 
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
-_DELIVERY_STAGES = frozenset({"pr_ref", "merged_sha", "deployed_sha", "verified_sha"})
+_DELIVERY_STAGES = frozenset({
+    "pr_ref",
+    "merged_sha",
+    "deployment_capability",
+    "deployment_target",
+    "deployed_sha",
+    "verified_sha",
+})
+_SHA_DELIVERY_STAGES = frozenset({"merged_sha", "deployed_sha", "verified_sha"})
 
 _COLUMNS = (
     "admission_id",
@@ -212,10 +220,14 @@ class SQLiteAdmissionRegistry:
             raise AdmissionValidationError("unsupported delivery provenance stage")
         if not isinstance(value, str) or not value:
             raise AdmissionValidationError("delivery provenance value is invalid")
-        if stage != "pr_ref" and _SHA_RE.fullmatch(value) is None:
+        if stage in _SHA_DELIVERY_STAGES and _SHA_RE.fullmatch(value) is None:
             raise AdmissionValidationError(
                 f"{stage} delivery provenance must be exact commit SHA"
             )
+        if stage == "deployment_capability" and value not in {
+            "none", "deploy_nonproduction", "deploy_production"
+        }:
+            raise AdmissionValidationError("deployment capability provenance is invalid")
         with self._connect() as connection:
             current = connection.execute(
                 """
