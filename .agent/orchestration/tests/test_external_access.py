@@ -78,6 +78,16 @@ class ExternalAccessTests(unittest.TestCase):
             "skill foo\n",
         )
 
+    def test_external_grant_root_cannot_contain_target_worktree(self):
+        broad = Path(self.fx.temp.name)
+        grant = ExternalImportGrant.create(
+            grant_id="ext-broad",
+            source_root=broad,
+            destination_scope=(".claude/skills/**",),
+        )
+        with self.assertRaises(ExternalAccessDenied):
+            ExternalImportBroker(self.fx.root, [grant])
+
     def test_ungranted_sibling_source_is_denied(self):
         sibling = Path(self.fx.temp.name) / "project-b"
         sibling.mkdir()
