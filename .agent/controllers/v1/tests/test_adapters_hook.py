@@ -66,6 +66,27 @@ class RuntimeAdapterTests(unittest.TestCase):
         )
         self.assertEqual(event.facts["tool_class"], "patch")
 
+    def test_relative_target_is_resolved_from_native_nested_cwd(self):
+        nested = self.root / "subdir"
+        nested.mkdir()
+        raw = {
+            "cwd": str(nested),
+            "tool_name": "Write",
+            "tool_input": {"file_path": "file.py"},
+        }
+        event = adapters.normalize_structured_write("claude", raw)
+        self.assertEqual(event.paths, ("subdir/file.py",))
+
+    def test_relative_target_through_symlink_outside_worktree_is_denied(self):
+        outside = Path(self.temp.name) / "outside"
+        outside.mkdir()
+        allowed = self.root / "allowed"
+        allowed.mkdir()
+        (allowed / "link").symlink_to(outside, target_is_directory=True)
+        raw = self.raw("Write", {"file_path": "allowed/link/file.py"})
+        with self.assertRaises(ValidationError):
+            adapters.normalize_structured_write("claude", raw)
+
     def test_absolute_path_inside_worktree_normalizes_and_outside_denies(self):
         inside = self.root / ".agent/controllers/v1/state.py"
         event = adapters.normalize_structured_write(
@@ -96,6 +117,22 @@ class RuntimeAdapterTests(unittest.TestCase):
             adapters.normalize_structured_write(
                 "codex", self.raw("apply_patch", {"command": "*** Begin Patch\n*** End Patch"})
             )
+
+    def test_denied_claude_pretool_response_does_not_stop_processing(self):
+        denied = policy.evaluate(
+            adapters.normalize_structured_write(
+                "claude",
+                self.raw("Write", {"file_path": "outside.txt"}),
+            ),
+            s.execute(),
+        )
+        self.assertFalse(denied.allowed)
+        response = adapters.runtime_response("claude", denied)
+        self.assertEqual(
+            response["hookSpecificOutput"]["permissionDecision"],
+            "deny",
+        )
+        self.assertNotIn("continue", response)
 
     def test_runtime_native_responses_have_same_permission_semantics(self):
         decision = policy.evaluate(
