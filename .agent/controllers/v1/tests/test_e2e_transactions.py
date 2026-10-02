@@ -317,18 +317,56 @@ class E2ETransactionTests(unittest.TestCase):
         self.assertEqual(result.code, "PUSH_POST_CANDIDATE_HISTORY_DENIED")
         self.assertEqual(cli.status(self.fx.root)["lifecycle_state"], "ASSURE")
 
-    def test_failed_publish_preserves_assure_bytes(self):
+    def test_failed_push_preserves_assure_bytes_and_remote_ref(self):
         self.fx.open_and_execute()
         self.fx.assure_candidate()
+        tip = gitfacts.head_sha(self.fx.root)
         before = self.fx.state_path().read_bytes()
-        self.fx._run("remote", "rename", "origin", "missing-origin")
+        subject_ref = f"refs/heads/{SUBJECT_BRANCH}"
+
+        remote_before = subprocess.run(
+            [
+                "git", "--git-dir", str(self.fx.remote),
+                "show-ref", "--verify", "--quiet", subject_ref,
+            ],
+            check=False,
+        )
+        self.assertNotEqual(remote_before.returncode, 0)
+
+        zero = "0" * 40
+        preflight = hook.evaluate_git_pre_push(
+            self.fx.root,
+            installation_root=self.fx.root,
+            remote_name="origin",
+            stdin_text=(
+                f"{subject_ref} {tip} "
+                f"{subject_ref} {zero}\n"
+            ),
+            default_branch="main",
+            branch_protection_resolver=lambda _remote, _branch: False,
+        )
+        self.assertEqual(preflight.code, "PUSH_ALLOWED")
+
+        pre_receive = self.fx.remote / "hooks/pre-receive"
+        pre_receive.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+        pre_receive.chmod(0o755)
+
         with self.assertRaises(StopAndPreserve):
             cli.publish(
                 self.fx.root,
                 branch_protection_resolver=lambda _remote, _branch: False,
             )
+
         self.assertEqual(self.fx.state_path().read_bytes(), before)
         self.assertEqual(cli.status(self.fx.root)["lifecycle_state"], "ASSURE")
+        remote_after = subprocess.run(
+            [
+                "git", "--git-dir", str(self.fx.remote),
+                "show-ref", "--verify", "--quiet", subject_ref,
+            ],
+            check=False,
+        )
+        self.assertNotEqual(remote_after.returncode, 0)
 
     def test_direct_valid_push_then_publish_is_idempotent(self):
         self.fx.open_and_execute()
