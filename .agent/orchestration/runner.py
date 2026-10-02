@@ -377,6 +377,52 @@ class Orchestrator:
                 f"cannot persist immutable publication provenance: {exc}"
             ) from exc
 
+    def _owner_authorized(
+        self,
+        admission_id: str,
+        capability: str,
+        published_tip_sha: str,
+    ) -> bool:
+        method = getattr(self.dispatcher.store, "owner_authorized", None)
+        if method is None:
+            raise OrchestrationBlocked(
+                "orchestration store lacks Owner authorization provenance"
+            )
+        return bool(method(admission_id, capability, published_tip_sha))
+
+    def _put_owner_authorization(
+        self,
+        admission_id: str,
+        capability: str,
+        published_tip_sha: str,
+    ) -> None:
+        method = getattr(self.dispatcher.store, "put_owner_authorization", None)
+        if method is None:
+            raise OrchestrationBlocked(
+                "orchestration store lacks Owner authorization provenance"
+            )
+        try:
+            method(admission_id, capability, published_tip_sha)
+        except Exception as exc:
+            raise OrchestrationBlocked(
+                f"cannot persist Owner authorization for {capability}: {exc}"
+            ) from exc
+
+    def _decision_allowed_by_owner(
+        self,
+        context: delivery.DeliveryContext,
+        decision: delivery.DeliveryDecision,
+    ) -> bool:
+        if decision.allowed:
+            return True
+        if decision.status != "OWNER_DECISION_REQUIRED":
+            return False
+        return self._owner_authorized(
+            context.admission_id,
+            decision.capability,
+            context.published_tip_sha,
+        )
+
     def _delivery_fact(self, admission_id: str, stage: str) -> str | None:
         method = getattr(self.dispatcher.store, "delivery_fact", None)
         if method is None:
@@ -559,7 +605,7 @@ class Orchestrator:
             pr_auth = delivery.authorize(
                 root, self.dispatcher.store, context, "open_or_update_pr"
             )
-            if not pr_auth.allowed:
+            if not self._decision_allowed_by_owner(context, pr_auth):
                 return self._owner_required(context, pr_auth)
             pr_ref = self.delivery_executor.execute(
                 "open_or_update_pr",
@@ -575,7 +621,7 @@ class Orchestrator:
             merge_auth = delivery.authorize(
                 root, self.dispatcher.store, context, "merge"
             )
-            if not merge_auth.allowed:
+            if not self._decision_allowed_by_owner(context, merge_auth):
                 return self._owner_required(context, merge_auth)
             merged_sha = self._require_sha(
                 self.delivery_executor.execute(
@@ -607,7 +653,7 @@ class Orchestrator:
                 context,
                 deployment_capability,
             )
-            if not deploy_auth.allowed:
+            if not self._decision_allowed_by_owner(context, deploy_auth):
                 return self._owner_required(
                     context,
                     deploy_auth,
@@ -627,7 +673,7 @@ class Orchestrator:
                 rollback = delivery.authorize(
                     root, self.dispatcher.store, context, "rollback"
                 )
-                if not rollback.allowed:
+                if not self._decision_allowed_by_owner(context, rollback):
                     result = self._owner_required(
                         context,
                         rollback,
@@ -671,7 +717,7 @@ class Orchestrator:
                 context,
                 "post_deploy_verify",
             )
-            if not verify_auth.allowed:
+            if not self._decision_allowed_by_owner(context, verify_auth):
                 return self._owner_required(
                     context,
                     verify_auth,
@@ -729,7 +775,14 @@ class Orchestrator:
             raise OrchestrationBlocked(
                 f"subject_branch_publish denied: {publish_auth.reason}"
             )
-        if not publish_auth.allowed:
+        if (
+            not publish_auth.allowed
+            and not self._owner_authorized(
+                record.admission_id,
+                "subject_branch_publish",
+                binding.published_tip_sha,
+            )
+        ):
             return RunResult(
                 status="OWNER_DECISION_REQUIRED",
                 admission_id=record.admission_id,
@@ -903,11 +956,29 @@ class Orchestrator:
         admission_id: str,
         spec: WorkBlockSpec,
         branch_protection_resolver,
+        owner_approvals: frozenset[str] | set[str] | tuple[str, ...] | None = None,
     ) -> RunResult:
-        """Resume an existing admission without recreating or widening it."""
+        """Resume an existing admission without recreating or widening it.
+
+        Owner approvals are accepted only for delivery capabilities and are bound
+        immutably to the already-recorded published tip for this admission.
+        """
 
         root = self._bound_root(repo_root)
         record = self.dispatcher.store.resolve(admission_id)
+        approvals = frozenset(owner_approvals or ())
+        if approvals:
+            binding = self._publication_or_none(admission_id)
+            if binding is None:
+                raise OrchestrationBlocked(
+                    "delivery Owner approval requires immutable publication provenance"
+                )
+            for capability in approvals:
+                self._put_owner_authorization(
+                    admission_id,
+                    capability,
+                    binding.published_tip_sha,
+                )
         gitfacts.require_clean(root)
         subprocess.run(
             ["git", "-C", str(root), "switch", "-q", record.subject_branch],
