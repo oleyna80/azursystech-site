@@ -12,7 +12,7 @@ from controllers.v1 import cli, gitfacts
 
 from . import delivery
 from .dispatcher import DispatchRequest, TrustedDispatcher
-from .external_access import ExternalImportBroker
+from .external_access import ExternalImportBroker, ExternalReadView
 from .scheduler import WriterScheduler
 
 
@@ -54,7 +54,7 @@ class RoleContext:
     admission_id: str
     work_block: WorkBlockSpec
     controller_state: dict | None
-    external_access: ExternalImportBroker | None = None
+    external_access: ExternalImportBroker | ExternalReadView | None = None
     reason: str | None = None
 
 
@@ -136,12 +136,19 @@ class Orchestrator:
         *,
         reason: str | None = None,
     ) -> RoleResult:
+        role_external_access = None
+        if self.external_access is not None:
+            role_external_access = (
+                self.external_access
+                if role == "coder"
+                else self.external_access.read_view()
+            )
         context = RoleContext(
             root=root,
             admission_id=admission_id,
             work_block=spec,
             controller_state=cli.status(root),
-            external_access=self.external_access,
+            external_access=role_external_access,
             reason=reason,
         )
         assurance_role = role in {"critic", "reviewer", "verifier"}
