@@ -37,6 +37,7 @@ class DeliveryContext:
     profile_revision: str
     subject_branch: str
     base_commit: str
+    source_candidate_sha: str
     published_tip_sha: str
 
 
@@ -106,12 +107,36 @@ def published_context(
     record = resolver.resolve(admission_id)
     if record.repository != repository_id:
         raise AdmissionValidationError("delivery repository identity mismatch")
+
+    resolve_publication = getattr(resolver, "resolve_publication", None)
+    if resolve_publication is None:
+        raise AdmissionValidationError(
+            "delivery continuation requires immutable publication provenance"
+        )
+    binding = resolve_publication(admission_id)
+    if binding.admission_id != record.admission_id:
+        raise AdmissionValidationError("publication provenance admission mismatch")
+
     ref = f"refs/heads/{record.subject_branch}"
     published = gitfacts.remote_ref_sha(root, remote, ref)
-    if published is None or _SHA_RE.fullmatch(published) is None:
-        raise AdmissionValidationError("published subject ref is unavailable")
-    if not gitfacts.is_ancestor(root, record.base_commit, published):
-        raise AdmissionValidationError("published tip does not descend from admitted base")
+    if published != binding.published_tip_sha:
+        raise AdmissionValidationError(
+            "remote subject ref differs from immutable published_tip_sha"
+        )
+    if _SHA_RE.fullmatch(binding.source_candidate_sha) is None:
+        raise AdmissionValidationError("source candidate provenance is invalid")
+    if not gitfacts.is_ancestor(root, record.base_commit, binding.source_candidate_sha):
+        raise AdmissionValidationError(
+            "source candidate does not descend from admitted base"
+        )
+    if not gitfacts.is_ancestor(
+        root,
+        binding.source_candidate_sha,
+        binding.published_tip_sha,
+    ):
+        raise AdmissionValidationError(
+            "published tip does not contain immutable source candidate"
+        )
     _profile(root, record)
     return DeliveryContext(
         admission_id=record.admission_id,
@@ -120,9 +145,9 @@ def published_context(
         profile_revision=record.authority_profile_revision,
         subject_branch=record.subject_branch,
         base_commit=record.base_commit,
-        published_tip_sha=published,
+        source_candidate_sha=binding.source_candidate_sha,
+        published_tip_sha=binding.published_tip_sha,
     )
-
 
 def _capability_decision(record, profile: dict, capability: str) -> DeliveryDecision:
     if capability not in DELIVERY_CAPABILITIES:
@@ -186,12 +211,33 @@ def authorize(
 ) -> DeliveryDecision:
     root = gitfacts.worktree_root(root)
     record = resolver.resolve(context.admission_id)
+    resolve_publication = getattr(resolver, "resolve_publication", None)
+    if resolve_publication is None:
+        return DeliveryDecision(
+            "DENY",
+            capability,
+            context.admission_id,
+            context.profile_id,
+            "immutable publication provenance is unavailable",
+        )
+    try:
+        binding = resolve_publication(context.admission_id)
+    except Exception:
+        return DeliveryDecision(
+            "DENY",
+            capability,
+            context.admission_id,
+            context.profile_id,
+            "immutable publication provenance cannot be resolved",
+        )
     expected = (
         record.repository,
         record.authority_profile_id,
         record.authority_profile_revision,
         record.subject_branch,
         record.base_commit,
+        binding.source_candidate_sha,
+        binding.published_tip_sha,
     )
     observed = (
         context.repository,
@@ -199,6 +245,8 @@ def authorize(
         context.profile_revision,
         context.subject_branch,
         context.base_commit,
+        context.source_candidate_sha,
+        context.published_tip_sha,
     )
     if observed != expected:
         return DeliveryDecision(
@@ -229,12 +277,24 @@ def authorize(
             context.profile_id,
             "published tip differs from trusted remote subject ref",
         )
-    if not gitfacts.is_ancestor(root, record.base_commit, context.published_tip_sha):
+    if not gitfacts.is_ancestor(root, record.base_commit, context.source_candidate_sha):
         return DeliveryDecision(
             "DENY",
             capability,
             context.admission_id,
             context.profile_id,
-            "published tip does not descend from admitted base",
+            "source candidate does not descend from admitted base",
+        )
+    if not gitfacts.is_ancestor(
+        root,
+        context.source_candidate_sha,
+        context.published_tip_sha,
+    ):
+        return DeliveryDecision(
+            "DENY",
+            capability,
+            context.admission_id,
+            context.profile_id,
+            "published tip does not contain source candidate",
         )
     return _capability_decision(record, _profile(root, record), capability)
