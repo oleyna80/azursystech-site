@@ -44,14 +44,21 @@ class TrustedDispatcher:
         required = {"repository", "trigger_class", "subject_branch", "policy_revision"}
         if not required.issubset(raw):
             raise admission.AdmissionValidationError("dispatch request is incomplete")
+        for field in required:
+            if not isinstance(raw[field], str) or not raw[field]:
+                raise admission.AdmissionValidationError(
+                    f"dispatch request field {field} must be non-empty string"
+                )
         admission_id = raw.get("admission_id")
-        if admission_id is not None and not isinstance(admission_id, str):
+        if admission_id is not None and (
+            not isinstance(admission_id, str) or not admission_id
+        ):
             raise admission.AdmissionValidationError("invalid admission_id")
         return DispatchRequest(
-            repository=str(raw["repository"]),
-            trigger_class=str(raw["trigger_class"]),
-            subject_branch=str(raw["subject_branch"]),
-            policy_revision=str(raw["policy_revision"]),
+            repository=raw["repository"],
+            trigger_class=raw["trigger_class"],
+            subject_branch=raw["subject_branch"],
+            policy_revision=raw["policy_revision"],
             admission_id=admission_id,
         )
 
