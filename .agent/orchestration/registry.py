@@ -61,6 +61,16 @@ class SQLiteAdmissionRegistry:
                 """
             )
 
+    def assert_external_to(self, repo_root: Path) -> None:
+        root = Path(repo_root).resolve(strict=True)
+        try:
+            self.path.relative_to(root)
+        except ValueError:
+            return
+        raise AdmissionValidationError(
+            "trusted admission registry must be outside subject repository"
+        )
+
     def put(self, record: AdmissionRecord) -> None:
         if not isinstance(record, AdmissionRecord):
             raise AdmissionValidationError("registry accepts AdmissionRecord only")
