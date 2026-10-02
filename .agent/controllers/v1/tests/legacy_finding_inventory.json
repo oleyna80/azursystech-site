@@ -1,0 +1,327 @@
+{
+  "schema_version": 1,
+  "canonical_source": {
+    "branch": "audit/sdlc-revision",
+    "path": "docs/architecture/sdlc-revision-audit.md"
+  },
+  "allowed_statuses": [
+    "COVERED",
+    "SUPERSEDED",
+    "NOT_APPLICABLE"
+  ],
+  "findings": {
+    "F-001": {
+      "title": "Assurance disposition lifecycle was incomplete",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_verifier_rework_and_evidence_problem_have_distinct_semantics"
+      ],
+      "rationale": "The simplified lifecycle has no optional-assurance PENDING/SKIPPED closeout contract; explicit Reviewer/Verifier transitions own continuation."
+    },
+    "F-002": {
+      "title": "Git command arguments were not equivalent to Git-selected paths",
+      "status": "COVERED",
+      "tests": [
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_out_of_scope_and_directory_staging_are_denied_from_actual_index",
+        "v1.tests.test_gitfacts.GitFactsTests.test_rename_is_exposed_as_source_and_destination_paths"
+      ],
+      "rationale": "Authority is based on actual Git index/history paths, including descendants, deletions, and both rename sides."
+    },
+    "F-003": {
+      "title": "Coordination authority was not a first-class lifecycle transition",
+      "status": "COVERED",
+      "tests": [
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_happy_path_has_no_bootstrap_or_bypass"
+      ],
+      "rationale": "ASSURE permits bounded coordination-only commits after the source candidate without reopening implementation authority."
+    },
+    "F-004": {
+      "title": "Candidate transaction and terminal transaction were not formally separated",
+      "status": "COVERED",
+      "tests": [
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_happy_path_has_no_bootstrap_or_bypass"
+      ],
+      "rationale": "The exact source candidate is assured first; later coordination-only history is separately validated before publish."
+    },
+    "F-005": {
+      "title": "Contract parsers disagreed on the accepted specification format",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_events.EventTests",
+        "v1.tests.test_state.StateTests"
+      ],
+      "rationale": "Legacy specification/evidence parsers are not authority inputs in schema-v2 core; strict state/event schemas replace them."
+    },
+    "F-006": {
+      "title": "Owner-authorized recovery had no runtime capability representation",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_proactive_execute_revision_is_reachable",
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_proactive_assure_revision_is_reachable"
+      ],
+      "rationale": "Recovery is represented by explicit revise lifecycle transitions rather than parsing arbitrary Git recovery commands."
+    },
+    "F-007": {
+      "title": "Frozen candidate can deadlock with stale Git index",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_dirty_candidate_and_planning_change_revert_are_denied",
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_reviewer_rework_creates_new_candidate"
+      ],
+      "rationale": "The simplified model creates a candidate only from clean committed HEAD and returns to EXECUTE for source rework; no frozen-index materialization state exists."
+    },
+    "F-008": {
+      "title": "Evidence producers and evidence validators can diverge",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_state.StateTests.test_candidate_and_assurance_bind_exact_sha"
+      ],
+      "rationale": "Durable free-form Reviewer/Verifier report schemas are not controller authority; exact candidate status bindings are authoritative."
+    },
+    "F-009": {
+      "title": "Assurance invalidation is too coarse for control-plane self-modification",
+      "status": "COVERED",
+      "tests": [
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_reviewer_rework_creates_new_candidate",
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_verifier_rework_and_evidence_problem_have_distinct_semantics",
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_reviewer_and_verifier_scope_change_return_to_define"
+      ],
+      "rationale": "Rework, evidence problems, and scope changes now have distinct invalidation semantics."
+    },
+    "F-010": {
+      "title": "Component tests were stronger than transaction-level E2E coverage",
+      "status": "COVERED",
+      "tests": [
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_happy_path_has_no_bootstrap_or_bypass"
+      ],
+      "rationale": "WB-003 adds a real disposable Git transaction from trusted admission through exact remote verification."
+    },
+    "F-011": {
+      "title": "Self-hosting publication deadlock confirmed by WB-038",
+      "status": "COVERED",
+      "tests": [
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_happy_path_has_no_bootstrap_or_bypass",
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_direct_valid_push_then_publish_is_idempotent"
+      ],
+      "rationale": "An assured source candidate can reach subject publication without reopening source write authority or bootstrap Git bypass."
+    },
+    "F-012": {
+      "title": "Cooperative guardrails became repair-path blockers",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_adapters_hook.RuntimeAdapterTests.test_opaque_bash_never_becomes_structured_authority"
+      ],
+      "rationale": "Runtime adapters are thin structured-event normalizers; shell repair command grammar is no longer controller authority."
+    },
+    "F-013": {
+      "title": "Stop-hook pressure can cause unauthorized lifecycle-state mutation",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_reporting_only_close_is_git_private_and_reachable"
+      ],
+      "rationale": "Stop/session-exit hooks are not lifecycle transitions in the new controller; close is an explicit controller operation."
+    },
+    "F-014": {
+      "title": "A runtime may be unable to modify its own adapter",
+      "status": "NOT_APPLICABLE",
+      "tests": [],
+      "rationale": "WB-003 is deterministic controller/Git harness coverage; runtime filesystem self-modification capability is an external rollout concern, not controller authority."
+    },
+    "F-015": {
+      "title": "Runtime hook commands depend on session cwd",
+      "status": "COVERED",
+      "tests": [
+        "v1.tests.test_adapters_hook.RuntimeAdapterTests.test_relative_target_is_resolved_from_native_nested_cwd",
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_linked_worktree_state_is_isolated_and_nested_cwd_is_bound"
+      ],
+      "rationale": "Target worktree and relative paths are derived from native cwd, not a fixed repository-root assumption."
+    },
+    "F-016": {
+      "title": "Agent-facing operating documentation is materially stale",
+      "status": "NOT_APPLICABLE",
+      "tests": [],
+      "rationale": "The canonical audit classifies this as documentation-audit backlog; WB-003 tests controller transaction behavior."
+    },
+    "F-017": {
+      "title": "Maintenance Mode does not yet reach Git-native commit enforcement",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_happy_path_has_no_bootstrap_or_bypass"
+      ],
+      "rationale": "The simplified normal path uses one shared policy through Git-native adapters and requires no Maintenance Mode."
+    },
+    "F-018": {
+      "title": "Normal Git conformance cannot represent an inactive Maintenance Bootstrap commit",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_happy_path_has_no_bootstrap_or_bypass"
+      ],
+      "rationale": "Trusted admission precedes planning/open; the new normal path does not model inactive maintenance bootstrap commits."
+    },
+    "F-019": {
+      "title": "Bootstrap publication can be exact-ref verified without normal PUBLISHED_VERIFIED",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_happy_path_has_no_bootstrap_or_bypass"
+      ],
+      "rationale": "There is no PUBLISHED_VERIFIED lifecycle state; publish verifies the exact remote ref then transitions ASSURE directly to INACTIVE."
+    },
+    "F-020": {
+      "title": "WB-038 E2E baseline is not in the published remediation ancestry",
+      "status": "COVERED",
+      "tests": [
+        "v1.tests.test_e2e_transactions.E2ETransactionTests"
+      ],
+      "rationale": "WB-003 makes the deterministic transaction harness durable in the current remediation ancestry."
+    },
+    "F-021": {
+      "title": "Unassigned finding identifier",
+      "status": "NOT_APPLICABLE",
+      "tests": [],
+      "rationale": "The canonical audit source has no F-021 entry; the gap is preserved rather than inventing a finding."
+    },
+    "F-022": {
+      "title": "Candidate transaction capability validation is applied too broadly to Bash input",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_adapters_hook.RuntimeAdapterTests.test_opaque_bash_never_becomes_structured_authority"
+      ],
+      "rationale": "Candidate authority is a controller lifecycle API; Bash text is not normalized into candidate capability authority."
+    },
+    "F-023": {
+      "title": "Hard-stop command normalization may overclassify benign Git option forms",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_adapters_hook.RuntimeAdapterTests.test_opaque_bash_never_becomes_structured_authority"
+      ],
+      "rationale": "The shared controller no longer classifies arbitrary shell/Git command text for write authority."
+    },
+    "F-024": {
+      "title": "Maintenance Mode audit provenance is hard-coded to WB-039",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_state.StateTests.test_open_creates_exact_define_contract"
+      ],
+      "rationale": "Maintenance Mode provenance is not part of schema-v2 authority; immutable admission_id and Work Block identity provide correlation."
+    },
+    "F-025": {
+      "title": "Git restore/checkout revision arguments are misclassified as source paths",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_adapters_hook.RuntimeAdapterTests.test_opaque_bash_never_becomes_structured_authority"
+      ],
+      "rationale": "No shell argv path extraction is used for controller write authority."
+    },
+    "F-026": {
+      "title": "Re-opening an active Work Block can silently replace its planning/evidence base",
+      "status": "COVERED",
+      "tests": [
+        "v1.tests.test_state.StateTests.test_open_rejects_active_state",
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_proactive_execute_revision_is_reachable"
+      ],
+      "rationale": "Open rejects active state and revise preserves immutable base/admission identity."
+    },
+    "F-027": {
+      "title": "Stop hook can recursively block session termination while assurance is intentionally pending",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_verifier_rework_and_evidence_problem_have_distinct_semantics"
+      ],
+      "rationale": "Stop is not an authority-bearing event or lifecycle transition; pending assurance remains explicit without session-exit mutation."
+    },
+    "F-028": {
+      "title": "Shell command segmentation loses newline command boundaries",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_adapters_hook.RuntimeAdapterTests.test_opaque_bash_never_becomes_structured_authority"
+      ],
+      "rationale": "The controller no longer segments Bash command text for authority decisions."
+    },
+    "F-029": {
+      "title": "Shell tokenization loses quoted-separator provenance and can create false command boundaries",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_adapters_hook.RuntimeAdapterTests.test_opaque_bash_never_becomes_structured_authority"
+      ],
+      "rationale": "The bespoke shell tokenizer was removed from controller authority."
+    },
+    "F-030": {
+      "title": "Shared hard-stop policy can classify dangerous command text inside benign task arguments as executable intent",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_adapters_hook.RuntimeAdapterTests.test_opaque_bash_never_becomes_structured_authority"
+      ],
+      "rationale": "Prompt/task argument text is absent from normalized controller events."
+    },
+    "F-031": {
+      "title": "Orchestrator self-selected an Owner decision after explicitly pausing for authorization",
+      "status": "NOT_APPLICABLE",
+      "tests": [],
+      "rationale": "This is an orchestration authority-boundary finding owned by later autonomous orchestration work (WB-004), not the deterministic WB-003 controller harness."
+    },
+    "F-032": {
+      "title": "Shell grouping constructs can hide executable hard-stop operations from adapter segmentation",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_adapters_hook.RuntimeAdapterTests.test_opaque_bash_never_becomes_structured_authority"
+      ],
+      "rationale": "No grouping/subshell parser participates in controller authority."
+    },
+    "F-033": {
+      "title": "Shell comments are not respected by adapter segmentation and can create false executable commands",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_adapters_hook.RuntimeAdapterTests.test_opaque_bash_never_becomes_structured_authority"
+      ],
+      "rationale": "No shell-comment parsing participates in controller authority."
+    },
+    "F-034": {
+      "title": "Command substitution inside quoted argv data can execute hidden hard-stop operations",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_adapters_hook.RuntimeAdapterTests.test_opaque_bash_never_becomes_structured_authority"
+      ],
+      "rationale": "Opaque Bash is not converted to structured authority; command-substitution parsing is outside the controller."
+    },
+    "F-035": {
+      "title": "Empty quoted words are lost, breaking shell comment semantics",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_adapters_hook.RuntimeAdapterTests.test_opaque_bash_never_becomes_structured_authority"
+      ],
+      "rationale": "The legacy lightweight shell lexer is not used."
+    },
+    "F-036": {
+      "title": "Variable expansion can synthesize an executable command outside the supported grammar",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_adapters_hook.RuntimeAdapterTests.test_opaque_bash_never_becomes_structured_authority"
+      ],
+      "rationale": "Executable variable expansion is not interpreted by the controller because shell text is not an authority source."
+    },
+    "F-037": {
+      "title": "Lightweight shell splitting is not a sustainable security boundary",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_adapters_hook.RuntimeAdapterTests.test_opaque_bash_never_becomes_structured_authority"
+      ],
+      "rationale": "WB-002 removed bespoke shell splitting from controller authority entirely."
+    },
+    "F-038": {
+      "title": "Redirects to benign special sinks are treated as out-of-repository writes",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_adapters_hook.RuntimeAdapterTests.test_opaque_bash_never_becomes_structured_authority"
+      ],
+      "rationale": "Redirect targets from Bash text are not controller write paths; structured tools provide exact paths."
+    },
+    "F-039": {
+      "title": "Canonical reporting-only inactive state is not committable",
+      "status": "SUPERSEDED",
+      "tests": [
+        "v1.tests.test_e2e_transactions.E2ETransactionTests.test_reporting_only_close_is_git_private_and_reachable"
+      ],
+      "rationale": "Schema-v2 lifecycle state is Git-private per-worktree metadata, so reporting-only INACTIVE state is not a tracked file that must pass commit conformance."
+    }
+  }
+}
