@@ -124,20 +124,67 @@ def published_context(
     )
 
 
+def _capability_decision(record, profile: dict, capability: str) -> DeliveryDecision:
+    if capability not in DELIVERY_CAPABILITIES:
+        return DeliveryDecision(
+            "DENY",
+            capability,
+            record.admission_id,
+            record.authority_profile_id,
+            "unknown delivery capability",
+        )
+    capabilities = set(profile["capabilities"])
+    requires_owner = set(profile["requires_owner"])
+    if capability in capabilities:
+        return DeliveryDecision(
+            "ALLOW",
+            capability,
+            record.admission_id,
+            record.authority_profile_id,
+            "capability is present in pinned autonomy profile",
+        )
+    reason = (
+        "pinned autonomy profile requires Owner decision"
+        if capability in requires_owner
+        else "capability is absent from pinned autonomy profile"
+    )
+    return DeliveryDecision(
+        "OWNER_DECISION_REQUIRED",
+        capability,
+        record.admission_id,
+        record.authority_profile_id,
+        reason,
+    )
+
+
+def authorize_record(
+    root: Path,
+    resolver: AdmissionResolver,
+    *,
+    admission_id: str,
+    repository_id: str,
+    capability: str,
+) -> DeliveryDecision:
+    root = gitfacts.worktree_root(root)
+    record = resolver.resolve(admission_id)
+    if record.repository != repository_id:
+        return DeliveryDecision(
+            "DENY",
+            capability,
+            record.admission_id,
+            record.authority_profile_id,
+            "repository differs from trusted admission",
+        )
+    return _capability_decision(record, _profile(root, record), capability)
+
+
 def authorize(
     root: Path,
     resolver: AdmissionResolver,
     context: DeliveryContext,
     capability: str,
 ) -> DeliveryDecision:
-    if capability not in DELIVERY_CAPABILITIES:
-        return DeliveryDecision(
-            "DENY",
-            capability,
-            context.admission_id,
-            context.profile_id,
-            "unknown delivery capability",
-        )
+    root = gitfacts.worktree_root(root)
     record = resolver.resolve(context.admission_id)
     expected = (
         record.repository,
@@ -161,26 +208,33 @@ def authorize(
             context.profile_id,
             "delivery context differs from trusted admission",
         )
-    profile = _profile(gitfacts.worktree_root(root), record)
-    capabilities = set(profile["capabilities"])
-    requires_owner = set(profile["requires_owner"])
-    if capability in capabilities:
+    if _SHA_RE.fullmatch(context.published_tip_sha) is None:
         return DeliveryDecision(
-            "ALLOW",
+            "DENY",
             capability,
             context.admission_id,
             context.profile_id,
-            "capability is present in pinned autonomy profile",
+            "published tip is not an exact commit SHA",
         )
-    reason = (
-        "pinned autonomy profile requires Owner decision"
-        if capability in requires_owner
-        else "capability is absent from pinned autonomy profile"
-    )
-    return DeliveryDecision(
-        "OWNER_DECISION_REQUIRED",
-        capability,
-        context.admission_id,
-        context.profile_id,
-        reason,
-    )
+    ref = f"refs/heads/{record.subject_branch}"
+    try:
+        remote_tip = gitfacts.remote_ref_sha(root, "origin", ref)
+    except Exception:
+        remote_tip = None
+    if remote_tip != context.published_tip_sha:
+        return DeliveryDecision(
+            "DENY",
+            capability,
+            context.admission_id,
+            context.profile_id,
+            "published tip differs from trusted remote subject ref",
+        )
+    if not gitfacts.is_ancestor(root, record.base_commit, context.published_tip_sha):
+        return DeliveryDecision(
+            "DENY",
+            capability,
+            context.admission_id,
+            context.profile_id,
+            "published tip does not descend from admitted base",
+        )
+    return _capability_decision(record, _profile(root, record), capability)
