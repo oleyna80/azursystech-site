@@ -27,7 +27,8 @@
         "open_or_update_pr",
         "collect_release_evidence",
         "merge",
-        "deploy_nonproduction"
+        "deploy_nonproduction",
+        "post_deploy_verify"
       ],
       "requires_owner": [
         "deploy_production",
