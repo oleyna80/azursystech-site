@@ -228,34 +228,36 @@ class Orchestrator:
                 self._code_candidate(root, admission_id, spec)
                 continue
 
-            verifier = self._role("verifier", root, admission_id, spec)
-            if verifier.outcome == "READY":
-                cli.verifier(root, "ready")
-                return
-            if verifier.outcome == "EVIDENCE_PROBLEM":
-                cli.verifier(root, "evidence-problem")
-                cycles[0] += 1
-                self._limit(spec, cycles[0])
-                continue
-            if verifier.outcome == "REWORK":
-                cli.verifier(root, "rework")
-                cycles[0] += 1
-                self._limit(spec, cycles[0])
-                self._code_candidate(root, admission_id, spec)
-                continue
+            while True:
+                verifier = self._role("verifier", root, admission_id, spec)
+                if verifier.outcome == "READY":
+                    cli.verifier(root, "ready")
+                    return
+                if verifier.outcome == "EVIDENCE_PROBLEM":
+                    cli.verifier(root, "evidence-problem")
+                    cycles[0] += 1
+                    self._limit(spec, cycles[0])
+                    continue
+                if verifier.outcome == "REWORK":
+                    cli.verifier(root, "rework")
+                    cycles[0] += 1
+                    self._limit(spec, cycles[0])
+                    self._code_candidate(root, admission_id, spec)
+                    break
 
-            cli.verifier(root, "scope-change")
-            cycles[0] += 1
-            self._limit(spec, cycles[0])
-            self._plan(root, admission_id, spec, reason="verifier-scope-change")
-            cli.revise_bind(
-                root,
-                planning_paths=list(spec.planning_paths),
-                implementation_write_set=list(spec.implementation_write_set),
-                coordination_scope=list(spec.coordination_scope),
-            )
-            self._critic_until_ready(root, admission_id, spec, cycles)
-            self._code_candidate(root, admission_id, spec)
+                cli.verifier(root, "scope-change")
+                cycles[0] += 1
+                self._limit(spec, cycles[0])
+                self._plan(root, admission_id, spec, reason="verifier-scope-change")
+                cli.revise_bind(
+                    root,
+                    planning_paths=list(spec.planning_paths),
+                    implementation_write_set=list(spec.implementation_write_set),
+                    coordination_scope=list(spec.coordination_scope),
+                )
+                self._critic_until_ready(root, admission_id, spec, cycles)
+                self._code_candidate(root, admission_id, spec)
+                break
 
     def _owner_required(
         self,
