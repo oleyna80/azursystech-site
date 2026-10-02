@@ -7,7 +7,7 @@ AGENT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(AGENT_ROOT))
 
 from controllers.v1 import cli
-from orchestration import delivery
+from orchestration import admission, delivery
 from orchestration.runner import Orchestrator
 from orchestration.tests.support import (
     OrchestrationRepo,
@@ -54,6 +54,9 @@ class DeliveryAuthorityTests(unittest.TestCase):
     def test_delivery_context_survives_controller_inactive_via_admission_id(self):
         result, context = self._published_context()
         self.assertEqual(context.admission_id, result.admission_id)
+        binding = self.fx.registry.resolve_publication(result.admission_id)
+        self.assertEqual(context.source_candidate_sha, binding.source_candidate_sha)
+        self.assertEqual(context.published_tip_sha, binding.published_tip_sha)
         self.assertEqual(context.published_tip_sha, result.published_tip_sha)
         decision = delivery.authorize(
             self.fx.root,
@@ -62,6 +65,30 @@ class DeliveryAuthorityTests(unittest.TestCase):
             "merge",
         )
         self.assertEqual(decision.status, "OWNER_DECISION_REQUIRED")
+
+    def test_remote_advance_after_verified_publish_is_rejected(self):
+        result, context = self._published_context()
+        record = self.fx.registry.resolve(result.admission_id)
+        (self.fx.root / "after-publish.txt").write_text(
+            "unassured remote advance\n",
+            encoding="utf-8",
+        )
+        advanced = self.fx.commit_direct("unassured remote advance")
+        self.assertNotEqual(advanced, context.published_tip_sha)
+        self.fx._git_run(
+            "push",
+            "-q",
+            "origin",
+            f"HEAD:refs/heads/{record.subject_branch}",
+        )
+
+        with self.assertRaises(admission.AdmissionValidationError):
+            delivery.published_context(
+                self.fx.root,
+                self.fx.registry,
+                admission_id=result.admission_id,
+                repository_id=REPOSITORY_ID,
+            )
 
     def test_forged_published_tip_is_denied(self):
         _result, context = self._published_context()
