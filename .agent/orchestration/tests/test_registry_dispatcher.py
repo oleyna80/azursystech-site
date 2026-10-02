@@ -47,6 +47,21 @@ class RegistryDispatcherTests(unittest.TestCase):
         with self.assertRaises(admission.AdmissionValidationError):
             TrustedDispatcher.parse_request(raw)
 
+    def test_persistent_registry_inside_subject_repo_is_rejected(self):
+        fx = OrchestrationRepo()
+        try:
+            inside = SQLiteAdmissionRegistry(
+                fx.root / ".agent" / "admissions.sqlite3"
+            )
+            dispatcher = TrustedDispatcher(inside)
+            with self.assertRaises(admission.AdmissionValidationError):
+                dispatcher.admit(
+                    fx.root,
+                    fx.request("manual-owner", admission_id="adm-inside0001"),
+                )
+        finally:
+            fx.cleanup()
+
     def test_default_dispatcher_does_not_enable_higher_triggers(self):
         fx = OrchestrationRepo()
         try:
