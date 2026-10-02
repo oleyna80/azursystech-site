@@ -15,8 +15,8 @@ from .errors import StopAndPreserve, ValidationError
 from .events import Decision, Event, validate as validate_event
 from .policy import evaluate
 
-PATCH_PATH = re.compile(r"^\*\*\*\s+(?:Add|Update|Delete)\s+File:\s+(.+?)\s*$", re.M)
-PATCH_MOVE = re.compile(r"^\*\*\*\s+Move to:\s+(.+?)\s*$", re.M)
+PATCH_PATH = re.compile(r"^\*\*\*\s+(?:Add|Update|Delete)\s+File: (.+)$", re.M)
+PATCH_MOVE = re.compile(r"^\*\*\*\s+Move to: (.+)$", re.M)
 
 WRITE_TOOLS = frozenset({"write", "write_file"})
 EDIT_TOOLS = frozenset({"edit", "multiedit"})
