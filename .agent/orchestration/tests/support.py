@@ -321,6 +321,21 @@ class ScriptedRoles:
         return RoleResult(role, outcome)
 
 
+class SimulatedOwnerAuthorization:
+    def __init__(self, allowed: set[str] | frozenset[str]) -> None:
+        self.allowed = frozenset(allowed)
+        self.calls: list[tuple[str, str, str]] = []
+
+    def approved(
+        self,
+        admission_id: str,
+        capability: str,
+        published_tip_sha: str,
+    ) -> bool:
+        self.calls.append((admission_id, capability, published_tip_sha))
+        return capability in self.allowed
+
+
 class SimulatedDelivery:
     def __init__(self, *, fail_capability: str | None = None) -> None:
         self.fail_capability = fail_capability
