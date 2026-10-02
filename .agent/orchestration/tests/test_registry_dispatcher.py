@@ -41,8 +41,17 @@ class RegistryDispatcherTests(unittest.TestCase):
             "repository": "fixture/repo",
             "trigger_class": "manual-owner",
             "subject_branch": "feat/test",
-            "policy_revision": "a" * 40,
             "authority_profile_id": "autonomous-production",
+        }
+        with self.assertRaises(admission.AdmissionValidationError):
+            TrustedDispatcher.parse_request(raw)
+
+    def test_dispatch_request_cannot_select_historical_policy_revision(self):
+        raw = {
+            "repository": "fixture/repo",
+            "trigger_class": "manual-owner",
+            "subject_branch": "feat/test",
+            "policy_revision": "a" * 40,
         }
         with self.assertRaises(admission.AdmissionValidationError):
             TrustedDispatcher.parse_request(raw)
