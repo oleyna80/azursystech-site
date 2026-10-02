@@ -62,7 +62,14 @@ class OrchestrationRepo:
         self._git_run("push", "-q", "origin", "main")
 
         self.registry = SQLiteAdmissionRegistry(base / "trusted" / "admissions.sqlite3")
-        self.dispatcher = TrustedDispatcher(self.registry)
+        self.dispatcher = TrustedDispatcher(
+            self.registry,
+            allowed_trigger_classes={
+                "manual-owner",
+                "trusted-ci",
+                "trusted-release",
+            },
+        )
 
     def cleanup(self) -> None:
         self.temp.cleanup()
