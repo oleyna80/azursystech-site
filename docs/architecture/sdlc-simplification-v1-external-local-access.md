@@ -32,6 +32,10 @@ ExternalImportGrant
   destination_scope = bounded repository scope
 ```
 
+The admitted source root must be filesystem-disjoint from the target worktree:
+it may be another project/worktree, but it cannot be the target worktree itself
+or a broad parent directory that contains the target worktree.
+
 The two sides are independent:
 
 ```text
@@ -63,6 +67,14 @@ A grant provides no API for:
 - external delete;
 - external rename/move;
 - grant mutation/widening.
+
+Logical roles receive least-capability views:
+
+- Planner/Critic/Reviewer/Verifier/closeout receive a read-only view capable of
+  bounded listing and file reads;
+- Coder receives the import-capable view because repository import is an
+  implementation mutation;
+- the read-only role view contains no reference to the full import broker.
 
 ## Symlinks
 
@@ -130,8 +142,11 @@ The implementation must prove:
 6. admitted source → non-WB destination is denied;
 7. WB write scope cannot override a narrower grant destination scope;
 8. a grant cannot be widened by the role consuming it;
-9. a broker bound to another worktree cannot be reused;
-10. import still passes normal Git/candidate/assurance/publication transactions.
+9. a grant root containing the target worktree is denied;
+10. destination symlink escape is denied;
+11. non-Coder roles receive a structurally read-only view;
+12. a broker bound to another worktree cannot be reused;
+13. import still passes normal Git/candidate/assurance/publication transactions.
 
 ## Rollout
 
