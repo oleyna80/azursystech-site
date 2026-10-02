@@ -183,13 +183,20 @@ class ExternalImportBroker:
                 raise ExternalAccessDenied("external access broker accepts grants only")
             if grant.mode != "read-only":
                 raise ExternalAccessDenied("external grant is not read-only")
+            overlaps = False
             try:
                 grant.source_root.relative_to(self.repo_root)
+                overlaps = True
             except ValueError:
                 pass
-            else:
+            try:
+                self.repo_root.relative_to(grant.source_root)
+                overlaps = True
+            except ValueError:
+                pass
+            if overlaps:
                 raise ExternalAccessDenied(
-                    "external grant source_root must be outside target worktree"
+                    "external grant source_root must be disjoint from target worktree"
                 )
             if grant.grant_id in self._grants:
                 raise ExternalAccessDenied("duplicate external import grant_id")
@@ -238,6 +245,8 @@ class ExternalImportBroker:
             raise ExternalAccessDenied(
                 "destination resolves outside target worktree"
             ) from exc
+        if resolved.exists() and resolved.is_dir():
+            raise ExternalAccessDenied("destination must be a file path")
         repo_path = self._repo_path(relative)
         if not state.scope_matches(repo_path, grant.destination_scope):
             raise ExternalAccessDenied(
