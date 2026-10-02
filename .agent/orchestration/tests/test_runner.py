@@ -151,6 +151,7 @@ class RunnerTests(unittest.TestCase):
         )
         self.assertEqual(result.status, "OWNER_DECISION_REQUIRED")
         self.assertEqual(roles.coder_count, 1)
+        self.assertEqual(roles.calls.count("reviewer"), 1)
         self.assertEqual(roles.calls.count("verifier"), 2)
 
     def test_scope_change_returns_to_define_and_recritic(self):
@@ -214,6 +215,42 @@ class RunnerTests(unittest.TestCase):
                 branch_protection_resolver=lambda _remote, _branch: False,
             )
         self.assertEqual(cli.status(self.fx.root)["lifecycle_state"], "DEFINE")
+
+    def test_role_owner_boundary_stops_without_followup_or_self_selection(self):
+        base = ScriptedRoles(self.fx)
+        delivery = SimulatedDelivery()
+
+        class NeedsOwner:
+            def run(inner_self, role, context):
+                if role == "critic":
+                    return RoleResult(
+                        "critic",
+                        "OWNER_DECISION_REQUIRED",
+                        reason="architecture choice requires Owner",
+                        required_capability="architecture_change",
+                    )
+                return base.run(role, context)
+
+        orchestrator = Orchestrator(
+            self.fx.dispatcher,
+            NeedsOwner(),
+            delivery_executor=delivery,
+        )
+        result = orchestrator.run(
+            self.fx.root,
+            self.fx.request(
+                "manual-owner",
+                admission_id="adm-ownerrole01",
+            ),
+            self.fx.spec(),
+            branch_protection_resolver=lambda _remote, _branch: False,
+        )
+        self.assertEqual(result.status, "OWNER_DECISION_REQUIRED")
+        self.assertEqual(result.required_capability, "architecture_change")
+        self.assertEqual(result.reason, "architecture choice requires Owner")
+        self.assertEqual(cli.status(self.fx.root)["lifecycle_state"], "DEFINE")
+        self.assertEqual(delivery.calls, [])
+        self.assertEqual(base.calls, ["planner"])
 
     def test_owner_boundary_does_not_self_select_followup_action(self):
         result, _roles, delivery = self._run(
