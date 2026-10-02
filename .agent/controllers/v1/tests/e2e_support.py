@@ -156,6 +156,21 @@ class E2ERepo:
 
     def create_planning(self) -> str:
         for path in PLANNING_PATHS:
+            runtime = hook.evaluate_runtime(
+                "codex",
+                {
+                    "cwd": str(self.root),
+                    "tool_name": "Write",
+                    "tool_input": {"file_path": path},
+                },
+                installation_root=self.root,
+                admission=self.record,
+                repository_id=REPOSITORY_ID,
+            )
+            if runtime.code != "WRITE_PLANNING_ALLOWED":
+                raise AssertionError(
+                    f"pre-WB planning runtime denied: {runtime.code}: {runtime.reason}"
+                )
             target = self.root / path
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(path + "\n", encoding="utf-8")
