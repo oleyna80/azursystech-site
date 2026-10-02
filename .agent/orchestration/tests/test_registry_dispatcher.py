@@ -10,7 +10,7 @@ sys.path.insert(0, str(AGENT_ROOT))
 from orchestration import admission
 from controllers.v1 import hook
 from orchestration.dispatcher import TrustedDispatcher
-from orchestration.registry import SQLiteAdmissionRegistry
+from orchestration.registry import PublicationBinding, SQLiteAdmissionRegistry
 from orchestration.tests.support import OrchestrationRepo, REPOSITORY_ID
 
 
@@ -35,6 +35,62 @@ class RegistryDispatcherTests(unittest.TestCase):
             self.assertEqual(reopened.resolve(record.admission_id), record)
             with self.assertRaises(admission.AdmissionConflict):
                 reopened.put(replace(record, subject_branch="feat/changed"))
+
+    def test_publication_binding_and_owner_authorization_are_immutable(self):
+        with tempfile.TemporaryDirectory() as temp:
+            registry = SQLiteAdmissionRegistry(Path(temp) / "registry.sqlite3")
+            record = admission.AdmissionRecord(
+                admission_id="adm-provenance0001",
+                repository="fixture/repo",
+                trigger_class="manual-owner",
+                authority_profile_id="human-governed",
+                authority_profile_revision="a" * 40,
+                base_ref="main",
+                base_commit="b" * 40,
+                subject_branch="feat/test",
+            )
+            registry.put(record)
+            binding = PublicationBinding(
+                admission_id=record.admission_id,
+                source_candidate_sha="c" * 40,
+                published_tip_sha="d" * 40,
+            )
+            registry.put_publication(binding)
+            registry.put_publication(binding)
+            self.assertEqual(
+                registry.resolve_publication(record.admission_id),
+                binding,
+            )
+            with self.assertRaises(admission.AdmissionConflict):
+                registry.put_publication(
+                    replace(binding, published_tip_sha="e" * 40)
+                )
+
+            registry.put_owner_authorization(
+                record.admission_id,
+                "merge",
+                binding.published_tip_sha,
+            )
+            self.assertTrue(
+                registry.owner_authorized(
+                    record.admission_id,
+                    "merge",
+                    binding.published_tip_sha,
+                )
+            )
+            self.assertFalse(
+                registry.owner_authorized(
+                    record.admission_id,
+                    "merge",
+                    "e" * 40,
+                )
+            )
+            with self.assertRaises(admission.AdmissionConflict):
+                registry.put_owner_authorization(
+                    record.admission_id,
+                    "merge",
+                    "e" * 40,
+                )
 
     def test_dispatch_request_cannot_select_or_inject_profile(self):
         raw = {
