@@ -4,6 +4,14 @@
     "manual-owner": {
       "max_profile": "human-governed",
       "base_ref": "main"
+    },
+    "trusted-ci": {
+      "max_profile": "supervised-integrated",
+      "base_ref": "main"
+    },
+    "trusted-release": {
+      "max_profile": "autonomous-production",
+      "base_ref": "main"
     }
   }
 }
