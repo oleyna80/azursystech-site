@@ -180,7 +180,6 @@ class OrchestrationRepo:
             repository=REPOSITORY_ID,
             trigger_class=trigger_class,
             subject_branch=f"feat/{admission_id}",
-            policy_revision=self.base_commit,
             admission_id=admission_id,
         )
 
