@@ -517,13 +517,13 @@ class Orchestrator:
                 raise OrchestrationBlocked("closeout coordination did not complete")
             gitfacts.require_clean(root)
             head = gitfacts.head_sha(root)
-        else:
-            # Crash/restart after a committed closeout but before provenance bind:
-            # only already-valid coordination-only history may be adopted.
-            if not policy.post_candidate_history_allowed(root, current, head):
-                raise OrchestrationBlocked(
-                    "unbound post-candidate history is not valid closeout coordination"
-                )
+
+        # Bind provenance only after the exact candidate-to-tip history is already
+        # valid for publication. This avoids permanently pinning a failed closeout.
+        if not policy.post_candidate_history_allowed(root, current, head):
+            raise OrchestrationBlocked(
+                "post-candidate history is not valid closeout coordination"
+            )
 
         binding = PublicationBinding(
             admission_id=record.admission_id,
