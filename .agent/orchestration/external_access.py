@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 from controllers.v1 import cli, hook, state
+from controllers.v1.errors import ControllerError
 
 
 _GRANT_ID_RE = re.compile(r"^ext-[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
@@ -42,10 +43,13 @@ class ExternalImportGrant:
         scopes = tuple(self.destination_scope)
         if not scopes:
             raise ExternalAccessDenied("external import grant requires destination scope")
-        for pattern in scopes:
-            # Reuse the canonical Work Block scope grammar one pattern at a time
-            # so an earlier matching pattern cannot hide a later malformed one.
-            state.scope_matches("__external_import_scope_probe__", (pattern,))
+        try:
+            for pattern in scopes:
+                # Validate every pattern independently so one earlier match cannot
+                # hide a later malformed scope.
+                state.scope_matches("__external_import_scope_probe__", (pattern,))
+        except ControllerError as exc:
+            raise ExternalAccessDenied("external import destination_scope is invalid") from exc
         object.__setattr__(self, "source_root", root)
         object.__setattr__(self, "destination_scope", scopes)
 
@@ -64,24 +68,91 @@ class ExternalImportGrant:
         )
 
 
+def _inside_source(path: Path, root: Path) -> None:
+    try:
+        path.relative_to(root)
+    except ValueError as exc:
+        raise ExternalAccessDenied(
+            "external source resolves outside admitted read root"
+        ) from exc
+
+
+def _resolve_source(
+    grant: ExternalImportGrant,
+    requested: Path | str,
+    *,
+    require_file: bool = False,
+    require_dir: bool = False,
+) -> Path:
+    raw = Path(requested).expanduser()
+    candidate = raw if raw.is_absolute() else grant.source_root / raw
+    try:
+        resolved = candidate.resolve(strict=True)
+    except OSError as exc:
+        raise ExternalAccessDenied("external source cannot be resolved") from exc
+    _inside_source(resolved, grant.source_root)
+    if require_file and not resolved.is_file():
+        raise ExternalAccessDenied("external source is not a regular file")
+    if require_dir and not resolved.is_dir():
+        raise ExternalAccessDenied("external source is not a directory")
+    return resolved
+
+
+def _list_grant_files(
+    grant: ExternalImportGrant,
+    source: Path | str = ".",
+) -> tuple[str, ...]:
+    source_root = _resolve_source(grant, source, require_dir=True)
+    files: list[str] = []
+    for current, dirnames, filenames in os.walk(source_root, followlinks=False):
+        current_path = Path(current)
+        for dirname in list(dirnames):
+            child = current_path / dirname
+            if child.is_symlink():
+                try:
+                    resolved = child.resolve(strict=True)
+                except OSError as exc:
+                    raise ExternalAccessDenied(
+                        "external source symlink cannot be resolved"
+                    ) from exc
+                _inside_source(resolved, grant.source_root)
+                raise ExternalAccessDenied("symlink directories are not traversed")
+        for filename in filenames:
+            raw_source = current_path / filename
+            _resolve_source(grant, raw_source, require_file=True)
+            files.append(raw_source.relative_to(grant.source_root).as_posix())
+    return tuple(sorted(files))
+
+
 class ExternalReadView:
     """Read-only capability view suitable for non-Coder logical roles."""
 
-    def __init__(self, broker: "ExternalImportBroker") -> None:
-        self._broker = broker
+    def __init__(self, grants: tuple[ExternalImportGrant, ...]) -> None:
+        self._grants = {grant.grant_id: grant for grant in grants}
 
     def grants(self) -> tuple[ExternalImportGrant, ...]:
-        return self._broker.grants()
+        return tuple(self._grants[key] for key in sorted(self._grants))
+
+    def _grant(self, grant_id: str) -> ExternalImportGrant:
+        try:
+            return self._grants[grant_id]
+        except KeyError as exc:
+            raise ExternalAccessDenied("external import grant is not admitted") from exc
 
     def list_files(
         self,
         grant_id: str,
         source: Path | str = ".",
     ) -> tuple[str, ...]:
-        return self._broker.list_files(grant_id, source)
+        return _list_grant_files(self._grant(grant_id), source)
 
     def read_bytes(self, grant_id: str, source: Path | str) -> bytes:
-        return self._broker.read_bytes(grant_id, source)
+        resolved = _resolve_source(
+            self._grant(grant_id),
+            source,
+            require_file=True,
+        )
+        return resolved.read_bytes()
 
     def read_text(
         self,
@@ -90,7 +161,7 @@ class ExternalReadView:
         *,
         encoding: str = "utf-8",
     ) -> str:
-        return self._broker.read_text(grant_id, source, encoding=encoding)
+        return self.read_bytes(grant_id, source).decode(encoding)
 
 
 class ExternalImportBroker:
@@ -110,7 +181,6 @@ class ExternalImportBroker:
         for grant in grants:
             if not isinstance(grant, ExternalImportGrant):
                 raise ExternalAccessDenied("external access broker accepts grants only")
-            # __post_init__ canonicalizes even directly constructed grants.
             if grant.mode != "read-only":
                 raise ExternalAccessDenied("external grant is not read-only")
             try:
@@ -126,7 +196,7 @@ class ExternalImportBroker:
             self._grants[grant.grant_id] = grant
 
     def read_view(self) -> ExternalReadView:
-        return ExternalReadView(self)
+        return ExternalReadView(self.grants())
 
     def grants(self) -> tuple[ExternalImportGrant, ...]:
         return tuple(self._grants[key] for key in sorted(self._grants))
@@ -136,36 +206,6 @@ class ExternalImportBroker:
             return self._grants[grant_id]
         except KeyError as exc:
             raise ExternalAccessDenied("external import grant is not admitted") from exc
-
-    @staticmethod
-    def _inside(path: Path, root: Path) -> None:
-        try:
-            path.relative_to(root)
-        except ValueError as exc:
-            raise ExternalAccessDenied(
-                "external source resolves outside admitted read root"
-            ) from exc
-
-    def _source(
-        self,
-        grant: ExternalImportGrant,
-        requested: Path | str,
-        *,
-        require_file: bool = False,
-        require_dir: bool = False,
-    ) -> Path:
-        raw = Path(requested).expanduser()
-        candidate = raw if raw.is_absolute() else grant.source_root / raw
-        try:
-            resolved = candidate.resolve(strict=True)
-        except OSError as exc:
-            raise ExternalAccessDenied("external source cannot be resolved") from exc
-        self._inside(resolved, grant.source_root)
-        if require_file and not resolved.is_file():
-            raise ExternalAccessDenied("external source is not a regular file")
-        if require_dir and not resolved.is_dir():
-            raise ExternalAccessDenied("external source is not a directory")
-        return resolved
 
     @staticmethod
     def _repo_path(path: Path) -> str:
@@ -235,28 +275,14 @@ class ExternalImportBroker:
         grant_id: str,
         source: Path | str = ".",
     ) -> tuple[str, ...]:
-        grant = self._grant(grant_id)
-        source_root = self._source(grant, source, require_dir=True)
-        files: list[str] = []
-        for current, dirnames, filenames in os.walk(source_root, followlinks=False):
-            current_path = Path(current)
-            for dirname in list(dirnames):
-                child = current_path / dirname
-                if child.is_symlink():
-                    resolved = child.resolve(strict=True)
-                    self._inside(resolved, grant.source_root)
-                    raise ExternalAccessDenied(
-                        "symlink directories are not traversed"
-                    )
-            for filename in filenames:
-                raw_source = current_path / filename
-                self._source(grant, raw_source, require_file=True)
-                files.append(raw_source.relative_to(grant.source_root).as_posix())
-        return tuple(sorted(files))
+        return _list_grant_files(self._grant(grant_id), source)
 
     def read_bytes(self, grant_id: str, source: Path | str) -> bytes:
-        grant = self._grant(grant_id)
-        resolved = self._source(grant, source, require_file=True)
+        resolved = _resolve_source(
+            self._grant(grant_id),
+            source,
+            require_file=True,
+        )
         return resolved.read_bytes()
 
     def read_text(
@@ -275,7 +301,7 @@ class ExternalImportBroker:
         destination: Path | str,
     ) -> str:
         grant = self._grant(grant_id)
-        source_path = self._source(grant, source, require_file=True)
+        source_path = _resolve_source(grant, source, require_file=True)
         destination_path, repo_path = self._destination(grant, destination)
         payload = source_path.read_bytes()
         destination_path.parent.mkdir(parents=True, exist_ok=True)
@@ -289,7 +315,7 @@ class ExternalImportBroker:
         destination: Path | str,
     ) -> tuple[str, ...]:
         grant = self._grant(grant_id)
-        source_root = self._source(grant, source, require_dir=True)
+        source_root = _resolve_source(grant, source, require_dir=True)
 
         files: list[tuple[bytes, Path, str]] = []
         for current, dirnames, filenames in os.walk(source_root, followlinks=False):
@@ -297,14 +323,19 @@ class ExternalImportBroker:
             for dirname in list(dirnames):
                 child = current_path / dirname
                 if child.is_symlink():
-                    resolved = child.resolve(strict=True)
-                    self._inside(resolved, grant.source_root)
+                    try:
+                        resolved = child.resolve(strict=True)
+                    except OSError as exc:
+                        raise ExternalAccessDenied(
+                            "external source symlink cannot be resolved"
+                        ) from exc
+                    _inside_source(resolved, grant.source_root)
                     raise ExternalAccessDenied(
                         "symlink directories are not imported recursively"
                     )
             for filename in filenames:
                 raw_source = current_path / filename
-                resolved_source = self._source(
+                resolved_source = _resolve_source(
                     grant,
                     raw_source,
                     require_file=True,
