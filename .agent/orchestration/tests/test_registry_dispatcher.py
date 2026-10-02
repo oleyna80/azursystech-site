@@ -8,6 +8,7 @@ AGENT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(AGENT_ROOT))
 
 from orchestration import admission
+from controllers.v1 import hook
 from orchestration.dispatcher import TrustedDispatcher
 from orchestration.registry import SQLiteAdmissionRegistry
 from orchestration.tests.support import OrchestrationRepo, REPOSITORY_ID
@@ -69,6 +70,32 @@ class RegistryDispatcherTests(unittest.TestCase):
                 )
             finally:
                 other.cleanup()
+        finally:
+            fx.cleanup()
+
+    def test_subject_branch_cannot_modify_protected_profile_policy(self):
+        fx = OrchestrationRepo()
+        try:
+            record = fx.dispatcher.admit(
+                fx.root,
+                fx.request("manual-owner", admission_id="adm-protected01"),
+            )
+            fx._git_run("switch", "-q", record.subject_branch)
+            result = hook.evaluate_runtime(
+                "codex",
+                {
+                    "cwd": str(fx.root),
+                    "tool_name": "Write",
+                    "tool_input": {
+                        "file_path": ".agent/policies/autonomy-profiles.json"
+                    },
+                },
+                installation_root=fx.root,
+                admission=record,
+                repository_id=REPOSITORY_ID,
+            )
+            self.assertFalse(result.allowed)
+            self.assertEqual(result.code, "COMMIT_FORBIDDEN_PATH")
         finally:
             fx.cleanup()
 
