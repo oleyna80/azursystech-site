@@ -251,39 +251,29 @@ class E2ETransactionTests(unittest.TestCase):
         )
         self.assertEqual(denied.code, "COMMIT_SCOPE_DENIED")
 
-        self.fx._run("reset", "-q", "HEAD")
-        outside.unlink()
-        allowed_dir = self.fx.root / "src/allowed"
-        forbidden_dir = self.fx.root / "src/forbidden"
-        allowed_dir.mkdir(parents=True)
-        forbidden_dir.mkdir(parents=True)
-        (allowed_dir / "good.txt").write_text("good\n", encoding="utf-8")
-        (forbidden_dir / "bad.txt").write_text("bad\n", encoding="utf-8")
-
-        current = cli.status(self.fx.root)
-        narrowed = state.revise_begin(current)
-        storage.write(self.fx.state_path(), narrowed, expected=current)
-        rebound = state.revise_bind(
-            narrowed,
-            planning_revision=narrowed["active"]["planning_subject"]["revision"],
-            planning_paths=PLANNING_PATHS,
-            implementation_write_set=["src/allowed/**"],
-            coordination_scope=COORDINATION_SCOPE,
-        )
-        storage.write(self.fx.state_path(), rebound, expected=narrowed)
-        ready = state.critic_result(rebound, "ready")
-        storage.write(self.fx.state_path(), ready, expected=rebound)
-
-        subprocess.run(
-            ["git", "-C", str(self.fx.root), "add", "src"],
-            check=True,
-        )
-        denied_directory = hook.evaluate_git_pre_commit(
-            self.fx.root,
-            installation_root=self.fx.root,
-            default_branch="main",
-        )
-        self.assertEqual(denied_directory.code, "COMMIT_SCOPE_DENIED")
+        narrow = E2ERepo()
+        try:
+            narrow.open_and_execute(
+                implementation_write_set=["src/allowed/**"],
+            )
+            allowed_dir = narrow.root / "src/allowed"
+            forbidden_dir = narrow.root / "src/forbidden"
+            allowed_dir.mkdir(parents=True)
+            forbidden_dir.mkdir(parents=True)
+            (allowed_dir / "good.txt").write_text("good\n", encoding="utf-8")
+            (forbidden_dir / "bad.txt").write_text("bad\n", encoding="utf-8")
+            subprocess.run(
+                ["git", "-C", str(narrow.root), "add", "src"],
+                check=True,
+            )
+            denied_directory = hook.evaluate_git_pre_commit(
+                narrow.root,
+                installation_root=narrow.root,
+                default_branch="main",
+            )
+            self.assertEqual(denied_directory.code, "COMMIT_SCOPE_DENIED")
+        finally:
+            narrow.cleanup()
 
     def test_dirty_candidate_and_planning_change_revert_are_denied(self):
         self.fx.open_and_execute()
