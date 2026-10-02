@@ -12,9 +12,46 @@
       ],
       "requires_owner": [
         "merge",
-        "deploy",
-        "release",
-        "production_live_data"
+        "deploy_nonproduction",
+        "deploy_production",
+        "live_data_change",
+        "credential_change"
+      ]
+    },
+    "supervised-integrated": {
+      "capabilities": [
+        "planning",
+        "implementation",
+        "assurance",
+        "subject_branch_publish",
+        "open_or_update_pr",
+        "collect_release_evidence",
+        "merge",
+        "deploy_nonproduction"
+      ],
+      "requires_owner": [
+        "deploy_production",
+        "live_data_change",
+        "credential_change"
+      ]
+    },
+    "autonomous-production": {
+      "capabilities": [
+        "planning",
+        "implementation",
+        "assurance",
+        "subject_branch_publish",
+        "open_or_update_pr",
+        "collect_release_evidence",
+        "merge",
+        "deploy_nonproduction",
+        "deploy_production",
+        "post_deploy_verify",
+        "rollback"
+      ],
+      "requires_owner": [
+        "live_data_change",
+        "credential_change"
       ]
     }
   }
