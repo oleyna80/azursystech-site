@@ -334,10 +334,9 @@ class Orchestrator:
     ) -> RunResult:
         if self.delivery_executor is None:
             return RunResult(
-                status="OWNER_DECISION_REQUIRED",
+                status="BLOCKED",
                 admission_id=context.admission_id,
                 published_tip_sha=context.published_tip_sha,
-                required_capability="open_or_update_pr",
                 reason="no trusted delivery executor is configured",
             )
 
@@ -429,20 +428,25 @@ class Orchestrator:
         verify_auth = delivery.authorize(
             root, self.dispatcher.store, context, "post_deploy_verify"
         )
-        if verify_auth.allowed:
-            verified_sha = self._require_sha(
-                self.delivery_executor.execute(
-                    "post_deploy_verify",
-                    context,
-                    input_value=deployed_sha,
-                    target=spec.deployment_target,
-                ),
-                "post-deploy verifier",
+        if not verify_auth.allowed:
+            return self._owner_required(
+                context,
+                verify_auth,
+                merged_sha=merged_sha,
             )
-            if verified_sha != deployed_sha:
-                raise OrchestrationBlocked(
-                    "post-deploy verification returned different deployed SHA"
-                )
+        verified_sha = self._require_sha(
+            self.delivery_executor.execute(
+                "post_deploy_verify",
+                context,
+                input_value=deployed_sha,
+                target=spec.deployment_target,
+            ),
+            "post-deploy verifier",
+        )
+        if verified_sha != deployed_sha:
+            raise OrchestrationBlocked(
+                "post-deploy verification returned different deployed SHA"
+            )
         return RunResult(
             status="COMPLETE",
             admission_id=context.admission_id,
