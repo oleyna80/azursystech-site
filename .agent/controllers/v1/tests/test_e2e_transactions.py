@@ -348,7 +348,11 @@ class E2ETransactionTests(unittest.TestCase):
         self.assertEqual(preflight.code, "PUSH_ALLOWED")
 
         pre_receive = self.fx.remote / "hooks/pre-receive"
-        pre_receive.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+        receive_marker = self.fx.remote / "pre-receive-seen"
+        pre_receive.write_text(
+            "#!/bin/sh\nprintf reached > pre-receive-seen\nexit 1\n",
+            encoding="utf-8",
+        )
         pre_receive.chmod(0o755)
 
         with self.assertRaises(StopAndPreserve):
@@ -357,6 +361,8 @@ class E2ETransactionTests(unittest.TestCase):
                 branch_protection_resolver=lambda _remote, _branch: False,
             )
 
+        self.assertTrue(receive_marker.is_file())
+        self.assertEqual(receive_marker.read_text(encoding="utf-8"), "reached")
         self.assertEqual(self.fx.state_path().read_bytes(), before)
         self.assertEqual(cli.status(self.fx.root)["lifecycle_state"], "ASSURE")
         remote_after = subprocess.run(
