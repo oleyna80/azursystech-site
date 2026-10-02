@@ -8,11 +8,15 @@ normal implementation-write policy.
 from __future__ import annotations
 
 import os
+import re
 import uuid
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 from controllers.v1 import cli, hook, state
+
+
+_GRANT_ID_RE = re.compile(r"^ext-[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 
 
 class ExternalAccessDenied(Exception):
@@ -26,6 +30,25 @@ class ExternalImportGrant:
     destination_scope: tuple[str, ...]
     mode: str = "read-only"
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.grant_id, str) or _GRANT_ID_RE.fullmatch(self.grant_id) is None:
+            raise ExternalAccessDenied("external import grant_id is invalid")
+        if self.mode != "read-only":
+            raise ExternalAccessDenied("external import grant mode must be read-only")
+        try:
+            root = Path(self.source_root).expanduser().resolve(strict=True)
+        except OSError as exc:
+            raise ExternalAccessDenied("external source root cannot be resolved") from exc
+        scopes = tuple(self.destination_scope)
+        if not scopes:
+            raise ExternalAccessDenied("external import grant requires destination scope")
+        for pattern in scopes:
+            # Reuse the canonical Work Block scope grammar one pattern at a time
+            # so an earlier matching pattern cannot hide a later malformed one.
+            state.scope_matches("__external_import_scope_probe__", (pattern,))
+        object.__setattr__(self, "source_root", root)
+        object.__setattr__(self, "destination_scope", scopes)
+
     @classmethod
     def create(
         cls,
@@ -34,22 +57,40 @@ class ExternalImportGrant:
         destination_scope: tuple[str, ...] | list[str],
         grant_id: str | None = None,
     ) -> "ExternalImportGrant":
-        root = Path(source_root).expanduser().resolve(strict=True)
-        if not root.exists():
-            raise ExternalAccessDenied("external source root does not exist")
-        scopes = tuple(destination_scope)
-        if not scopes:
-            raise ExternalAccessDenied("external import grant requires destination scope")
-        # Reuse the canonical Work Block scope grammar without widening it.
-        state.scope_matches("__external_import_scope_probe__", scopes)
-        identifier = grant_id or f"ext-{uuid.uuid4().hex}"
-        if not isinstance(identifier, str) or not identifier.startswith("ext-"):
-            raise ExternalAccessDenied("external import grant_id is invalid")
         return cls(
-            grant_id=identifier,
-            source_root=root,
-            destination_scope=scopes,
+            grant_id=grant_id or f"ext-{uuid.uuid4().hex}",
+            source_root=Path(source_root),
+            destination_scope=tuple(destination_scope),
         )
+
+
+class ExternalReadView:
+    """Read-only capability view suitable for non-Coder logical roles."""
+
+    def __init__(self, broker: "ExternalImportBroker") -> None:
+        self._broker = broker
+
+    def grants(self) -> tuple[ExternalImportGrant, ...]:
+        return self._broker.grants()
+
+    def list_files(
+        self,
+        grant_id: str,
+        source: Path | str = ".",
+    ) -> tuple[str, ...]:
+        return self._broker.list_files(grant_id, source)
+
+    def read_bytes(self, grant_id: str, source: Path | str) -> bytes:
+        return self._broker.read_bytes(grant_id, source)
+
+    def read_text(
+        self,
+        grant_id: str,
+        source: Path | str,
+        *,
+        encoding: str = "utf-8",
+    ) -> str:
+        return self._broker.read_text(grant_id, source, encoding=encoding)
 
 
 class ExternalImportBroker:
@@ -69,6 +110,9 @@ class ExternalImportBroker:
         for grant in grants:
             if not isinstance(grant, ExternalImportGrant):
                 raise ExternalAccessDenied("external access broker accepts grants only")
+            # __post_init__ canonicalizes even directly constructed grants.
+            if grant.mode != "read-only":
+                raise ExternalAccessDenied("external grant is not read-only")
             try:
                 grant.source_root.relative_to(self.repo_root)
             except ValueError:
@@ -80,6 +124,9 @@ class ExternalImportBroker:
             if grant.grant_id in self._grants:
                 raise ExternalAccessDenied("duplicate external import grant_id")
             self._grants[grant.grant_id] = grant
+
+    def read_view(self) -> ExternalReadView:
+        return ExternalReadView(self)
 
     def grants(self) -> tuple[ExternalImportGrant, ...]:
         return tuple(self._grants[key] for key in sorted(self._grants))
@@ -135,11 +182,13 @@ class ExternalImportBroker:
         grant: ExternalImportGrant,
         requested: Path | str,
     ) -> tuple[Path, str]:
-        raw = Path(requested)
-        if raw.is_absolute():
-            candidate = raw
-        else:
-            candidate = self.repo_root / raw
+        raw_text = os.fspath(requested)
+        if not isinstance(raw_text, str) or not raw_text or raw_text != raw_text.strip():
+            raise ExternalAccessDenied("destination path is ambiguous")
+        raw = Path(raw_text)
+        if not raw.is_absolute() and any(part in {".", ".."} for part in raw.parts):
+            raise ExternalAccessDenied("relative destination path is ambiguous")
+        candidate = raw if raw.is_absolute() else self.repo_root / raw
         if candidate.is_symlink():
             raise ExternalAccessDenied("destination symlink is not importable")
         try:
@@ -181,10 +230,43 @@ class ExternalImportBroker:
             )
         return resolved, repo_path
 
+    def list_files(
+        self,
+        grant_id: str,
+        source: Path | str = ".",
+    ) -> tuple[str, ...]:
+        grant = self._grant(grant_id)
+        source_root = self._source(grant, source, require_dir=True)
+        files: list[str] = []
+        for current, dirnames, filenames in os.walk(source_root, followlinks=False):
+            current_path = Path(current)
+            for dirname in list(dirnames):
+                child = current_path / dirname
+                if child.is_symlink():
+                    resolved = child.resolve(strict=True)
+                    self._inside(resolved, grant.source_root)
+                    raise ExternalAccessDenied(
+                        "symlink directories are not traversed"
+                    )
+            for filename in filenames:
+                raw_source = current_path / filename
+                self._source(grant, raw_source, require_file=True)
+                files.append(raw_source.relative_to(grant.source_root).as_posix())
+        return tuple(sorted(files))
+
     def read_bytes(self, grant_id: str, source: Path | str) -> bytes:
         grant = self._grant(grant_id)
         resolved = self._source(grant, source, require_file=True)
         return resolved.read_bytes()
+
+    def read_text(
+        self,
+        grant_id: str,
+        source: Path | str,
+        *,
+        encoding: str = "utf-8",
+    ) -> str:
+        return self.read_bytes(grant_id, source).decode(encoding)
 
     def import_file(
         self,
@@ -209,7 +291,7 @@ class ExternalImportBroker:
         grant = self._grant(grant_id)
         source_root = self._source(grant, source, require_dir=True)
 
-        files: list[tuple[Path, bytes, Path, str]] = []
+        files: list[tuple[bytes, Path, str]] = []
         for current, dirnames, filenames in os.walk(source_root, followlinks=False):
             current_path = Path(current)
             for dirname in list(dirnames):
@@ -235,7 +317,6 @@ class ExternalImportBroker:
                 )
                 files.append(
                     (
-                        resolved_source,
                         resolved_source.read_bytes(),
                         destination_path,
                         repo_path,
@@ -244,7 +325,7 @@ class ExternalImportBroker:
 
         # All source and destination paths are validated before the first write.
         imported: list[str] = []
-        for _source_path, payload, destination_path, repo_path in files:
+        for payload, destination_path, repo_path in files:
             destination_path.parent.mkdir(parents=True, exist_ok=True)
             destination_path.write_bytes(payload)
             imported.append(repo_path)
