@@ -189,13 +189,15 @@ class OrchestrationRepo:
         *,
         deployment_target: str | None = None,
         deployment_is_production: bool = False,
+        implementation_write_set: tuple[str, ...] = IMPLEMENTATION_SCOPE,
+        coordination_scope: tuple[str, ...] = COORDINATION_SCOPE,
     ) -> WorkBlockSpec:
         return WorkBlockSpec(
             work_block_id="WB-004",
             initiative_ref=INITIATIVE,
             planning_paths=PLANNING_PATHS,
-            implementation_write_set=IMPLEMENTATION_SCOPE,
-            coordination_scope=COORDINATION_SCOPE,
+            implementation_write_set=implementation_write_set,
+            coordination_scope=coordination_scope,
             deployment_target=deployment_target,
             deployment_is_production=deployment_is_production,
         )
