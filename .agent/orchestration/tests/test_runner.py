@@ -15,6 +15,7 @@ from orchestration.tests.support import (
     OrchestrationRepo,
     ScriptedRoles,
     SimulatedDelivery,
+    SimulatedOwnerAuthorization,
 )
 
 
@@ -479,21 +480,27 @@ class RunnerTests(unittest.TestCase):
 
         resumed_roles = ScriptedRoles(self.fx)
         resumed_delivery = SimulatedDelivery()
+        owner = SimulatedOwnerAuthorization({"merge"})
         resumed = Orchestrator(
             self.fx.dispatcher,
             resumed_roles,
             delivery_executor=resumed_delivery,
+            owner_authorization_resolver=owner,
         )
         completed = resumed.resume(
             self.fx.root,
             admission_id=admission_id,
             spec=spec,
-            owner_approvals={"merge"},
             branch_protection_resolver=lambda _remote, _branch: False,
         )
         self.assertEqual(completed.status, "COMPLETE")
         self.assertEqual([call[0] for call in resumed_delivery.calls], ["merge"])
         self.assertEqual(resumed_roles.calls, [])
+        binding = self.fx.registry.resolve_publication(admission_id)
+        self.assertEqual(
+            owner.calls,
+            [(admission_id, "merge", binding.published_tip_sha)],
+        )
 
         replay_delivery = SimulatedDelivery()
         replay = Orchestrator(
@@ -536,22 +543,28 @@ class RunnerTests(unittest.TestCase):
         )
 
         resumed_delivery = SimulatedDelivery()
+        owner = SimulatedOwnerAuthorization({"deploy_production"})
         resumed = Orchestrator(
             self.fx.dispatcher,
             ScriptedRoles(self.fx),
             delivery_executor=resumed_delivery,
+            owner_authorization_resolver=owner,
         )
         completed = resumed.resume(
             self.fx.root,
             admission_id=admission_id,
             spec=spec,
-            owner_approvals={"deploy_production"},
             branch_protection_resolver=lambda _remote, _branch: False,
         )
         self.assertEqual(completed.status, "COMPLETE")
         self.assertEqual(
             [call[0] for call in resumed_delivery.calls],
             ["deploy_production", "post_deploy_verify"],
+        )
+        binding = self.fx.registry.resolve_publication(admission_id)
+        self.assertEqual(
+            owner.calls[0],
+            (admission_id, "deploy_production", binding.published_tip_sha),
         )
 
     def test_owner_boundary_does_not_self_select_followup_action(self):
