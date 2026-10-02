@@ -12,6 +12,7 @@ from controllers.v1 import cli, gitfacts
 
 from . import delivery
 from .dispatcher import DispatchRequest, TrustedDispatcher
+from .external_access import ExternalImportBroker
 from .scheduler import WriterScheduler
 
 
@@ -53,6 +54,7 @@ class RoleContext:
     admission_id: str
     work_block: WorkBlockSpec
     controller_state: dict | None
+    external_access: ExternalImportBroker | None = None
     reason: str | None = None
 
 
@@ -117,11 +119,13 @@ class Orchestrator:
         *,
         delivery_executor: DeliveryExecutor | None = None,
         scheduler: WriterScheduler | None = None,
+        external_access: ExternalImportBroker | None = None,
     ) -> None:
         self.dispatcher = dispatcher
         self.roles = roles
         self.delivery_executor = delivery_executor
         self.scheduler = scheduler or WriterScheduler()
+        self.external_access = external_access
 
     def _role(
         self,
@@ -137,6 +141,7 @@ class Orchestrator:
             admission_id=admission_id,
             work_block=spec,
             controller_state=cli.status(root),
+            external_access=self.external_access,
             reason=reason,
         )
         assurance_role = role in {"critic", "reviewer", "verifier"}
@@ -464,6 +469,13 @@ class Orchestrator:
         branch_protection_resolver,
     ) -> RunResult:
         root = gitfacts.worktree_root(repo_root)
+        if (
+            self.external_access is not None
+            and self.external_access.repo_root != root
+        ):
+            raise OrchestrationBlocked(
+                "external access broker is bound to a different worktree"
+            )
         record = self.dispatcher.admit(root, request)
         subprocess.run(
             ["git", "-C", str(root), "switch", "-q", record.subject_branch],
