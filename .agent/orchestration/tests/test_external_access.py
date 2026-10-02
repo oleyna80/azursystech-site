@@ -117,7 +117,6 @@ class ExternalAccessTests(unittest.TestCase):
         outside = Path(self.fx.temp.name) / "destination-outside"
         outside.mkdir()
         link_parent = self.fx.root / ".claude"
-        link_parent.symlink_to(outside, target_is_directory=True)
 
         grant = self._grant()
         broker = ExternalImportBroker(self.fx.root, [grant])
@@ -127,12 +126,17 @@ class ExternalAccessTests(unittest.TestCase):
             def run(inner_self, role, context):
                 if role != "coder":
                     return base.run(role, context)
-                with self.assertRaises(ExternalAccessDenied):
-                    context.external_access.import_file(
-                        "ext-skills",
-                        "foo/SKILL.md",
-                        ".claude/skills/foo/SKILL.md",
-                    )
+                link_parent.symlink_to(outside, target_is_directory=True)
+                try:
+                    with self.assertRaises(ExternalAccessDenied):
+                        context.external_access.import_file(
+                            "ext-skills",
+                            "foo/SKILL.md",
+                            ".claude/skills/foo/SKILL.md",
+                        )
+                    self.assertFalse((outside / "skills/foo/SKILL.md").exists())
+                finally:
+                    link_parent.unlink()
                 base._coder(context)
                 return RoleResult("coder", "DONE")
 
