@@ -25,6 +25,15 @@ _DELIVERY_STAGES = frozenset({
     "verified_sha",
 })
 _SHA_DELIVERY_STAGES = frozenset({"merged_sha", "deployed_sha", "verified_sha"})
+_OWNER_APPROVABLE = frozenset({
+    "subject_branch_publish",
+    "open_or_update_pr",
+    "merge",
+    "deploy_nonproduction",
+    "deploy_production",
+    "post_deploy_verify",
+    "rollback",
+})
 
 _COLUMNS = (
     "admission_id",
@@ -106,6 +115,17 @@ class SQLiteAdmissionRegistry:
                     stage TEXT NOT NULL,
                     value TEXT NOT NULL,
                     PRIMARY KEY(admission_id, stage),
+                    FOREIGN KEY(admission_id) REFERENCES admissions(admission_id)
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS owner_authorizations (
+                    admission_id TEXT NOT NULL,
+                    capability TEXT NOT NULL,
+                    published_tip_sha TEXT NOT NULL,
+                    PRIMARY KEY(admission_id, capability),
                     FOREIGN KEY(admission_id) REFERENCES admissions(admission_id)
                 )
                 """
@@ -249,6 +269,60 @@ class SQLiteAdmissionRegistry:
                 """,
                 (admission_id, stage, value),
             )
+
+    def put_owner_authorization(
+        self,
+        admission_id: str,
+        capability: str,
+        published_tip_sha: str,
+    ) -> None:
+        self.resolve(admission_id)
+        if capability not in _OWNER_APPROVABLE:
+            raise AdmissionValidationError("unsupported Owner-authorized capability")
+        if _SHA_RE.fullmatch(published_tip_sha) is None:
+            raise AdmissionValidationError(
+                "Owner authorization must bind exact published tip SHA"
+            )
+        with self._connect() as connection:
+            current = connection.execute(
+                """
+                SELECT published_tip_sha FROM owner_authorizations
+                WHERE admission_id = ? AND capability = ?
+                """,
+                (admission_id, capability),
+            ).fetchone()
+            if current is not None:
+                if current[0] != published_tip_sha:
+                    raise AdmissionConflict(
+                        "Owner authorization is already bound to different published tip"
+                    )
+                return
+            connection.execute(
+                """
+                INSERT INTO owner_authorizations (
+                    admission_id, capability, published_tip_sha
+                ) VALUES (?, ?, ?)
+                """,
+                (admission_id, capability, published_tip_sha),
+            )
+
+    def owner_authorized(
+        self,
+        admission_id: str,
+        capability: str,
+        published_tip_sha: str,
+    ) -> bool:
+        if capability not in _OWNER_APPROVABLE:
+            return False
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT published_tip_sha FROM owner_authorizations
+                WHERE admission_id = ? AND capability = ?
+                """,
+                (admission_id, capability),
+            ).fetchone()
+        return row is not None and row[0] == published_tip_sha
 
     def delivery_fact(self, admission_id: str, stage: str) -> str | None:
         if stage not in _DELIVERY_STAGES:
