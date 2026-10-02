@@ -418,6 +418,29 @@ class Orchestrator:
             raise OrchestrationBlocked("closeout coordination did not complete")
         gitfacts.require_clean(root)
 
+        prepublish_context = delivery.DeliveryContext(
+            admission_id=record.admission_id,
+            repository=record.repository,
+            profile_id=record.authority_profile_id,
+            profile_revision=record.authority_profile_revision,
+            subject_branch=record.subject_branch,
+            base_commit=record.base_commit,
+            published_tip_sha=gitfacts.head_sha(root),
+        )
+        publish_auth = delivery.authorize(
+            root,
+            self.dispatcher.store,
+            prepublish_context,
+            "subject_branch_publish",
+        )
+        if not publish_auth.allowed:
+            return RunResult(
+                status="OWNER_DECISION_REQUIRED",
+                admission_id=record.admission_id,
+                required_capability="subject_branch_publish",
+                reason=publish_auth.reason,
+            )
+
         cli.publish(
             root,
             branch_protection_resolver=branch_protection_resolver,
