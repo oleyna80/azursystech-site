@@ -108,7 +108,19 @@ class DeliveryAuthorityTests(unittest.TestCase):
             "open_or_update_pr",
         )
         self.assertEqual(decision.status, "DENY")
-        self.assertIn("remote subject ref", decision.reason)
+        self.assertIn("delivery context differs", decision.reason)
+
+    def test_forged_source_candidate_is_denied(self):
+        _result, context = self._published_context()
+        forged = dataclasses.replace(context, source_candidate_sha="f" * 40)
+        decision = delivery.authorize(
+            self.fx.root,
+            self.fx.registry,
+            forged,
+            "open_or_update_pr",
+        )
+        self.assertEqual(decision.status, "DENY")
+        self.assertIn("delivery context differs", decision.reason)
 
     def test_forged_profile_binding_is_denied(self):
         _result, context = self._published_context()
