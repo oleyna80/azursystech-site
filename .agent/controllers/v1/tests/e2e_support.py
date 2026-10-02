@@ -161,7 +161,12 @@ class E2ERepo:
             target.write_text(path + "\n", encoding="utf-8")
         return self.guarded_commit("planning")
 
-    def open(self) -> dict:
+    def open(
+        self,
+        *,
+        implementation_write_set: list[str] | None = None,
+        coordination_scope: list[str] | None = None,
+    ) -> dict:
         return cli.open_with_resolver(
             self.root,
             self.store,
@@ -170,14 +175,22 @@ class E2ERepo:
             work_block_id=WB_ID,
             initiative_ref=INITIATIVE,
             planning_paths=PLANNING_PATHS,
-            implementation_write_set=IMPLEMENTATION_SCOPE,
-            coordination_scope=COORDINATION_SCOPE,
+            implementation_write_set=implementation_write_set or IMPLEMENTATION_SCOPE,
+            coordination_scope=coordination_scope or COORDINATION_SCOPE,
             default_branch="main",
         )
 
-    def open_and_execute(self) -> dict:
+    def open_and_execute(
+        self,
+        *,
+        implementation_write_set: list[str] | None = None,
+        coordination_scope: list[str] | None = None,
+    ) -> dict:
         self.create_planning()
-        self.open()
+        self.open(
+            implementation_write_set=implementation_write_set,
+            coordination_scope=coordination_scope,
+        )
         return cli.critic(self.root, "ready")
 
     def make_candidate(self, text: str = "implementation\n") -> tuple[dict, str]:
