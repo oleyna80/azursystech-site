@@ -53,7 +53,6 @@ class RegistryDispatcherTests(unittest.TestCase):
                 base_commit="b" * 40,
                 subject_branch="feat/test",
             )
-            registry.put(record)
             binding = WorkBlockBinding(
                 admission_id=record.admission_id,
                 work_block_id="WB-004",
@@ -66,16 +65,17 @@ class RegistryDispatcherTests(unittest.TestCase):
                 deployment_is_production=False,
                 max_rework_cycles=8,
             )
-            registry.put_work_block(binding)
-            registry.put_work_block(binding)
+            registry.put_admission_with_work_block(record, binding)
+            registry.put_admission_with_work_block(record, binding)
             reopened = SQLiteAdmissionRegistry(registry.path)
             self.assertEqual(
                 reopened.resolve_work_block(record.admission_id),
                 binding,
             )
             with self.assertRaises(admission.AdmissionConflict):
-                reopened.put_work_block(
-                    replace(binding, deployment_target="production")
+                reopened.put_admission_with_work_block(
+                    record,
+                    replace(binding, deployment_target="production"),
                 )
 
     def test_publication_binding_and_owner_authorization_are_immutable(self):

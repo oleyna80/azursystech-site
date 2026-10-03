@@ -116,6 +116,21 @@ class WorkBlockBinding:
             raise AdmissionValidationError("max_rework_cycles must be non-negative integer")
 
 
+def _work_block_values(binding: WorkBlockBinding) -> tuple:
+    return (
+        binding.admission_id,
+        binding.work_block_id,
+        binding.initiative_ref,
+        json.dumps(binding.planning_paths, separators=(",", ":")),
+        json.dumps(binding.implementation_write_set, separators=(",", ":")),
+        json.dumps(binding.coordination_scope, separators=(",", ":")),
+        binding.default_branch,
+        binding.deployment_target,
+        int(binding.deployment_is_production),
+        binding.max_rework_cycles,
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class PublicationBinding:
     admission_id: str
@@ -268,22 +283,82 @@ class SQLiteAdmissionRegistry:
             raise AdmissionNotFound(f"unknown admission_id: {admission_id}")
         return AdmissionRecord(*row)
 
+    def put_admission_with_work_block(
+        self,
+        record: AdmissionRecord,
+        binding: WorkBlockBinding,
+    ) -> None:
+        if not isinstance(record, AdmissionRecord):
+            raise AdmissionValidationError("registry accepts AdmissionRecord only")
+        if not isinstance(binding, WorkBlockBinding):
+            raise AdmissionValidationError("registry accepts WorkBlockBinding only")
+        if binding.admission_id != record.admission_id:
+            raise AdmissionValidationError(
+                "Work Block binding admission_id differs from admission record"
+            )
+
+        admission_values = astuple(record)
+        binding_values = _work_block_values(binding)
+        with self._connect() as connection:
+            current_admission = connection.execute(
+                "SELECT " + ", ".join(_COLUMNS) + " FROM admissions WHERE admission_id = ?",
+                (record.admission_id,),
+            ).fetchone()
+            if current_admission is not None and tuple(current_admission) != admission_values:
+                raise AdmissionConflict(
+                    "admission_id is already bound to different facts"
+                )
+
+            current_binding = connection.execute(
+                """
+                SELECT admission_id, work_block_id, initiative_ref,
+                       planning_paths_json, implementation_write_set_json,
+                       coordination_scope_json, default_branch, deployment_target,
+                       deployment_is_production, max_rework_cycles
+                FROM work_block_bindings
+                WHERE admission_id = ?
+                """,
+                (record.admission_id,),
+            ).fetchone()
+            if current_binding is not None and tuple(current_binding) != binding_values:
+                raise AdmissionConflict(
+                    "admission_id is already bound to different Work Block facts"
+                )
+
+            if current_admission is None:
+                connection.execute(
+                    """
+                    INSERT INTO admissions (
+                        admission_id,
+                        repository,
+                        trigger_class,
+                        authority_profile_id,
+                        authority_profile_revision,
+                        base_ref,
+                        base_commit,
+                        subject_branch
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    admission_values,
+                )
+            if current_binding is None:
+                connection.execute(
+                    """
+                    INSERT INTO work_block_bindings (
+                        admission_id, work_block_id, initiative_ref,
+                        planning_paths_json, implementation_write_set_json,
+                        coordination_scope_json, default_branch, deployment_target,
+                        deployment_is_production, max_rework_cycles
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    binding_values,
+                )
+
     def put_work_block(self, binding: WorkBlockBinding) -> None:
         if not isinstance(binding, WorkBlockBinding):
             raise AdmissionValidationError("registry accepts WorkBlockBinding only")
         self.resolve(binding.admission_id)
-        values = (
-            binding.admission_id,
-            binding.work_block_id,
-            binding.initiative_ref,
-            json.dumps(binding.planning_paths, separators=(",", ":")),
-            json.dumps(binding.implementation_write_set, separators=(",", ":")),
-            json.dumps(binding.coordination_scope, separators=(",", ":")),
-            binding.default_branch,
-            binding.deployment_target,
-            int(binding.deployment_is_production),
-            binding.max_rework_cycles,
-        )
+        values = _work_block_values(binding)
         with self._connect() as connection:
             current = connection.execute(
                 """

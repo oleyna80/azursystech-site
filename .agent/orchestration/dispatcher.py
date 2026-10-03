@@ -6,7 +6,7 @@ import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Mapping, Protocol
+from typing import Callable, Mapping, Protocol
 
 from . import admission
 
@@ -123,7 +123,12 @@ class TrustedDispatcher:
             admission_id=admission_id,
         )
 
-    def admit(self, repo_root: Path, request: DispatchRequest) -> admission.AdmissionRecord:
+    def _admit_with_store(
+        self,
+        repo_root: Path,
+        request: DispatchRequest,
+        store,
+    ) -> admission.AdmissionRecord:
         if not isinstance(request, DispatchRequest):
             raise admission.AdmissionValidationError("trusted dispatcher requires DispatchRequest")
         if request.trigger_class not in self.allowed_trigger_classes:
@@ -140,6 +145,37 @@ class TrustedDispatcher:
             trigger_class=request.trigger_class,
             subject_branch=request.subject_branch,
             policy_revision=policy_revision,
-            store=self.store,
+            store=store,
             admission_id=request.admission_id,
         )
+
+    def admit(self, repo_root: Path, request: DispatchRequest) -> admission.AdmissionRecord:
+        return self._admit_with_store(repo_root, request, self.store)
+
+    def admit_with_work_block(
+        self,
+        repo_root: Path,
+        request: DispatchRequest,
+        binding_factory: Callable[[str], object],
+    ) -> admission.AdmissionRecord:
+        atomic_put = getattr(self.store, "put_admission_with_work_block", None)
+        if atomic_put is None:
+            raise admission.AdmissionValidationError(
+                "trusted orchestration store lacks atomic admission binding"
+            )
+        if not callable(binding_factory):
+            raise admission.AdmissionValidationError(
+                "Work Block binding factory must be callable"
+            )
+
+        base_store = self.store
+
+        class AtomicStore:
+            def put(self, record: admission.AdmissionRecord) -> None:
+                binding = binding_factory(record.admission_id)
+                atomic_put(record, binding)
+
+            def resolve(self, admission_id: str) -> admission.AdmissionRecord:
+                return base_store.resolve(admission_id)
+
+        return self._admit_with_store(repo_root, request, AtomicStore())

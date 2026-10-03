@@ -387,19 +387,14 @@ class Orchestrator:
         self,
         admission_id: str,
         spec: WorkBlockSpec,
-        *,
-        create: bool,
     ) -> WorkBlockBinding:
         expected = self._work_block_binding(admission_id, spec)
-        put_method = getattr(self.dispatcher.store, "put_work_block", None)
         resolve_method = getattr(self.dispatcher.store, "resolve_work_block", None)
-        if resolve_method is None or (create and put_method is None):
+        if resolve_method is None:
             raise OrchestrationBlocked(
                 "orchestration store lacks immutable Work Block binding"
             )
         try:
-            if create:
-                put_method(expected)
             actual = resolve_method(admission_id)
         except Exception as exc:
             raise OrchestrationBlocked(
@@ -1003,8 +998,17 @@ class Orchestrator:
         branch_protection_resolver,
     ) -> RunResult:
         root = self._bound_root(repo_root)
-        record = self.dispatcher.admit(root, request)
-        self._ensure_work_block_binding(record.admission_id, spec, create=True)
+        atomic_admit = getattr(self.dispatcher, "admit_with_work_block", None)
+        if atomic_admit is None:
+            raise OrchestrationBlocked(
+                "trusted dispatcher lacks atomic Work Block admission"
+            )
+        record = atomic_admit(
+            root,
+            request,
+            lambda admission_id: self._work_block_binding(admission_id, spec),
+        )
+        self._ensure_work_block_binding(record.admission_id, spec)
         gitfacts.require_clean(root)
         subprocess.run(
             ["git", "-C", str(root), "switch", "-q", record.subject_branch],
@@ -1042,7 +1046,7 @@ class Orchestrator:
 
         root = self._bound_root(repo_root)
         record = self.dispatcher.store.resolve(admission_id)
-        self._ensure_work_block_binding(record.admission_id, spec, create=False)
+        self._ensure_work_block_binding(record.admission_id, spec)
         gitfacts.require_clean(root)
         subprocess.run(
             ["git", "-C", str(root), "switch", "-q", record.subject_branch],
