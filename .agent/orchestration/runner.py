@@ -998,6 +998,10 @@ class Orchestrator:
         branch_protection_resolver,
     ) -> RunResult:
         root = self._bound_root(repo_root)
+        if isinstance(request, DispatchRequest) and request.admission_id is None:
+            raise OrchestrationBlocked(
+                "durable orchestration requires explicit admission_id"
+            )
         atomic_admit = getattr(self.dispatcher, "admit_with_work_block", None)
         if atomic_admit is None:
             raise OrchestrationBlocked(

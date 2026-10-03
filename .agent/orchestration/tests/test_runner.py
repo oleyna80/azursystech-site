@@ -55,6 +55,25 @@ class RunnerTests(unittest.TestCase):
         )
         return result, roles, delivery
 
+    def test_run_requires_explicit_admission_id_for_durable_resume(self):
+        request = replace(
+            self.fx.request("manual-owner", admission_id="adm-placeholder01"),
+            admission_id=None,
+        )
+        orchestrator = Orchestrator(
+            self.fx.dispatcher,
+            ScriptedRoles(self.fx),
+            delivery_executor=SimulatedDelivery(),
+        )
+        with self.assertRaises(OrchestrationBlocked):
+            orchestrator.run(
+                self.fx.root,
+                request,
+                self.fx.spec(),
+                branch_protection_resolver=lambda _remote, _branch: False,
+            )
+        self.assertIsNone(cli.status(self.fx.root))
+
     def test_human_governed_stops_exactly_at_merge_owner_boundary(self):
         result, roles, delivery = self._run()
         self.assertEqual(result.status, "OWNER_DECISION_REQUIRED")
