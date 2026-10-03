@@ -168,17 +168,20 @@ def _capability_decision(record, profile: dict, capability: str) -> DeliveryDeci
             record.authority_profile_id,
             "capability is present in pinned autonomy profile",
         )
-    reason = (
-        "pinned autonomy profile requires Owner decision"
-        if capability in requires_owner
-        else "capability is absent from pinned autonomy profile"
-    )
+    if capability in requires_owner:
+        return DeliveryDecision(
+            "OWNER_DECISION_REQUIRED",
+            capability,
+            record.admission_id,
+            record.authority_profile_id,
+            "pinned autonomy profile requires Owner decision",
+        )
     return DeliveryDecision(
-        "OWNER_DECISION_REQUIRED",
+        "DENY",
         capability,
         record.admission_id,
         record.authority_profile_id,
-        reason,
+        "capability is absent from pinned autonomy profile",
     )
 
 

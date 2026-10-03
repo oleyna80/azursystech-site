@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 import sqlite3
 from dataclasses import astuple, dataclass
@@ -45,6 +46,74 @@ _COLUMNS = (
     "base_commit",
     "subject_branch",
 )
+
+
+def _binding_paths(value, name: str, *, nonempty: bool) -> tuple[str, ...]:
+    if not isinstance(value, (tuple, list)):
+        raise AdmissionValidationError(f"{name} must be a path sequence")
+    items = tuple(value)
+    if nonempty and not items:
+        raise AdmissionValidationError(f"{name} must be non-empty")
+    if any(not isinstance(item, str) or not item for item in items):
+        raise AdmissionValidationError(f"{name} contains invalid path")
+    if len(set(items)) != len(items):
+        raise AdmissionValidationError(f"{name} contains duplicate path")
+    return tuple(sorted(items))
+
+
+@dataclass(frozen=True, slots=True)
+class WorkBlockBinding:
+    admission_id: str
+    work_block_id: str
+    initiative_ref: str
+    planning_paths: tuple[str, ...]
+    implementation_write_set: tuple[str, ...]
+    coordination_scope: tuple[str, ...]
+    default_branch: str
+    deployment_target: str | None
+    deployment_is_production: bool
+    max_rework_cycles: int
+
+    def __post_init__(self) -> None:
+        for name, value in (
+            ("admission_id", self.admission_id),
+            ("work_block_id", self.work_block_id),
+            ("initiative_ref", self.initiative_ref),
+            ("default_branch", self.default_branch),
+        ):
+            if not isinstance(value, str) or not value:
+                raise AdmissionValidationError(f"work block {name} is invalid")
+        object.__setattr__(
+            self,
+            "planning_paths",
+            _binding_paths(self.planning_paths, "planning_paths", nonempty=True),
+        )
+        object.__setattr__(
+            self,
+            "implementation_write_set",
+            _binding_paths(
+                self.implementation_write_set,
+                "implementation_write_set",
+                nonempty=True,
+            ),
+        )
+        object.__setattr__(
+            self,
+            "coordination_scope",
+            _binding_paths(self.coordination_scope, "coordination_scope", nonempty=False),
+        )
+        if self.deployment_target is not None and (
+            not isinstance(self.deployment_target, str) or not self.deployment_target
+        ):
+            raise AdmissionValidationError("deployment_target is invalid")
+        if not isinstance(self.deployment_is_production, bool):
+            raise AdmissionValidationError("deployment_is_production must be boolean")
+        if (
+            isinstance(self.max_rework_cycles, bool)
+            or not isinstance(self.max_rework_cycles, int)
+            or self.max_rework_cycles < 0
+        ):
+            raise AdmissionValidationError("max_rework_cycles must be non-negative integer")
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,6 +164,23 @@ class SQLiteAdmissionRegistry:
                     base_ref TEXT NOT NULL,
                     base_commit TEXT NOT NULL,
                     subject_branch TEXT NOT NULL
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS work_block_bindings (
+                    admission_id TEXT PRIMARY KEY,
+                    work_block_id TEXT NOT NULL,
+                    initiative_ref TEXT NOT NULL,
+                    planning_paths_json TEXT NOT NULL,
+                    implementation_write_set_json TEXT NOT NULL,
+                    coordination_scope_json TEXT NOT NULL,
+                    default_branch TEXT NOT NULL,
+                    deployment_target TEXT,
+                    deployment_is_production INTEGER NOT NULL,
+                    max_rework_cycles INTEGER NOT NULL,
+                    FOREIGN KEY(admission_id) REFERENCES admissions(admission_id)
                 )
                 """
             )
@@ -181,6 +267,92 @@ class SQLiteAdmissionRegistry:
         if row is None:
             raise AdmissionNotFound(f"unknown admission_id: {admission_id}")
         return AdmissionRecord(*row)
+
+    def put_work_block(self, binding: WorkBlockBinding) -> None:
+        if not isinstance(binding, WorkBlockBinding):
+            raise AdmissionValidationError("registry accepts WorkBlockBinding only")
+        self.resolve(binding.admission_id)
+        values = (
+            binding.admission_id,
+            binding.work_block_id,
+            binding.initiative_ref,
+            json.dumps(binding.planning_paths, separators=(",", ":")),
+            json.dumps(binding.implementation_write_set, separators=(",", ":")),
+            json.dumps(binding.coordination_scope, separators=(",", ":")),
+            binding.default_branch,
+            binding.deployment_target,
+            int(binding.deployment_is_production),
+            binding.max_rework_cycles,
+        )
+        with self._connect() as connection:
+            current = connection.execute(
+                """
+                SELECT admission_id, work_block_id, initiative_ref,
+                       planning_paths_json, implementation_write_set_json,
+                       coordination_scope_json, default_branch, deployment_target,
+                       deployment_is_production, max_rework_cycles
+                FROM work_block_bindings
+                WHERE admission_id = ?
+                """,
+                (binding.admission_id,),
+            ).fetchone()
+            if current is not None:
+                if tuple(current) != values:
+                    raise AdmissionConflict(
+                        "admission_id is already bound to different Work Block facts"
+                    )
+                return
+            connection.execute(
+                """
+                INSERT INTO work_block_bindings (
+                    admission_id, work_block_id, initiative_ref,
+                    planning_paths_json, implementation_write_set_json,
+                    coordination_scope_json, default_branch, deployment_target,
+                    deployment_is_production, max_rework_cycles
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                values,
+            )
+
+    def resolve_work_block(self, admission_id: str) -> WorkBlockBinding:
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT admission_id, work_block_id, initiative_ref,
+                       planning_paths_json, implementation_write_set_json,
+                       coordination_scope_json, default_branch, deployment_target,
+                       deployment_is_production, max_rework_cycles
+                FROM work_block_bindings
+                WHERE admission_id = ?
+                """,
+                (admission_id,),
+            ).fetchone()
+        if row is None:
+            raise AdmissionNotFound(
+                f"Work Block binding not found for admission_id: {admission_id}"
+            )
+        try:
+            production = row[8]
+            if production not in (0, 1):
+                raise AdmissionValidationError(
+                    "stored deployment_is_production is invalid"
+                )
+            return WorkBlockBinding(
+                admission_id=row[0],
+                work_block_id=row[1],
+                initiative_ref=row[2],
+                planning_paths=tuple(json.loads(row[3])),
+                implementation_write_set=tuple(json.loads(row[4])),
+                coordination_scope=tuple(json.loads(row[5])),
+                default_branch=row[6],
+                deployment_target=row[7],
+                deployment_is_production=bool(production),
+                max_rework_cycles=row[9],
+            )
+        except (json.JSONDecodeError, TypeError, ValueError) as exc:
+            raise AdmissionValidationError(
+                "stored Work Block binding is malformed"
+            ) from exc
 
     def put_publication(self, binding: PublicationBinding) -> None:
         if not isinstance(binding, PublicationBinding):

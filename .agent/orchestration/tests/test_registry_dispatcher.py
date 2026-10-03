@@ -10,7 +10,11 @@ sys.path.insert(0, str(AGENT_ROOT))
 from orchestration import admission
 from controllers.v1 import hook
 from orchestration.dispatcher import TrustedDispatcher
-from orchestration.registry import PublicationBinding, SQLiteAdmissionRegistry
+from orchestration.registry import (
+    PublicationBinding,
+    SQLiteAdmissionRegistry,
+    WorkBlockBinding,
+)
 from orchestration.tests.support import OrchestrationRepo, REPOSITORY_ID
 
 
@@ -35,6 +39,44 @@ class RegistryDispatcherTests(unittest.TestCase):
             self.assertEqual(reopened.resolve(record.admission_id), record)
             with self.assertRaises(admission.AdmissionConflict):
                 reopened.put(replace(record, subject_branch="feat/changed"))
+
+    def test_work_block_binding_is_persistent_idempotent_and_immutable(self):
+        with tempfile.TemporaryDirectory() as temp:
+            registry = SQLiteAdmissionRegistry(Path(temp) / "registry.sqlite3")
+            record = admission.AdmissionRecord(
+                admission_id="adm-workblock0001",
+                repository="fixture/repo",
+                trigger_class="manual-owner",
+                authority_profile_id="human-governed",
+                authority_profile_revision="a" * 40,
+                base_ref="main",
+                base_commit="b" * 40,
+                subject_branch="feat/test",
+            )
+            registry.put(record)
+            binding = WorkBlockBinding(
+                admission_id=record.admission_id,
+                work_block_id="WB-004",
+                initiative_ref="docs/changes/orchestration",
+                planning_paths=("docs/changes/orchestration/spec.md",),
+                implementation_write_set=("src/**",),
+                coordination_scope=("docs/changes/orchestration/**",),
+                default_branch="main",
+                deployment_target=None,
+                deployment_is_production=False,
+                max_rework_cycles=8,
+            )
+            registry.put_work_block(binding)
+            registry.put_work_block(binding)
+            reopened = SQLiteAdmissionRegistry(registry.path)
+            self.assertEqual(
+                reopened.resolve_work_block(record.admission_id),
+                binding,
+            )
+            with self.assertRaises(admission.AdmissionConflict):
+                reopened.put_work_block(
+                    replace(binding, deployment_target="production")
+                )
 
     def test_publication_binding_and_owner_authorization_are_immutable(self):
         with tempfile.TemporaryDirectory() as temp:

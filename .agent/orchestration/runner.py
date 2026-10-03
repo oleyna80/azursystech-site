@@ -13,7 +13,7 @@ from controllers.v1 import cli, gitfacts, policy
 from . import delivery
 from .dispatcher import DispatchRequest, TrustedDispatcher
 from .external_access import ExternalImportBroker, ExternalReadView
-from .registry import PublicationBinding
+from .registry import PublicationBinding, WorkBlockBinding
 from .scheduler import WriterScheduler
 
 
@@ -367,6 +367,49 @@ class Orchestrator:
         if not isinstance(value, str) or _SHA_RE.fullmatch(value) is None:
             raise OrchestrationBlocked(f"{label} did not return exact commit SHA")
         return value
+
+    @staticmethod
+    def _work_block_binding(admission_id: str, spec: WorkBlockSpec) -> WorkBlockBinding:
+        return WorkBlockBinding(
+            admission_id=admission_id,
+            work_block_id=spec.work_block_id,
+            initiative_ref=spec.initiative_ref,
+            planning_paths=spec.planning_paths,
+            implementation_write_set=spec.implementation_write_set,
+            coordination_scope=spec.coordination_scope,
+            default_branch=spec.default_branch,
+            deployment_target=spec.deployment_target,
+            deployment_is_production=spec.deployment_is_production,
+            max_rework_cycles=spec.max_rework_cycles,
+        )
+
+    def _ensure_work_block_binding(
+        self,
+        admission_id: str,
+        spec: WorkBlockSpec,
+        *,
+        create: bool,
+    ) -> WorkBlockBinding:
+        expected = self._work_block_binding(admission_id, spec)
+        put_method = getattr(self.dispatcher.store, "put_work_block", None)
+        resolve_method = getattr(self.dispatcher.store, "resolve_work_block", None)
+        if resolve_method is None or (create and put_method is None):
+            raise OrchestrationBlocked(
+                "orchestration store lacks immutable Work Block binding"
+            )
+        try:
+            if create:
+                put_method(expected)
+            actual = resolve_method(admission_id)
+        except Exception as exc:
+            raise OrchestrationBlocked(
+                f"cannot validate immutable Work Block binding: {exc}"
+            ) from exc
+        if actual != expected:
+            raise OrchestrationBlocked(
+                "resume Work Block specification differs from immutable binding"
+            )
+        return actual
 
     def _publication_or_none(self, admission_id: str) -> PublicationBinding | None:
         method = getattr(self.dispatcher.store, "publication_or_none", None)
@@ -961,6 +1004,7 @@ class Orchestrator:
     ) -> RunResult:
         root = self._bound_root(repo_root)
         record = self.dispatcher.admit(root, request)
+        self._ensure_work_block_binding(record.admission_id, spec, create=True)
         gitfacts.require_clean(root)
         subprocess.run(
             ["git", "-C", str(root), "switch", "-q", record.subject_branch],
@@ -998,6 +1042,7 @@ class Orchestrator:
 
         root = self._bound_root(repo_root)
         record = self.dispatcher.store.resolve(admission_id)
+        self._ensure_work_block_binding(record.admission_id, spec, create=False)
         gitfacts.require_clean(root)
         subprocess.run(
             ["git", "-C", str(root), "switch", "-q", record.subject_branch],

@@ -1,5 +1,6 @@
 import sys
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 AGENT_ROOT = Path(__file__).resolve().parents[2]
@@ -332,6 +333,50 @@ class RunnerTests(unittest.TestCase):
         self.assertNotIn("planner", resumed_roles.calls)
         self.assertEqual(cli.status(self.fx.root)["lifecycle_state"], "INACTIVE")
 
+    def test_resume_before_controller_open_rejects_mutated_work_block_spec(self):
+        base = ScriptedRoles(self.fx)
+
+        class CrashingPlanner:
+            def run(inner_self, role, context):
+                if role == "planner":
+                    raise RuntimeError("simulated planner process loss")
+                return base.run(role, context)
+
+        admission_id = "adm-resumepreopen"
+        spec = self.fx.spec()
+        first = Orchestrator(
+            self.fx.dispatcher,
+            CrashingPlanner(),
+            delivery_executor=SimulatedDelivery(),
+        )
+        with self.assertRaises(RuntimeError):
+            first.run(
+                self.fx.root,
+                self.fx.request("manual-owner", admission_id=admission_id),
+                spec,
+                branch_protection_resolver=lambda _remote, _branch: False,
+            )
+        self.assertIsNone(cli.status(self.fx.root))
+
+        resumed_roles = ScriptedRoles(self.fx)
+        resumed = Orchestrator(
+            self.fx.dispatcher,
+            resumed_roles,
+            delivery_executor=SimulatedDelivery(),
+        )
+        mutated = replace(
+            spec,
+            implementation_write_set=("src/**", "other/**"),
+        )
+        with self.assertRaises(OrchestrationBlocked):
+            resumed.resume(
+                self.fx.root,
+                admission_id=admission_id,
+                spec=mutated,
+                branch_protection_resolver=lambda _remote, _branch: False,
+            )
+        self.assertEqual(resumed_roles.calls, [])
+
     def test_resume_from_execute_after_process_failure_reruns_coder(self):
         base = ScriptedRoles(self.fx)
 
@@ -516,6 +561,87 @@ class RunnerTests(unittest.TestCase):
         )
         self.assertEqual(replayed.status, "COMPLETE")
         self.assertEqual(replay_delivery.calls, [])
+
+    def test_resume_inactive_rejects_changed_delivery_spec(self):
+        admission_id = "adm-resumespec01"
+        spec = self.fx.spec()
+        first = Orchestrator(
+            self.fx.dispatcher,
+            ScriptedRoles(self.fx),
+            delivery_executor=SimulatedDelivery(),
+        )
+        result = first.run(
+            self.fx.root,
+            self.fx.request("manual-owner", admission_id=admission_id),
+            spec,
+            branch_protection_resolver=lambda _remote, _branch: False,
+        )
+        self.assertEqual(result.status, "OWNER_DECISION_REQUIRED")
+        self.assertEqual(cli.status(self.fx.root)["lifecycle_state"], "INACTIVE")
+
+        resumed_roles = ScriptedRoles(self.fx)
+        resumed_delivery = SimulatedDelivery()
+        resumed = Orchestrator(
+            self.fx.dispatcher,
+            resumed_roles,
+            delivery_executor=resumed_delivery,
+        )
+        mutated = replace(
+            spec,
+            deployment_target="production",
+            deployment_is_production=True,
+        )
+        with self.assertRaises(OrchestrationBlocked):
+            resumed.resume(
+                self.fx.root,
+                admission_id=admission_id,
+                spec=mutated,
+                branch_protection_resolver=lambda _remote, _branch: False,
+            )
+        self.assertEqual(resumed_roles.calls, [])
+        self.assertEqual(resumed_delivery.calls, [])
+
+    def test_owner_cannot_override_delivery_capability_absent_from_profile(self):
+        admission_id = "adm-ownerdeny001"
+        spec = self.fx.spec(
+            deployment_target="staging",
+            deployment_is_production=False,
+        )
+        first = Orchestrator(
+            self.fx.dispatcher,
+            ScriptedRoles(self.fx),
+            delivery_executor=SimulatedDelivery(),
+        )
+        result = first.run(
+            self.fx.root,
+            self.fx.request("manual-owner", admission_id=admission_id),
+            spec,
+            branch_protection_resolver=lambda _remote, _branch: False,
+        )
+        self.assertEqual(result.required_capability, "merge")
+
+        owner = SimulatedOwnerAuthorization(
+            {"merge", "deploy_nonproduction", "post_deploy_verify"}
+        )
+        resumed_delivery = SimulatedDelivery()
+        resumed = Orchestrator(
+            self.fx.dispatcher,
+            ScriptedRoles(self.fx),
+            delivery_executor=resumed_delivery,
+            owner_authorization_resolver=owner,
+        )
+        with self.assertRaises(OrchestrationBlocked):
+            resumed.resume(
+                self.fx.root,
+                admission_id=admission_id,
+                spec=spec,
+                branch_protection_resolver=lambda _remote, _branch: False,
+            )
+        self.assertEqual(
+            [call[1] for call in owner.calls],
+            ["merge", "deploy_nonproduction"],
+        )
+        self.assertNotIn("post_deploy_verify", [call[1] for call in owner.calls])
 
     def test_resume_owner_approved_production_deploy_skips_pr_and_merge(self):
         admission_id = "adm-resumedeploy"

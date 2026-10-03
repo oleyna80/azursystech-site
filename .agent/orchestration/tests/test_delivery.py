@@ -98,6 +98,17 @@ class DeliveryAuthorityTests(unittest.TestCase):
         self.assertEqual(decision.status, "DENY")
         self.assertIn("remote subject ref", decision.reason)
 
+    def test_known_capability_absent_from_profile_is_denied(self):
+        _result, context = self._published_context()
+        decision = delivery.authorize(
+            self.fx.root,
+            self.fx.registry,
+            context,
+            "post_deploy_verify",
+        )
+        self.assertEqual(decision.status, "DENY")
+        self.assertIn("absent from pinned autonomy profile", decision.reason)
+
     def test_forged_published_tip_is_denied(self):
         _result, context = self._published_context()
         forged = dataclasses.replace(context, published_tip_sha="f" * 40)
