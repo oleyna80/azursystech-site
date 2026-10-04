@@ -721,13 +721,174 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(len(delivery.calls), 1)
         self.assertEqual(delivery.calls[0][0], "open_or_update_pr")
 
+    def test_delivery_crash_after_external_side_effect_reconciles_without_duplicate(self):
+        for capability in (
+            "open_or_update_pr",
+            "merge",
+            "deploy_production",
+            "post_deploy_verify",
+        ):
+            with self.subTest(capability=capability):
+                fx = OrchestrationRepo()
+                try:
+                    admission_id = "adm-crash-" + capability.replace("_", "-")
+                    operations = {}
+                    crashing_delivery = SimulatedDelivery(
+                        operations=operations,
+                        crash_after_capability=capability,
+                    )
+                    first = Orchestrator(
+                        fx.dispatcher,
+                        ScriptedRoles(fx),
+                        delivery_executor=crashing_delivery,
+                    )
+                    spec = fx.spec(
+                        deployment_target="production",
+                        deployment_is_production=True,
+                    )
+                    with self.assertRaises(RuntimeError):
+                        first.run(
+                            fx.root,
+                            fx.request(
+                                "trusted-release",
+                                admission_id=admission_id,
+                            ),
+                            spec,
+                            branch_protection_resolver=lambda _remote, _branch: False,
+                        )
+
+                    resumed_delivery = SimulatedDelivery(operations=operations)
+                    resumed = Orchestrator(
+                        fx.dispatcher,
+                        ScriptedRoles(fx),
+                        delivery_executor=resumed_delivery,
+                    )
+                    result = resumed.resume(
+                        fx.root,
+                        admission_id=admission_id,
+                        spec=spec,
+                        branch_protection_resolver=lambda _remote, _branch: False,
+                    )
+                    self.assertEqual(result.status, "COMPLETE")
+
+                    all_side_effects = (
+                        crashing_delivery.side_effects
+                        + resumed_delivery.side_effects
+                    )
+                    self.assertEqual(
+                        [item[0] for item in all_side_effects].count(capability),
+                        1,
+                    )
+                    first_ids = [
+                        call[3]
+                        for call in crashing_delivery.calls
+                        if call[0] == capability
+                    ]
+                    resumed_ids = [
+                        call[3]
+                        for call in resumed_delivery.calls
+                        if call[0] == capability
+                    ]
+                    self.assertTrue(first_ids)
+                    self.assertTrue(resumed_ids)
+                    self.assertEqual(first_ids[-1], resumed_ids[0])
+                finally:
+                    fx.cleanup()
+
+    def test_failed_deploy_rollback_crash_reconciles_and_never_redeploys(self):
+        admission_id = "adm-rollbackcrash"
+        operations = {}
+        spec = self.fx.spec(
+            deployment_target="production",
+            deployment_is_production=True,
+        )
+        crashing = SimulatedDelivery(
+            fail_capability="deploy_production",
+            operations=operations,
+            crash_after_capability="rollback",
+        )
+        first = Orchestrator(
+            self.fx.dispatcher,
+            ScriptedRoles(self.fx),
+            delivery_executor=crashing,
+        )
+        with self.assertRaises(RuntimeError):
+            first.run(
+                self.fx.root,
+                self.fx.request(
+                    "trusted-release",
+                    admission_id=admission_id,
+                ),
+                spec,
+                branch_protection_resolver=lambda _remote, _branch: False,
+            )
+        self.assertIsNotNone(
+            self.fx.registry.delivery_fact(admission_id, "deployment_failed")
+        )
+        self.assertIsNone(
+            self.fx.registry.delivery_fact(admission_id, "rollback_sha")
+        )
+
+        resumed_delivery = SimulatedDelivery(operations=operations)
+        resumed = Orchestrator(
+            self.fx.dispatcher,
+            ScriptedRoles(self.fx),
+            delivery_executor=resumed_delivery,
+        )
+        result = resumed.resume(
+            self.fx.root,
+            admission_id=admission_id,
+            spec=spec,
+            branch_protection_resolver=lambda _remote, _branch: False,
+        )
+        self.assertEqual(result.status, "BLOCKED")
+        self.assertIsNotNone(
+            self.fx.registry.delivery_fact(admission_id, "rollback_sha")
+        )
+        self.assertNotIn(
+            "deploy_production",
+            [call[0] for call in resumed_delivery.calls],
+        )
+        self.assertEqual(
+            [item[0] for item in crashing.side_effects + resumed_delivery.side_effects].count(
+                "rollback"
+            ),
+            1,
+        )
+
+        replay_delivery = SimulatedDelivery(operations=operations)
+        replay = Orchestrator(
+            self.fx.dispatcher,
+            ScriptedRoles(self.fx),
+            delivery_executor=replay_delivery,
+        )
+        replayed = replay.resume(
+            self.fx.root,
+            admission_id=admission_id,
+            spec=spec,
+            branch_protection_resolver=lambda _remote, _branch: False,
+        )
+        self.assertEqual(replayed.status, "BLOCKED")
+        self.assertEqual(replay_delivery.calls, [])
+
     def test_invalid_merge_output_fails_closed(self):
         class BadMerge(SimulatedDelivery):
-            def execute(inner_self, capability, context, *, input_value=None, target=None):
+            def ensure(
+                inner_self,
+                operation_id,
+                capability,
+                context,
+                *,
+                input_value=None,
+                target=None,
+            ):
                 if capability == "merge":
-                    inner_self.calls.append((capability, input_value, target))
+                    inner_self.calls.append(
+                        (capability, input_value, target, operation_id)
+                    )
                     return "not-a-sha"
-                return super(BadMerge, inner_self).execute(
+                return super(BadMerge, inner_self).ensure(
+                    operation_id,
                     capability,
                     context,
                     input_value=input_value,

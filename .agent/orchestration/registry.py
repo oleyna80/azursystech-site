@@ -25,8 +25,15 @@ _DELIVERY_STAGES = frozenset({
     "deployment_target",
     "deployed_sha",
     "verified_sha",
+    "deployment_failed",
+    "rollback_sha",
 })
-_SHA_DELIVERY_STAGES = frozenset({"merged_sha", "deployed_sha", "verified_sha"})
+_SHA_DELIVERY_STAGES = frozenset({
+    "merged_sha",
+    "deployed_sha",
+    "verified_sha",
+    "rollback_sha",
+})
 _OWNER_APPROVABLE = frozenset({
     "subject_branch_publish",
     "open_or_update_pr",

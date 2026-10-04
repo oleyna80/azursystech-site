@@ -337,29 +337,57 @@ class SimulatedOwnerAuthorization:
 
 
 class SimulatedDelivery:
-    def __init__(self, *, fail_capability: str | None = None) -> None:
-        self.fail_capability = fail_capability
-        self.calls: list[tuple[str, str | None, str | None]] = []
-
-    def execute(
+    def __init__(
         self,
+        *,
+        fail_capability: str | None = None,
+        operations: dict[str, tuple[str, str]] | None = None,
+        crash_after_capability: str | None = None,
+    ) -> None:
+        self.fail_capability = fail_capability
+        self.operations = operations if operations is not None else {}
+        self.crash_after_capability = crash_after_capability
+        self._crashed = False
+        self.calls: list[tuple[str, str | None, str | None, str]] = []
+        self.side_effects: list[tuple[str, str]] = []
+
+    def ensure(
+        self,
+        operation_id: str,
         capability: str,
         context,
         *,
         input_value: str | None = None,
         target: str | None = None,
     ) -> str:
-        self.calls.append((capability, input_value, target))
+        self.calls.append((capability, input_value, target, operation_id))
+        existing = self.operations.get(operation_id)
+        if existing is not None:
+            status, value = existing
+            if status == "error":
+                raise DeliveryExecutionError(value)
+            return value
+
         if capability == self.fail_capability:
-            raise DeliveryExecutionError(f"simulated {capability} failure")
+            message = f"simulated {capability} failure"
+            self.operations[operation_id] = ("error", message)
+            raise DeliveryExecutionError(message)
         if capability == "open_or_update_pr":
-            return f"pr:{context.subject_branch}"
-        if capability == "merge":
-            return context.published_tip_sha
-        if capability in {"deploy_nonproduction", "deploy_production"}:
-            return input_value or context.published_tip_sha
-        if capability == "post_deploy_verify":
-            return input_value or context.published_tip_sha
-        if capability == "rollback":
-            return input_value or context.published_tip_sha
-        raise AssertionError(f"unexpected simulated capability: {capability}")
+            result = f"pr:{context.subject_branch}"
+        elif capability == "merge":
+            result = context.published_tip_sha
+        elif capability in {"deploy_nonproduction", "deploy_production"}:
+            result = input_value or context.published_tip_sha
+        elif capability == "post_deploy_verify":
+            result = input_value or context.published_tip_sha
+        elif capability == "rollback":
+            result = input_value or context.published_tip_sha
+        else:
+            raise AssertionError(f"unexpected simulated capability: {capability}")
+
+        self.operations[operation_id] = ("ok", result)
+        self.side_effects.append((capability, operation_id))
+        if capability == self.crash_after_capability and not self._crashed:
+            self._crashed = True
+            raise RuntimeError(f"simulated crash after {capability} side effect")
+        return result

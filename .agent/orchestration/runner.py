@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 import subprocess
 from dataclasses import dataclass
@@ -99,15 +100,22 @@ class OwnerAuthorizationResolver(Protocol):
 
 
 class DeliveryExecutor(Protocol):
-    def execute(
+    def ensure(
         self,
+        operation_id: str,
         capability: str,
         context: delivery.DeliveryContext,
         *,
         input_value: str | None = None,
         target: str | None = None,
     ) -> str:
-        """Execute one platform action after authority has already been granted."""
+        """Ensure one externally idempotent platform operation.
+
+        operation_id is deterministic for the admitted delivery stage. The trusted
+        executor must reconcile an existing external operation with that identity
+        before creating a new side effect, and must return the same durable result
+        on replay after a process crash.
+        """
 
 
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -493,6 +501,52 @@ class Orchestrator:
             context.published_tip_sha,
         )
 
+    @staticmethod
+    def _delivery_operation_id(
+        context: delivery.DeliveryContext,
+        stage: str,
+        *,
+        target: str | None = None,
+    ) -> str:
+        material = "\0".join(
+            (
+                context.admission_id,
+                stage,
+                context.published_tip_sha,
+                target or "",
+            )
+        )
+        return "wb4-" + hashlib.sha256(material.encode("utf-8")).hexdigest()
+
+    def _ensure_delivery(
+        self,
+        stage: str,
+        capability: str,
+        context: delivery.DeliveryContext,
+        *,
+        input_value: str | None = None,
+        target: str | None = None,
+    ) -> str:
+        if self.delivery_executor is None:
+            raise OrchestrationBlocked("no trusted delivery executor is configured")
+        ensure = getattr(self.delivery_executor, "ensure", None)
+        if ensure is None:
+            raise OrchestrationBlocked(
+                "delivery executor lacks crash-safe ensure/reconciliation semantics"
+            )
+        operation_id = self._delivery_operation_id(
+            context,
+            stage,
+            target=target,
+        )
+        return ensure(
+            operation_id,
+            capability,
+            context,
+            input_value=input_value,
+            target=target,
+        )
+
     def _delivery_fact(self, admission_id: str, stage: str) -> str | None:
         method = getattr(self.dispatcher.store, "delivery_fact", None)
         if method is None:
@@ -654,6 +708,61 @@ class Orchestrator:
             reason=decision.reason,
         )
 
+    def _continue_failed_deployment(
+        self,
+        root: Path,
+        context: delivery.DeliveryContext,
+        spec: WorkBlockSpec,
+        *,
+        merged_sha: str,
+        failure_reason: str,
+    ) -> RunResult:
+        rollback_sha = self._delivery_fact(context.admission_id, "rollback_sha")
+        if rollback_sha is None:
+            rollback = delivery.authorize(
+                root, self.dispatcher.store, context, "rollback"
+            )
+            if not self._decision_allowed_by_owner(context, rollback):
+                result = self._owner_required(
+                    context,
+                    rollback,
+                    merged_sha=merged_sha,
+                )
+                return RunResult(
+                    status=result.status,
+                    admission_id=result.admission_id,
+                    published_tip_sha=result.published_tip_sha,
+                    merged_sha=result.merged_sha,
+                    required_capability=result.required_capability,
+                    reason=failure_reason,
+                )
+            rollback_sha = self._require_sha(
+                self._ensure_delivery(
+                    "rollback_sha",
+                    "rollback",
+                    context,
+                    input_value=merged_sha,
+                    target=spec.deployment_target,
+                ),
+                "rollback executor",
+            )
+            self._put_delivery_fact(
+                context.admission_id,
+                "rollback_sha",
+                rollback_sha,
+            )
+
+        return RunResult(
+            status="BLOCKED",
+            admission_id=context.admission_id,
+            published_tip_sha=context.published_tip_sha,
+            merged_sha=merged_sha,
+            reason=(
+                "deployment failed and admitted rollback is durably reconciled: "
+                f"{failure_reason}"
+            ),
+        )
+
     def _execute_delivery(
         self,
         root: Path,
@@ -677,7 +786,8 @@ class Orchestrator:
             )
             if not self._decision_allowed_by_owner(context, pr_auth):
                 return self._owner_required(context, pr_auth)
-            pr_ref = self.delivery_executor.execute(
+            pr_ref = self._ensure_delivery(
+                "pr_ref",
                 "open_or_update_pr",
                 context,
                 input_value=context.published_tip_sha,
@@ -694,7 +804,8 @@ class Orchestrator:
             if not self._decision_allowed_by_owner(context, merge_auth):
                 return self._owner_required(context, merge_auth)
             merged_sha = self._require_sha(
-                self.delivery_executor.execute(
+                self._ensure_delivery(
+                    "merged_sha",
                     "merge",
                     context,
                     input_value=pr_ref,
@@ -716,6 +827,23 @@ class Orchestrator:
             )
 
         deployed_sha = self._delivery_fact(context.admission_id, "deployed_sha")
+        deployment_failed = self._delivery_fact(
+            context.admission_id,
+            "deployment_failed",
+        )
+        if deployed_sha is not None and deployment_failed is not None:
+            raise OrchestrationBlocked(
+                "delivery provenance records both deployment success and failure"
+            )
+        if deployment_failed is not None:
+            return self._continue_failed_deployment(
+                root,
+                context,
+                spec,
+                merged_sha=merged_sha,
+                failure_reason="previous deployment operation failed",
+            )
+
         if deployed_sha is None:
             deploy_auth = delivery.authorize(
                 root,
@@ -729,9 +857,15 @@ class Orchestrator:
                     deploy_auth,
                     merged_sha=merged_sha,
                 )
+            operation_id = self._delivery_operation_id(
+                context,
+                "deployed_sha",
+                target=spec.deployment_target,
+            )
             try:
                 deployed_sha = self._require_sha(
-                    self.delivery_executor.execute(
+                    self._ensure_delivery(
+                        "deployed_sha",
                         deployment_capability,
                         context,
                         input_value=merged_sha,
@@ -740,38 +874,17 @@ class Orchestrator:
                     "deployment executor",
                 )
             except DeliveryExecutionError as exc:
-                rollback = delivery.authorize(
-                    root, self.dispatcher.store, context, "rollback"
+                self._put_delivery_fact(
+                    context.admission_id,
+                    "deployment_failed",
+                    operation_id,
                 )
-                if not self._decision_allowed_by_owner(context, rollback):
-                    result = self._owner_required(
-                        context,
-                        rollback,
-                        merged_sha=merged_sha,
-                    )
-                    return RunResult(
-                        status=result.status,
-                        admission_id=result.admission_id,
-                        published_tip_sha=result.published_tip_sha,
-                        merged_sha=result.merged_sha,
-                        required_capability=result.required_capability,
-                        reason=str(exc),
-                    )
-                self.delivery_executor.execute(
-                    "rollback",
+                return self._continue_failed_deployment(
+                    root,
                     context,
-                    input_value=merged_sha,
-                    target=spec.deployment_target,
-                )
-                return RunResult(
-                    status="BLOCKED",
-                    admission_id=context.admission_id,
-                    published_tip_sha=context.published_tip_sha,
+                    spec,
                     merged_sha=merged_sha,
-                    reason=(
-                        "deployment failed and admitted rollback executed: "
-                        f"{exc}"
-                    ),
+                    failure_reason=str(exc),
                 )
             self._put_delivery_fact(
                 context.admission_id,
@@ -795,7 +908,8 @@ class Orchestrator:
                     deployed_sha=deployed_sha,
                 )
             verified_sha = self._require_sha(
-                self.delivery_executor.execute(
+                self._ensure_delivery(
+                    "verified_sha",
                     "post_deploy_verify",
                     context,
                     input_value=deployed_sha,
