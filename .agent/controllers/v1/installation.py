@@ -25,15 +25,21 @@ class InstallationConfig:
     provider_kind: str
 
     def __post_init__(self) -> None:
-        if _REPOSITORY_RE.fullmatch(self.repository) is None:
+        if (
+            not isinstance(self.repository, str)
+            or _REPOSITORY_RE.fullmatch(self.repository) is None
+        ):
             raise ValidationError("installation repository identity is invalid")
-        if not self.registry_path.is_absolute():
+        if not isinstance(self.registry_path, Path) or not self.registry_path.is_absolute():
             raise ValidationError("installation registry path must be absolute")
-        if _REMOTE_RE.fullmatch(self.remote) is None:
+        if (
+            not isinstance(self.remote, str)
+            or _REMOTE_RE.fullmatch(self.remote) is None
+        ):
             raise ValidationError("installation remote is invalid")
         if self.remote != "origin":
             raise ValidationError("replacement publication remote must be origin")
-        if self.provider_kind != "github-cli":
+        if not isinstance(self.provider_kind, str) or self.provider_kind != "github-cli":
             raise ValidationError("unsupported branch-protection provider")
 
 

@@ -689,16 +689,33 @@ class Orchestrator:
             )
         )
         target = spec.deployment_target or "<none>"
-        self._put_delivery_fact(
+        existing_capability = self._delivery_fact(
             context.admission_id,
             "deployment_capability",
-            capability,
         )
-        self._put_delivery_fact(
+        existing_target = self._delivery_fact(
             context.admission_id,
             "deployment_target",
-            target,
         )
+        if existing_capability is None and existing_target is None:
+            self._put_delivery_fact(
+                context.admission_id,
+                "deployment_capability",
+                capability,
+            )
+            self._put_delivery_fact(
+                context.admission_id,
+                "deployment_target",
+                target,
+            )
+            return capability
+        if (
+            existing_capability != capability
+            or existing_target != target
+        ):
+            raise OrchestrationBlocked(
+                "durable deployment specification differs from Work Block binding"
+            )
         return capability
 
     @staticmethod

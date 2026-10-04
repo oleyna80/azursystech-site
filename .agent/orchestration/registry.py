@@ -562,7 +562,7 @@ class SQLiteAdmissionRegistry:
     def put_work_block(self, binding: WorkBlockBinding) -> None:
         if not isinstance(binding, WorkBlockBinding):
             raise AdmissionValidationError("registry accepts WorkBlockBinding only")
-        self.resolve(binding.admission_id)
+        self.assert_active(binding.admission_id)
         values = _work_block_values(binding)
         with self._connection() as connection:
             current = connection.execute(
