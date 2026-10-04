@@ -130,7 +130,7 @@ class RegistryDispatcherTests(unittest.TestCase):
             )
             self.assertTrue(registry.is_active(first.admission_id))
 
-            conflicting = dataclasses.replace(
+            conflicting = replace(
                 first,
                 admission_id="adm-active000002",
             )

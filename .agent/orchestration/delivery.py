@@ -108,14 +108,10 @@ def published_context(
     if assert_active is not None:
         try:
             assert_active(admission_id)
-        except Exception:
-            return DeliveryDecision(
-                "DENY",
-                capability,
-                admission_id,
-                "unknown",
-                "admission is not active",
-            )
+        except Exception as exc:
+            raise AdmissionValidationError(
+                "delivery continuation requires active admission"
+            ) from exc
     record = resolver.resolve(admission_id)
     if record.repository != repository_id:
         raise AdmissionValidationError("delivery repository identity mismatch")
@@ -206,6 +202,18 @@ def authorize_record(
     capability: str,
 ) -> DeliveryDecision:
     root = gitfacts.worktree_root(root)
+    assert_active = getattr(resolver, "assert_active", None)
+    if assert_active is not None:
+        try:
+            assert_active(admission_id)
+        except Exception:
+            return DeliveryDecision(
+                "DENY",
+                capability,
+                admission_id,
+                "unknown",
+                "admission is not active",
+            )
     record = resolver.resolve(admission_id)
     if record.repository != repository_id:
         return DeliveryDecision(

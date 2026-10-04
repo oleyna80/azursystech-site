@@ -66,6 +66,37 @@ class DeliveryAuthorityTests(unittest.TestCase):
         )
         self.assertEqual(decision.status, "OWNER_DECISION_REQUIRED")
 
+    def test_terminalized_admission_cannot_receive_publication_or_delivery_authority(self):
+        result, context = self._published_context()
+        self.fx.registry.terminalize(result.admission_id, "REVOKED")
+
+        publication = delivery.authorize_record(
+            self.fx.root,
+            self.fx.registry,
+            admission_id=result.admission_id,
+            repository_id=REPOSITORY_ID,
+            capability="subject_branch_publish",
+        )
+        self.assertEqual(publication.status, "DENY")
+        self.assertIn("not active", publication.reason)
+
+        continuation = delivery.authorize(
+            self.fx.root,
+            self.fx.registry,
+            context,
+            "merge",
+        )
+        self.assertEqual(continuation.status, "DENY")
+        self.assertIn("not active", continuation.reason)
+
+        with self.assertRaises(admission.AdmissionValidationError):
+            delivery.published_context(
+                self.fx.root,
+                self.fx.registry,
+                admission_id=result.admission_id,
+                repository_id=REPOSITORY_ID,
+            )
+
     def test_remote_advance_after_verified_publish_is_rejected(self):
         result, context = self._published_context()
         record = self.fx.registry.resolve(result.admission_id)

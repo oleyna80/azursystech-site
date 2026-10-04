@@ -976,6 +976,87 @@ class Orchestrator:
             deployed_sha=deployed_sha,
         )
 
+    def _terminal_replay(
+        self,
+        admission_id: str,
+    ) -> RunResult | None:
+        terminal_reason = getattr(self.dispatcher.store, "terminal_reason", None)
+        if terminal_reason is None:
+            return None
+        reason = terminal_reason(admission_id)
+        if reason is None:
+            return None
+
+        binding = self._publication_or_none(admission_id)
+        if binding is None:
+            raise OrchestrationBlocked(
+                "terminal admission lacks immutable publication provenance"
+            )
+        merged_sha = self._delivery_fact(admission_id, "merged_sha")
+        deployed_sha = self._delivery_fact(admission_id, "deployed_sha")
+
+        if reason == "COMPLETED":
+            if merged_sha is None:
+                raise OrchestrationBlocked(
+                    "completed admission lacks durable merge provenance"
+                )
+            capability = self._delivery_fact(
+                admission_id,
+                "deployment_capability",
+            )
+            target = self._delivery_fact(admission_id, "deployment_target")
+            if capability is None or target is None:
+                raise OrchestrationBlocked(
+                    "completed admission lacks durable deployment specification"
+                )
+            if capability != "none":
+                verified_sha = self._delivery_fact(
+                    admission_id,
+                    "verified_sha",
+                )
+                if deployed_sha is None or verified_sha != deployed_sha:
+                    raise OrchestrationBlocked(
+                        "completed deployment lacks durable verification provenance"
+                    )
+            return RunResult(
+                status="COMPLETE",
+                admission_id=admission_id,
+                published_tip_sha=binding.published_tip_sha,
+                merged_sha=merged_sha,
+                deployed_sha=deployed_sha,
+                reason="terminal admission replayed from durable provenance",
+            )
+
+        if reason == "ROLLED_BACK":
+            if (
+                self._delivery_fact(admission_id, "deployment_failed") is None
+                or self._delivery_fact(admission_id, "rollback_sha") is None
+            ):
+                raise OrchestrationBlocked(
+                    "rolled-back admission lacks durable rollback provenance"
+                )
+            return RunResult(
+                status="BLOCKED",
+                admission_id=admission_id,
+                published_tip_sha=binding.published_tip_sha,
+                merged_sha=merged_sha,
+                reason="terminal rolled-back admission; no retry authority remains",
+            )
+
+        if reason in {"CANCELLED", "REVOKED"}:
+            return RunResult(
+                status="BLOCKED",
+                admission_id=admission_id,
+                published_tip_sha=binding.published_tip_sha,
+                merged_sha=merged_sha,
+                deployed_sha=deployed_sha,
+                reason=f"terminal admission is {reason.lower()}",
+            )
+
+        raise OrchestrationBlocked(
+            f"unsupported terminal admission reason: {reason}"
+        )
+
     def _publish_and_deliver(
         self,
         root: Path,
@@ -1049,6 +1130,10 @@ class Orchestrator:
         *,
         branch_protection_resolver,
     ) -> RunResult:
+        terminal = self._terminal_replay(record.admission_id)
+        if terminal is not None:
+            return terminal
+
         current = cli.status(root)
         if current is None:
             self._plan(root, record.admission_id, spec, reason="initial")
