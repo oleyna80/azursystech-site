@@ -8,7 +8,7 @@ sys.path.insert(0, str(AGENT_ROOT))
 
 from controllers.v1 import cli
 from orchestration.dispatcher import TrustedDispatcher
-from orchestration.registry import SQLiteAdmissionRegistry
+from orchestration.registry import SQLiteAdmissionRegistry, WorkBlockBinding
 from orchestration.runner import (
     OrchestrationBlocked,
     Orchestrator,
@@ -690,7 +690,18 @@ class RunnerTests(unittest.TestCase):
                 "manual-owner",
                 admission_id=admission_id,
             ),
-            lambda value: self.fx.binding(value, spec),
+            lambda value: WorkBlockBinding(
+                admission_id=value,
+                work_block_id=spec.work_block_id,
+                initiative_ref=spec.initiative_ref,
+                planning_paths=spec.planning_paths,
+                implementation_write_set=spec.implementation_write_set,
+                coordination_scope=spec.coordination_scope,
+                default_branch=spec.default_branch,
+                deployment_target=spec.deployment_target,
+                deployment_is_production=spec.deployment_is_production,
+                max_rework_cycles=spec.max_rework_cycles,
+            ),
         )
         self.fx.registry.terminalize(admission_id, "REVOKED")
 
