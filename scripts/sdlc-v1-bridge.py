@@ -49,6 +49,18 @@ def _runtime(runtime: str) -> int:
     config, registry = _registry(root)
     branch = gitfacts.branch(root)
     admission = _active_or_none(registry, config.repository, branch)
+    if admission is None:
+        response = {
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "deny",
+                "permissionDecisionReason": (
+                    "no active trusted admission for repository/subject branch"
+                ),
+            }
+        }
+        print(json.dumps(response, sort_keys=True))
+        return 0
     response = hook.runtime_hook_response(
         runtime,
         raw,
@@ -83,6 +95,10 @@ def _git_pre_commit(root: Path) -> int:
     config, registry = _registry(root)
     branch = gitfacts.branch(root)
     admission = _active_or_none(registry, config.repository, branch)
+    if admission is None:
+        raise StopAndPreserve(
+            "pre-commit requires active trusted admission for repository/subject branch"
+        )
     result = hook.evaluate_git_pre_commit(
         root,
         installation_root=root,
@@ -227,6 +243,16 @@ def main(argv=None) -> int:
             return _trusted_publish(args.root)
         raise ValidationError("unknown bridge operation")
     except (ControllerError, KeyError, OSError, ValueError, TypeError) as exc:
+        if getattr(args, "operation", None) == "runtime":
+            response = {
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "permissionDecision": "deny",
+                    "permissionDecisionReason": f"replacement bridge fail-closed: {exc}",
+                }
+            }
+            print(json.dumps(response, sort_keys=True))
+            return 0
         print(f"STOP: {exc}", file=sys.stderr)
         return 2
 
