@@ -171,6 +171,7 @@ def main(argv=None) -> int:
                     ".agent/assurance/wb5",
                     "scripts/sdlc-v1-bridge.py",
                     "scripts/sdlc-v1-bootstrap.py",
+                    "scripts/verify-sdlc-replacement.py",
                 ],
                 env,
             )

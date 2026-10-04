@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 CONTROLLER_ROOT = Path(__file__).resolve().parents[3]
-REPO_ROOT = CONTROLLER_ROOT.parents[1]
+REPO_ROOT = CONTROLLER_ROOT.parent
 BOOTSTRAP = REPO_ROOT / "scripts" / "sdlc-v1-bootstrap.py"
 
 

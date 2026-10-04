@@ -17,10 +17,16 @@ class Wb5RehearsalHelperTests(unittest.TestCase):
         manifest = json.loads(
             (REPO_ROOT / CANONICAL_PATHS["manifest"]).read_text(encoding="utf-8")
         )
-        candidate = subprocess.check_output(
-            ["git", "-C", str(REPO_ROOT), "rev-parse", "HEAD"],
-            text=True,
-        ).strip()
+        binding = REPO_ROOT / "docs/reports/sdlc-wb005-candidate-binding.json"
+        if binding.exists():
+            candidate = json.loads(binding.read_text(encoding="utf-8"))[
+                "replacement_candidate_sha"
+            ]
+        else:
+            candidate = subprocess.check_output(
+                ["git", "-C", str(REPO_ROOT), "rev-parse", "HEAD"],
+                text=True,
+            ).strip()
         verify_candidate_live_wiring(REPO_ROOT, candidate, manifest)
 
     def test_patch_applies_cleanly_to_current_candidate(self):
