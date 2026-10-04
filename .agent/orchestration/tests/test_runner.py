@@ -942,6 +942,10 @@ class RunnerTests(unittest.TestCase):
             branch_protection_resolver=lambda _remote, _branch: False,
         )
         self.assertEqual(result.status, "BLOCKED")
+        self.assertEqual(
+            self.fx.registry.terminal_reason(admission_id),
+            "ROLLED_BACK",
+        )
         self.assertIsNotNone(
             self.fx.registry.delivery_fact(admission_id, "rollback_sha")
         )

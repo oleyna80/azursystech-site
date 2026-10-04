@@ -490,6 +490,19 @@ class Orchestrator:
                 f"cannot persist Owner authorization for {capability}: {exc}"
             ) from exc
 
+    def _terminalize(self, admission_id: str, reason: str) -> None:
+        method = getattr(self.dispatcher.store, "terminalize", None)
+        if method is None:
+            raise OrchestrationBlocked(
+                "orchestration store lacks active-admission terminalization"
+            )
+        try:
+            method(admission_id, reason)
+        except Exception as exc:
+            raise OrchestrationBlocked(
+                f"cannot terminalize admission: {exc}"
+            ) from exc
+
     def _decision_allowed_by_owner(
         self,
         context: delivery.DeliveryContext,
@@ -756,6 +769,7 @@ class Orchestrator:
                 rollback_sha,
             )
 
+        self._terminalize(context.admission_id, "ROLLED_BACK")
         return RunResult(
             status="BLOCKED",
             admission_id=context.admission_id,
@@ -823,6 +837,7 @@ class Orchestrator:
             )
 
         if deployment_capability == "none":
+            self._terminalize(context.admission_id, "COMPLETED")
             return RunResult(
                 status="COMPLETE",
                 admission_id=context.admission_id,
@@ -935,6 +950,7 @@ class Orchestrator:
                 "durable verification provenance differs from deployed SHA"
             )
 
+        self._terminalize(context.admission_id, "COMPLETED")
         return RunResult(
             status="COMPLETE",
             admission_id=context.admission_id,

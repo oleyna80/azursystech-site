@@ -110,6 +110,86 @@ class RegistryDispatcherTests(unittest.TestCase):
                     replace(binding, deployment_target="production"),
                 )
 
+    def test_active_subject_binding_is_unique_terminal_and_reusable(self):
+        with tempfile.TemporaryDirectory() as temp:
+            registry = SQLiteAdmissionRegistry(Path(temp) / "registry.sqlite3")
+            first = admission.AdmissionRecord(
+                admission_id="adm-active000001",
+                repository="fixture/repo",
+                trigger_class="manual-owner",
+                authority_profile_id="human-governed",
+                authority_profile_revision="a" * 40,
+                base_ref="main",
+                base_commit="b" * 40,
+                subject_branch="feat/reused",
+            )
+            registry.put(first)
+            self.assertEqual(
+                registry.resolve_active("fixture/repo", "feat/reused"),
+                first,
+            )
+            self.assertTrue(registry.is_active(first.admission_id))
+
+            conflicting = dataclasses.replace(
+                first,
+                admission_id="adm-active000002",
+            )
+            with self.assertRaises(admission.AdmissionConflict):
+                registry.put(conflicting)
+
+            registry.terminalize(first.admission_id, "COMPLETED")
+            self.assertFalse(registry.is_active(first.admission_id))
+            self.assertEqual(
+                registry.terminal_reason(first.admission_id),
+                "COMPLETED",
+            )
+            with self.assertRaises(admission.AdmissionNotFound):
+                registry.resolve_active("fixture/repo", "feat/reused")
+            with self.assertRaises(admission.AdmissionConflict):
+                registry.put(first)
+
+            registry.put(conflicting)
+            self.assertEqual(
+                registry.resolve_active("fixture/repo", "feat/reused"),
+                conflicting,
+            )
+            self.assertTrue(registry.is_active(conflicting.admission_id))
+
+    def test_terminalized_admission_cannot_grant_owner_or_delivery_authority(self):
+        with tempfile.TemporaryDirectory() as temp:
+            registry = SQLiteAdmissionRegistry(Path(temp) / "registry.sqlite3")
+            record = admission.AdmissionRecord(
+                admission_id="adm-terminal001",
+                repository="fixture/repo",
+                trigger_class="manual-owner",
+                authority_profile_id="human-governed",
+                authority_profile_revision="a" * 40,
+                base_ref="main",
+                base_commit="b" * 40,
+                subject_branch="feat/terminal",
+            )
+            registry.put(record)
+            registry.terminalize(record.admission_id, "REVOKED")
+            self.assertFalse(
+                registry.owner_authorized(
+                    record.admission_id,
+                    "merge",
+                    "c" * 40,
+                )
+            )
+            with self.assertRaises(admission.AdmissionConflict):
+                registry.put_owner_authorization(
+                    record.admission_id,
+                    "merge",
+                    "c" * 40,
+                )
+            with self.assertRaises(admission.AdmissionConflict):
+                registry.put_delivery_fact(
+                    record.admission_id,
+                    "merged_sha",
+                    "d" * 40,
+                )
+
     def test_rework_budget_is_durable_and_bounded(self):
         with tempfile.TemporaryDirectory() as temp:
             registry = SQLiteAdmissionRegistry(Path(temp) / "registry.sqlite3")

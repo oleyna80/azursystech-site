@@ -43,6 +43,12 @@ _OWNER_APPROVABLE = frozenset({
     "post_deploy_verify",
     "rollback",
 })
+_TERMINAL_REASONS = frozenset({
+    "COMPLETED",
+    "CANCELLED",
+    "REVOKED",
+    "ROLLED_BACK",
+})
 
 _COLUMNS = (
     "admission_id",
@@ -201,6 +207,26 @@ class SQLiteAdmissionRegistry:
             )
             connection.execute(
                 """
+                CREATE TABLE IF NOT EXISTS active_subject_bindings (
+                    repository TEXT NOT NULL,
+                    subject_branch TEXT NOT NULL,
+                    admission_id TEXT NOT NULL UNIQUE,
+                    PRIMARY KEY(repository, subject_branch),
+                    FOREIGN KEY(admission_id) REFERENCES admissions(admission_id)
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS terminal_admissions (
+                    admission_id TEXT PRIMARY KEY,
+                    reason TEXT NOT NULL,
+                    FOREIGN KEY(admission_id) REFERENCES admissions(admission_id)
+                )
+                """
+            )
+            connection.execute(
+                """
                 CREATE TABLE IF NOT EXISTS work_block_bindings (
                     admission_id TEXT PRIMARY KEY,
                     work_block_id TEXT NOT NULL,
@@ -269,6 +295,52 @@ class SQLiteAdmissionRegistry:
             "trusted admission registry must be outside subject repository"
         )
 
+    @staticmethod
+    def _claim_active_binding(
+        connection: sqlite3.Connection,
+        record: AdmissionRecord,
+    ) -> None:
+        terminal = connection.execute(
+            "SELECT reason FROM terminal_admissions WHERE admission_id = ?",
+            (record.admission_id,),
+        ).fetchone()
+        if terminal is not None:
+            raise AdmissionConflict(
+                "terminal admission cannot be reactivated"
+            )
+        current = connection.execute(
+            """
+            SELECT admission_id FROM active_subject_bindings
+            WHERE repository = ? AND subject_branch = ?
+            """,
+            (record.repository, record.subject_branch),
+        ).fetchone()
+        if current is not None:
+            if current[0] != record.admission_id:
+                raise AdmissionConflict(
+                    "repository/subject branch already has an active admission"
+                )
+            return
+        by_admission = connection.execute(
+            """
+            SELECT repository, subject_branch FROM active_subject_bindings
+            WHERE admission_id = ?
+            """,
+            (record.admission_id,),
+        ).fetchone()
+        if by_admission is not None:
+            raise AdmissionConflict(
+                "admission_id is already active for different subject facts"
+            )
+        connection.execute(
+            """
+            INSERT INTO active_subject_bindings (
+                repository, subject_branch, admission_id
+            ) VALUES (?, ?, ?)
+            """,
+            (record.repository, record.subject_branch, record.admission_id),
+        )
+
     def put(self, record: AdmissionRecord) -> None:
         if not isinstance(record, AdmissionRecord):
             raise AdmissionValidationError("registry accepts AdmissionRecord only")
@@ -283,8 +355,8 @@ class SQLiteAdmissionRegistry:
                     raise AdmissionConflict(
                         "admission_id is already bound to different facts"
                     )
-                return
-            connection.execute(
+            else:
+                connection.execute(
                 """
                 INSERT INTO admissions (
                     admission_id,
@@ -297,8 +369,9 @@ class SQLiteAdmissionRegistry:
                     subject_branch
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                values,
-            )
+                    values,
+                )
+            self._claim_active_binding(connection, record)
 
     def resolve(self, admission_id: str) -> AdmissionRecord:
         with self._connection() as connection:
@@ -309,6 +382,110 @@ class SQLiteAdmissionRegistry:
         if row is None:
             raise AdmissionNotFound(f"unknown admission_id: {admission_id}")
         return AdmissionRecord(*row)
+
+    def resolve_active(
+        self,
+        repository: str,
+        subject_branch: str,
+    ) -> AdmissionRecord:
+        if not isinstance(repository, str) or not repository:
+            raise AdmissionValidationError("repository identity is invalid")
+        if not isinstance(subject_branch, str) or not subject_branch:
+            raise AdmissionValidationError("subject branch is invalid")
+        with self._connection() as connection:
+            row = connection.execute(
+                """
+                SELECT a.admission_id, a.repository, a.trigger_class,
+                       a.authority_profile_id, a.authority_profile_revision,
+                       a.base_ref, a.base_commit, a.subject_branch
+                FROM active_subject_bindings AS b
+                JOIN admissions AS a ON a.admission_id = b.admission_id
+                LEFT JOIN terminal_admissions AS t
+                  ON t.admission_id = a.admission_id
+                WHERE b.repository = ? AND b.subject_branch = ?
+                  AND t.admission_id IS NULL
+                """,
+                (repository, subject_branch),
+            ).fetchone()
+        if row is None:
+            raise AdmissionNotFound(
+                "no active admission for repository/subject branch"
+            )
+        return AdmissionRecord(*row)
+
+    def is_active(self, admission_id: str) -> bool:
+        with self._connection() as connection:
+            row = connection.execute(
+                """
+                SELECT 1
+                FROM active_subject_bindings AS b
+                LEFT JOIN terminal_admissions AS t
+                  ON t.admission_id = b.admission_id
+                WHERE b.admission_id = ? AND t.admission_id IS NULL
+                """,
+                (admission_id,),
+            ).fetchone()
+        return row is not None
+
+    def assert_active(self, admission_id: str) -> None:
+        self.resolve(admission_id)
+        if not self.is_active(admission_id):
+            raise AdmissionConflict("admission is not active")
+
+    def terminalize(self, admission_id: str, reason: str) -> None:
+        if reason not in _TERMINAL_REASONS:
+            raise AdmissionValidationError("unsupported terminal admission reason")
+        with self._connection() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            record = connection.execute(
+                "SELECT " + ", ".join(_COLUMNS)
+                + " FROM admissions WHERE admission_id = ?",
+                (admission_id,),
+            ).fetchone()
+            if record is None:
+                raise AdmissionNotFound(f"unknown admission_id: {admission_id}")
+            terminal = connection.execute(
+                "SELECT reason FROM terminal_admissions WHERE admission_id = ?",
+                (admission_id,),
+            ).fetchone()
+            if terminal is not None:
+                if terminal[0] != reason:
+                    raise AdmissionConflict(
+                        "admission already has different terminal reason"
+                    )
+                return
+            active = connection.execute(
+                """
+                SELECT repository, subject_branch
+                FROM active_subject_bindings
+                WHERE admission_id = ?
+                """,
+                (admission_id,),
+            ).fetchone()
+            if active is None:
+                raise AdmissionConflict(
+                    "non-terminal admission has no active subject binding"
+                )
+            connection.execute(
+                "DELETE FROM active_subject_bindings WHERE admission_id = ?",
+                (admission_id,),
+            )
+            connection.execute(
+                """
+                INSERT INTO terminal_admissions (admission_id, reason)
+                VALUES (?, ?)
+                """,
+                (admission_id, reason),
+            )
+
+    def terminal_reason(self, admission_id: str) -> str | None:
+        self.resolve(admission_id)
+        with self._connection() as connection:
+            row = connection.execute(
+                "SELECT reason FROM terminal_admissions WHERE admission_id = ?",
+                (admission_id,),
+            ).fetchone()
+        return None if row is None else row[0]
 
     def put_admission_with_work_block(
         self,
@@ -368,6 +545,7 @@ class SQLiteAdmissionRegistry:
                     """,
                     admission_values,
                 )
+            self._claim_active_binding(connection, record)
             if current_binding is None:
                 connection.execute(
                     """
@@ -461,7 +639,7 @@ class SQLiteAdmissionRegistry:
         admission_id: str,
         max_cycles: int,
     ) -> int:
-        self.resolve(admission_id)
+        self.assert_active(admission_id)
         if (
             isinstance(max_cycles, bool)
             or not isinstance(max_cycles, int)
@@ -509,8 +687,8 @@ class SQLiteAdmissionRegistry:
     def put_publication(self, binding: PublicationBinding) -> None:
         if not isinstance(binding, PublicationBinding):
             raise AdmissionValidationError("registry accepts PublicationBinding only")
-        # Require the immutable admission record to exist first.
-        self.resolve(binding.admission_id)
+        # Publication is authority-bearing and requires an active admission.
+        self.assert_active(binding.admission_id)
         values = astuple(binding)
         with self._connection() as connection:
             current = connection.execute(
@@ -559,7 +737,7 @@ class SQLiteAdmissionRegistry:
             return None
 
     def put_delivery_fact(self, admission_id: str, stage: str, value: str) -> None:
-        self.resolve(admission_id)
+        self.assert_active(admission_id)
         if stage not in _DELIVERY_STAGES:
             raise AdmissionValidationError("unsupported delivery provenance stage")
         if not isinstance(value, str) or not value:
@@ -600,7 +778,7 @@ class SQLiteAdmissionRegistry:
         capability: str,
         published_tip_sha: str,
     ) -> None:
-        self.resolve(admission_id)
+        self.assert_active(admission_id)
         if capability not in _OWNER_APPROVABLE:
             raise AdmissionValidationError("unsupported Owner-authorized capability")
         if _SHA_RE.fullmatch(published_tip_sha) is None:
@@ -636,6 +814,8 @@ class SQLiteAdmissionRegistry:
         capability: str,
         published_tip_sha: str,
     ) -> bool:
+        if not self.is_active(admission_id):
+            return False
         if capability not in _OWNER_APPROVABLE:
             return False
         with self._connection() as connection:
