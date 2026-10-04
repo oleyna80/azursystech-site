@@ -988,9 +988,20 @@ class Orchestrator:
             return None
 
         binding = self._publication_or_none(admission_id)
+
+        if reason in {"CANCELLED", "REVOKED"}:
+            return RunResult(
+                status="BLOCKED",
+                admission_id=admission_id,
+                published_tip_sha=(
+                    None if binding is None else binding.published_tip_sha
+                ),
+                reason=f"terminal admission is {reason.lower()}",
+            )
+
         if binding is None:
             raise OrchestrationBlocked(
-                "terminal admission lacks immutable publication provenance"
+                "terminal delivery admission lacks immutable publication provenance"
             )
         merged_sha = self._delivery_fact(admission_id, "merged_sha")
         deployed_sha = self._delivery_fact(admission_id, "deployed_sha")
@@ -1041,16 +1052,6 @@ class Orchestrator:
                 published_tip_sha=binding.published_tip_sha,
                 merged_sha=merged_sha,
                 reason="terminal rolled-back admission; no retry authority remains",
-            )
-
-        if reason in {"CANCELLED", "REVOKED"}:
-            return RunResult(
-                status="BLOCKED",
-                admission_id=admission_id,
-                published_tip_sha=binding.published_tip_sha,
-                merged_sha=merged_sha,
-                deployed_sha=deployed_sha,
-                reason=f"terminal admission is {reason.lower()}",
             )
 
         raise OrchestrationBlocked(

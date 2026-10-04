@@ -681,6 +681,37 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(replayed.status, "COMPLETE")
         self.assertEqual(replay_delivery.calls, [])
 
+    def test_revoked_admission_replays_blocked_without_publication_or_authority(self):
+        admission_id = "adm-revokedprepub"
+        spec = self.fx.spec()
+        self.fx.dispatcher.admit_with_work_block(
+            self.fx.root,
+            self.fx.request(
+                "manual-owner",
+                admission_id=admission_id,
+            ),
+            lambda value: self.fx.binding(value, spec),
+        )
+        self.fx.registry.terminalize(admission_id, "REVOKED")
+
+        runner = Orchestrator(
+            self.fx.dispatcher,
+            ScriptedRoles(self.fx),
+            delivery_executor=SimulatedDelivery(),
+        )
+        result = runner.resume(
+            self.fx.root,
+            admission_id=admission_id,
+            spec=spec,
+            branch_protection_resolver=lambda _remote, _branch: False,
+        )
+        self.assertEqual(result.status, "BLOCKED")
+        self.assertIsNone(result.published_tip_sha)
+        self.assertIn("revoked", result.reason)
+        self.assertIsNone(
+            self.fx.registry.publication_or_none(admission_id)
+        )
+
     def test_resume_inactive_rejects_changed_delivery_spec(self):
         admission_id = "adm-resumespec01"
         spec = self.fx.spec()
