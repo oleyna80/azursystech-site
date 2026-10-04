@@ -21,7 +21,7 @@ from controllers.v1.errors import ControllerError, StopAndPreserve, ValidationEr
 from controllers.v1.installation import load as load_installation
 from controllers.v1.providers import GitHubCliBranchProtectionResolver
 from orchestration.admission import AdmissionNotFound
-from orchestration.registry import SQLiteAdmissionRegistry
+from orchestration.registry import PublicationBinding, SQLiteAdmissionRegistry
 
 
 def _registry(root: Path):
@@ -220,6 +220,24 @@ def _trusted_publish(root: Path) -> int:
     record = registry.resolve_active(config.repository, gitfacts.branch(root))
     if record.admission_id != admission_id:
         raise StopAndPreserve("active admission differs from controller binding")
+    active = current["active"]
+    candidate = active["source_candidate_sha"]
+    if not isinstance(candidate, str):
+        raise StopAndPreserve("trusted publish requires exact source candidate")
+    head = gitfacts.head_sha(root)
+    if not __import__("controllers.v1.policy", fromlist=["post_candidate_history_allowed"]).post_candidate_history_allowed(
+        root,
+        current,
+        head,
+    ):
+        raise StopAndPreserve("trusted publish tip is not candidate plus coordination-only history")
+    registry.put_publication(
+        PublicationBinding(
+            admission_id=admission_id,
+            source_candidate_sha=candidate,
+            published_tip_sha=head,
+        )
+    )
     result = cli.publish(
         root,
         branch_protection_resolver=GitHubCliBranchProtectionResolver(config),
