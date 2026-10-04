@@ -29,14 +29,38 @@ class Wb5RehearsalHelperTests(unittest.TestCase):
             ).strip()
         verify_candidate_live_wiring(REPO_ROOT, candidate, manifest)
 
-    def test_patch_applies_cleanly_to_current_candidate(self):
-        patch = REPO_ROOT / CANONICAL_PATHS["patch"]
-        result = subprocess.run(
-            ["git", "-C", str(REPO_ROOT), "apply", "--check", str(patch)],
-            capture_output=True,
+    def test_patch_bytes_match_exact_candidate_artifact(self):
+        binding = REPO_ROOT / "docs/reports/sdlc-wb005-candidate-binding.json"
+        if binding.exists():
+            candidate = json.loads(binding.read_text(encoding="utf-8"))[
+                "replacement_candidate_sha"
+            ]
+        else:
+            candidate = subprocess.check_output(
+                ["git", "-C", str(REPO_ROOT), "rev-parse", "HEAD"],
+                text=True,
+            ).strip()
+        expected = subprocess.check_output(
+            [
+                "git",
+                "-C",
+                str(REPO_ROOT),
+                "rev-parse",
+                f"{candidate}:{CANONICAL_PATHS['patch']}",
+            ],
             text=True,
-        )
-        self.assertEqual(result.returncode, 0, result.stderr)
+        ).strip()
+        actual = subprocess.check_output(
+            [
+                "git",
+                "-C",
+                str(REPO_ROOT),
+                "hash-object",
+                CANONICAL_PATHS["patch"],
+            ],
+            text=True,
+        ).strip()
+        self.assertEqual(actual, expected)
 
 
 if __name__ == "__main__":
