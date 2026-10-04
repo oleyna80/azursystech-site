@@ -77,6 +77,37 @@ def _inside_source(path: Path, root: Path) -> None:
         ) from exc
 
 
+def _existing_destination_mode(path: Path) -> int | None:
+    try:
+        return path.stat().st_mode & 0o7777
+    except FileNotFoundError:
+        return None
+
+
+def _replace_import_bytes(
+    destination: Path,
+    payload: bytes,
+    existing_mode: int | None,
+) -> None:
+    """Replace one repository destination without writing its existing inode."""
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary = destination.parent / (
+        f".{destination.name}.external-import-{uuid.uuid4().hex}"
+    )
+    try:
+        with temporary.open("xb") as stream:
+            stream.write(payload)
+        if existing_mode is not None:
+            temporary.chmod(existing_mode)
+        os.replace(temporary, destination)
+    finally:
+        try:
+            temporary.unlink()
+        except FileNotFoundError:
+            pass
+
+
 def _resolve_source(
     grant: ExternalImportGrant,
     requested: Path | str,
@@ -313,8 +344,8 @@ class ExternalImportBroker:
         source_path = _resolve_source(grant, source, require_file=True)
         destination_path, repo_path = self._destination(grant, destination)
         payload = source_path.read_bytes()
-        destination_path.parent.mkdir(parents=True, exist_ok=True)
-        destination_path.write_bytes(payload)
+        existing_mode = _existing_destination_mode(destination_path)
+        _replace_import_bytes(destination_path, payload, existing_mode)
         return repo_path
 
     def import_tree(
@@ -326,7 +357,7 @@ class ExternalImportBroker:
         grant = self._grant(grant_id)
         source_root = _resolve_source(grant, source, require_dir=True)
 
-        files: list[tuple[bytes, Path, str]] = []
+        files: list[tuple[bytes, Path, str, int | None]] = []
         for current, dirnames, filenames in os.walk(source_root, followlinks=False):
             current_path = Path(current)
             for dirname in list(dirnames):
@@ -360,13 +391,20 @@ class ExternalImportBroker:
                         resolved_source.read_bytes(),
                         destination_path,
                         repo_path,
+                        _existing_destination_mode(destination_path),
                     )
                 )
 
-        # All source and destination paths are validated before the first write.
+        # All source/destination authority and replacement metadata are resolved
+        # before the first write. Each write replaces the repository directory
+        # entry with a fresh inode, so a pre-existing hardlink cannot mutate an
+        # external alias.
         imported: list[str] = []
-        for payload, destination_path, repo_path in files:
-            destination_path.parent.mkdir(parents=True, exist_ok=True)
-            destination_path.write_bytes(payload)
+        for payload, destination_path, repo_path, existing_mode in files:
+            _replace_import_bytes(
+                destination_path,
+                payload,
+                existing_mode,
+            )
             imported.append(repo_path)
         return tuple(sorted(imported))
