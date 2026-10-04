@@ -79,9 +79,6 @@ def resolve_candidate(explicit: str | None) -> tuple[str, dict | None]:
     else:
         candidate = git("rev-parse", "--verify", "HEAD^{commit}")
 
-    if not git("merge-base", "--is-ancestor", BASELINE_SHA, candidate, check=False) == "":
-        # merge-base --is-ancestor has no stdout; return code is handled separately below.
-        pass
     ancestor = subprocess.run(
         ["git", "-C", str(ROOT), "merge-base", "--is-ancestor", BASELINE_SHA, candidate],
         check=False,
@@ -100,6 +97,21 @@ def resolve_candidate(explicit: str | None) -> tuple[str, dict | None]:
                 raise VerificationError(
                     f"coordination binding differs from candidate tree: {path}"
                 )
+    for path in CANONICAL_PATHS.values():
+        expected = tree_blob(candidate, path)
+        current_path = ROOT / path
+        if expected is None or not current_path.is_file():
+            raise VerificationError(f"candidate artifact is missing: {path}")
+        actual = subprocess.run(
+            ["git", "-C", str(ROOT), "hash-object", "--", path],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        if actual != expected:
+            raise VerificationError(
+                f"current artifact bytes differ from exact candidate tree: {path}"
+            )
     return candidate, binding
 
 
