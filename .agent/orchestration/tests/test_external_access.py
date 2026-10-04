@@ -169,7 +169,7 @@ class ExternalAccessTests(unittest.TestCase):
         self.assertEqual(result.status, "OWNER_DECISION_REQUIRED")
         self.assertFalse((outside / "skills/foo/SKILL.md").exists())
 
-    def test_import_file_replaces_hardlinked_destination_without_external_mutation(self):
+    def test_import_file_rejects_hardlinked_destination_without_external_mutation(self):
         victim = Path(self.fx.temp.name) / "external-victim-file.txt"
         victim.write_text("EXTERNAL ORIGINAL\n", encoding="utf-8")
         destination = self.fx.root / "src/import/value.txt"
@@ -187,22 +187,22 @@ class ExternalAccessTests(unittest.TestCase):
             def run(inner_self, role, context):
                 if role != "coder":
                     return base.run(role, context)
-                imported = context.external_access.import_file(
-                    "ext-skills",
-                    "foo/SKILL.md",
-                    "src/import/value.txt",
+                with self.assertRaises(ExternalAccessDenied):
+                    context.external_access.import_file(
+                        "ext-skills",
+                        "foo/SKILL.md",
+                        "src/import/value.txt",
+                    )
+                self.assertEqual(destination.stat().st_ino, original_inode)
+                self.assertEqual(
+                    destination.read_text(encoding="utf-8"),
+                    "EXTERNAL ORIGINAL\n",
                 )
-                self.assertEqual(imported, "src/import/value.txt")
                 self.assertEqual(
                     victim.read_text(encoding="utf-8"),
                     "EXTERNAL ORIGINAL\n",
                 )
-                self.assertNotEqual(destination.stat().st_ino, original_inode)
-                self.assertEqual(
-                    destination.read_text(encoding="utf-8"),
-                    "skill foo\n",
-                )
-                base._commit(context, "import file through fresh inode")
+                base._coder(context)
                 return RoleResult("coder", "DONE")
 
         runner = Orchestrator(
@@ -217,19 +217,21 @@ class ExternalAccessTests(unittest.TestCase):
                 "manual-owner",
                 admission_id="adm-hardlinkfile",
             ),
-            self.fx.spec(implementation_write_set=("src/import/**",)),
+            self.fx.spec(implementation_write_set=("src/**",)),
             branch_protection_resolver=lambda _remote, _branch: False,
         )
         self.assertEqual(result.status, "OWNER_DECISION_REQUIRED")
+        self.assertEqual(victim.stat().st_ino, original_inode)
         self.assertEqual(
             victim.read_text(encoding="utf-8"),
             "EXTERNAL ORIGINAL\n",
         )
 
-    def test_import_tree_replaces_hardlinked_destination_without_external_mutation(self):
+    def test_import_tree_rejects_hardlinked_destination_before_any_write(self):
         victim = Path(self.fx.temp.name) / "external-victim-tree.txt"
         victim.write_text("EXTERNAL ORIGINAL\n", encoding="utf-8")
         destination = self.fx.root / "src/import/foo/SKILL.md"
+        helper_destination = self.fx.root / "src/import/foo/helper.txt"
         destination.parent.mkdir(parents=True, exist_ok=True)
         os.link(victim, destination)
         original_inode = destination.stat().st_ino
@@ -244,28 +246,23 @@ class ExternalAccessTests(unittest.TestCase):
             def run(inner_self, role, context):
                 if role != "coder":
                     return base.run(role, context)
-                imported = context.external_access.import_tree(
-                    "ext-skills",
-                    "foo",
-                    "src/import/foo",
-                )
+                with self.assertRaises(ExternalAccessDenied):
+                    context.external_access.import_tree(
+                        "ext-skills",
+                        "foo",
+                        "src/import/foo",
+                    )
+                self.assertEqual(destination.stat().st_ino, original_inode)
                 self.assertEqual(
-                    imported,
-                    (
-                        "src/import/foo/SKILL.md",
-                        "src/import/foo/helper.txt",
-                    ),
+                    destination.read_text(encoding="utf-8"),
+                    "EXTERNAL ORIGINAL\n",
                 )
                 self.assertEqual(
                     victim.read_text(encoding="utf-8"),
                     "EXTERNAL ORIGINAL\n",
                 )
-                self.assertNotEqual(destination.stat().st_ino, original_inode)
-                self.assertEqual(
-                    destination.read_text(encoding="utf-8"),
-                    "skill foo\n",
-                )
-                base._commit(context, "import tree through fresh inodes")
+                self.assertFalse(helper_destination.exists())
+                base._coder(context)
                 return RoleResult("coder", "DONE")
 
         runner = Orchestrator(
@@ -280,10 +277,11 @@ class ExternalAccessTests(unittest.TestCase):
                 "manual-owner",
                 admission_id="adm-hardlinktree",
             ),
-            self.fx.spec(implementation_write_set=("src/import/**",)),
+            self.fx.spec(implementation_write_set=("src/**",)),
             branch_protection_resolver=lambda _remote, _branch: False,
         )
         self.assertEqual(result.status, "OWNER_DECISION_REQUIRED")
+        self.assertEqual(victim.stat().st_ino, original_inode)
         self.assertEqual(
             victim.read_text(encoding="utf-8"),
             "EXTERNAL ORIGINAL\n",
