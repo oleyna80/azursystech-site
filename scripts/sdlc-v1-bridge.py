@@ -72,6 +72,37 @@ def _runtime(runtime: str) -> int:
     return 0
 
 
+def _subagent_context(runtime: str) -> int:
+    raw = json.load(sys.stdin)
+    if not isinstance(raw, dict):
+        raise ValidationError("subagent context input must be an object")
+    cwd = raw.get("cwd")
+    if not isinstance(cwd, str) or not cwd:
+        raise ValidationError("subagent context input is missing cwd")
+    root = gitfacts.worktree_root(Path(cwd))
+    config, registry = _registry(root)
+    branch = gitfacts.branch(root)
+    admission = _active_or_none(registry, config.repository, branch)
+    if admission is None:
+        response = {
+            "hookSpecificOutput": {
+                "hookEventName": "SubagentStart",
+                "additionalContext": (
+                    "No active trusted admission for repository/subject branch; "
+                    "this context grants no mutation authority."
+                ),
+            }
+        }
+        print(json.dumps(response, sort_keys=True))
+        return 0
+    print(json.dumps(hook.subagent_context(
+        runtime,
+        raw,
+        installation_root=root,
+    ), sort_keys=True))
+    return 0
+
+
 def _consequential() -> int:
     raw = json.load(sys.stdin)
     command = None
@@ -204,6 +235,9 @@ def main(argv=None) -> int:
     runtime = sub.add_parser("runtime")
     runtime.add_argument("--runtime", choices=["claude", "codex"], required=True)
 
+    context = sub.add_parser("subagent-context")
+    context.add_argument("--runtime", choices=["claude", "codex"], required=True)
+
     sub.add_parser("consequential")
 
     for name in ("git-pre-commit", "trusted-publish"):
@@ -226,6 +260,8 @@ def main(argv=None) -> int:
     try:
         if args.operation == "runtime":
             return _runtime(args.runtime)
+        if args.operation == "subagent-context":
+            return _subagent_context(args.runtime)
         if args.operation == "consequential":
             return _consequential()
         if args.operation == "git-pre-commit":
