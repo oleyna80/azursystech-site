@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "baseline_sha": "de129c8c8e924ff9b1b96a49e853a501f2171f1f",
+  "patch_blob_sha": "d694556924360220aeaa7efd81f92d760665fbcd",
+  "canonical_ci_command": "python scripts/verify-sdlc-replacement.py",
+  "live_wiring_paths": [
+    {
+      "path": ".claude/settings.json",
+      "action": "REPLACE",
+      "preimage_blob_sha": "c92f13b62e868bfc3fe4a153fc4a96116b09fc7c",
+      "preimage_mode": "100644",
+      "postimage_blob_sha": "0aa0e938d2d0079fc65b57141f34861e65608371",
+      "postimage_mode": "100644"
+    },
+    {
+      "path": ".codex/hooks.json",
+      "action": "REPLACE",
+      "preimage_blob_sha": "a4a402d1eea3e3cfeaf9097e0a62a4eac334543e",
+      "preimage_mode": "100644",
+      "postimage_blob_sha": "fe714240dd2b08391a31870f91d0b01d8e95f242",
+      "postimage_mode": "100644"
+    },
+    {
+      "path": ".githooks/pre-commit",
+      "action": "ADD",
+      "preimage_blob_sha": null,
+      "preimage_mode": null,
+      "postimage_blob_sha": "d2abfc85aad1e3913e54c8a2df5e0555e840c44a",
+      "postimage_mode": "100755"
+    },
+    {
+      "path": ".githooks/commit-msg",
+      "action": "REPLACE",
+      "preimage_blob_sha": "66b485ee7cabae58a035c42968fa3646fa5e5c72",
+      "preimage_mode": "100755",
+      "postimage_blob_sha": "485c221d4e20a859c3da6f30d9d4e78626c855da",
+      "postimage_mode": "100755"
+    },
+    {
+      "path": ".githooks/pre-push",
+      "action": "ADD",
+      "preimage_blob_sha": null,
+      "preimage_mode": null,
+      "postimage_blob_sha": "7b999074b5fd53b9f4bd5f61b85ff81f1a7cc051",
+      "postimage_mode": "100755"
+    },
+    {
+      "path": "scripts/bootstrap.sh",
+      "action": "REPLACE",
+      "preimage_blob_sha": "ee9f4778728465cfe616f476176fb7a965a991c2",
+      "preimage_mode": "100755",
+      "postimage_blob_sha": "411d4169f3ab792a358c808101217ed20431a8af",
+      "postimage_mode": "100755"
+    },
+    {
+      "path": ".github/workflows/control-plane-contracts.yml",
+      "action": "REPLACE",
+      "preimage_blob_sha": "e851aed9a04cceeadb7d8e91e80fd3da5e344f7d",
+      "preimage_mode": "100644",
+      "postimage_blob_sha": "db99264b8a4f0946faebb9e0f058492b5de25d04",
+      "postimage_mode": "100644"
+    }
+  ],
+  "legacy_entrypoints": [
+    {
+      "entrypoint": ".agent/hooks/hard_stop_policy.py",
+      "disposition": "REMOVE",
+      "reason": "legacy lifecycle/publication authority is removed from Claude live config"
+    },
+    {
+      "entrypoint": ".claude/hooks/work_block_gate.py",
+      "disposition": "REMOVE",
+      "reason": "replaced by shared controller structured-write bridge"
+    },
+    {
+      "entrypoint": ".claude/hooks/assurance_gate.py",
+      "disposition": "REMOVE",
+      "reason": "Stop hook no longer owns lifecycle/assurance authority"
+    },
+    {
+      "entrypoint": ".codex/hooks/hard_stop_policy.py",
+      "disposition": "REMOVE",
+      "reason": "replaced by shared non-lifecycle consequential guard"
+    },
+    {
+      "entrypoint": ".codex/hooks/pre_tool_use_policy.py",
+      "disposition": "REMOVE",
+      "reason": "replaced by shared controller structured-write bridge"
+    },
+    {
+      "entrypoint": ".codex/hooks/subagent_context.py",
+      "disposition": "REMOVE",
+      "reason": "replaced by shared advisory controller context bridge"
+    },
+    {
+      "entrypoint": ".claude/hooks/typecheck.sh",
+      "disposition": "RETAIN_NON_AUTHORITY",
+      "reason": "post-write diagnostic only"
+    }
+  ],
+  "replacement_entrypoints": [
+    "scripts/sdlc-v1-bridge.py runtime --runtime claude",
+    "scripts/sdlc-v1-bridge.py runtime --runtime codex",
+    "scripts/sdlc-v1-bridge.py consequential",
+    "scripts/sdlc-v1-bridge.py subagent-context --runtime codex",
+    "scripts/sdlc-v1-bridge.py git-pre-commit",
+    "scripts/sdlc-v1-bridge.py git-commit-msg",
+    "scripts/sdlc-v1-bridge.py git-pre-push",
+    "scripts/sdlc-v1-bridge.py trusted-open",
+    "scripts/sdlc-v1-bridge.py trusted-publish",
+    "scripts/sdlc-v1-bootstrap.py install",
+    "scripts/sdlc-v1-bootstrap.py check"
+  ],
+  "rollback": {
+    "authority_state": [
+      "core.hooksPath",
+      "Git-common-dir azursystech/installation.json",
+      "Git-private controller state",
+      "external registry active_subject_bindings"
+    ],
+    "evidence_only_residue": [
+      "terminal_admissions history",
+      "terminalized delivery/Owner authorization audit facts",
+      "test logs outside repository"
+    ]
+  },
+  "invariants": {
+    "wb5_source_candidate_must_not_modify_live_wiring": true,
+    "patch_may_change_only_manifest_paths": true,
+    "runtime_payload_or_environment_must_not_override_installation_authority": true,
+    "terminal_admission_cannot_grant_future_authority": true
+  }
+}

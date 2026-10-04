@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "baseline_sha": "de129c8c8e924ff9b1b96a49e853a501f2171f1f",
+  "scenarios": [
+    {
+      "scenario_id": "PREWB-PLANNING-ADMITTED",
+      "domain": "planning-authority",
+      "security_sensitive": true,
+      "legacy_result": "DENY_SOURCE_WRITE_WHEN_CANONICAL_INACTIVE",
+      "replacement_result": "ALLOW_PLANNING_ONLY_WITH_EXACT_ACTIVE_ADMISSION",
+      "classification": "INTENTIONAL_CHANGE",
+      "rationale": "Trusted admission intentionally precedes local Work Block state and grants planning-only authority.",
+      "accepted_requirement_ref": {
+        "path": "docs/architecture/sdlc-simplification-v1-state-event-contract.md",
+        "contains": "an admitted run with missing local state or canonical INACTIVE receives planning-only authority"
+      }
+    },
+    {
+      "scenario_id": "ACTIVE-STRUCTURED-IN-SCOPE",
+      "domain": "structured-write",
+      "security_sensitive": true,
+      "legacy_result": "ALLOW",
+      "replacement_result": "ALLOW",
+      "classification": "EQUIVALENT",
+      "rationale": "Both systems permit admitted in-scope structured writes.",
+      "accepted_requirement_ref": {
+        "path": "docs/architecture/sdlc-simplification-v1-implementation-design.md",
+        "contains": "Structured write tools should be checked directly against"
+      }
+    },
+    {
+      "scenario_id": "ACTIVE-STRUCTURED-OUTSIDE-SCOPE",
+      "domain": "structured-write",
+      "security_sensitive": true,
+      "legacy_result": "DENY",
+      "replacement_result": "DENY",
+      "classification": "EQUIVALENT",
+      "rationale": "Write-set containment remains mandatory.",
+      "accepted_requirement_ref": {
+        "path": "docs/architecture/sdlc-simplification-v1-state-event-contract.md",
+        "contains": "defines implementation mutation authority"
+      }
+    },
+    {
+      "scenario_id": "PROTECTED-POLICY-WRITE",
+      "domain": "governance-policy",
+      "security_sensitive": true,
+      "legacy_result": "DENY",
+      "replacement_result": "DENY",
+      "classification": "EQUIVALENT",
+      "rationale": "Ordinary Work Blocks cannot self-modify protected policy.",
+      "accepted_requirement_ref": {
+        "path": "docs/architecture/sdlc-simplification-v1-state-event-contract.md",
+        "contains": "Ordinary Work Blocks cannot include `.agent/policies/**`"
+      }
+    },
+    {
+      "scenario_id": "DEFAULT-BRANCH-COMMIT",
+      "domain": "git-commit",
+      "security_sensitive": true,
+      "legacy_result": "DENY",
+      "replacement_result": "DENY",
+      "classification": "EQUIVALENT",
+      "rationale": "Default-branch mutation remains outside normal Work Block authority.",
+      "accepted_requirement_ref": {
+        "path": "docs/architecture/sdlc-simplification-v1-implementation-design.md",
+        "contains": "Git hooks enforce invariants for which Git has authoritative facts"
+      }
+    },
+    {
+      "scenario_id": "EXACT-SUBJECT-PUBLICATION",
+      "domain": "git-publication",
+      "security_sensitive": true,
+      "legacy_result": "ALLOW_ONLY_AFTER_EXACT_ASSURANCE",
+      "replacement_result": "ALLOW_ONLY_AFTER_EXACT_ASSURANCE_AND_TRUSTED_PLATFORM_FACTS",
+      "classification": "INTENTIONAL_CHANGE",
+      "rationale": "Publication predicates move into shared policy plus trusted platform facts.",
+      "accepted_requirement_ref": {
+        "path": "docs/architecture/sdlc-simplification-v1-implementation-design.md",
+        "contains": "exact non-force subject-branch publication may be autonomous only after required assurance"
+      }
+    },
+    {
+      "scenario_id": "FORCE-PUSH",
+      "domain": "git-publication",
+      "security_sensitive": true,
+      "legacy_result": "DENY",
+      "replacement_result": "DENY",
+      "classification": "EQUIVALENT",
+      "rationale": "Only exact non-force subject publication is admitted.",
+      "accepted_requirement_ref": {
+        "path": "docs/architecture/sdlc-simplification-v1-implementation-design.md",
+        "contains": "exact non-force subject-branch publication"
+      }
+    },
+    {
+      "scenario_id": "OPAQUE-BASH-SCOPE-INFERENCE",
+      "domain": "runtime-shell",
+      "security_sensitive": true,
+      "legacy_result": "LEGACY_HOOK_PARSES_SHELL_TEXT_FOR_WRITE_SCOPE",
+      "replacement_result": "NO_STRUCTURED_AUTHORITY_INFERRED_FROM_BASH_TEXT",
+      "classification": "REMOVED_OR_TRANSFERRED_LEGACY_MECHANISM",
+      "rationale": "General shell parsing is removed as an authority boundary.",
+      "accepted_requirement_ref": {
+        "path": "docs/architecture/sdlc-simplification-v1-implementation-design.md",
+        "contains": "The replacement must not use a lightweight bespoke shell parser as a security boundary."
+      },
+      "authority_disposition": "TRANSFERRED",
+      "transferred_to": "structured runtime events + Git index hooks + runtime sandbox/OS/platform controls",
+      "replacement_test": "comparison:OPAQUE-BASH-SCOPE-INFERENCE"
+    },
+    {
+      "scenario_id": "STOP-ASSURANCE-MUTATION-GATE",
+      "domain": "runtime-stop",
+      "security_sensitive": false,
+      "legacy_result": "STOP_HOOK_REQUIRES_ASSURANCE_CLOSEOUT_STATE",
+      "replacement_result": "NO_LIFECYCLE_AUTHORITY_IN_STOP_HOOK",
+      "classification": "REMOVED_OR_TRANSFERRED_LEGACY_MECHANISM",
+      "rationale": "Session termination no longer owns lifecycle authority.",
+      "accepted_requirement_ref": {
+        "path": "docs/architecture/sdlc-simplification-v1-implementation-design.md",
+        "contains": "Stop/session hooks may report unresolved work but must never require lifecycle mutation"
+      },
+      "authority_disposition": "OBSOLETE",
+      "transferred_to": "controller lifecycle and orchestration assurance",
+      "replacement_test": "manifest:claude-stop-hook-removed"
+    },
+    {
+      "scenario_id": "SUBAGENT-CONTEXT",
+      "domain": "runtime-context",
+      "security_sensitive": false,
+      "legacy_result": "ADVISORY_CONTEXT_FROM_SCHEMA3_GATE",
+      "replacement_result": "ADVISORY_CONTEXT_FROM_CONTROLLER_V1_STATE",
+      "classification": "INTENTIONAL_CHANGE",
+      "rationale": "Subagent context stays advisory.",
+      "accepted_requirement_ref": {
+        "path": "docs/architecture/sdlc-simplification-v1-implementation-design.md",
+        "contains": "Subagent-start hooks may provide context but do not grant authority."
+      }
+    },
+    {
+      "scenario_id": "POST-PUBLICATION-MERGE-AUTHORITY",
+      "domain": "delivery-authority",
+      "security_sensitive": true,
+      "legacy_result": "OWNER_HARD_STOP_OUTSIDE_CONTROLLER",
+      "replacement_result": "PINNED_PROFILE_PLUS_OWNER_OR_PLATFORM_BOUNDARY",
+      "classification": "INTENTIONAL_CHANGE",
+      "rationale": "Publication never implies merge authority.",
+      "accepted_requirement_ref": {
+        "path": "docs/architecture/sdlc-simplification-v1-autonomous-orchestration.md",
+        "contains": "The Orchestrator cannot convert subject-branch publication authority into merge authority."
+      }
+    },
+    {
+      "scenario_id": "TERMINAL-ADMISSION-AUTHORITY",
+      "domain": "external-authority",
+      "security_sensitive": true,
+      "legacy_result": "NO_EXPLICIT_ACTIVE_ADMISSION_INDEX",
+      "replacement_result": "TERMINAL_ADMISSION_CANNOT_GRANT_FUTURE_AUTHORITY",
+      "classification": "INTENTIONAL_CHANGE",
+      "rationale": "Historical admission identity is separated from current authority.",
+      "accepted_requirement_ref": {
+        "path": "docs/architecture/sdlc-simplification-v1-autonomous-orchestration.md",
+        "contains": "The external trusted admission registry owns the detailed envelope keyed by `admission_id`."
+      }
+    }
+  ]
+}
