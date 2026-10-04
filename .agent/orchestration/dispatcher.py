@@ -123,6 +123,19 @@ class TrustedDispatcher:
             admission_id=admission_id,
         )
 
+    def validate_store(self, repo_root: Path) -> None:
+        external_guard = getattr(self.store, "assert_external_to", None)
+        if external_guard is not None:
+            external_guard(repo_root)
+
+    def resolve_admission(
+        self,
+        repo_root: Path,
+        admission_id: str,
+    ) -> admission.AdmissionRecord:
+        self.validate_store(repo_root)
+        return self.store.resolve(admission_id)
+
     def _admit_with_store(
         self,
         repo_root: Path,
@@ -135,9 +148,7 @@ class TrustedDispatcher:
             raise admission.AdmissionPolicyError(
                 "trigger class is not enabled by this trusted dispatcher"
             )
-        external_guard = getattr(self.store, "assert_external_to", None)
-        if external_guard is not None:
-            external_guard(repo_root)
+        self.validate_store(repo_root)
         policy_revision = self.policy_revision_resolver.resolve(repo_root)
         return admission.create_admission(
             repo_root=repo_root,

@@ -237,21 +237,36 @@ class Orchestrator:
             raise OrchestrationBlocked("planner did not complete")
         gitfacts.require_clean(root)
 
+    def _consume_rework_cycle(
+        self,
+        admission_id: str,
+        spec: WorkBlockSpec,
+    ) -> None:
+        method = getattr(self.dispatcher.store, "consume_rework_cycle", None)
+        if method is None:
+            raise OrchestrationBlocked(
+                "orchestration store lacks durable rework budget"
+            )
+        try:
+            method(admission_id, spec.max_rework_cycles)
+        except Exception as exc:
+            raise OrchestrationBlocked(
+                f"cannot consume autonomous rework cycle: {exc}"
+            ) from exc
+
     def _critic_until_ready(
         self,
         root: Path,
         admission_id: str,
         spec: WorkBlockSpec,
-        cycles: list[int],
     ) -> None:
         while True:
             result = self._role("critic", root, admission_id, spec)
             if result.outcome == "READY":
                 cli.critic(root, "ready")
                 return
+            self._consume_rework_cycle(admission_id, spec)
             cli.critic(root, "blocked")
-            cycles[0] += 1
-            self._limit(spec, cycles[0])
             self._plan(root, admission_id, spec, reason="critic-blocked")
             cli.revise_bind(
                 root,
@@ -279,17 +294,11 @@ class Orchestrator:
         finally:
             self.scheduler.release(lease)
 
-    @staticmethod
-    def _limit(spec: WorkBlockSpec, cycles: int) -> None:
-        if cycles > spec.max_rework_cycles:
-            raise OrchestrationBlocked("maximum autonomous rework cycles exceeded")
-
     def _assure_from_state(
         self,
         root: Path,
         admission_id: str,
         spec: WorkBlockSpec,
-        cycles: list[int],
     ) -> None:
         """Reach Reviewer+Verifier READY without fabricating lost role outcomes."""
 
@@ -300,7 +309,7 @@ class Orchestrator:
             lifecycle = current["lifecycle_state"]
 
             if lifecycle == "DEFINE":
-                self._critic_until_ready(root, admission_id, spec, cycles)
+                self._critic_until_ready(root, admission_id, spec)
                 continue
             if lifecycle == "EXECUTE":
                 self._code_candidate(root, admission_id, spec)
@@ -320,13 +329,11 @@ class Orchestrator:
                     cli.reviewer(root, "ready")
                     continue
                 if reviewer.outcome == "REWORK":
+                    self._consume_rework_cycle(admission_id, spec)
                     cli.reviewer(root, "rework")
-                    cycles[0] += 1
-                    self._limit(spec, cycles[0])
                     continue
+                self._consume_rework_cycle(admission_id, spec)
                 cli.reviewer(root, "scope-change")
-                cycles[0] += 1
-                self._limit(spec, cycles[0])
                 self._plan(root, admission_id, spec, reason="reviewer-scope-change")
                 cli.revise_bind(
                     root,
@@ -349,19 +356,16 @@ class Orchestrator:
                 cli.verifier(root, "ready")
                 return
             if verifier.outcome == "EVIDENCE_PROBLEM":
+                self._consume_rework_cycle(admission_id, spec)
                 cli.verifier(root, "evidence-problem")
-                cycles[0] += 1
-                self._limit(spec, cycles[0])
                 continue
             if verifier.outcome == "REWORK":
+                self._consume_rework_cycle(admission_id, spec)
                 cli.verifier(root, "rework")
-                cycles[0] += 1
-                self._limit(spec, cycles[0])
                 continue
 
+            self._consume_rework_cycle(admission_id, spec)
             cli.verifier(root, "scope-change")
-            cycles[0] += 1
-            self._limit(spec, cycles[0])
             self._plan(root, admission_id, spec, reason="verifier-scope-change")
             cli.revise_bind(
                 root,
@@ -1047,7 +1051,6 @@ class Orchestrator:
             )
 
         self._validate_active_binding(current, record, spec)
-        cycles = [0]
 
         while True:
             current = cli.status(root)
@@ -1061,7 +1064,6 @@ class Orchestrator:
                     root,
                     record.admission_id,
                     spec,
-                    cycles,
                 )
                 continue
 
@@ -1076,7 +1078,6 @@ class Orchestrator:
                         root,
                         record.admission_id,
                         spec,
-                        cycles,
                     )
                     binding = self._prepare_publication(root, record, spec)
                 return self._publish_and_deliver(
@@ -1163,7 +1164,7 @@ class Orchestrator:
         """
 
         root = self._bound_root(repo_root)
-        record = self.dispatcher.store.resolve(admission_id)
+        record = self.dispatcher.resolve_admission(root, admission_id)
         self._ensure_work_block_binding(record.admission_id, spec)
         gitfacts.require_clean(root)
         subprocess.run(

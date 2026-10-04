@@ -218,6 +218,16 @@ class SQLiteAdmissionRegistry:
             )
             connection.execute(
                 """
+                CREATE TABLE IF NOT EXISTS rework_cycles (
+                    admission_id TEXT NOT NULL,
+                    cycle INTEGER NOT NULL,
+                    PRIMARY KEY(admission_id, cycle),
+                    FOREIGN KEY(admission_id) REFERENCES admissions(admission_id)
+                )
+                """
+            )
+            connection.execute(
+                """
                 CREATE TABLE IF NOT EXISTS publication_bindings (
                     admission_id TEXT PRIMARY KEY,
                     source_candidate_sha TEXT NOT NULL,
@@ -445,6 +455,56 @@ class SQLiteAdmissionRegistry:
             raise AdmissionValidationError(
                 "stored Work Block binding is malformed"
             ) from exc
+
+    def consume_rework_cycle(
+        self,
+        admission_id: str,
+        max_cycles: int,
+    ) -> int:
+        self.resolve(admission_id)
+        if (
+            isinstance(max_cycles, bool)
+            or not isinstance(max_cycles, int)
+            or max_cycles < 0
+        ):
+            raise AdmissionValidationError(
+                "max rework cycles must be non-negative integer"
+            )
+        with self._connection() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                """
+                SELECT COUNT(*) FROM rework_cycles
+                WHERE admission_id = ?
+                """,
+                (admission_id,),
+            ).fetchone()
+            current = int(row[0])
+            if current >= max_cycles:
+                raise AdmissionConflict(
+                    "maximum autonomous rework cycles exceeded"
+                )
+            next_cycle = current + 1
+            connection.execute(
+                """
+                INSERT INTO rework_cycles (admission_id, cycle)
+                VALUES (?, ?)
+                """,
+                (admission_id, next_cycle),
+            )
+            return next_cycle
+
+    def rework_cycle_count(self, admission_id: str) -> int:
+        self.resolve(admission_id)
+        with self._connection() as connection:
+            row = connection.execute(
+                """
+                SELECT COUNT(*) FROM rework_cycles
+                WHERE admission_id = ?
+                """,
+                (admission_id,),
+            ).fetchone()
+        return int(row[0])
 
     def put_publication(self, binding: PublicationBinding) -> None:
         if not isinstance(binding, PublicationBinding):

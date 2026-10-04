@@ -7,6 +7,8 @@ AGENT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(AGENT_ROOT))
 
 from controllers.v1 import cli
+from orchestration.dispatcher import TrustedDispatcher
+from orchestration.registry import SQLiteAdmissionRegistry
 from orchestration.runner import (
     OrchestrationBlocked,
     Orchestrator,
@@ -352,6 +354,49 @@ class RunnerTests(unittest.TestCase):
         self.assertNotIn("planner", resumed_roles.calls)
         self.assertEqual(cli.status(self.fx.root)["lifecycle_state"], "INACTIVE")
 
+    def test_resume_rejects_registry_inside_subject_repository(self):
+        admission_id = "adm-resumeinside1"
+        spec = self.fx.spec()
+        first = Orchestrator(
+            self.fx.dispatcher,
+            ScriptedRoles(self.fx),
+            delivery_executor=SimulatedDelivery(),
+        )
+        result = first.run(
+            self.fx.root,
+            self.fx.request("manual-owner", admission_id=admission_id),
+            spec,
+            branch_protection_resolver=lambda _remote, _branch: False,
+        )
+        self.assertEqual(result.status, "OWNER_DECISION_REQUIRED")
+
+        inside = SQLiteAdmissionRegistry(
+            self.fx.root / ".agent" / "resume-inside.sqlite3"
+        )
+        inside.put_admission_with_work_block(
+            self.fx.registry.resolve(admission_id),
+            self.fx.registry.resolve_work_block(admission_id),
+        )
+        inside.put_publication(
+            self.fx.registry.resolve_publication(admission_id)
+        )
+        resumed = Orchestrator(
+            TrustedDispatcher(inside),
+            ScriptedRoles(self.fx),
+            delivery_executor=SimulatedDelivery(),
+        )
+        with self.assertRaises(Exception) as caught:
+            resumed.resume(
+                self.fx.root,
+                admission_id=admission_id,
+                spec=spec,
+                branch_protection_resolver=lambda _remote, _branch: False,
+            )
+        self.assertIn(
+            "trusted admission registry must be outside subject repository",
+            str(caught.exception),
+        )
+
     def test_resume_before_controller_open_rejects_mutated_work_block_spec(self):
         base = ScriptedRoles(self.fx)
 
@@ -395,6 +440,61 @@ class RunnerTests(unittest.TestCase):
                 branch_protection_resolver=lambda _remote, _branch: False,
             )
         self.assertEqual(resumed_roles.calls, [])
+
+    def test_rework_budget_survives_crash_before_controller_transition(self):
+        admission_id = "adm-reworkcrash1"
+        spec = replace(self.fx.spec(), max_rework_cycles=1)
+        roles = ScriptedRoles(self.fx, critic=["BLOCKED", "BLOCKED"])
+        original_consume = self.fx.registry.consume_rework_cycle
+        crashed = {"done": False}
+
+        def crash_after_consume(admission_id_value, max_cycles):
+            value = original_consume(admission_id_value, max_cycles)
+            if not crashed["done"]:
+                crashed["done"] = True
+                raise RuntimeError("simulated crash after durable rework consume")
+            return value
+
+        self.fx.registry.consume_rework_cycle = crash_after_consume
+        first = Orchestrator(
+            self.fx.dispatcher,
+            roles,
+            delivery_executor=SimulatedDelivery(),
+        )
+        with self.assertRaises(OrchestrationBlocked):
+            first.run(
+                self.fx.root,
+                self.fx.request(
+                    "manual-owner",
+                    admission_id=admission_id,
+                ),
+                spec,
+                branch_protection_resolver=lambda _remote, _branch: False,
+            )
+        self.fx.registry.consume_rework_cycle = original_consume
+        self.assertEqual(
+            self.fx.registry.rework_cycle_count(admission_id),
+            1,
+        )
+        self.assertEqual(cli.status(self.fx.root)["lifecycle_state"], "DEFINE")
+
+        resumed_roles = ScriptedRoles(self.fx, critic=["BLOCKED"])
+        resumed = Orchestrator(
+            self.fx.dispatcher,
+            resumed_roles,
+            delivery_executor=SimulatedDelivery(),
+        )
+        with self.assertRaises(OrchestrationBlocked):
+            resumed.resume(
+                self.fx.root,
+                admission_id=admission_id,
+                spec=spec,
+                branch_protection_resolver=lambda _remote, _branch: False,
+            )
+        self.assertEqual(
+            self.fx.registry.rework_cycle_count(admission_id),
+            1,
+        )
 
     def test_resume_from_execute_after_process_failure_reruns_coder(self):
         base = ScriptedRoles(self.fx)

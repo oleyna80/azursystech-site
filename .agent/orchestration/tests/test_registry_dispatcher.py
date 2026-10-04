@@ -110,6 +110,29 @@ class RegistryDispatcherTests(unittest.TestCase):
                     replace(binding, deployment_target="production"),
                 )
 
+    def test_rework_budget_is_durable_and_bounded(self):
+        with tempfile.TemporaryDirectory() as temp:
+            registry = SQLiteAdmissionRegistry(Path(temp) / "registry.sqlite3")
+            record = admission.AdmissionRecord(
+                admission_id="adm-reworkbudget1",
+                repository="fixture/repo",
+                trigger_class="manual-owner",
+                authority_profile_id="human-governed",
+                authority_profile_revision="a" * 40,
+                base_ref="main",
+                base_commit="b" * 40,
+                subject_branch="feat/test",
+            )
+            registry.put(record)
+            self.assertEqual(registry.consume_rework_cycle(record.admission_id, 2), 1)
+            self.assertEqual(registry.consume_rework_cycle(record.admission_id, 2), 2)
+            self.assertEqual(registry.rework_cycle_count(record.admission_id), 2)
+            reopened = SQLiteAdmissionRegistry(registry.path)
+            self.assertEqual(reopened.rework_cycle_count(record.admission_id), 2)
+            with self.assertRaises(admission.AdmissionConflict):
+                reopened.consume_rework_cycle(record.admission_id, 2)
+            self.assertEqual(reopened.rework_cycle_count(record.admission_id), 2)
+
     def test_publication_binding_and_owner_authorization_are_immutable(self):
         with tempfile.TemporaryDirectory() as temp:
             registry = SQLiteAdmissionRegistry(Path(temp) / "registry.sqlite3")
