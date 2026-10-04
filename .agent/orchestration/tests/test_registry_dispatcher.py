@@ -1,3 +1,4 @@
+import sqlite3
 import sys
 import tempfile
 import unittest
@@ -19,6 +20,37 @@ from orchestration.tests.support import OrchestrationRepo, REPOSITORY_ID
 
 
 class RegistryDispatcherTests(unittest.TestCase):
+    def test_registry_closes_connections_after_read_and_write(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "registry.sqlite3"
+            registry = SQLiteAdmissionRegistry(path)
+            record = admission.AdmissionRecord(
+                admission_id="adm-closeconn0001",
+                repository="fixture/repo",
+                trigger_class="manual-owner",
+                authority_profile_id="human-governed",
+                authority_profile_revision="a" * 40,
+                base_ref="main",
+                base_commit="b" * 40,
+                subject_branch="feat/test",
+            )
+
+            connections = []
+            original_connect = registry._connect
+
+            def tracked_connect():
+                connection = original_connect()
+                connections.append(connection)
+                return connection
+
+            registry._connect = tracked_connect
+            registry.put(record)
+            self.assertEqual(registry.resolve(record.admission_id), record)
+            self.assertGreaterEqual(len(connections), 2)
+            for connection in connections:
+                with self.assertRaises(sqlite3.ProgrammingError):
+                    connection.execute("SELECT 1")
+
     def test_sqlite_registry_is_persistent_idempotent_and_immutable(self):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "registry.sqlite3"

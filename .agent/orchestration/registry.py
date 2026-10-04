@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
+from contextlib import contextmanager
 from dataclasses import astuple, dataclass
 from pathlib import Path
 
@@ -166,8 +167,17 @@ class SQLiteAdmissionRegistry:
         connection.execute("PRAGMA foreign_keys = ON")
         return connection
 
+    @contextmanager
+    def _connection(self):
+        connection = self._connect()
+        try:
+            with connection:
+                yield connection
+        finally:
+            connection.close()
+
     def _initialize(self) -> None:
-        with self._connect() as connection:
+        with self._connection() as connection:
             connection.execute(
                 """
                 CREATE TABLE IF NOT EXISTS admissions (
@@ -246,7 +256,7 @@ class SQLiteAdmissionRegistry:
         if not isinstance(record, AdmissionRecord):
             raise AdmissionValidationError("registry accepts AdmissionRecord only")
         values = astuple(record)
-        with self._connect() as connection:
+        with self._connection() as connection:
             current = connection.execute(
                 "SELECT " + ", ".join(_COLUMNS) + " FROM admissions WHERE admission_id = ?",
                 (record.admission_id,),
@@ -274,7 +284,7 @@ class SQLiteAdmissionRegistry:
             )
 
     def resolve(self, admission_id: str) -> AdmissionRecord:
-        with self._connect() as connection:
+        with self._connection() as connection:
             row = connection.execute(
                 "SELECT " + ", ".join(_COLUMNS) + " FROM admissions WHERE admission_id = ?",
                 (admission_id,),
@@ -299,7 +309,7 @@ class SQLiteAdmissionRegistry:
 
         admission_values = astuple(record)
         binding_values = _work_block_values(binding)
-        with self._connect() as connection:
+        with self._connection() as connection:
             current_admission = connection.execute(
                 "SELECT " + ", ".join(_COLUMNS) + " FROM admissions WHERE admission_id = ?",
                 (record.admission_id,),
@@ -359,7 +369,7 @@ class SQLiteAdmissionRegistry:
             raise AdmissionValidationError("registry accepts WorkBlockBinding only")
         self.resolve(binding.admission_id)
         values = _work_block_values(binding)
-        with self._connect() as connection:
+        with self._connection() as connection:
             current = connection.execute(
                 """
                 SELECT admission_id, work_block_id, initiative_ref,
@@ -390,7 +400,7 @@ class SQLiteAdmissionRegistry:
             )
 
     def resolve_work_block(self, admission_id: str) -> WorkBlockBinding:
-        with self._connect() as connection:
+        with self._connection() as connection:
             row = connection.execute(
                 """
                 SELECT admission_id, work_block_id, initiative_ref,
@@ -435,7 +445,7 @@ class SQLiteAdmissionRegistry:
         # Require the immutable admission record to exist first.
         self.resolve(binding.admission_id)
         values = astuple(binding)
-        with self._connect() as connection:
+        with self._connection() as connection:
             current = connection.execute(
                 """
                 SELECT admission_id, source_candidate_sha, published_tip_sha
@@ -460,7 +470,7 @@ class SQLiteAdmissionRegistry:
             )
 
     def resolve_publication(self, admission_id: str) -> PublicationBinding:
-        with self._connect() as connection:
+        with self._connection() as connection:
             row = connection.execute(
                 """
                 SELECT admission_id, source_candidate_sha, published_tip_sha
@@ -495,7 +505,7 @@ class SQLiteAdmissionRegistry:
             "none", "deploy_nonproduction", "deploy_production"
         }:
             raise AdmissionValidationError("deployment capability provenance is invalid")
-        with self._connect() as connection:
+        with self._connection() as connection:
             current = connection.execute(
                 """
                 SELECT value FROM delivery_facts
@@ -530,7 +540,7 @@ class SQLiteAdmissionRegistry:
             raise AdmissionValidationError(
                 "Owner authorization must bind exact published tip SHA"
             )
-        with self._connect() as connection:
+        with self._connection() as connection:
             current = connection.execute(
                 """
                 SELECT published_tip_sha FROM owner_authorizations
@@ -561,7 +571,7 @@ class SQLiteAdmissionRegistry:
     ) -> bool:
         if capability not in _OWNER_APPROVABLE:
             return False
-        with self._connect() as connection:
+        with self._connection() as connection:
             row = connection.execute(
                 """
                 SELECT published_tip_sha FROM owner_authorizations
@@ -574,7 +584,7 @@ class SQLiteAdmissionRegistry:
     def delivery_fact(self, admission_id: str, stage: str) -> str | None:
         if stage not in _DELIVERY_STAGES:
             raise AdmissionValidationError("unsupported delivery provenance stage")
-        with self._connect() as connection:
+        with self._connection() as connection:
             row = connection.execute(
                 """
                 SELECT value FROM delivery_facts
