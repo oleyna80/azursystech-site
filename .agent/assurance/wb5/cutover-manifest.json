@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "baseline_sha": "de129c8c8e924ff9b1b96a49e853a501f2171f1f",
-  "patch_blob_sha": "db00dc8b858142c2bee602671abdb02e92a585ae",
+  "patch_blob_sha": "511c0bc523104464c3a2f30edabebc20281fad2e",
   "canonical_ci_command": "python scripts/verify-sdlc-replacement.py",
   "live_wiring_paths": [
     {
@@ -57,7 +57,7 @@
       "action": "REPLACE",
       "preimage_blob_sha": "e851aed9a04cceeadb7d8e91e80fd3da5e344f7d",
       "preimage_mode": "100644",
-      "postimage_blob_sha": "3fe186884d4f1c0b4ed738a8a233a5a3dfd74c17",
+      "postimage_blob_sha": "6269e5e797ac5c84f59aee31841057587c20a441",
       "postimage_mode": "100644"
     }
   ],

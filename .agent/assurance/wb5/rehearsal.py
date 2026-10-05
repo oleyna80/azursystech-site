@@ -184,9 +184,13 @@ def _fake_gh(bin_dir: Path) -> None:
     path.write_text(
         "#!/usr/bin/env python3\n"
         "import json, sys\n"
-        "if len(sys.argv) >= 2 and sys.argv[1] == 'api':\n"
-        "    print(json.dumps({'protected': False}))\n"
-        "    raise SystemExit(0)\n"
+        "if len(sys.argv) >= 3 and sys.argv[1] == 'api':\n"
+        "    if sys.argv[2] == 'graphql':\n"
+        "        print(json.dumps({'data': {'repository': {'branchProtectionRules': {'nodes': [], 'pageInfo': {'hasNextPage': False}}}}}))\n"
+        "        raise SystemExit(0)\n"
+        "    if '/rules/branches/' in sys.argv[2]:\n"
+        "        print('[]')\n"
+        "        raise SystemExit(0)\n"
         "raise SystemExit(2)\n",
         encoding="utf-8",
     )
@@ -267,6 +271,8 @@ def run_rehearsal(source_root: Path, candidate_sha: str) -> RehearsalSummary:
         )
         if workflow.count("run: python scripts/verify-sdlc-replacement.py") != 1:
             raise RehearsalError("future CI does not use one canonical command")
+        if "fetch-depth: 0" not in workflow:
+            raise RehearsalError("future CI checkout does not fetch required history")
         for legacy in (
             ".agent/hooks/hard_stop_policy.py",
             ".claude/hooks/work_block_gate.py",
@@ -436,6 +442,38 @@ def run_rehearsal(source_root: Path, candidate_sha: str) -> RehearsalSummary:
             raise RehearsalError("trusted publish bound wrong source candidate")
         if _git(clone, "rev-parse", f"refs/remotes/origin/{subject_branch}", env=env) != published.published_tip_sha:
             raise RehearsalError("published subject ref differs from provenance")
+
+        activated = _run(
+            [
+                sys.executable,
+                "scripts/verify-sdlc-replacement.py",
+                "--replacement-candidate",
+                candidate_sha,
+                "--skip-rehearsal",
+            ],
+            cwd=clone,
+            env=env,
+        )
+        activated_lines = [
+            line for line in activated.stdout.splitlines() if line.strip()
+        ]
+        if not activated_lines:
+            raise RehearsalError("activated canonical assurance produced no summary")
+        try:
+            activated_summary = json.loads(activated_lines[-1])
+        except json.JSONDecodeError as exc:
+            raise RehearsalError(
+                "activated canonical assurance summary is invalid"
+            ) from exc
+        if (
+            activated_summary.get("status") != "PASS"
+            or activated_summary.get("current_wiring_mode") != "ACTIVATED"
+            or activated_summary.get("replacement_candidate_sha") != candidate_sha
+            or activated_summary.get("rehearsal") is not None
+        ):
+            raise RehearsalError(
+                "activated canonical assurance did not prove exact cutover state"
+            )
 
         registry.terminalize(admission_id, "REVOKED")
         if registry.is_active(admission_id):
