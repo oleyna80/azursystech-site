@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import sys
 import unittest
@@ -17,8 +18,11 @@ class Wb5RehearsalHelperTests(unittest.TestCase):
         manifest = json.loads(
             (REPO_ROOT / CANONICAL_PATHS["manifest"]).read_text(encoding="utf-8")
         )
+        explicit = os.environ.get("WB5_REPLACEMENT_CANDIDATE_SHA")
         binding = REPO_ROOT / "docs/reports/sdlc-wb005-candidate-binding.json"
-        if binding.exists():
+        if explicit:
+            candidate = explicit
+        elif binding.exists():
             candidate = json.loads(binding.read_text(encoding="utf-8"))[
                 "replacement_candidate_sha"
             ]
@@ -30,8 +34,11 @@ class Wb5RehearsalHelperTests(unittest.TestCase):
         verify_candidate_live_wiring(REPO_ROOT, candidate, manifest)
 
     def test_patch_bytes_match_exact_candidate_artifact(self):
+        explicit = os.environ.get("WB5_REPLACEMENT_CANDIDATE_SHA")
         binding = REPO_ROOT / "docs/reports/sdlc-wb005-candidate-binding.json"
-        if binding.exists():
+        if explicit:
+            candidate = explicit
+        elif binding.exists():
             candidate = json.loads(binding.read_text(encoding="utf-8"))[
                 "replacement_candidate_sha"
             ]

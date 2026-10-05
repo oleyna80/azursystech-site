@@ -158,6 +158,7 @@ def main(argv=None) -> int:
             env["PYTHONDONTWRITEBYTECODE"] = "1"
             env["PYTHONPYCACHEPREFIX"] = pycache
             env["PYTHONPATH"] = str(AGENT)
+            env["WB5_REPLACEMENT_CANDIDATE_SHA"] = candidate
 
             run_phase(
                 "compile/import",
