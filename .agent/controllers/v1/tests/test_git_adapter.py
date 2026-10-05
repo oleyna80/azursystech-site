@@ -153,10 +153,22 @@ class GitAdapterTests(unittest.TestCase):
         self.assertEqual(result.code, "PUSH_ALLOWED")
 
     def test_pre_push_head_alias_with_non_head_sha_fails_closed(self):
+        marker = self.root / "later.txt"
+        marker.write_text("later\n", encoding="utf-8")
+        import subprocess
+        subprocess.run(
+            ["git", "-C", str(self.root), "add", "later.txt"],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.root), "commit", "-qm", "later"],
+            check=True,
+        )
+
         _item, head = self.assured_state_at_head()
-        different = self.base
-        self.assertNotEqual(different, head)
-        stdin = f"HEAD {different} refs/heads/feat/test {'0' * 40}\n"
+        stale_sha = self.base
+        self.assertNotEqual(stale_sha, head)
+        stdin = f"HEAD {stale_sha} refs/heads/feat/test {'0' * 40}\n"
         with self.assertRaises(ValidationError):
             git_adapter.pre_push_events(self.root, "origin", stdin)
 
