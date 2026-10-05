@@ -220,27 +220,19 @@ def _trusted_publish(root: Path) -> int:
     record = registry.resolve_active(config.repository, gitfacts.branch(root))
     if record.admission_id != admission_id:
         raise StopAndPreserve("active admission differs from controller binding")
-    active = current["active"]
-    candidate = active["source_candidate_sha"]
-    if not isinstance(candidate, str):
-        raise StopAndPreserve("trusted publish requires exact source candidate")
-    head = gitfacts.head_sha(root)
-    if not __import__("controllers.v1.policy", fromlist=["post_candidate_history_allowed"]).post_candidate_history_allowed(
-        root,
-        current,
-        head,
-    ):
-        raise StopAndPreserve("trusted publish tip is not candidate plus coordination-only history")
-    registry.put_publication(
-        PublicationBinding(
-            admission_id=admission_id,
-            source_candidate_sha=candidate,
-            published_tip_sha=head,
+    def record_publication(source_candidate_sha: str, published_tip_sha: str) -> None:
+        registry.put_publication(
+            PublicationBinding(
+                admission_id=admission_id,
+                source_candidate_sha=source_candidate_sha,
+                published_tip_sha=published_tip_sha,
+            )
         )
-    )
+
     result = cli.publish(
         root,
         branch_protection_resolver=GitHubCliBranchProtectionResolver(config),
+        publication_recorder=record_publication,
     )
     print(json.dumps(result, sort_keys=True))
     return 0

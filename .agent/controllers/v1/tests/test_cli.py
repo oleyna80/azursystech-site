@@ -330,6 +330,118 @@ class CliTests(unittest.TestCase):
             cli.publish(self.root, branch_protection_resolver=lambda _remote, _branch: True)
         self.assertEqual(cli.status(self.root)["lifecycle_state"], "ASSURE")
 
+    def _ready_publish_fixture(self, remote_name: str):
+        remote = Path(self.temp.name) / remote_name
+        subprocess.run(
+            ["git", "init", "--bare", "-q", "--initial-branch=main", str(remote)],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.root), "remote", "add", "origin", str(remote)],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.root), "push", "-q", "origin", "HEAD:refs/heads/main"],
+            check=True,
+        )
+        self.open()
+        cli.critic(self.root, "ready")
+        source = self.root / ".agent/controllers/v1/state.py"
+        source.write_text("implementation\n", encoding="utf-8")
+        s.commit_all(self.root, "implementation")
+        cli.candidate(self.root)
+        cli.reviewer(self.root, "ready")
+        cli.verifier(self.root, "ready")
+        return remote
+
+    def test_publish_records_provenance_after_remote_verification_before_inactive(self):
+        self._ready_publish_fixture("remote-recorder.git")
+        observed = []
+
+        def recorder(candidate, tip):
+            remote = gitfacts.remote_ref_sha(
+                self.root, "origin", "refs/heads/feat/test"
+            )
+            observed.append(
+                (candidate, tip, remote, cli.status(self.root)["lifecycle_state"])
+            )
+
+        result = cli.publish(
+            self.root,
+            branch_protection_resolver=lambda _remote, _branch: False,
+            publication_recorder=recorder,
+        )
+        self.assertEqual(result["lifecycle_state"], "INACTIVE")
+        self.assertEqual(len(observed), 1)
+        candidate, tip, remote, lifecycle = observed[0]
+        self.assertEqual(candidate, tip)
+        self.assertEqual(remote, tip)
+        self.assertEqual(lifecycle, "ASSURE")
+
+    def test_denied_publish_does_not_record_final_provenance(self):
+        remote = Path(self.temp.name) / "remote-preflight.git"
+        subprocess.run(
+            ["git", "init", "--bare", "-q", "--initial-branch=main", str(remote)],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.root), "remote", "add", "origin", str(remote)],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.root), "push", "-q", "origin", "HEAD:refs/heads/main"],
+            check=True,
+        )
+        self.open()
+        cli.critic(self.root, "ready")
+        source = self.root / ".agent/controllers/v1/state.py"
+        source.write_text("implementation\n", encoding="utf-8")
+        s.commit_all(self.root, "implementation")
+        cli.candidate(self.root)
+        recorded = []
+        with self.assertRaises(TransitionDenied):
+            cli.publish(
+                self.root,
+                branch_protection_resolver=lambda _remote, _branch: False,
+                publication_recorder=lambda candidate, tip: recorded.append((candidate, tip)),
+            )
+        self.assertEqual(recorded, [])
+        self.assertIsNone(
+            gitfacts.remote_ref_sha(
+                self.root, "origin", "refs/heads/feat/test"
+            )
+        )
+        self.assertEqual(cli.status(self.root)["lifecycle_state"], "ASSURE")
+
+    def test_recorder_failure_after_push_is_retryable_without_republishing(self):
+        self._ready_publish_fixture("remote-recorder-retry.git")
+        attempts = []
+
+        def failing(candidate, tip):
+            attempts.append((candidate, tip))
+            raise StopAndPreserve("simulated recorder crash")
+
+        with self.assertRaises(StopAndPreserve):
+            cli.publish(
+                self.root,
+                branch_protection_resolver=lambda _remote, _branch: False,
+                publication_recorder=failing,
+            )
+        remote_tip = gitfacts.remote_ref_sha(
+            self.root, "origin", "refs/heads/feat/test"
+        )
+        self.assertIsNotNone(remote_tip)
+        self.assertEqual(cli.status(self.root)["lifecycle_state"], "ASSURE")
+
+        recorded = []
+        result = cli.publish(
+            self.root,
+            branch_protection_resolver=lambda _remote, _branch: False,
+            publication_recorder=lambda candidate, tip: recorded.append((candidate, tip)),
+        )
+        self.assertEqual(result["lifecycle_state"], "INACTIVE")
+        self.assertEqual(recorded, [(remote_tip, remote_tip)])
+
     def test_publish_does_not_accept_payload_selected_remote_or_default_branch(self):
         with self.assertRaises(TypeError):
             cli.publish(self.root, remote="evil")

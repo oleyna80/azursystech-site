@@ -98,31 +98,92 @@ class InstallationProviderTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             load(self.root)
 
-    def test_branch_protection_provider_parses_exact_boolean(self):
+    def _classic_payload(self, patterns=()):
+        return subprocess.CompletedProcess(
+            ["gh"], 0,
+            stdout=json.dumps({
+                "data": {
+                    "repository": {
+                        "branchProtectionRules": {
+                            "nodes": [{"pattern": value} for value in patterns],
+                            "pageInfo": {"hasNextPage": False},
+                        }
+                    }
+                }
+            }) + "\n",
+            stderr="",
+        )
+
+    def test_branch_protection_provider_allows_absent_branch_with_no_applicable_rules(self):
         config = load(self.root)
         resolver = GitHubCliBranchProtectionResolver(config)
-        ok = subprocess.CompletedProcess(
-            ["gh"], 0, stdout='{"protected":false}\n', stderr=""
-        )
-        with mock.patch("v1.providers.subprocess.run", return_value=ok) as call:
+        rules = subprocess.CompletedProcess(["gh"], 0, stdout="[]\n", stderr="")
+        with mock.patch(
+            "v1.providers.subprocess.run",
+            side_effect=[rules, self._classic_payload(("main",))],
+        ) as call:
             self.assertFalse(resolver("origin", "feat/example"))
-        command = call.call_args.args[0]
-        self.assertEqual(command[:2], ["gh", "api"])
-        self.assertIn("repos/fixture/repo/branches/feat%2Fexample", command[2])
-
-        ambiguous = subprocess.CompletedProcess(
-            ["gh"], 0, stdout='{"protected":"false"}\n', stderr=""
+        commands = [item.args[0] for item in call.call_args_list]
+        self.assertIn(
+            "repos/fixture/repo/rules/branches/feat%2Fexample",
+            commands[0],
         )
-        with mock.patch("v1.providers.subprocess.run", return_value=ambiguous):
-            with self.assertRaises(StopAndPreserve):
-                resolver("origin", "feat/example")
+        self.assertEqual(commands[1][:3], ["gh", "api", "graphql"])
 
-    def test_branch_protection_provider_fails_closed_on_cli_failure(self):
+    def test_branch_protection_provider_denies_applicable_ruleset(self):
+        config = load(self.root)
+        resolver = GitHubCliBranchProtectionResolver(config)
+        rules = subprocess.CompletedProcess(
+            ["gh"], 0, stdout='[{"type":"creation"}]\n', stderr=""
+        )
+        with mock.patch("v1.providers.subprocess.run", return_value=rules):
+            self.assertTrue(resolver("origin", "feat/example"))
+
+    def test_branch_protection_provider_denies_matching_classic_rule(self):
+        config = load(self.root)
+        resolver = GitHubCliBranchProtectionResolver(config)
+        rules = subprocess.CompletedProcess(["gh"], 0, stdout="[]\n", stderr="")
+        with mock.patch(
+            "v1.providers.subprocess.run",
+            side_effect=[rules, self._classic_payload(("feat/*",))],
+        ):
+            self.assertTrue(resolver("origin", "feat/example"))
+
+    def test_branch_protection_provider_fails_closed_on_unsupported_classic_pattern(self):
+        config = load(self.root)
+        resolver = GitHubCliBranchProtectionResolver(config)
+        rules = subprocess.CompletedProcess(["gh"], 0, stdout="[]\n", stderr="")
+        with mock.patch(
+            "v1.providers.subprocess.run",
+            side_effect=[rules, self._classic_payload(("feat/**",))],
+        ):
+            self.assertTrue(resolver("origin", "feat/example"))
+
+    def test_branch_protection_provider_accepts_explicit_feature_unavailable_as_no_rulesets(self):
+        config = load(self.root)
+        resolver = GitHubCliBranchProtectionResolver(config)
+        unavailable = subprocess.CalledProcessError(
+            1,
+            ["gh"],
+            stderr=(
+                "gh: Upgrade to GitHub Pro or make this repository public "
+                "to enable this feature (HTTP 403)"
+            ),
+        )
+        with mock.patch(
+            "v1.providers.subprocess.run",
+            side_effect=[unavailable, self._classic_payload(())],
+        ):
+            self.assertFalse(resolver("origin", "feat/example"))
+
+    def test_branch_protection_provider_fails_closed_on_unknown_cli_failure(self):
         config = load(self.root)
         resolver = GitHubCliBranchProtectionResolver(config)
         with mock.patch(
             "v1.providers.subprocess.run",
-            side_effect=subprocess.CalledProcessError(1, ["gh"]),
+            side_effect=subprocess.CalledProcessError(
+                1, ["gh"], stderr="gh: authentication failed (HTTP 401)"
+            ),
         ):
             with self.assertRaises(StopAndPreserve):
                 resolver("origin", "feat/example")

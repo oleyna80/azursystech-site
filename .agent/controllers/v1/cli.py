@@ -254,8 +254,13 @@ def _prepush_event(root: Path, current: dict, remote: str, remote_sha: str | Non
     )
 
 
-def publish(root: Path, *, branch_protection_resolver=None) -> dict:
-    """Publish only with trusted remote/default/protection facts."""
+def publish(
+    root: Path,
+    *,
+    branch_protection_resolver=None,
+    publication_recorder=None,
+) -> dict:
+    """Publish only with trusted facts and crash-safe provenance recording."""
 
     root = gitfacts.worktree_root(root)
     remote = policy.PUBLISH_REMOTE
@@ -290,6 +295,10 @@ def publish(root: Path, *, branch_protection_resolver=None) -> dict:
     after = gitfacts.remote_ref_sha(root, remote, remote_ref)
     if after != local_sha:
         raise StopAndPreserve("remote verification failed; ASSURE state preserved")
+    if publication_recorder is not None:
+        if not callable(publication_recorder):
+            raise StopAndPreserve("publication recorder is not callable")
+        publication_recorder(active["source_candidate_sha"], local_sha)
     proposed = state.publish_success(current)
     storage.write(path, proposed, expected=current)
     return proposed
