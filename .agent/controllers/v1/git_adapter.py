@@ -110,6 +110,8 @@ def pre_push_events(root: Path, remote_name: str, stdin_text: str) -> tuple[Even
     if not isinstance(remote_name, str) or not remote_name:
         raise ValidationError("pre-push remote name is missing")
     branch = gitfacts.branch(root)
+    head = gitfacts.head_sha(root)
+    canonical_branch_ref = f"refs/heads/{branch}"
 
     events: list[Event] = []
     for raw_line in stdin_text.splitlines():
@@ -120,6 +122,12 @@ def pre_push_events(root: Path, remote_name: str, stdin_text: str) -> tuple[Even
         if len(parts) != 4:
             raise ValidationError("pre-push ref update must contain four Git-native fields")
         local_ref, local_sha, remote_ref, remote_sha = parts
+        if local_ref == "HEAD":
+            if local_sha != head:
+                raise ValidationError(
+                    "pre-push HEAD alias does not resolve to current attached HEAD"
+                )
+            local_ref = canonical_branch_ref
         events.append(
             _event(
                 root,

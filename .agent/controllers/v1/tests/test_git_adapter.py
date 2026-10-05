@@ -137,6 +137,29 @@ class GitAdapterTests(unittest.TestCase):
         )
         self.assertEqual(result.code, "PUSH_ALLOWED")
 
+    def test_pre_push_explicit_head_refspec_is_canonicalized_to_attached_subject(self):
+        item, head = self.assured_state_at_head()
+        stdin = f"HEAD {head} refs/heads/feat/test {'0' * 40}\n"
+        events = git_adapter.pre_push_events(self.root, "origin", stdin)
+        self.assertEqual(events[0].facts["local_ref"], "refs/heads/feat/test")
+        result = git_adapter.evaluate_pre_push(
+            self.root,
+            item,
+            remote_name="origin",
+            stdin_text=stdin,
+            default_branch="main",
+            branch_protection_resolver=lambda _remote, _branch: False,
+        )
+        self.assertEqual(result.code, "PUSH_ALLOWED")
+
+    def test_pre_push_head_alias_with_non_head_sha_fails_closed(self):
+        _item, head = self.assured_state_at_head()
+        different = self.base
+        self.assertNotEqual(different, head)
+        stdin = f"HEAD {different} refs/heads/feat/test {'0' * 40}\n"
+        with self.assertRaises(ValidationError):
+            git_adapter.pre_push_events(self.root, "origin", stdin)
+
     def test_pre_push_multiple_refs_denies_whole_push_if_one_ref_is_invalid(self):
         item, head = self.assured_state_at_head()
         zero = "0" * 40
