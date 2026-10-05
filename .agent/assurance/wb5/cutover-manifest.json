@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "baseline_sha": "de129c8c8e924ff9b1b96a49e853a501f2171f1f",
-  "patch_blob_sha": "d694556924360220aeaa7efd81f92d760665fbcd",
+  "patch_blob_sha": "db00dc8b858142c2bee602671abdb02e92a585ae",
   "canonical_ci_command": "python scripts/verify-sdlc-replacement.py",
   "live_wiring_paths": [
     {

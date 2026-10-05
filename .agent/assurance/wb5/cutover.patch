@@ -633,7 +633,7 @@ index ee9f477..411d416 100755
 +
 +echo "==> Dev environment checks done"
 diff --git a/.github/workflows/control-plane-contracts.yml b/.github/workflows/control-plane-contracts.yml
-index e851aed..db99264 100644
+index e851aed..3fe1868 100644
 --- a/.github/workflows/control-plane-contracts.yml
 +++ b/.github/workflows/control-plane-contracts.yml
 @@ -1,120 +1,43 @@
