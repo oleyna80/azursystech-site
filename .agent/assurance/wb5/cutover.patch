@@ -636,7 +636,7 @@ diff --git a/.github/workflows/control-plane-contracts.yml b/.github/workflows/c
 index e851aed..6269e5e 100644
 --- a/.github/workflows/control-plane-contracts.yml
 +++ b/.github/workflows/control-plane-contracts.yml
-@@ -1,120 +1,43 @@
+@@ -1,120 +1,45 @@
 -name: Control Plane Contracts
 -
 -on:
