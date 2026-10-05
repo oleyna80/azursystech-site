@@ -157,10 +157,26 @@ def _cli(root: Path, operation: str, payload: dict | None, env: dict[str, str]) 
         "--root",
         str(root),
     ]
-    if payload is not None:
-        args += ["--payload", json.dumps(payload, sort_keys=True)]
-    args.append(operation)
-    _run(args, cwd=root, env=env)
+    payload_path: Path | None = None
+    try:
+        if payload is not None:
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                suffix=".json",
+                prefix="wb5-cli-",
+                dir=root.parent,
+                delete=False,
+            ) as stream:
+                json.dump(payload, stream, sort_keys=True)
+                stream.write("\n")
+                payload_path = Path(stream.name)
+            args += ["--payload", str(payload_path)]
+        args.append(operation)
+        _run(args, cwd=root, env=env)
+    finally:
+        if payload_path is not None:
+            payload_path.unlink(missing_ok=True)
 
 
 def _fake_gh(bin_dir: Path) -> None:
@@ -274,6 +290,9 @@ def run_rehearsal(source_root: Path, candidate_sha: str) -> RehearsalSummary:
         _git(clone, "push", "-q", "origin", f"{cutover_commit}:refs/heads/main", env=env)
         _git(clone, "fetch", "-q", "origin", "main", env=env)
         _git(clone, "remote", "set-head", "origin", "main", env=env)
+        _git(clone, "branch", "-f", "main", cutover_commit, env=env)
+        if _git(clone, "rev-parse", "main", env=env) != cutover_commit:
+            raise RehearsalError("local main does not match exact cutover baseline")
 
         registry_path = trusted / "admissions.sqlite3"
         _run(
@@ -376,7 +395,7 @@ def run_rehearsal(source_root: Path, candidate_sha: str) -> RehearsalSummary:
         )
         env_cli = env.copy()
         env_cli["PYTHONPATH"] = str(clone / ".agent")
-        _cli(clone, "critic", {"outcome": "READY"}, env_cli)
+        _cli(clone, "critic", {"outcome": "ready"}, env_cli)
 
         source_event = {
             "cwd": str(clone),
@@ -398,8 +417,8 @@ def run_rehearsal(source_root: Path, candidate_sha: str) -> RehearsalSummary:
         )
         _cli(clone, "candidate", None, env_cli)
         source_candidate = _git(clone, "rev-parse", "HEAD", env=env)
-        _cli(clone, "reviewer", {"outcome": "READY"}, env_cli)
-        _cli(clone, "verifier", {"outcome": "READY"}, env_cli)
+        _cli(clone, "reviewer", {"outcome": "ready"}, env_cli)
+        _cli(clone, "verifier", {"outcome": "ready"}, env_cli)
 
         _run(
             [
