@@ -775,15 +775,10 @@ class RunnerTests(unittest.TestCase):
                 max_rework_cycles=spec.max_rework_cycles,
             ),
         )
-        self.fx._git_run("branch", record.subject_branch)
-
         other_id = "adm-resume-other"
         other_spec = self.fx.spec()
-        other = Orchestrator(
-            self.fx.dispatcher,
-            ScriptedRoles(self.fx),
-            delivery_executor=SimulatedDelivery(),
-        )
+        base_roles = ScriptedRoles(self.fx)
+
         class HoldCritic:
             def run(inner_self, role, context):
                 if role == "critic":
@@ -793,7 +788,7 @@ class RunnerTests(unittest.TestCase):
                         reason="hold",
                         required_capability="architecture_change",
                     )
-                return ScriptedRoles(self.fx).run(role, context)
+                return base_roles.run(role, context)
 
         other = Orchestrator(
             self.fx.dispatcher,

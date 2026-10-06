@@ -12,6 +12,17 @@ from assurance.wb5.environment import isolated_git_environment
 
 
 class CanonicalEnvironmentTests(unittest.TestCase):
+    def test_canonical_isolates_git_before_assurance_imports(self):
+        repo_root = AGENT_ROOT.parent
+        script = (repo_root / "scripts/verify-sdlc-replacement.py").read_text(
+            encoding="utf-8"
+        )
+        isolation = script.index("isolate_process_git_environment()")
+        rehearsal_import = script.index("from assurance.wb5.rehearsal import")
+        validate_import = script.index("from assurance.wb5.validate import")
+        self.assertLess(isolation, rehearsal_import)
+        self.assertLess(isolation, validate_import)
+
     def test_hostile_global_signing_config_cannot_affect_git_commit(self):
         with tempfile.TemporaryDirectory(prefix="wb5-hostile-git-") as temp_raw:
             temp = Path(temp_raw)
