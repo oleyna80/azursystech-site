@@ -64,6 +64,13 @@ class Wb5ArtifactValidationTests(unittest.TestCase):
         with self.assertRaises(AssuranceValidationError):
             validate_corpus(self.root, forged)
 
+    def test_security_relaxation_requires_registered_baseline_authorization(self):
+        forged = json.loads(json.dumps(self.corpus))
+        scenario = forged["scenarios"][0]
+        del scenario["security_relaxation_authorization_ref"]
+        with self.assertRaises(AssuranceValidationError):
+            validate_corpus(self.root, forged)
+
     def test_security_sensitive_flag_cannot_disable_relaxation_gate(self):
         forged = json.loads(json.dumps(self.corpus))
         scenario = forged["scenarios"][0]

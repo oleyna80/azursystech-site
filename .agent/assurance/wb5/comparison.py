@@ -191,7 +191,7 @@ LEGACY_MARKERS = {
         (".claude/hooks/work_block_gate.py", "Complex mutating Bash cannot be scoped safely"),
     ),
     "STOP-ASSURANCE-MUTATION-GATE": (
-        (".claude/settings.json", '".Stop"'),
+        (".claude/settings.json", '"Stop"'),
         (".claude/settings.json", ".claude/hooks/assurance_gate.py"),
     ),
     "SUBAGENT-CONTEXT": (
