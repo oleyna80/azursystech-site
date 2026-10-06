@@ -641,7 +641,7 @@ class RunnerTests(unittest.TestCase):
                 max_rework_cycles=spec.max_rework_cycles,
             ),
         )
-        self.fx._git_run("switch", "-q", "-c", record.subject_branch)
+        self.fx._git_run("switch", "-q", record.subject_branch)
         (self.fx.root / "subject-only.txt").write_text(
             "subject branch\n", encoding="utf-8"
         )
@@ -698,33 +698,45 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(completed.status, "COMPLETE")
         self.assertEqual(self.fx.registry.terminal_reason(completed_id), "COMPLETED")
 
-        base_roles = ScriptedRoles(self.fx)
-
-        class NeedsOwnerCritic:
-            def run(inner_self, role, context):
-                if role == "critic":
-                    return RoleResult(
-                        "critic",
-                        "OWNER_DECISION_REQUIRED",
-                        reason="hold unrelated active admission in DEFINE",
-                        required_capability="architecture_change",
-                    )
-                return base_roles.run(role, context)
-
         active_id = "adm-terminal-active"
         active_spec = self.fx.spec()
-        active_runner = Orchestrator(
-            self.fx.dispatcher,
-            NeedsOwnerCritic(),
-            delivery_executor=SimulatedDelivery(),
-        )
-        held = active_runner.run(
+        active_record = self.fx.dispatcher.admit_with_work_block(
             self.fx.root,
             self.fx.request("manual-owner", admission_id=active_id),
-            active_spec,
-            branch_protection_resolver=lambda _remote, _branch: False,
+            lambda value: WorkBlockBinding(
+                admission_id=value,
+                work_block_id=active_spec.work_block_id,
+                initiative_ref=active_spec.initiative_ref,
+                planning_paths=active_spec.planning_paths,
+                implementation_write_set=active_spec.implementation_write_set,
+                coordination_scope=active_spec.coordination_scope,
+                default_branch=active_spec.default_branch,
+                deployment_target=active_spec.deployment_target,
+                deployment_is_production=active_spec.deployment_is_production,
+                max_rework_cycles=active_spec.max_rework_cycles,
+            ),
         )
-        self.assertEqual(held.status, "OWNER_DECISION_REQUIRED")
+        self.fx._git_run("switch", "-q", active_record.subject_branch)
+        for planning_path in active_spec.planning_paths:
+            target = self.fx.root / planning_path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(
+                f"{planning_path}\n",
+                encoding="utf-8",
+            )
+        self.fx.commit_direct("active admission planning")
+        cli.open_with_resolver(
+            self.fx.root,
+            self.fx.registry,
+            repository_id=active_record.repository,
+            admission_id=active_id,
+            work_block_id=active_spec.work_block_id,
+            initiative_ref=active_spec.initiative_ref,
+            planning_paths=list(active_spec.planning_paths),
+            implementation_write_set=list(active_spec.implementation_write_set),
+            coordination_scope=list(active_spec.coordination_scope),
+            default_branch=active_spec.default_branch,
+        )
         current = cli.status(self.fx.root)
         self.assertEqual(current["lifecycle_state"], "DEFINE")
         self.assertEqual(current["active"]["admission_id"], active_id)
