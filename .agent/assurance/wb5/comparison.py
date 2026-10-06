@@ -7,6 +7,7 @@ replacement probes and the frozen baseline contract each scenario must bind.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import tempfile
 from dataclasses import dataclass
@@ -29,6 +30,8 @@ class ComparisonContract:
 def _ref(path: str, contains: str) -> dict[str, str]:
     return {"path": path, "contains": contains}
 
+
+BASELINE_SHA = "de129c8c8e924ff9b1b96a49e853a501f2171f1f"
 
 CONTRACTS: dict[str, ComparisonContract] = {
     "PREWB-PLANNING-ADMITTED": ComparisonContract(
@@ -132,6 +135,102 @@ CONTRACTS: dict[str, ComparisonContract] = {
         ),
     ),
 }
+
+
+
+DOMAINS = {
+    "PREWB-PLANNING-ADMITTED": "planning-authority",
+    "ACTIVE-STRUCTURED-IN-SCOPE": "structured-write",
+    "ACTIVE-STRUCTURED-OUTSIDE-SCOPE": "structured-write",
+    "PROTECTED-POLICY-WRITE": "governance-policy",
+    "DEFAULT-BRANCH-COMMIT": "git-commit",
+    "EXACT-SUBJECT-PUBLICATION": "git-publication",
+    "FORCE-PUSH": "git-publication",
+    "OPAQUE-BASH-SCOPE-INFERENCE": "runtime-shell",
+    "STOP-ASSURANCE-MUTATION-GATE": "runtime-stop",
+    "SUBAGENT-CONTEXT": "runtime-context",
+    "POST-PUBLICATION-MERGE-AUTHORITY": "delivery-authority",
+    "TERMINAL-ADMISSION-AUTHORITY": "external-authority",
+}
+
+SECURITY_SENSITIVE = {
+    "PREWB-PLANNING-ADMITTED": True,
+    "ACTIVE-STRUCTURED-IN-SCOPE": True,
+    "ACTIVE-STRUCTURED-OUTSIDE-SCOPE": True,
+    "PROTECTED-POLICY-WRITE": True,
+    "DEFAULT-BRANCH-COMMIT": True,
+    "EXACT-SUBJECT-PUBLICATION": True,
+    "FORCE-PUSH": True,
+    "OPAQUE-BASH-SCOPE-INFERENCE": True,
+    "STOP-ASSURANCE-MUTATION-GATE": False,
+    "SUBAGENT-CONTEXT": False,
+    "POST-PUBLICATION-MERGE-AUTHORITY": True,
+    "TERMINAL-ADMISSION-AUTHORITY": True,
+}
+
+LEGACY_MARKERS = {
+    "PREWB-PLANNING-ADMITTED": (
+        (".claude/hooks/work_block_gate.py", "if canonical_inactive(gate):"),
+        (".claude/hooks/work_block_gate.py", 'Inactive coordination write'),
+    ),
+    "ACTIVE-STRUCTURED-IN-SCOPE": (
+        (".claude/hooks/work_block_gate.py", 'require_scope(source, validate_source_gate(gate), "Source write")'),
+    ),
+    "ACTIVE-STRUCTURED-OUTSIDE-SCOPE": (
+        (".claude/hooks/work_block_gate.py", "outside approved scope"),
+    ),
+    "PROTECTED-POLICY-WRITE": (),
+    "DEFAULT-BRANCH-COMMIT": (),
+    "EXACT-SUBJECT-PUBLICATION": (
+        (".agent/hooks/hard_stop_policy.py", "def autonomous_subject_push_allowed"),
+    ),
+    "FORCE-PUSH": (
+        (".agent/hooks/hard_stop_policy.py", "if force_push(command):"),
+    ),
+    "OPAQUE-BASH-SCOPE-INFERENCE": (
+        (".claude/hooks/work_block_gate.py", "Complex mutating Bash cannot be scoped safely"),
+    ),
+    "STOP-ASSURANCE-MUTATION-GATE": (
+        (".claude/settings.json", '".Stop"'),
+        (".claude/settings.json", ".claude/hooks/assurance_gate.py"),
+    ),
+    "SUBAGENT-CONTEXT": (
+        (".codex/hooks.json", "SubagentStart"),
+        (".codex/hooks.json", ".codex/hooks/subagent_context.py"),
+    ),
+    "POST-PUBLICATION-MERGE-AUTHORITY": (
+        (".agent/hooks/hard_stop_policy.py", "externally Owner-controlled channel"),
+    ),
+    "TERMINAL-ADMISSION-AUTHORITY": (),
+}
+
+
+def _baseline_file(root: Path, path: str) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(root), "show", f"{BASELINE_SHA}:{path}"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout
+
+
+def probe_legacy(root: Path, identifier: str) -> str:
+    contract = CONTRACTS[identifier]
+    reference = contract.accepted_requirement_ref
+    text = _baseline_file(root, reference["path"])
+    if reference["contains"] not in text:
+        raise AssertionError(f"baseline architecture evidence missing: {identifier}")
+    for path, needle in LEGACY_MARKERS[identifier]:
+        if needle not in _baseline_file(root, path):
+            raise AssertionError(
+                f"baseline enforcement evidence missing for {identifier}: {path}"
+            )
+    if identifier == "TERMINAL-ADMISSION-AUTHORITY":
+        registry = _baseline_file(root, ".agent/orchestration/registry.py")
+        if "active_subject_bindings" in registry:
+            raise AssertionError("baseline unexpectedly has active-admission index")
+    return contract.legacy_result
 
 
 def replacement_test_id(identifier: str) -> str:
@@ -248,11 +347,15 @@ def _probe_default_branch_commit(_root: Path) -> str:
 
 
 def _git(root: Path, *args: str) -> str:
+    env = os.environ.copy()
+    env["GIT_CONFIG_GLOBAL"] = os.devnull
+    env["GIT_CONFIG_NOSYSTEM"] = "1"
     return subprocess.run(
         ["git", "-C", str(root), *args],
         check=True,
         capture_output=True,
         text=True,
+        env=env,
     ).stdout.strip()
 
 

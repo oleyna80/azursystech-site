@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -63,6 +64,20 @@ class Wb5ArtifactValidationTests(unittest.TestCase):
         with self.assertRaises(AssuranceValidationError):
             validate_corpus(self.root, forged)
 
+    def test_security_sensitive_flag_cannot_disable_relaxation_gate(self):
+        forged = json.loads(json.dumps(self.corpus))
+        scenario = forged["scenarios"][0]
+        scenario["security_sensitive"] = False
+        with self.assertRaises(AssuranceValidationError):
+            validate_corpus(self.root, forged)
+
+    def test_domain_binding_cannot_be_reclassified(self):
+        forged = json.loads(json.dumps(self.corpus))
+        scenario = forged["scenarios"][0]
+        scenario["domain"] = "documentation"
+        with self.assertRaises(AssuranceValidationError):
+            validate_corpus(self.root, forged)
+
     def test_replacement_test_binding_is_executable_and_exact(self):
         forged = json.loads(json.dumps(self.corpus))
         scenario = next(
@@ -76,30 +91,39 @@ class Wb5ArtifactValidationTests(unittest.TestCase):
     def test_activated_wiring_rejects_correct_blob_with_wrong_git_mode(self):
         with tempfile.TemporaryDirectory(prefix="wb5-mode-regression-") as temp_raw:
             clone = Path(temp_raw) / "repo"
+            env = os.environ.copy()
+            env["GIT_CONFIG_GLOBAL"] = os.devnull
+            env["GIT_CONFIG_NOSYSTEM"] = "1"
             subprocess.run(
                 ["git", "clone", "--quiet", "--no-hardlinks", str(self.root), str(clone)],
                 check=True,
+                env=env,
             )
             subprocess.run(
                 ["git", "-C", str(clone), "switch", "--detach", self.manifest["baseline_sha"]],
                 check=True,
+                env=env,
             )
             subprocess.run(
                 ["git", "-C", str(clone), "config", "user.name", "WB5 Mode Test"],
                 check=True,
+                env=env,
             )
             subprocess.run(
                 ["git", "-C", str(clone), "config", "user.email", "wb5-mode@example.invalid"],
                 check=True,
+                env=env,
             )
             subprocess.run(
                 ["git", "-C", str(clone), "apply", "--index", "-"],
                 input=self.patch,
                 check=True,
+                env=env,
             )
             subprocess.run(
                 ["git", "-C", str(clone), "commit", "-qm", "activated wiring"],
                 check=True,
+                env=env,
             )
             self.assertEqual(wiring_mode(clone, self.manifest), "ACTIVATED")
 
@@ -108,10 +132,12 @@ class Wb5ArtifactValidationTests(unittest.TestCase):
             subprocess.run(
                 ["git", "-C", str(clone), "add", "--chmod=-x", ".githooks/pre-commit"],
                 check=True,
+                env=env,
             )
             subprocess.run(
                 ["git", "-C", str(clone), "commit", "-qm", "wrong hook mode"],
                 check=True,
+                env=env,
             )
             with self.assertRaises(AssuranceValidationError):
                 wiring_mode(clone, self.manifest)

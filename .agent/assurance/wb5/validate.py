@@ -7,7 +7,14 @@ import re
 import subprocess
 from pathlib import Path
 
-from .comparison import CONTRACTS, probe_replacement, replacement_test_id
+from .comparison import (
+    CONTRACTS,
+    DOMAINS,
+    SECURITY_SENSITIVE,
+    probe_legacy,
+    probe_replacement,
+    replacement_test_id,
+)
 
 BASELINE_SHA = "de129c8c8e924ff9b1b96a49e853a501f2171f1f"
 CANONICAL_PATHS = {
@@ -171,6 +178,14 @@ def validate_corpus(root: Path, corpus: dict) -> None:
     for identifier, contract in CONTRACTS.items():
         scenario = by_id[identifier]
 
+        if scenario.get("domain") != DOMAINS[identifier]:
+            raise AssuranceValidationError(
+                f"comparison domain differs from executable contract: {identifier}"
+            )
+        if scenario.get("security_sensitive") is not SECURITY_SENSITIVE[identifier]:
+            raise AssuranceValidationError(
+                f"security sensitivity differs from executable contract: {identifier}"
+            )
         if scenario.get("classification") not in CLASSIFICATIONS:
             raise AssuranceValidationError(f"invalid classification: {identifier}")
         if scenario.get("classification") != contract.classification:
@@ -185,9 +200,15 @@ def validate_corpus(root: Path, corpus: dict) -> None:
             )
         _baseline_text(root, reference, identifier)
 
-        if scenario.get("legacy_result") != contract.legacy_result:
+        try:
+            actual_legacy = probe_legacy(root, identifier)
+        except Exception as exc:
             raise AssuranceValidationError(
-                f"declared legacy outcome differs from frozen comparison contract: {identifier}"
+                f"baseline semantic probe failed: {identifier}: {exc}"
+            ) from exc
+        if scenario.get("legacy_result") != actual_legacy:
+            raise AssuranceValidationError(
+                f"declared legacy outcome differs from executable baseline probe: {identifier}"
             )
 
         expected_test = replacement_test_id(identifier)
@@ -206,7 +227,7 @@ def validate_corpus(root: Path, corpus: dict) -> None:
                 f"declared replacement outcome differs from executable probe: {identifier}"
             )
 
-        old_polarity = _polarity(contract.legacy_result)
+        old_polarity = _polarity(actual_legacy)
         new_polarity = _polarity(actual_replacement)
         authorization = scenario.get("security_relaxation_authorization_ref")
         expected_authorization = contract.security_relaxation_authorization_ref
