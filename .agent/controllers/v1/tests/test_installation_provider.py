@@ -159,6 +159,40 @@ class InstallationProviderTests(unittest.TestCase):
         ):
             self.assertTrue(resolver("origin", "feat/example"))
 
+    def test_branch_protection_provider_rejects_json_array_graphql_payload(self):
+        config = load(self.root)
+        resolver = GitHubCliBranchProtectionResolver(config)
+        rules = subprocess.CompletedProcess(["gh"], 0, stdout="[]\n", stderr="")
+        malformed_graphql = subprocess.CompletedProcess(
+            ["gh"], 0, stdout="[]\n", stderr=""
+        )
+        with mock.patch(
+            "v1.providers.subprocess.run",
+            side_effect=[rules, malformed_graphql],
+        ):
+            with self.assertRaises(StopAndPreserve):
+                resolver("origin", "feat/example")
+
+    def test_branch_protection_provider_rejects_graphql_error_envelope(self):
+        config = load(self.root)
+        resolver = GitHubCliBranchProtectionResolver(config)
+        rules = subprocess.CompletedProcess(["gh"], 0, stdout="[]\n", stderr="")
+        graphql = self._classic_payload(
+            (),
+            errors=[
+                {
+                    "type": "FORBIDDEN",
+                    "message": "Resource not accessible by integration",
+                }
+            ],
+        )
+        with mock.patch(
+            "v1.providers.subprocess.run",
+            side_effect=[rules, graphql],
+        ):
+            with self.assertRaises(StopAndPreserve):
+                resolver("origin", "feat/example")
+
     def test_branch_protection_provider_accepts_explicit_feature_unavailable_as_no_rulesets(self):
         config = load(self.root)
         resolver = GitHubCliBranchProtectionResolver(config)

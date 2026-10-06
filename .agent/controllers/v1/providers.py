@@ -12,6 +12,9 @@ from .errors import StopAndPreserve
 from .installation import InstallationConfig
 
 
+_FEATURE_UNAVAILABLE = object()
+
+
 def _feature_unavailable(exc: subprocess.CalledProcessError) -> bool:
     detail = (exc.stderr or "") + "\n" + (exc.stdout or "")
     return (
@@ -21,7 +24,7 @@ def _feature_unavailable(exc: subprocess.CalledProcessError) -> bool:
     )
 
 
-def _run_json(command: list[str], *, feature_unavailable_empty=False):
+def _run_json(command: list[str], *, feature_unavailable_sentinel=False):
     try:
         result = subprocess.run(
             command,
@@ -31,8 +34,8 @@ def _run_json(command: list[str], *, feature_unavailable_empty=False):
             timeout=10,
         )
     except subprocess.CalledProcessError as exc:
-        if feature_unavailable_empty and _feature_unavailable(exc):
-            return []
+        if feature_unavailable_sentinel and _feature_unavailable(exc):
+            return _FEATURE_UNAVAILABLE
         raise StopAndPreserve(
             "trusted GitHub branch-protection lookup failed"
         ) from exc
@@ -85,8 +88,10 @@ class GitHubCliBranchProtectionResolver:
         )
         payload = _run_json(
             ["gh", "api", endpoint],
-            feature_unavailable_empty=True,
+            feature_unavailable_sentinel=True,
         )
+        if payload is _FEATURE_UNAVAILABLE:
+            return False
         if not isinstance(payload, list):
             raise StopAndPreserve(
                 "trusted GitHub ruleset response is ambiguous"
@@ -109,10 +114,19 @@ class GitHubCliBranchProtectionResolver:
                 "-F", f"owner={owner}",
                 "-F", f"name={name}",
             ],
-            feature_unavailable_empty=True,
+            feature_unavailable_sentinel=True,
         )
-        if payload == []:
+        if payload is _FEATURE_UNAVAILABLE:
             return False
+        if not isinstance(payload, dict):
+            raise StopAndPreserve(
+                "trusted GitHub classic-protection response is ambiguous"
+            )
+        errors = payload.get("errors")
+        if errors not in (None, []):
+            raise StopAndPreserve(
+                "trusted GitHub classic-protection response contains errors"
+            )
         try:
             connection = payload["data"]["repository"]["branchProtectionRules"]
             nodes = connection["nodes"]
