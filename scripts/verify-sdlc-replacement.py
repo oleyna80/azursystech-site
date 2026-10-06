@@ -16,6 +16,10 @@ ROOT = Path(__file__).resolve().parents[1]
 AGENT = ROOT / ".agent"
 sys.path.insert(0, str(AGENT))
 
+from assurance.wb5.environment import isolate_process_git_environment
+
+isolate_process_git_environment()
+
 from assurance.wb5.rehearsal import (
     RehearsalError,
     run_rehearsal,
