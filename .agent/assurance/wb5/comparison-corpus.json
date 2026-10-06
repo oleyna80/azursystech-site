@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "baseline_sha": "de129c8c8e924ff9b1b96a49e853a501f2171f1f",
   "scenarios": [
     {
@@ -11,6 +11,11 @@
       "classification": "INTENTIONAL_CHANGE",
       "rationale": "Trusted admission intentionally precedes local Work Block state and grants planning-only authority.",
       "accepted_requirement_ref": {
+        "path": "docs/architecture/sdlc-simplification-v1-state-event-contract.md",
+        "contains": "an admitted run with missing local state or canonical INACTIVE receives planning-only authority"
+      },
+      "replacement_test": "probe:PREWB-PLANNING-ADMITTED",
+      "security_relaxation_authorization_ref": {
         "path": "docs/architecture/sdlc-simplification-v1-state-event-contract.md",
         "contains": "an admitted run with missing local state or canonical INACTIVE receives planning-only authority"
       }
@@ -26,7 +31,8 @@
       "accepted_requirement_ref": {
         "path": "docs/architecture/sdlc-simplification-v1-implementation-design.md",
         "contains": "Structured write tools should be checked directly against"
-      }
+      },
+      "replacement_test": "probe:ACTIVE-STRUCTURED-IN-SCOPE"
     },
     {
       "scenario_id": "ACTIVE-STRUCTURED-OUTSIDE-SCOPE",
@@ -39,7 +45,8 @@
       "accepted_requirement_ref": {
         "path": "docs/architecture/sdlc-simplification-v1-state-event-contract.md",
         "contains": "defines implementation mutation authority"
-      }
+      },
+      "replacement_test": "probe:ACTIVE-STRUCTURED-OUTSIDE-SCOPE"
     },
     {
       "scenario_id": "PROTECTED-POLICY-WRITE",
@@ -52,7 +59,8 @@
       "accepted_requirement_ref": {
         "path": "docs/architecture/sdlc-simplification-v1-state-event-contract.md",
         "contains": "Ordinary Work Blocks cannot include `.agent/policies/**`"
-      }
+      },
+      "replacement_test": "probe:PROTECTED-POLICY-WRITE"
     },
     {
       "scenario_id": "DEFAULT-BRANCH-COMMIT",
@@ -65,7 +73,8 @@
       "accepted_requirement_ref": {
         "path": "docs/architecture/sdlc-simplification-v1-implementation-design.md",
         "contains": "Git hooks enforce invariants for which Git has authoritative facts"
-      }
+      },
+      "replacement_test": "probe:DEFAULT-BRANCH-COMMIT"
     },
     {
       "scenario_id": "EXACT-SUBJECT-PUBLICATION",
@@ -78,7 +87,8 @@
       "accepted_requirement_ref": {
         "path": "docs/architecture/sdlc-simplification-v1-implementation-design.md",
         "contains": "exact non-force subject-branch publication may be autonomous only after required assurance"
-      }
+      },
+      "replacement_test": "probe:EXACT-SUBJECT-PUBLICATION"
     },
     {
       "scenario_id": "FORCE-PUSH",
@@ -91,7 +101,8 @@
       "accepted_requirement_ref": {
         "path": "docs/architecture/sdlc-simplification-v1-implementation-design.md",
         "contains": "exact non-force subject-branch publication"
-      }
+      },
+      "replacement_test": "probe:FORCE-PUSH"
     },
     {
       "scenario_id": "OPAQUE-BASH-SCOPE-INFERENCE",
@@ -107,7 +118,7 @@
       },
       "authority_disposition": "TRANSFERRED",
       "transferred_to": "structured runtime events + Git index hooks + runtime sandbox/OS/platform controls",
-      "replacement_test": "comparison:OPAQUE-BASH-SCOPE-INFERENCE"
+      "replacement_test": "probe:OPAQUE-BASH-SCOPE-INFERENCE"
     },
     {
       "scenario_id": "STOP-ASSURANCE-MUTATION-GATE",
@@ -123,7 +134,7 @@
       },
       "authority_disposition": "OBSOLETE",
       "transferred_to": "controller lifecycle and orchestration assurance",
-      "replacement_test": "manifest:claude-stop-hook-removed"
+      "replacement_test": "probe:STOP-ASSURANCE-MUTATION-GATE"
     },
     {
       "scenario_id": "SUBAGENT-CONTEXT",
@@ -136,7 +147,8 @@
       "accepted_requirement_ref": {
         "path": "docs/architecture/sdlc-simplification-v1-implementation-design.md",
         "contains": "Subagent-start hooks may provide context but do not grant authority."
-      }
+      },
+      "replacement_test": "probe:SUBAGENT-CONTEXT"
     },
     {
       "scenario_id": "POST-PUBLICATION-MERGE-AUTHORITY",
@@ -149,7 +161,8 @@
       "accepted_requirement_ref": {
         "path": "docs/architecture/sdlc-simplification-v1-autonomous-orchestration.md",
         "contains": "The Orchestrator cannot convert subject-branch publication authority into merge authority."
-      }
+      },
+      "replacement_test": "probe:POST-PUBLICATION-MERGE-AUTHORITY"
     },
     {
       "scenario_id": "TERMINAL-ADMISSION-AUTHORITY",
@@ -162,7 +175,8 @@
       "accepted_requirement_ref": {
         "path": "docs/architecture/sdlc-simplification-v1-autonomous-orchestration.md",
         "contains": "The external trusted admission registry owns the detailed envelope keyed by `admission_id`."
-      }
+      },
+      "replacement_test": "probe:TERMINAL-ADMISSION-AUTHORITY"
     }
   ]
 }

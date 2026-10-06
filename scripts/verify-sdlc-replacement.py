@@ -26,6 +26,7 @@ from assurance.wb5.validate import (
     CANONICAL_PATHS,
     AssuranceValidationError,
     validate_source_artifacts,
+    wiring_mode,
 )
 
 
@@ -116,19 +117,10 @@ def resolve_candidate(explicit: str | None) -> tuple[str, dict | None]:
 
 
 def current_wiring_mode(manifest: dict) -> str:
-    pre = True
-    post = True
-    for item in manifest["live_wiring_paths"]:
-        current = tree_blob("HEAD", item["path"])
-        if current != item["preimage_blob_sha"]:
-            pre = False
-        if current != item["postimage_blob_sha"]:
-            post = False
-    if pre:
-        return "PRE_CUTOVER"
-    if post:
-        return "ACTIVATED"
-    raise VerificationError("current HEAD is neither exact pre-cutover nor exact activated wiring")
+    try:
+        return wiring_mode(ROOT, manifest)
+    except AssuranceValidationError as exc:
+        raise VerificationError(str(exc)) from exc
 
 
 def run_phase(name: str, command: list[str], env: dict[str, str]) -> None:
