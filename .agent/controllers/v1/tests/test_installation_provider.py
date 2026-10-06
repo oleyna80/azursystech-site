@@ -98,19 +98,22 @@ class InstallationProviderTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             load(self.root)
 
-    def _classic_payload(self, patterns=()):
-        return subprocess.CompletedProcess(
-            ["gh"], 0,
-            stdout=json.dumps({
-                "data": {
-                    "repository": {
-                        "branchProtectionRules": {
-                            "nodes": [{"pattern": value} for value in patterns],
-                            "pageInfo": {"hasNextPage": False},
-                        }
+    def _classic_payload(self, patterns=(), *, errors=None):
+        payload = {
+            "data": {
+                "repository": {
+                    "branchProtectionRules": {
+                        "nodes": [{"pattern": value} for value in patterns],
+                        "pageInfo": {"hasNextPage": False},
                     }
                 }
-            }) + "\n",
+            }
+        }
+        if errors is not None:
+            payload["errors"] = errors
+        return subprocess.CompletedProcess(
+            ["gh"], 0,
+            stdout=json.dumps(payload) + "\n",
             stderr="",
         )
 
