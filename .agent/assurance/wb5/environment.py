@@ -20,6 +20,7 @@ def isolated_git_environment(
     # caller-controlled Git configuration channel and can override global/system
     # isolation.
     env.pop("GIT_CONFIG_COUNT", None)
+    env.pop("GIT_CONFIG_PARAMETERS", None)
     for key in tuple(env):
         if key.startswith("GIT_CONFIG_KEY_") or key.startswith("GIT_CONFIG_VALUE_"):
             env.pop(key, None)

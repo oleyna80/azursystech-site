@@ -39,12 +39,17 @@ class CanonicalEnvironmentTests(unittest.TestCase):
             inherited["GIT_CONFIG_COUNT"] = "1"
             inherited["GIT_CONFIG_KEY_0"] = "commit.gpgsign"
             inherited["GIT_CONFIG_VALUE_0"] = "true"
+            inherited["GIT_CONFIG_PARAMETERS"] = (
+                "'commit.gpgsign=true' "
+                "'gpg.program=/definitely/missing/wb5-gpg'"
+            )
 
             env = isolated_git_environment(inherited)
             self.assertEqual(env["GIT_CONFIG_GLOBAL"], os.devnull)
             self.assertEqual(env["GIT_CONFIG_SYSTEM"], os.devnull)
             self.assertEqual(env["GIT_CONFIG_NOSYSTEM"], "1")
             self.assertNotIn("GIT_CONFIG_COUNT", env)
+            self.assertNotIn("GIT_CONFIG_PARAMETERS", env)
             self.assertNotIn("GIT_CONFIG_KEY_0", env)
             self.assertNotIn("GIT_CONFIG_VALUE_0", env)
 
