@@ -24,10 +24,24 @@ from orchestration.admission import AdmissionNotFound
 from orchestration.registry import PublicationBinding, SQLiteAdmissionRegistry
 
 
-def _registry(root: Path):
-    config = load_installation(root)
+def _installation_root() -> Path:
+    return gitfacts.worktree_root(ROOT)
+
+
+def _bound_target(root: Path) -> Path:
+    return hook.resolve_bound_worktree(
+        Path(root),
+        installation_root=_installation_root(),
+    )
+
+
+def _registry(*, target_root: Path | None = None):
+    installation_root = _installation_root()
+    config = load_installation(installation_root)
     registry = SQLiteAdmissionRegistry(config.registry_path)
-    registry.assert_external_to(root)
+    registry.assert_external_to(installation_root)
+    if target_root is not None:
+        registry.assert_external_to(target_root)
     return config, registry
 
 
@@ -45,8 +59,9 @@ def _runtime(runtime: str) -> int:
     cwd = raw.get("cwd")
     if not isinstance(cwd, str) or not cwd:
         raise ValidationError("runtime bridge input is missing cwd")
-    root = gitfacts.worktree_root(Path(cwd))
-    config, registry = _registry(root)
+    root = _bound_target(Path(cwd))
+    installation_root = _installation_root()
+    config, registry = _registry(target_root=root)
     branch = gitfacts.branch(root)
     admission = _active_or_none(registry, config.repository, branch)
     if admission is None:
@@ -64,7 +79,7 @@ def _runtime(runtime: str) -> int:
     response = hook.runtime_hook_response(
         runtime,
         raw,
-        installation_root=root,
+        installation_root=installation_root,
         admission=admission,
         repository_id=config.repository,
     )
@@ -79,8 +94,9 @@ def _subagent_context(runtime: str) -> int:
     cwd = raw.get("cwd")
     if not isinstance(cwd, str) or not cwd:
         raise ValidationError("subagent context input is missing cwd")
-    root = gitfacts.worktree_root(Path(cwd))
-    config, registry = _registry(root)
+    root = _bound_target(Path(cwd))
+    installation_root = _installation_root()
+    config, registry = _registry(target_root=root)
     branch = gitfacts.branch(root)
     admission = _active_or_none(registry, config.repository, branch)
     if admission is None:
@@ -98,7 +114,7 @@ def _subagent_context(runtime: str) -> int:
     print(json.dumps(hook.subagent_context(
         runtime,
         raw,
-        installation_root=root,
+        installation_root=installation_root,
     ), sort_keys=True))
     return 0
 
@@ -123,7 +139,8 @@ def _consequential() -> int:
 
 
 def _git_pre_commit(root: Path) -> int:
-    config, registry = _registry(root)
+    root = _bound_target(root)
+    config, registry = _registry(target_root=root)
     branch = gitfacts.branch(root)
     admission = _active_or_none(registry, config.repository, branch)
     if admission is None:
@@ -132,7 +149,7 @@ def _git_pre_commit(root: Path) -> int:
         )
     result = hook.evaluate_git_pre_commit(
         root,
-        installation_root=root,
+        installation_root=_installation_root(),
         default_branch=gitfacts.remote_default_branch(root, config.remote),
         admission=admission,
         repository_id=config.repository,
@@ -146,10 +163,11 @@ def _git_pre_commit(root: Path) -> int:
 
 
 def _git_commit_msg(root: Path, message_file: Path) -> int:
+    root = _bound_target(root)
     result = hook.evaluate_git_commit_message(
         root,
         message_file,
-        installation_root=root,
+        installation_root=_installation_root(),
     )
     code, message = __import__(
         "controllers.v1.git_adapter", fromlist=["exit_status"]
@@ -160,7 +178,8 @@ def _git_commit_msg(root: Path, message_file: Path) -> int:
 
 
 def _git_pre_push(root: Path, remote: str) -> int:
-    config, registry = _registry(root)
+    root = _bound_target(root)
+    config, registry = _registry(target_root=root)
     current = cli.status(root)
     if current is None or current["lifecycle_state"] != "ASSURE":
         raise StopAndPreserve("pre-push requires active ASSURE state")
@@ -173,7 +192,7 @@ def _git_pre_push(root: Path, remote: str) -> int:
     provider = GitHubCliBranchProtectionResolver(config)
     result = hook.evaluate_git_pre_push(
         root,
-        installation_root=root,
+        installation_root=_installation_root(),
         remote_name=remote,
         stdin_text=stdin_text,
         default_branch=gitfacts.remote_default_branch(root, config.remote),
@@ -188,7 +207,8 @@ def _git_pre_push(root: Path, remote: str) -> int:
 
 
 def _trusted_open(root: Path, payload: dict) -> int:
-    config, registry = _registry(root)
+    root = _bound_target(root)
+    config, registry = _registry(target_root=root)
     admission_id = payload["admission_id"]
     registry.assert_active(admission_id)
     record = registry.resolve(admission_id)
@@ -211,7 +231,8 @@ def _trusted_open(root: Path, payload: dict) -> int:
 
 
 def _trusted_publish(root: Path) -> int:
-    config, registry = _registry(root)
+    root = _bound_target(root)
+    config, registry = _registry(target_root=root)
     current = cli.status(root)
     if current is None or current["lifecycle_state"] != "ASSURE":
         raise StopAndPreserve("trusted publish requires active ASSURE state")
