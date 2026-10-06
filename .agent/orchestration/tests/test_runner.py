@@ -622,6 +622,210 @@ class RunnerTests(unittest.TestCase):
         self.assertNotIn("closeout", resumed_roles.calls)
         self.assertEqual(result.published_tip_sha, binding_before.published_tip_sha)
 
+    def test_revoked_terminal_resume_does_not_mutate_checkout_or_controller(self):
+        admission_id = "adm-terminal-nomutate"
+        spec = self.fx.spec()
+        record = self.fx.dispatcher.admit_with_work_block(
+            self.fx.root,
+            self.fx.request("manual-owner", admission_id=admission_id),
+            lambda value: WorkBlockBinding(
+                admission_id=value,
+                work_block_id=spec.work_block_id,
+                initiative_ref=spec.initiative_ref,
+                planning_paths=spec.planning_paths,
+                implementation_write_set=spec.implementation_write_set,
+                coordination_scope=spec.coordination_scope,
+                default_branch=spec.default_branch,
+                deployment_target=spec.deployment_target,
+                deployment_is_production=spec.deployment_is_production,
+                max_rework_cycles=spec.max_rework_cycles,
+            ),
+        )
+        self.fx._git_run("switch", "-q", "-c", record.subject_branch)
+        (self.fx.root / "subject-only.txt").write_text(
+            "subject branch\n", encoding="utf-8"
+        )
+        self.fx.commit_direct("subject-only state")
+        self.fx._git_run("switch", "-q", "main")
+        self.fx.registry.terminalize(admission_id, "REVOKED")
+
+        before = {
+            "branch": self.fx.git("branch", "--show-current"),
+            "head": self.fx.git("rev-parse", "HEAD"),
+            "status": self.fx.git("status", "--porcelain=v1"),
+            "controller": cli.status(self.fx.root),
+            "subject_file_exists": (self.fx.root / "subject-only.txt").exists(),
+        }
+
+        resumed = Orchestrator(
+            self.fx.dispatcher,
+            ScriptedRoles(self.fx),
+            delivery_executor=SimulatedDelivery(),
+        )
+        result = resumed.resume(
+            self.fx.root,
+            admission_id=admission_id,
+            spec=spec,
+            branch_protection_resolver=lambda _remote, _branch: False,
+        )
+        self.assertEqual(result.status, "BLOCKED")
+        after = {
+            "branch": self.fx.git("branch", "--show-current"),
+            "head": self.fx.git("rev-parse", "HEAD"),
+            "status": self.fx.git("status", "--porcelain=v1"),
+            "controller": cli.status(self.fx.root),
+            "subject_file_exists": (self.fx.root / "subject-only.txt").exists(),
+        }
+        self.assertEqual(after, before)
+
+    def test_completed_terminal_replay_ignores_unrelated_active_controller_without_checkout_mutation(self):
+        completed_id = "adm-terminal-completed"
+        completed_spec = self.fx.spec(
+            deployment_target="staging",
+            deployment_is_production=False,
+        )
+        completed_runner = Orchestrator(
+            self.fx.dispatcher,
+            ScriptedRoles(self.fx),
+            delivery_executor=SimulatedDelivery(),
+        )
+        completed = completed_runner.run(
+            self.fx.root,
+            self.fx.request("trusted-ci", admission_id=completed_id),
+            completed_spec,
+            branch_protection_resolver=lambda _remote, _branch: False,
+        )
+        self.assertEqual(completed.status, "COMPLETE")
+        self.assertEqual(self.fx.registry.terminal_reason(completed_id), "COMPLETED")
+
+        base_roles = ScriptedRoles(self.fx)
+
+        class NeedsOwnerCritic:
+            def run(inner_self, role, context):
+                if role == "critic":
+                    return RoleResult(
+                        "critic",
+                        "OWNER_DECISION_REQUIRED",
+                        reason="hold unrelated active admission in DEFINE",
+                        required_capability="architecture_change",
+                    )
+                return base_roles.run(role, context)
+
+        active_id = "adm-terminal-active"
+        active_spec = self.fx.spec()
+        active_runner = Orchestrator(
+            self.fx.dispatcher,
+            NeedsOwnerCritic(),
+            delivery_executor=SimulatedDelivery(),
+        )
+        held = active_runner.run(
+            self.fx.root,
+            self.fx.request("manual-owner", admission_id=active_id),
+            active_spec,
+            branch_protection_resolver=lambda _remote, _branch: False,
+        )
+        self.assertEqual(held.status, "OWNER_DECISION_REQUIRED")
+        current = cli.status(self.fx.root)
+        self.assertEqual(current["lifecycle_state"], "DEFINE")
+        self.assertEqual(current["active"]["admission_id"], active_id)
+
+        before = {
+            "branch": self.fx.git("branch", "--show-current"),
+            "head": self.fx.git("rev-parse", "HEAD"),
+            "status": self.fx.git("status", "--porcelain=v1"),
+            "controller": current,
+        }
+
+        replay = Orchestrator(
+            self.fx.dispatcher,
+            ScriptedRoles(self.fx),
+            delivery_executor=SimulatedDelivery(),
+        )
+        replayed = replay.resume(
+            self.fx.root,
+            admission_id=completed_id,
+            spec=completed_spec,
+            branch_protection_resolver=lambda _remote, _branch: False,
+        )
+        self.assertEqual(replayed.status, "COMPLETE")
+        after = {
+            "branch": self.fx.git("branch", "--show-current"),
+            "head": self.fx.git("rev-parse", "HEAD"),
+            "status": self.fx.git("status", "--porcelain=v1"),
+            "controller": cli.status(self.fx.root),
+        }
+        self.assertEqual(after, before)
+
+    def test_nonterminal_resume_validates_controller_before_checkout_switch(self):
+        admission_id = "adm-resume-precheck"
+        spec = self.fx.spec()
+        record = self.fx.dispatcher.admit_with_work_block(
+            self.fx.root,
+            self.fx.request("manual-owner", admission_id=admission_id),
+            lambda value: WorkBlockBinding(
+                admission_id=value,
+                work_block_id=spec.work_block_id,
+                initiative_ref=spec.initiative_ref,
+                planning_paths=spec.planning_paths,
+                implementation_write_set=spec.implementation_write_set,
+                coordination_scope=spec.coordination_scope,
+                default_branch=spec.default_branch,
+                deployment_target=spec.deployment_target,
+                deployment_is_production=spec.deployment_is_production,
+                max_rework_cycles=spec.max_rework_cycles,
+            ),
+        )
+        self.fx._git_run("branch", record.subject_branch)
+
+        other_id = "adm-resume-other"
+        other_spec = self.fx.spec()
+        other = Orchestrator(
+            self.fx.dispatcher,
+            ScriptedRoles(self.fx),
+            delivery_executor=SimulatedDelivery(),
+        )
+        class HoldCritic:
+            def run(inner_self, role, context):
+                if role == "critic":
+                    return RoleResult(
+                        "critic",
+                        "OWNER_DECISION_REQUIRED",
+                        reason="hold",
+                        required_capability="architecture_change",
+                    )
+                return ScriptedRoles(self.fx).run(role, context)
+
+        other = Orchestrator(
+            self.fx.dispatcher,
+            HoldCritic(),
+            delivery_executor=SimulatedDelivery(),
+        )
+        other.run(
+            self.fx.root,
+            self.fx.request("manual-owner", admission_id=other_id),
+            other_spec,
+            branch_protection_resolver=lambda _remote, _branch: False,
+        )
+        before_branch = self.fx.git("branch", "--show-current")
+        before_head = self.fx.git("rev-parse", "HEAD")
+        before_controller = cli.status(self.fx.root)
+
+        resumed = Orchestrator(
+            self.fx.dispatcher,
+            ScriptedRoles(self.fx),
+            delivery_executor=SimulatedDelivery(),
+        )
+        with self.assertRaises(OrchestrationBlocked):
+            resumed.resume(
+                self.fx.root,
+                admission_id=admission_id,
+                spec=spec,
+                branch_protection_resolver=lambda _remote, _branch: False,
+            )
+        self.assertEqual(self.fx.git("branch", "--show-current"), before_branch)
+        self.assertEqual(self.fx.git("rev-parse", "HEAD"), before_head)
+        self.assertEqual(cli.status(self.fx.root), before_controller)
+
     def test_resume_inactive_delivery_with_owner_merge_approval_skips_existing_pr(self):
         admission_id = "adm-resumemerge1"
         spec = self.fx.spec()

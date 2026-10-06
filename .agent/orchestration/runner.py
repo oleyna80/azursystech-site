@@ -490,6 +490,19 @@ class Orchestrator:
                 f"cannot persist Owner authorization for {capability}: {exc}"
             ) from exc
 
+    def _assert_active_admission(self, admission_id: str) -> None:
+        method = getattr(self.dispatcher.store, "assert_active", None)
+        if method is None:
+            raise OrchestrationBlocked(
+                "orchestration store lacks active-admission authority check"
+            )
+        try:
+            method(admission_id)
+        except Exception as exc:
+            raise OrchestrationBlocked(
+                f"resume requires exact active admission: {exc}"
+            ) from exc
+
     def _terminalize(self, admission_id: str, reason: str) -> None:
         method = getattr(self.dispatcher.store, "terminalize", None)
         if method is None:
@@ -1285,14 +1298,21 @@ class Orchestrator:
         root = self._bound_root(repo_root)
         record = self.dispatcher.resolve_admission(root, admission_id)
         self._ensure_work_block_binding(record.admission_id, spec)
+
+        terminal = self._terminal_replay(record.admission_id)
+        if terminal is not None:
+            return terminal
+
+        self._assert_active_admission(record.admission_id)
+        current = cli.status(root)
+        if current is not None and current["lifecycle_state"] != "INACTIVE":
+            self._validate_active_binding(current, record, spec)
+
         gitfacts.require_clean(root)
         subprocess.run(
             ["git", "-C", str(root), "switch", "-q", record.subject_branch],
             check=True,
         )
-        current = cli.status(root)
-        if current is not None and current["lifecycle_state"] != "INACTIVE":
-            self._validate_active_binding(current, record, spec)
         try:
             return self._progress(
                 root,
