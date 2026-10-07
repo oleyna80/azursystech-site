@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "replacement_candidate_sha": "e167b6ffbe01f3977ca2b738d8c12a17a4004110",
+  "artifacts": {
+    "patch": "58b044f8990395611538712b1d8e76ea46cdb632",
+    "manifest": "35a18b949489c991b109a5759e895479b665f272",
+    "corpus": "18a532dc56c2798b98e0320260e88385c9de02e8",
+    "checklist": "007c9f05cb10f45d5211d7482f76e5b6167f355c"
+  }
+}
