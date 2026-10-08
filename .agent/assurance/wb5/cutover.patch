@@ -1,0 +1,804 @@
+diff --git a/.claude/settings.json b/.claude/settings.json
+index c92f13b..0aa0e93 100644
+--- a/.claude/settings.json
++++ b/.claude/settings.json
+@@ -1,71 +1,60 @@
+-{
+-  "hooks": {
+-    "PreToolUse": [
+-      {
+-        "matcher": "Bash",
+-        "hooks": [
+-          {
+-            "type": "command",
+-            "command": "python3 .agent/hooks/hard_stop_policy.py",
+-            "timeout": 5000
+-          }
+-        ]
+-      },
+-      {
+-        "matcher": "Bash|Edit|MultiEdit|Write",
+-        "hooks": [
+-          {
+-            "type": "command",
+-            "command": "python3 .claude/hooks/work_block_gate.py",
+-            "timeout": 5000
+-          }
+-        ]
+-      }
+-    ],
+-    "PostToolUse": [
+-      {
+-        "matcher": "Edit|MultiEdit|Write",
+-        "hooks": [
+-          {
+-            "type": "command",
+-            "command": "bash .claude/hooks/typecheck.sh",
+-            "timeout": 30000
+-          }
+-        ]
+-      }
+-    ],
+-    "Stop": [
+-      {
+-        "hooks": [
+-          {
+-            "type": "command",
+-            "command": "python3 .claude/hooks/assurance_gate.py",
+-            "timeout": 5000
+-          }
+-        ]
+-      }
+-    ]
+-  },
+-  "agents": {
+-    "solution-architect": {
+-      "description": "Architecture and technical discovery for the Architect function (read-only)",
+-      "color": "green"
+-    },
+-    "critic": {
+-      "description": "Challenges Define-stage scope, assumptions, risk, and assurance design (read-only)",
+-      "color": "yellow"
+-    },
+-    "reviewer": {
+-      "description": "Independent engineering review of the frozen diff (read-only)",
+-      "color": "yellow"
+-    },
+-    "scoped-coder": {
+-      "description": "Implementation inside one approved Work Block write-set",
+-      "color": "blue"
+-    },
+-    "verifier": {
+-      "description": "Acceptance-criteria and runtime verification with evidence (read-only)",
+-      "color": "red"
+-    }
+-  }
+-}
++{
++  "hooks": {
++    "PreToolUse": [
++      {
++        "matcher": "Bash",
++        "hooks": [
++          {
++            "type": "command",
++            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/sdlc-v1-bridge.py\" consequential",
++            "timeout": 5000
++          }
++        ]
++      },
++      {
++        "matcher": "Edit|MultiEdit|Write",
++        "hooks": [
++          {
++            "type": "command",
++            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/sdlc-v1-bridge.py\" runtime --runtime claude",
++            "timeout": 5000
++          }
++        ]
++      }
++    ],
++    "PostToolUse": [
++      {
++        "matcher": "Edit|MultiEdit|Write",
++        "hooks": [
++          {
++            "type": "command",
++            "command": "bash .claude/hooks/typecheck.sh",
++            "timeout": 30000
++          }
++        ]
++      }
++    ]
++  },
++  "agents": {
++    "solution-architect": {
++      "description": "Architecture and technical discovery for the Architect function (read-only)",
++      "color": "green"
++    },
++    "critic": {
++      "description": "Challenges Define-stage scope, assumptions, risk, and assurance design (read-only)",
++      "color": "yellow"
++    },
++    "reviewer": {
++      "description": "Independent engineering review of the frozen diff (read-only)",
++      "color": "yellow"
++    },
++    "scoped-coder": {
++      "description": "Implementation inside one approved Work Block write-set",
++      "color": "blue"
++    },
++    "verifier": {
++      "description": "Acceptance-criteria and runtime verification with evidence (read-only)",
++      "color": "red"
++    }
++  }
++}
+diff --git a/.codex/hooks.json b/.codex/hooks.json
+index a4a402d..fe71424 100644
+--- a/.codex/hooks.json
++++ b/.codex/hooks.json
+@@ -1,37 +1,42 @@
+-{
+-  "description": "Project-local Codex guardrails for external Hard Stops, the active Work Block scope, write-set discipline, and subagent context.",
+-  "hooks": {
+-    "PreToolUse": [
+-      {
+-        "matcher": "^(Bash|apply_patch|Edit|Write)$",
+-        "hooks": [
+-          {
+-            "type": "command",
+-            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/hard_stop_policy.py\"",
+-            "timeout": 10,
+-            "statusMessage": "Checking external Hard Stop guardrail"
+-          },
+-          {
+-            "type": "command",
+-            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/pre_tool_use_policy.py\"",
+-            "timeout": 10,
+-            "statusMessage": "Checking Work Block scope and write-set"
+-          }
+-        ]
+-      }
+-    ],
+-    "SubagentStart": [
+-      {
+-        "matcher": ".*",
+-        "hooks": [
+-          {
+-            "type": "command",
+-            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/subagent_context.py\"",
+-            "timeout": 5,
+-            "statusMessage": "Loading Work Block scope for subagent"
+-          }
+-        ]
+-      }
+-    ]
+-  }
+-}
++{
++  "description": "Project-local Codex adapters over the shared SDLC v1 controller and non-lifecycle consequential guard.",
++  "hooks": {
++    "PreToolUse": [
++      {
++        "matcher": "^Bash$",
++        "hooks": [
++          {
++            "type": "command",
++            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/sdlc-v1-bridge.py\" consequential",
++            "timeout": 10,
++            "statusMessage": "Checking consequential external boundaries"
++          }
++        ]
++      },
++      {
++        "matcher": "^(apply_patch|Edit|Write)$",
++        "hooks": [
++          {
++            "type": "command",
++            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/sdlc-v1-bridge.py\" runtime --runtime codex",
++            "timeout": 10,
++            "statusMessage": "Checking shared SDLC v1 structured-write authority"
++          }
++        ]
++      }
++    ],
++    "SubagentStart": [
++      {
++        "matcher": ".*",
++        "hooks": [
++          {
++            "type": "command",
++            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/sdlc-v1-bridge.py\" subagent-context --runtime codex",
++            "timeout": 5,
++            "statusMessage": "Loading shared SDLC v1 Work Block context"
++          }
++        ]
++      }
++    ]
++  }
++}
+diff --git a/.githooks/pre-commit b/.githooks/pre-commit
+new file mode 100755
+index 0000000..d2abfc8
+--- /dev/null
++++ b/.githooks/pre-commit
+@@ -0,0 +1,4 @@
++#!/usr/bin/env bash
++set -euo pipefail
++root="$(git rev-parse --show-toplevel)"
++exec python3 "$root/scripts/sdlc-v1-bridge.py" git-pre-commit --root "$root"
+diff --git a/.githooks/commit-msg b/.githooks/commit-msg
+index 66b485e..485c221 100755
+--- a/.githooks/commit-msg
++++ b/.githooks/commit-msg
+@@ -1,66 +1,5 @@
+-#!/usr/bin/env bash
+-set -euo pipefail
+-
+-message_file="${1:?commit message file is required}"
+-repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+-[ -n "${repo_root}" ] || exit 0
+-state_file="${repo_root}/.agent/active-work-block.json"
+-
+-fail() { echo "commit-msg: $*" >&2; exit 1; }
+-
+-[ -f "${state_file}" ] || fail "canonical lifecycle state is missing; run bootstrap/lifecycle checks"
+-set +e
+-state_output="$(python3 - "${state_file}" <<'PY'
+-import json
+-import re
+-import sys
+-
+-try:
+-    value = json.loads(open(sys.argv[1], encoding="utf-8").read())
+-except (OSError, json.JSONDecodeError) as exc:
+-    print(f"invalid canonical lifecycle state: {exc}", file=sys.stderr)
+-    raise SystemExit(2)
+-if not isinstance(value, dict) or value.get("schema_version") != 3:
+-    print("unsupported or invalid canonical lifecycle state", file=sys.stderr)
+-    raise SystemExit(2)
+-work_block_id = value.get("work_block_id")
+-subject_branch = value.get("subject_branch")
+-if work_block_id == "":
+-    print("INACTIVE")
+-    raise SystemExit(0)
+-pattern = re.compile(r"^(?:WB-[0-9]{3}|WB-[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(?:-[a-z0-9]+)*)$")
+-if not isinstance(work_block_id, str) or not pattern.fullmatch(work_block_id):
+-    print("active lifecycle state has invalid work_block_id", file=sys.stderr)
+-    raise SystemExit(2)
+-if not isinstance(subject_branch, str) or not subject_branch:
+-    print("active lifecycle state has missing or invalid subject_branch", file=sys.stderr)
+-    raise SystemExit(2)
+-print(f"ACTIVE\t{work_block_id}\t{subject_branch}")
+-PY
+-)"
+-state_exit=$?
+-set -e
+-[ "${state_exit}" -eq 0 ] || fail "${state_output:-could not read canonical lifecycle state}"
+-[ "${state_output}" = "INACTIVE" ] && exit 0
+-IFS=$'\t' read -r state_kind expected_work_block expected_branch <<< "${state_output}"
+-[ "${state_kind}" = "ACTIVE" ] || fail "could not determine canonical lifecycle state"
+-
+-current_branch="$(git branch --show-current)"
+-[ -n "${current_branch}" ] || fail "active Work Block ${expected_work_block} cannot commit from detached HEAD"
+-[ "${current_branch}" = "${expected_branch}" ] || \
+-  fail "active Work Block ${expected_work_block} is bound to ${expected_branch}, current branch is ${current_branch}"
+-
+-parsed_trailers="$(git interpret-trailers --parse < "${message_file}")" || fail "could not parse commit trailers"
+-mapfile -t work_block_trailers < <(printf '%s\n' "${parsed_trailers}" | awk '$1 == "Work-Block:" { print }')
+-case "${#work_block_trailers[@]}" in
+-  0) fail "active Work Block ${expected_work_block} requires exactly one Work-Block: trailer" ;;
+-  1) ;;
+-  *) fail "active Work Block ${expected_work_block} requires exactly one Work-Block: trailer; found ${#work_block_trailers[@]}" ;;
+-esac
+-actual_work_block="${work_block_trailers[0]#Work-Block:}"
+-actual_work_block="${actual_work_block#${actual_work_block%%[![:space:]]*}}"
+-actual_work_block="${actual_work_block%${actual_work_block##*[![:space:]]}}"
+-[[ "${actual_work_block}" =~ ^(WB-[0-9]{3}|WB-[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(-[a-z0-9]+)*)$ ]] || \
+-  fail "Work-Block trailer is malformed: ${actual_work_block:-missing}"
+-[ "${actual_work_block}" = "${expected_work_block}" ] || \
+-  fail "Work-Block trailer ${actual_work_block} does not match active Work Block ${expected_work_block}"
++#!/usr/bin/env bash
++set -euo pipefail
++message_file="${1:?commit message file is required}"
++root="$(git rev-parse --show-toplevel)"
++exec python3 "$root/scripts/sdlc-v1-bridge.py" git-commit-msg --root "$root" "$message_file"
+diff --git a/.githooks/pre-push b/.githooks/pre-push
+new file mode 100755
+index 0000000..7b99907
+--- /dev/null
++++ b/.githooks/pre-push
+@@ -0,0 +1,5 @@
++#!/usr/bin/env bash
++set -euo pipefail
++remote="${1:?remote name is required}"
++root="$(git rev-parse --show-toplevel)"
++exec python3 "$root/scripts/sdlc-v1-bridge.py" git-pre-push --root "$root" "$remote"
+diff --git a/scripts/bootstrap.sh b/scripts/bootstrap.sh
+index ee9f477..411d416 100755
+--- a/scripts/bootstrap.sh
++++ b/scripts/bootstrap.sh
+@@ -1,156 +1,156 @@
+-#!/usr/bin/env bash
+-# Bootstrap health check for a generated Agentic SDLC project.
+-set -euo pipefail
+-
+-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+-PROFILE_FILE="$ROOT/.agent/bootstrap-profile.json"
+-PROFILE_VALIDATOR="$ROOT/scripts/validate-installation-profile.py"
+-ACTIVE_WORK_BLOCK="$ROOT/.agent/active-work-block.json"
+-DEFAULT_WORK_BLOCK="$ROOT/.agent/active-work-block.default.json"
+-
+-case "${1:-}" in
+-  --install-git-hooks)
+-    [ -x "$ROOT/.githooks/commit-msg" ] || {
+-      echo "FAIL: .githooks/commit-msg is missing or not executable" >&2
+-      exit 1
+-    }
+-    git -C "$ROOT" config core.hooksPath .githooks
+-    [ "$(git -C "$ROOT" config --get core.hooksPath)" = ".githooks" ] || {
+-      echo "FAIL: could not configure core.hooksPath=.githooks" >&2
+-      exit 1
+-    }
+-    echo "Git hooks installed locally: .githooks"
+-    exit 0
+-    ;;
+-  --check-git-hooks)
+-    [ -x "$ROOT/.githooks/commit-msg" ] || {
+-      echo "FAIL: .githooks/commit-msg is missing or not executable" >&2
+-      exit 1
+-    }
+-    [ "$(git -C "$ROOT" config --get core.hooksPath || true)" = ".githooks" ] || {
+-      echo "FAIL: core.hooksPath is not .githooks" >&2
+-      exit 1
+-    }
+-    echo "Git hooks check passed: .githooks"
+-    exit 0
+-    ;;
+-esac
+-
+-echo "==> Bootstrap: verifying Agentic SDLC layer at $ROOT"
+-
+-[ -f "$PROFILE_FILE" ] || {
+-  echo "FAIL: missing .agent/bootstrap-profile.json" >&2
+-  exit 1
+-}
+-[ -f "$PROFILE_VALIDATOR" ] || {
+-  echo "FAIL: missing scripts/validate-installation-profile.py" >&2
+-  exit 1
+-}
+-[ -f "$DEFAULT_WORK_BLOCK" ] || {
+-  echo "FAIL: missing .agent/active-work-block.default.json" >&2
+-  exit 1
+-}
+-
+-# Validate portable selected/unselected composition and the tracked BLOCKED
+-# Work Block default before creating or restoring any ignored local state.
+-python3 "$PROFILE_VALIDATOR" "$ROOT"
+-
+-# Projects may use memory_bank/ (framework default) or memory-bank/ (legacy).
+-MEMORY_DIR="memory_bank"
+-HAS_HYPHEN=false
+-HAS_UNDERSCORE=false
+-[ -d "$ROOT/memory-bank" ] && HAS_HYPHEN=true
+-[ -d "$ROOT/memory_bank" ] && HAS_UNDERSCORE=true
+-
+-if $HAS_HYPHEN && ! $HAS_UNDERSCORE; then
+-  MEMORY_DIR="memory-bank"
+-  echo "  DETECTED: memory-bank/ (hyphen convention)"
+-elif $HAS_UNDERSCORE && ! $HAS_HYPHEN; then
+-  echo "  Using: memory_bank/ (underscore convention)"
+-elif $HAS_HYPHEN && $HAS_UNDERSCORE; then
+-  if [ -f "$ROOT/memory-bank/activeContext.md" ] || [ -f "$ROOT/memory-bank/productContext.md" ]; then
+-    MEMORY_DIR="memory-bank"
+-    echo "  DETECTED: both exist. Using memory-bank/ (has project content)."
+-  else
+-    echo "  Both exist. Using memory_bank/ (framework default)."
+-  fi
+-else
+-  echo "  Creating: memory_bank/ (framework default)"
+-fi
+-
+-mkdir -p "$ROOT/$MEMORY_DIR/snapshots"
+-
+-ensure_operational_file() {
+-  local relative="$1"
+-  local title="$2"
+-  local path="$ROOT/$MEMORY_DIR/$relative"
+-  if [ ! -f "$path" ]; then
+-    printf '# %s\n\n' "$title" > "$path"
+-    echo "  RESTORED: $MEMORY_DIR/$relative"
+-  fi
+-}
+-
+-ensure_operational_file "context.md" "Current Context"
+-ensure_operational_file "progress.md" "Progress"
+-ensure_operational_file "decisions.md" "Operational Decisions"
+-ensure_operational_file "orchestrator-log.md" "Orchestrator Log"
+-ensure_operational_file "review-log.md" "Review Log"
+-ensure_operational_file "external-team-log.md" "External Team Log"
+-touch "$ROOT/$MEMORY_DIR/snapshots/.gitkeep"
+-
+-if [ ! -f "$ACTIVE_WORK_BLOCK" ]; then
+-  cp "$DEFAULT_WORK_BLOCK" "$ACTIVE_WORK_BLOCK"
+-  echo "  RESTORED: .agent/active-work-block.json (BLOCKED default)"
+-fi
+-
+-INSTALLATION_PROFILE="$(python3 - "$PROFILE_FILE" <<'PY'
+-import json
+-import pathlib
+-import sys
+-value = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+-print(value["resolved_profile"])
+-PY
+-)"
+-RUNTIMES="$(python3 - "$PROFILE_FILE" <<'PY'
+-import json
+-import pathlib
+-import sys
+-value = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+-print(", ".join(value["runtimes"]))
+-PY
+-)"
+-
+-mkdir -p "$ROOT/.agent"
+-cat > "$ROOT/.agent/project-config.md" << PROJECTCONFIG
+-# Project Configuration
+-
+-> Auto-generated by scripts/bootstrap.sh. Do not edit manually.
+-
+-- **MEMORY_DIR:** \`$MEMORY_DIR\`
+-- **INSTALLATION_PROFILE:** \`$INSTALLATION_PROFILE\`
+-- **INSTALLED_RUNTIME_GUIDANCE:** \`$RUNTIMES\`
+-
+-The installation profile records scaffold composition only. It does not grant
+-Work Block authority, integration admission, credentials, or side-effect
+-permission.
+-PROJECTCONFIG
+-
+-echo "==> Agentic SDLC layer: OK"
+-
+-echo ""
+-echo "==> Dev environment checks..."
+-if [ -d "$ROOT/node_modules" ]; then
+-  echo "  OK: node_modules/"
+-else
+-  echo "  WARN: node_modules/ missing — install dependencies when this project requires them"
+-fi
+-
+-if [ -n "${DATABASE_URL:-}" ]; then
+-  echo "  OK: DATABASE_URL is set"
+-elif [ -f "$ROOT/.env" ] && grep -q "DATABASE_URL" "$ROOT/.env" 2>/dev/null; then
+-  echo "  OK: DATABASE_URL found in .env"
+-else
+-  echo "  WARN: DATABASE_URL not set — database-dependent checks may be blocked"
+-fi
+-
+-echo "==> Dev environment checks done"
++#!/usr/bin/env bash
++# Bootstrap health check for a generated Agentic SDLC project.
++set -euo pipefail
++
++ROOT="$(cd "$(dirname "$0")/.." && pwd)"
++PROFILE_FILE="$ROOT/.agent/bootstrap-profile.json"
++PROFILE_VALIDATOR="$ROOT/scripts/validate-installation-profile.py"
++ACTIVE_WORK_BLOCK="$ROOT/.agent/active-work-block.json"
++DEFAULT_WORK_BLOCK="$ROOT/.agent/active-work-block.default.json"
++
++case "${1:-}" in
++  --install-git-hooks)
++    for hook in pre-commit commit-msg pre-push; do
++      [ -x "$ROOT/.githooks/$hook" ] || { echo "FAIL: .githooks/$hook is missing or not executable" >&2; exit 1; }
++    done
++    git -C "$ROOT" config core.hooksPath .githooks
++    [ "$(git -C "$ROOT" config --get core.hooksPath)" = ".githooks" ] || { echo "FAIL: could not configure core.hooksPath=.githooks" >&2; exit 1; }
++    echo "Git hooks installed locally: .githooks"
++    exit 0
++    ;;
++  --check-git-hooks)
++    for hook in pre-commit commit-msg pre-push; do
++      [ -x "$ROOT/.githooks/$hook" ] || { echo "FAIL: .githooks/$hook is missing or not executable" >&2; exit 1; }
++    done
++    [ "$(git -C "$ROOT" config --get core.hooksPath || true)" = ".githooks" ] || { echo "FAIL: core.hooksPath is not .githooks" >&2; exit 1; }
++    echo "Git hooks check passed: .githooks"
++    exit 0
++    ;;
++  --install-sdlc-v1)
++    repository="${2:?repository owner/name is required}"
++    registry_path="${3:?absolute external registry path is required}"
++    exec python3 "$ROOT/scripts/sdlc-v1-bootstrap.py" --root "$ROOT" install --repository "$repository" --registry-path "$registry_path"
++    ;;
++  --check-sdlc-v1)
++    exec python3 "$ROOT/scripts/sdlc-v1-bootstrap.py" --root "$ROOT" check
++    ;;
++esac
++
++echo "==> Bootstrap: verifying Agentic SDLC layer at $ROOT"
++
++[ -f "$PROFILE_FILE" ] || {
++  echo "FAIL: missing .agent/bootstrap-profile.json" >&2
++  exit 1
++}
++[ -f "$PROFILE_VALIDATOR" ] || {
++  echo "FAIL: missing scripts/validate-installation-profile.py" >&2
++  exit 1
++}
++[ -f "$DEFAULT_WORK_BLOCK" ] || {
++  echo "FAIL: missing .agent/active-work-block.default.json" >&2
++  exit 1
++}
++
++# Validate portable selected/unselected composition and the tracked BLOCKED
++# Work Block default before creating or restoring any ignored local state.
++python3 "$PROFILE_VALIDATOR" "$ROOT"
++
++# Projects may use memory_bank/ (framework default) or memory-bank/ (legacy).
++MEMORY_DIR="memory_bank"
++HAS_HYPHEN=false
++HAS_UNDERSCORE=false
++[ -d "$ROOT/memory-bank" ] && HAS_HYPHEN=true
++[ -d "$ROOT/memory_bank" ] && HAS_UNDERSCORE=true
++
++if $HAS_HYPHEN && ! $HAS_UNDERSCORE; then
++  MEMORY_DIR="memory-bank"
++  echo "  DETECTED: memory-bank/ (hyphen convention)"
++elif $HAS_UNDERSCORE && ! $HAS_HYPHEN; then
++  echo "  Using: memory_bank/ (underscore convention)"
++elif $HAS_HYPHEN && $HAS_UNDERSCORE; then
++  if [ -f "$ROOT/memory-bank/activeContext.md" ] || [ -f "$ROOT/memory-bank/productContext.md" ]; then
++    MEMORY_DIR="memory-bank"
++    echo "  DETECTED: both exist. Using memory-bank/ (has project content)."
++  else
++    echo "  Both exist. Using memory_bank/ (framework default)."
++  fi
++else
++  echo "  Creating: memory_bank/ (framework default)"
++fi
++
++mkdir -p "$ROOT/$MEMORY_DIR/snapshots"
++
++ensure_operational_file() {
++  local relative="$1"
++  local title="$2"
++  local path="$ROOT/$MEMORY_DIR/$relative"
++  if [ ! -f "$path" ]; then
++    printf '# %s\n\n' "$title" > "$path"
++    echo "  RESTORED: $MEMORY_DIR/$relative"
++  fi
++}
++
++ensure_operational_file "context.md" "Current Context"
++ensure_operational_file "progress.md" "Progress"
++ensure_operational_file "decisions.md" "Operational Decisions"
++ensure_operational_file "orchestrator-log.md" "Orchestrator Log"
++ensure_operational_file "review-log.md" "Review Log"
++ensure_operational_file "external-team-log.md" "External Team Log"
++touch "$ROOT/$MEMORY_DIR/snapshots/.gitkeep"
++
++if [ ! -f "$ACTIVE_WORK_BLOCK" ]; then
++  cp "$DEFAULT_WORK_BLOCK" "$ACTIVE_WORK_BLOCK"
++  echo "  RESTORED: .agent/active-work-block.json (BLOCKED default)"
++fi
++
++INSTALLATION_PROFILE="$(python3 - "$PROFILE_FILE" <<'PY'
++import json
++import pathlib
++import sys
++value = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
++print(value["resolved_profile"])
++PY
++)"
++RUNTIMES="$(python3 - "$PROFILE_FILE" <<'PY'
++import json
++import pathlib
++import sys
++value = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
++print(", ".join(value["runtimes"]))
++PY
++)"
++
++mkdir -p "$ROOT/.agent"
++cat > "$ROOT/.agent/project-config.md" << PROJECTCONFIG
++# Project Configuration
++
++> Auto-generated by scripts/bootstrap.sh. Do not edit manually.
++
++- **MEMORY_DIR:** \`$MEMORY_DIR\`
++- **INSTALLATION_PROFILE:** \`$INSTALLATION_PROFILE\`
++- **INSTALLED_RUNTIME_GUIDANCE:** \`$RUNTIMES\`
++
++The installation profile records scaffold composition only. It does not grant
++Work Block authority, integration admission, credentials, or side-effect
++permission.
++PROJECTCONFIG
++
++echo "==> Agentic SDLC layer: OK"
++
++echo ""
++echo "==> Dev environment checks..."
++if [ -d "$ROOT/node_modules" ]; then
++  echo "  OK: node_modules/"
++else
++  echo "  WARN: node_modules/ missing — install dependencies when this project requires them"
++fi
++
++if [ -n "${DATABASE_URL:-}" ]; then
++  echo "  OK: DATABASE_URL is set"
++elif [ -f "$ROOT/.env" ] && grep -q "DATABASE_URL" "$ROOT/.env" 2>/dev/null; then
++  echo "  OK: DATABASE_URL found in .env"
++else
++  echo "  WARN: DATABASE_URL not set — database-dependent checks may be blocked"
++fi
++
++echo "==> Dev environment checks done"
+diff --git a/.github/workflows/control-plane-contracts.yml b/.github/workflows/control-plane-contracts.yml
+index e851aed..6269e5e 100644
+--- a/.github/workflows/control-plane-contracts.yml
++++ b/.github/workflows/control-plane-contracts.yml
+@@ -1,120 +1,45 @@
+-name: Control Plane Contracts
+-
+-on:
+-  push:
+-    branches:
+-      - main
+-    paths:
+-      - ".agent/**"
+-      - ".githooks/**"
+-      - ".claude/**"
+-      - ".codex/**"
+-      - ".opencode/**"
+-      - "AGENTS.md"
+-      - "opencode.json"
+-      - "scripts/validate-evaluation.py"
+-      - "scripts/validate-installation-profile.py"
+-      - "scripts/test-github-capability-control-plane.py"
+-      - "scripts/test-github-capability-github-cli-hard-stops.py"
+-      - "scripts/validate-shared-context.py"
+-      - "scripts/test-validate-shared-context.py"
+-      - "scripts/bootstrap.sh"
+-      - ".env"
+-      - ".env.*"
+-      - "**/.env"
+-      - "**/.env.*"
+-      - "memory_bank/**"
+-      - "docs/project-context.md"
+-      - ".codex/worktrees/**"
+-      - "private_evidence"
+-      - "private_evidence/**"
+-      - ".github/workflows/control-plane-contracts.yml"
+-  pull_request:
+-    paths:
+-      - ".agent/**"
+-      - ".githooks/**"
+-      - ".claude/**"
+-      - ".codex/**"
+-      - ".opencode/**"
+-      - "AGENTS.md"
+-      - "opencode.json"
+-      - "scripts/validate-evaluation.py"
+-      - "scripts/validate-installation-profile.py"
+-      - "scripts/test-github-capability-control-plane.py"
+-      - "scripts/test-github-capability-github-cli-hard-stops.py"
+-      - "scripts/validate-shared-context.py"
+-      - "scripts/test-validate-shared-context.py"
+-      - "scripts/bootstrap.sh"
+-      - ".env"
+-      - ".env.*"
+-      - "**/.env"
+-      - "**/.env.*"
+-      - "memory_bank/**"
+-      - "docs/project-context.md"
+-      - ".codex/worktrees/**"
+-      - "private_evidence"
+-      - "private_evidence/**"
+-      - ".github/workflows/control-plane-contracts.yml"
+-  workflow_dispatch:
+-
+-permissions:
+-  contents: read
+-
+-jobs:
+-  control-plane:
+-    runs-on: ubuntu-24.04
+-    timeout-minutes: 10
+-    steps:
+-      - name: Checkout
+-        uses: actions/checkout@v4
+-
+-      - name: Set up Python
+-        uses: actions/setup-python@v5
+-        with:
+-          python-version: "3.12"
+-
+-      - name: Compile migrated Python control plane
+-        run: |
+-          python -m py_compile \
+-            .agent/hooks/hard_stop_policy.py \
+-            .claude/hooks/assurance_gate.py \
+-            .claude/hooks/work_block_gate.py \
+-            .codex/hooks/pre_tool_use_policy.py \
+-            .codex/hooks/subagent_context.py \
+-            .codex/scripts/doctor.py \
+-            .codex/scripts/lifecycle.py \
+-            scripts/validate-evaluation.py \
+-            scripts/validate-installation-profile.py \
+-            scripts/test-github-capability-control-plane.py \
+-            scripts/test-github-capability-github-cli-hard-stops.py \
+-            scripts/validate-shared-context.py \
+-            scripts/test-validate-shared-context.py
+-
+-      - name: Validate schema v3 blocked-default contract only
+-        run: |
+-          python - <<'PY'
+-          import runpy
+-          from pathlib import Path
+-
+-          namespace = runpy.run_path("scripts/validate-installation-profile.py")
+-          namespace["validate_blocked_default"](Path("."))
+-          print("blocked-default schema v3 contract: OK")
+-          PY
+-
+-      - name: Run GitHub capability authority integration fixtures
+-        run: python scripts/test-github-capability-control-plane.py
+-
+-      - name: Run GitHub CLI/API Hard Stop fixtures
+-        run: python scripts/test-github-capability-github-cli-hard-stops.py
+-
+-      - name: Run shared-context boundary regression and validation
+-        run: python scripts/test-validate-shared-context.py && python scripts/validate-shared-context.py
+-
+-      - name: Run native Codex apply-patch payload fixture
+-        run: bash .codex/hooks/tests/apply-patch-fixtures.sh
+-
+-      - name: Run Work Block commit linkage and bootstrap fixtures
+-        run: bash .githooks/tests/commit-msg-fixtures.sh
+-
+-      - name: Run sprint-analysis evidence fixtures
+-        run: bash .agent/skills/sprint-analysis/tests/commit-linkage-fixtures.sh
++name: Control Plane Contracts
++
++on:
++  push:
++    branches:
++      - main
++    paths:
++      - ".agent/**"
++      - ".githooks/**"
++      - ".claude/**"
++      - ".codex/**"
++      - "scripts/sdlc-v1-*.py"
++      - "scripts/verify-sdlc-replacement.py"
++      - "scripts/bootstrap.sh"
++      - ".github/workflows/control-plane-contracts.yml"
++  pull_request:
++    paths:
++      - ".agent/**"
++      - ".githooks/**"
++      - ".claude/**"
++      - ".codex/**"
++      - "scripts/sdlc-v1-*.py"
++      - "scripts/verify-sdlc-replacement.py"
++      - "scripts/bootstrap.sh"
++      - ".github/workflows/control-plane-contracts.yml"
++  workflow_dispatch:
++
++permissions:
++  contents: read
++
++jobs:
++  control-plane:
++    runs-on: ubuntu-24.04
++    timeout-minutes: 15
++    steps:
++      - name: Checkout
++        uses: actions/checkout@v4
++        with:
++          fetch-depth: 0
++      - name: Set up Python
++        uses: actions/setup-python@v5
++        with:
++          python-version: "3.14"
++      - name: Verify assured SDLC replacement
++        run: python scripts/verify-sdlc-replacement.py

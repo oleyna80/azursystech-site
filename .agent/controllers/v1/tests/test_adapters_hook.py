@@ -1,57 +1,218 @@
-import copy
+import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
-from v1 import hook
-from v1.adapters import decide, normalize
+from v1 import adapters, hook, policy, state, storage
+from v1.errors import StopAndPreserve, ValidationError
 from v1.tests import support as s
 
-ROOT = "/tmp/controller-v1-adapter-fixture"
+
+class RuntimeAdapterTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name) / "repo"
+        self.root.mkdir()
+        s.init_repo(self.root)
+        (self.root / ".agent/controllers/v1").mkdir(parents=True)
+        (self.root / ".agent/controllers/v1/state.py").write_text("x\n", encoding="utf-8")
+        s.commit_all(self.root, "base")
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def raw(self, tool_name, tool_input):
+        return {"cwd": str(self.root), "tool_name": tool_name, "tool_input": tool_input}
+
+    def test_claude_codex_structured_write_parity(self):
+        current = s.execute()
+        claude = adapters.normalize_structured_write(
+            "claude",
+            self.raw("Write", {"file_path": ".agent/controllers/v1/state.py"}),
+        )
+        codex = adapters.normalize_structured_write(
+            "codex",
+            self.raw("Write", {"file_path": ".agent/controllers/v1/state.py"}),
+        )
+        self.assertEqual(claude.paths, codex.paths)
+        self.assertEqual(claude.kind, codex.kind)
+        a = policy.evaluate(claude, current)
+        b = policy.evaluate(codex, current)
+        self.assertEqual((a.decision, a.code), (b.decision, b.code))
+
+    def test_codex_patch_extracts_all_exact_paths(self):
+        event = adapters.normalize_structured_write(
+            "codex",
+            self.raw(
+                "apply_patch",
+                {
+                    "command": (
+                        "*** Begin Patch\n"
+                        "*** Update File: .agent/controllers/v1/state.py\n"
+                        "*** Move to: .agent/controllers/v1/state2.py\n"
+                        "*** Add File: .agent/controllers/v1/new.py\n"
+                        "*** End Patch\n"
+                    )
+                },
+            ),
+        )
+        self.assertEqual(
+            event.paths,
+            (
+                ".agent/controllers/v1/new.py",
+                ".agent/controllers/v1/state.py",
+                ".agent/controllers/v1/state2.py",
+            ),
+        )
+        self.assertEqual(event.facts["tool_class"], "patch")
+
+    def test_relative_target_is_resolved_from_native_nested_cwd(self):
+        nested = self.root / "subdir"
+        nested.mkdir()
+        raw = {
+            "cwd": str(nested),
+            "tool_name": "Write",
+            "tool_input": {"file_path": "file.py"},
+        }
+        event = adapters.normalize_structured_write("claude", raw)
+        self.assertEqual(event.paths, ("subdir/file.py",))
+
+    def test_relative_target_through_symlink_outside_worktree_is_denied(self):
+        outside = Path(self.temp.name) / "outside"
+        outside.mkdir()
+        allowed = self.root / "allowed"
+        allowed.mkdir()
+        (allowed / "link").symlink_to(outside, target_is_directory=True)
+        raw = self.raw("Write", {"file_path": "allowed/link/file.py"})
+        with self.assertRaises(ValidationError):
+            adapters.normalize_structured_write("claude", raw)
+
+    def test_ambiguous_path_whitespace_is_denied_not_trimmed(self):
+        with self.assertRaises(ValidationError):
+            adapters.normalize_structured_write(
+                "claude",
+                self.raw("Write", {"file_path": " file.py"}),
+            )
+        with self.assertRaises(ValidationError):
+            adapters.normalize_structured_write(
+                "codex",
+                self.raw(
+                    "apply_patch",
+                    {
+                        "command": (
+                            "*** Begin Patch\n"
+                            "*** Add File: file.py \n"
+                            "*** End Patch\n"
+                        )
+                    },
+                ),
+            )
+
+    def test_absolute_path_inside_worktree_normalizes_and_outside_denies(self):
+        inside = self.root / ".agent/controllers/v1/state.py"
+        event = adapters.normalize_structured_write(
+            "claude", self.raw("Edit", {"file_path": str(inside)})
+        )
+        self.assertEqual(event.paths, (".agent/controllers/v1/state.py",))
+        with self.assertRaises(ValidationError):
+            adapters.normalize_structured_write(
+                "claude", self.raw("Edit", {"file_path": "/tmp/outside.py"})
+            )
+
+    def test_opaque_bash_never_becomes_structured_authority(self):
+        raw = self.raw("Bash", {"command": "echo x > .agent/controllers/v1/x.py"})
+        with self.assertRaises(ValidationError):
+            adapters.normalize_structured_write("claude", raw)
+        result = hook.evaluate_runtime(
+            "claude", raw, installation_root=self.root
+        )
+        self.assertFalse(result.allowed)
+        self.assertEqual(result.code, "STATE_INVALID")
+
+    def test_missing_exact_path_fails_closed(self):
+        with self.assertRaises(ValidationError):
+            adapters.normalize_structured_write(
+                "codex", self.raw("Write", {})
+            )
+        with self.assertRaises(ValidationError):
+            adapters.normalize_structured_write(
+                "codex", self.raw("apply_patch", {"command": "*** Begin Patch\n*** End Patch"})
+            )
+
+    def test_denied_claude_pretool_response_does_not_stop_processing(self):
+        denied = policy.evaluate(
+            adapters.normalize_structured_write(
+                "claude",
+                self.raw("Write", {"file_path": "outside.txt"}),
+            ),
+            s.execute(),
+        )
+        self.assertFalse(denied.allowed)
+        response = adapters.runtime_response("claude", denied)
+        self.assertEqual(
+            response["hookSpecificOutput"]["permissionDecision"],
+            "deny",
+        )
+        self.assertNotIn("continue", response)
+
+    def test_runtime_native_responses_have_same_permission_semantics(self):
+        decision = policy.evaluate(
+            adapters.normalize_structured_write(
+                "claude",
+                self.raw("Write", {"file_path": ".agent/controllers/v1/state.py"}),
+            ),
+            s.execute(),
+        )
+        claude = adapters.runtime_response("claude", decision)
+        codex = adapters.runtime_response("codex", decision)
+        self.assertEqual(
+            claude["hookSpecificOutput"]["permissionDecision"],
+            codex["hookSpecificOutput"]["permissionDecision"],
+        )
+        self.assertEqual(
+            claude["hookSpecificOutput"]["permissionDecisionReason"],
+            codex["hookSpecificOutput"]["permissionDecisionReason"],
+        )
+
+    def test_same_common_repo_linked_worktree_allowed_different_repo_denied(self):
+        linked = Path(self.temp.name) / "linked"
+        subprocess.run(
+            ["git", "-C", str(self.root), "worktree", "add", "-qb", "feat/linked", str(linked)],
+            check=True,
+        )
+        nested = linked / ".agent/controllers"
+        nested.mkdir(parents=True, exist_ok=True)
+        self.assertEqual(
+            hook.resolve_bound_worktree(nested, installation_root=self.root),
+            linked.resolve(),
+        )
+
+        other = Path(self.temp.name) / "other"
+        other.mkdir()
+        s.init_repo(other, branch="feat/other")
+        (other / "x").write_text("x\n", encoding="utf-8")
+        s.commit_all(other, "base")
+        with self.assertRaises(StopAndPreserve):
+            hook.resolve_bound_worktree(other, installation_root=self.root)
+
+    def test_subagent_context_is_context_only(self):
+        current = s.execute()
+        storage.write(storage.resolve_path(self.root), current)
+        event = adapters.normalize_subagent_context(
+            "codex", {"cwd": str(self.root), "agent_type": "reviewer"}
+        )
+        verdict = policy.evaluate(event, current)
+        self.assertEqual(verdict.decision, "ADVISORY")
+        response = hook.subagent_context(
+            "codex",
+            {"cwd": str(self.root), "agent_type": "reviewer"},
+            installation_root=self.root,
+        )
+        text = response["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("Work Block WB-001", text)
+        self.assertNotIn("session", text.lower())
+        self.assertNotIn("execution_id", text.lower())
 
 
-class AdapterHookTests(unittest.TestCase):
-    def test_codex_claude_equivalent_events(self):
-        item = s.capable("EXECUTE")
-        for tool, payload in (
-            ("apply_patch", {"patch": "*** Begin Patch\n*** Update File: .agent/controllers/v1/state.py\n*** End Patch"}),
-            ("Write", {"file_path": ".agent/controllers/v1/state.py"}),
-            ("Bash", {"command": "git push --force origin HEAD:refs/heads/feat/test"}),
-        ):
-            with self.subTest(tool=tool):
-                raw = {"tool_name": tool, "tool_input": payload}
-                decisions = [decide(runtime, raw, item, repository_root=ROOT, branch="feat/test")
-                             for runtime in ("codex", "claude")]
-                self.assertEqual(decisions[0].allowed, decisions[1].allowed)
-                self.assertEqual(decisions[0].reason, decisions[1].reason)
-
-    def test_malformed_and_ambiguous_fail_closed(self):
-        item = s.capable("EXECUTE")
-        for raw in ({"tool_name": "Bash", "tool_input": {"command": "echo hi; touch x"}},
-                    {"tool_name": "Write", "tool_input": {}},
-                    {"tool_name": "Bash", "tool_input": {"command": "unknown x"}},
-                    {"tool_name": "apply_patch", "tool_input": {"patch": "invalid"}}):
-            self.assertFalse(decide("codex", raw, item, repository_root=ROOT, branch="feat/test").allowed)
-
-    def test_raw_push_cannot_supply_trusted_publication_facts(self):
-        raw = {"tool_name": "Bash", "tool_input": {
-            "command": "git push origin HEAD:refs/heads/feat/test"},
-            "head_tree": s.CANDIDATE, "default_branch": "main",
-            "subject_branch_is_protected": False}
-        for runtime in ("codex", "claude"):
-            self.assertFalse(decide(runtime, raw, s.assured(), repository_root=ROOT,
-                                    branch="feat/test").allowed)
-
-    def test_hook_evaluation_does_not_mutate_state(self):
-        item = s.capable("EXECUTE")
-        before = copy.deepcopy(item)
-        output = hook.evaluate_event("codex", {
-            "tool_name": "Write", "tool_input": {"file_path": ".agent/controllers/v1/state.py"},
-        }, item, root=Path(ROOT), branch="feat/test")
-        self.assertEqual(output["decision"], "ALLOW")
-        self.assertEqual(item, before)
-
-    def test_no_activation_payload_or_live_manifest(self):
-        package = Path(__file__).resolve().parents[1]
-        self.assertFalse((package / "activation").exists())
-        self.assertFalse((package / "activation.py").exists())
-        self.assertFalse((package / "policy-metadata.json").exists())
+if __name__ == "__main__":
+    unittest.main()

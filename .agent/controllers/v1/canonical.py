@@ -1,4 +1,4 @@
-"""Deterministic JSON serialization. Git trees identify controller and candidate."""
+"""Deterministic JSON serialization. Git commit SHAs identify source candidates."""
 
 from __future__ import annotations
 

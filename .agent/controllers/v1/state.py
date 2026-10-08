@@ -1,236 +1,385 @@
-"""The complete v1 lifecycle and its single authoritative state schema."""
+"""Schema-v2 Work Block state and pure lifecycle transitions."""
 
 from __future__ import annotations
 
 import copy
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from .errors import TransitionDenied, ValidationError
 
+SCHEMA_VERSION = 2
 STATES = frozenset({"INACTIVE", "DEFINE", "EXECUTE", "ASSURE"})
-TREE = re.compile(r"[0-9a-f]{40}|[0-9a-f]{64}", re.ASCII)
-INACTIVE = {"schema_version": 1, "lifecycle_state": "INACTIVE", "active": None, "history": []}
+SHA_RE = re.compile(r"^[0-9a-f]{40}$", re.ASCII)
+WORK_BLOCK_RE = re.compile(
+    r"^WB-(?:[0-9]{3}|[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(?:-[a-z0-9]+)*)$",
+    re.ASCII,
+)
+SAFE_TOKEN_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", re.ASCII)
+ADMISSION_ID_RE = re.compile(r"^adm-[A-Za-z0-9][A-Za-z0-9._-]{7,123}$", re.ASCII)
+
+INACTIVE = {"schema_version": SCHEMA_VERSION, "lifecycle_state": "INACTIVE", "active": None}
+
 ACTIVE_FIELDS = frozenset({
-    "work_block_id", "subject_branch", "subject_revision", "write_set", "write_gate",
-    "controller_generation", "controller_tree", "candidate_id", "capability",
-    "dispatches", "evidence", "assurance_retry", "assurance_evidence_start",
+    "work_block_id", "initiative_ref", "admission_id", "subject_branch", "base_commit",
+    "authority_profile", "planning_subject", "implementation_write_set",
+    "coordination_scope", "critic", "source_candidate_sha", "reviewer", "verifier",
 })
-RESULT_ROLES = frozenset({"critic", "reviewer", "verifier"})
 
 
-def _required(value: object, name: str) -> str:
-    if not isinstance(value, str) or not value.strip():
-        raise ValidationError(f"{name} must be a nonempty string")
+def _required_text(value: object, name: str, *, limit: int = 256) -> str:
+    if not isinstance(value, str) or not value or len(value) > limit or "\x00" in value:
+        raise ValidationError(f"invalid {name}")
     return value
 
 
-def _tree(value: object, name: str) -> str:
-    if not isinstance(value, str) or not TREE.fullmatch(value):
-        raise ValidationError(f"{name} must be a Git tree SHA")
+def _sha(value: object, name: str) -> str:
+    if not isinstance(value, str) or SHA_RE.fullmatch(value) is None:
+        raise ValidationError(f"{name} must be a full lowercase Git SHA")
     return value
 
 
-def _validate_work_block(active: object, phase: str | None) -> None:
-    if not isinstance(active, dict) or set(active) != ACTIVE_FIELDS:
-        raise ValidationError("Work Block schema is unknown")
-    for key in ("work_block_id", "subject_branch", "subject_revision", "controller_generation"):
-        _required(active[key], key)
-    if active["controller_generation"] != "v1":
-        raise ValidationError("unsupported controller generation")
-    _tree(active["controller_tree"], "controller_tree")
-    if not isinstance(active["write_set"], list) or not active["write_set"] or any(
-        not isinstance(path, str) or not path or path.startswith("/") or ".." in path.split("/")
-        for path in active["write_set"]
-    ):
-        raise ValidationError("write_set must contain safe repository paths")
-    if active["write_gate"] not in {"READY", "BLOCKED"}:
-        raise ValidationError("write gate is unknown")
-    if active["candidate_id"] is not None:
-        _tree(active["candidate_id"], "candidate_id")
-    if phase == "ASSURE" and active["candidate_id"] is None:
-        raise ValidationError("ASSURE requires a frozen candidate")
-    if phase is not None and phase != "ASSURE" and active["candidate_id"] is not None:
-        raise ValidationError("candidate belongs only to ASSURE")
-    if active["capability"] is not None:
-        from .evidence import validate_capability
-        validate_capability(active["capability"])
-    if not isinstance(active["dispatches"], list) or not isinstance(active["evidence"], list):
-        raise ValidationError("dispatches and evidence must be lists")
-    start = active["assurance_evidence_start"]
-    if isinstance(start, bool) or not isinstance(start, int) or not 0 <= start <= len(active["evidence"]):
-        raise ValidationError("assurance evidence boundary is invalid")
-    from .evidence import validate_records
-    validate_records(active)
-    if phase == "ASSURE" and any(
-        item["role"] in {"reviewer", "verifier"}
-        and item["verdict"] in {"CHANGES_REQUIRED", "SCOPE_CHANGE", "FAIL"}
-        for item in active["evidence"][start:]
-    ):
-        raise ValidationError("negative assurance result cannot remain in ASSURE")
-    if not isinstance(active["assurance_retry"], bool):
-        raise ValidationError("assurance_retry must be boolean")
+def _repo_path(value: object, name: str, *, allow_pattern: bool) -> str:
+    path = _required_text(value, name, limit=1024)
+    if path.startswith("/") or "\\" in path:
+        raise ValidationError(f"{name} must be repository-relative POSIX path")
+    parts = path.split("/")
+    if any(part in {"", ".", ".."} for part in parts):
+        raise ValidationError(f"{name} contains unsafe path segment")
+    wildcard_chars = set("*?[]")
+    if allow_pattern and path.endswith("/**"):
+        stem = path[:-3]
+        if not stem or any(ch in stem for ch in wildcard_chars):
+            raise ValidationError(f"{name} has unsupported scope pattern")
+    elif any(ch in path for ch in wildcard_chars):
+        raise ValidationError(f"{name} has unsupported wildcard")
+    return path
+
+
+def _exact_paths(value: object, name: str, *, nonempty: bool) -> list[str]:
+    if not isinstance(value, list) or (nonempty and not value):
+        raise ValidationError(f"{name} must be {'nonempty ' if nonempty else ''}list")
+    paths = [_repo_path(item, name, allow_pattern=False) for item in value]
+    if paths != sorted(paths) or len(paths) != len(set(paths)):
+        raise ValidationError(f"{name} must be sorted and duplicate-free")
+    return paths
+
+
+def _scope(value: object, name: str, *, nonempty: bool) -> list[str]:
+    if not isinstance(value, list) or (nonempty and not value):
+        raise ValidationError(f"{name} must be {'nonempty ' if nonempty else ''}list")
+    paths = [_repo_path(item, name, allow_pattern=True) for item in value]
+    if paths != sorted(paths) or len(paths) != len(set(paths)):
+        raise ValidationError(f"{name} must be sorted and duplicate-free")
+    return paths
+
+
+def scope_matches(path: str, patterns: Sequence[str]) -> bool:
+    exact = _repo_path(path, "actual path", allow_pattern=False)
+    for pattern in patterns:
+        _repo_path(pattern, "scope path", allow_pattern=True)
+        if pattern.endswith("/**"):
+            prefix = pattern[:-3]
+            if exact.startswith(prefix + "/"):
+                return True
+        elif exact == pattern:
+            return True
+    return False
+
+
+def scopes_overlap(first: Sequence[str], second: Sequence[str]) -> bool:
+    for pattern in first:
+        probe = pattern[:-3] + "/__scope_probe__" if pattern.endswith("/**") else pattern
+        if scope_matches(probe, second):
+            return True
+    for pattern in second:
+        probe = pattern[:-3] + "/__scope_probe__" if pattern.endswith("/**") else pattern
+        if scope_matches(probe, first):
+            return True
+    return False
+
+
+def derived_planning_path(initiative_ref: str, path: str) -> bool:
+    initiative = _repo_path(initiative_ref, "initiative_ref", allow_pattern=False)
+    target = _repo_path(path, "planning path", allow_pattern=False)
+    fixed = {
+        f"{initiative}/intent.md",
+        f"{initiative}/spec.md",
+        f"{initiative}/plan.md",
+        f"{initiative}/tasklist.md",
+    }
+    return target in fixed or target.startswith(f"{initiative}/work-blocks/")
+
+
+def _validate_role(role: object, name: str, *, candidate: str | None, critic_revision: str | None = None) -> None:
+    if not isinstance(role, dict):
+        raise ValidationError(f"{name} state must be object")
+    if name == "critic":
+        if set(role) != {"status", "subject_revision"}:
+            raise ValidationError("critic schema is unknown")
+        status = role["status"]
+        if status not in {"PENDING", "BLOCKED", "READY"}:
+            raise ValidationError("critic status is unknown")
+        if status == "READY":
+            if role["subject_revision"] != critic_revision:
+                raise ValidationError("READY Critic must bind current planning revision")
+        elif role["subject_revision"] is not None:
+            raise ValidationError("non-READY Critic must not bind a revision")
+        return
+    if set(role) != {"status", "candidate_sha"}:
+        raise ValidationError(f"{name} schema is unknown")
+    status = role["status"]
+    if status not in {"PENDING", "READY"}:
+        raise ValidationError(f"{name} status is unknown")
+    if status == "READY":
+        if candidate is None or role["candidate_sha"] != candidate:
+            raise ValidationError(f"READY {name} must bind exact candidate")
+    elif role["candidate_sha"] is not None:
+        raise ValidationError(f"PENDING {name} must not bind candidate")
 
 
 def validate(state: Mapping[str, object]) -> None:
-    """Fail closed on unknown, partial, or contradictory authoritative state."""
-    if not isinstance(state, dict) or set(state) != set(INACTIVE):
+    if not isinstance(state, dict) or set(state) != {"schema_version", "lifecycle_state", "active"}:
         raise ValidationError("state schema is unknown")
-    if state["schema_version"] != 1 or state["lifecycle_state"] not in STATES:
+    if state["schema_version"] != SCHEMA_VERSION or state["lifecycle_state"] not in STATES:
         raise ValidationError("state version or lifecycle state is unknown")
-    history = state["history"]
-    if not isinstance(history, list):
-        raise ValidationError("history must be a list")
-    seen_work_blocks = set()
-    for closed in history:
-        if not isinstance(closed, dict) or set(closed) != {"outcome", "work_block", "closed_at", "reason"}:
-            raise ValidationError("closeout history is malformed")
-        if closed["outcome"] not in {"success", "reporting_only", "cancelled"}:
-            raise ValidationError("closeout outcome is unknown")
-        from .evidence import _timestamp, require_success
-        _timestamp(closed["closed_at"], "closed_at")
-        _required(closed["reason"], "closeout reason")
-        _validate_work_block(closed["work_block"], None)
-        work_block_id = closed["work_block"]["work_block_id"]
-        if work_block_id in seen_work_blocks:
-            raise ValidationError("closed Work Block id is duplicated")
-        seen_work_blocks.add(work_block_id)
-        if closed["outcome"] == "success":
-            if closed["work_block"]["candidate_id"] is None:
-                raise ValidationError("success history needs a candidate")
-            require_success(closed["work_block"])
-        elif "success" in closed["reason"].lower() or "ready for merge" in closed["reason"].lower():
-            raise ValidationError("non-success closeout cannot claim success")
+    lifecycle = state["lifecycle_state"]
     active = state["active"]
-    if state["lifecycle_state"] == "INACTIVE":
+    if lifecycle == "INACTIVE":
         if active is not None:
-            raise ValidationError("inactive state cannot hold active authority")
+            raise ValidationError("INACTIVE cannot hold active authority")
         return
-    _validate_work_block(active, state["lifecycle_state"])
-    if active["work_block_id"] in seen_work_blocks:
-        raise ValidationError("closed Work Block cannot also be active")
+    if not isinstance(active, dict) or set(active) != ACTIVE_FIELDS:
+        raise ValidationError("active Work Block schema is unknown")
+
+    wb = _required_text(active["work_block_id"], "work_block_id", limit=128)
+    if WORK_BLOCK_RE.fullmatch(wb) is None:
+        raise ValidationError("work_block_id does not match canonical grammar")
+    initiative = _repo_path(active["initiative_ref"], "initiative_ref", allow_pattern=False)
+    admission_id = _required_text(active["admission_id"], "admission_id", limit=128)
+    if ADMISSION_ID_RE.fullmatch(admission_id) is None:
+        raise ValidationError("invalid admission_id")
+    _required_text(active["subject_branch"], "subject_branch", limit=256)
+    _sha(active["base_commit"], "base_commit")
+
+    profile = active["authority_profile"]
+    if not isinstance(profile, dict) or set(profile) != {"id", "revision"}:
+        raise ValidationError("authority_profile schema is unknown")
+    _required_text(profile["id"], "authority_profile.id", limit=128)
+    _sha(profile["revision"], "authority_profile.revision")
+
+    planning = active["planning_subject"]
+    if not isinstance(planning, dict) or set(planning) != {"revision", "paths"}:
+        raise ValidationError("planning_subject schema is unknown")
+    planning_revision = _sha(planning["revision"], "planning_subject.revision")
+    planning_paths = _exact_paths(planning["paths"], "planning_subject.paths", nonempty=True)
+    for path in planning_paths:
+        if not derived_planning_path(initiative, path):
+            raise ValidationError("planning path is outside derived initiative planning surface")
+
+    impl = _scope(active["implementation_write_set"], "implementation_write_set", nonempty=True)
+    coord = _scope(active["coordination_scope"], "coordination_scope", nonempty=False)
+    if scopes_overlap(impl, coord):
+        raise ValidationError("implementation and coordination scopes overlap")
+    for path in planning_paths:
+        if not scope_matches(path, coord):
+            raise ValidationError("planning path must be covered by coordination_scope")
+        if scope_matches(path, impl):
+            raise ValidationError("planning path must not be implementation authority")
+
+    candidate = active["source_candidate_sha"]
+    if candidate is not None:
+        candidate = _sha(candidate, "source_candidate_sha")
+
+    _validate_role(active["critic"], "critic", candidate=candidate, critic_revision=planning_revision)
+    _validate_role(active["reviewer"], "reviewer", candidate=candidate)
+    _validate_role(active["verifier"], "verifier", candidate=candidate)
+
+    critic_status = active["critic"]["status"]
+    reviewer_status = active["reviewer"]["status"]
+    verifier_status = active["verifier"]["status"]
+    if lifecycle == "DEFINE":
+        if critic_status not in {"PENDING", "BLOCKED"} or candidate is not None:
+            raise ValidationError("DEFINE has contradictory authority")
+        if reviewer_status != "PENDING" or verifier_status != "PENDING":
+            raise ValidationError("DEFINE cannot retain candidate assurance")
+    elif lifecycle == "EXECUTE":
+        if critic_status != "READY" or candidate is not None:
+            raise ValidationError("EXECUTE requires READY Critic and no candidate")
+        if reviewer_status != "PENDING" or verifier_status != "PENDING":
+            raise ValidationError("EXECUTE cannot retain candidate assurance")
+    elif lifecycle == "ASSURE":
+        if critic_status != "READY" or candidate is None:
+            raise ValidationError("ASSURE requires READY Critic and candidate")
+        if verifier_status == "READY" and reviewer_status != "READY":
+            raise ValidationError("Verifier READY requires Reviewer READY")
 
 
-def _active(state: dict, expected: str) -> dict:
+def _copy_active(state: dict, expected: set[str]) -> dict:
     validate(state)
-    if state["lifecycle_state"] != expected:
-        raise TransitionDenied(f"transition requires {expected}")
+    if state["lifecycle_state"] not in expected:
+        raise TransitionDenied(f"transition requires one of {sorted(expected)}")
     return copy.deepcopy(state)
 
 
-def open_work_block(state: dict, *, work_block_id: str, subject_branch: str,
-                    subject_revision: str, write_set: list[str], controller_tree: str) -> dict:
-    next_state = _active(state, "INACTIVE")
-    if any(item["work_block"]["work_block_id"] == work_block_id for item in next_state["history"]):
-        raise TransitionDenied("a closed Work Block cannot be reopened under the same id")
-    next_state["lifecycle_state"] = "DEFINE"
-    next_state["active"] = {
-        "work_block_id": work_block_id, "subject_branch": subject_branch,
-        "subject_revision": subject_revision, "write_set": write_set,
-        "write_gate": "BLOCKED", "controller_generation": "v1",
-        "controller_tree": controller_tree, "candidate_id": None, "capability": None,
-        "dispatches": [], "evidence": [], "assurance_retry": False,
-        "assurance_evidence_start": 0,
+def _clear_candidate_assurance(active: dict) -> None:
+    active["source_candidate_sha"] = None
+    active["reviewer"] = {"status": "PENDING", "candidate_sha": None}
+    active["verifier"] = {"status": "PENDING", "candidate_sha": None}
+
+
+def open_work_block(
+    current: dict | None,
+    *,
+    work_block_id: str,
+    initiative_ref: str,
+    admission_id: str,
+    subject_branch: str,
+    base_commit: str,
+    authority_profile_id: str,
+    authority_profile_revision: str,
+    planning_revision: str,
+    planning_paths: list[str],
+    implementation_write_set: list[str],
+    coordination_scope: list[str],
+) -> dict:
+    if current is not None:
+        validate(current)
+        if current["lifecycle_state"] != "INACTIVE":
+            raise TransitionDenied("open requires missing state or INACTIVE")
+    next_state = {
+        "schema_version": SCHEMA_VERSION,
+        "lifecycle_state": "DEFINE",
+        "active": {
+            "work_block_id": work_block_id,
+            "initiative_ref": initiative_ref,
+            "admission_id": admission_id,
+            "subject_branch": subject_branch,
+            "base_commit": base_commit,
+            "authority_profile": {"id": authority_profile_id, "revision": authority_profile_revision},
+            "planning_subject": {"revision": planning_revision, "paths": sorted(planning_paths)},
+            "implementation_write_set": sorted(implementation_write_set),
+            "coordination_scope": sorted(coordination_scope),
+            "critic": {"status": "PENDING", "subject_revision": None},
+            "source_candidate_sha": None,
+            "reviewer": {"status": "PENDING", "candidate_sha": None},
+            "verifier": {"status": "PENDING", "candidate_sha": None},
+        },
     }
     validate(next_state)
     return next_state
 
 
-def approve_define(state: dict) -> dict:
-    next_state = _active(state, "DEFINE")
-    active = next_state["active"]
-    scope_change = next((item for item in reversed(active["evidence"])
-                         if item["verdict"] == "SCOPE_CHANGE"), None)
-    if scope_change is not None and scope_change["subject_revision"] == active["subject_revision"]:
-        raise TransitionDenied("material finding requires a new Define revision")
-    critic = [item for item in active["evidence"] if item["role"] == "critic"
-              and item["subject_revision"] == active["subject_revision"]]
-    if not critic or critic[-1]["verdict"] != "APPROVE":
-        raise TransitionDenied("current Define revision needs Critic approval")
-    active["write_gate"] = "READY"
-    next_state["lifecycle_state"] = "EXECUTE"
+def critic_result(state: dict, outcome: str, *, planning_verified: bool = True) -> dict:
+    next_state = _copy_active(state, {"DEFINE"})
+    if outcome == "blocked":
+        next_state["active"]["critic"] = {"status": "BLOCKED", "subject_revision": None}
+    elif outcome == "ready":
+        if not planning_verified:
+            raise TransitionDenied("Critic READY requires exact current planning subject")
+        revision = next_state["active"]["planning_subject"]["revision"]
+        next_state["active"]["critic"] = {"status": "READY", "subject_revision": revision}
+        next_state["lifecycle_state"] = "EXECUTE"
+    else:
+        raise TransitionDenied("unknown Critic outcome")
     validate(next_state)
     return next_state
 
 
-def freeze_candidate(state: dict, candidate_id: str) -> dict:
-    next_state = _active(state, "EXECUTE")
-    if next_state["active"]["write_gate"] != "READY":
-        raise TransitionDenied("write gate is not READY")
-    next_state["active"]["candidate_id"] = _tree(candidate_id, "candidate_id")
-    next_state["active"]["assurance_retry"] = False
-    next_state["active"]["assurance_evidence_start"] = len(next_state["active"]["evidence"])
-    next_state["lifecycle_state"] = "ASSURE"
-    validate(next_state)
-    return next_state
-
-
-def after_result(state: dict, role: str, verdict: str) -> dict:
-    """Apply the sole lifecycle semantics for a newly appended role result."""
-    if role in {"reviewer", "verifier"}:
-        if verdict in {"CHANGES_REQUIRED", "FAIL"}:
-            state["active"]["candidate_id"] = None
-            state["lifecycle_state"] = "EXECUTE"
-        elif verdict == "SCOPE_CHANGE":
-            state["active"]["candidate_id"] = None
-            state["active"]["write_gate"] = "BLOCKED"
-            state["lifecycle_state"] = "DEFINE"
-    validate(state)
-    return state
-
-
-def revise_define(state: dict, subject_revision: str) -> dict:
-    validate(state)
-    if state["lifecycle_state"] not in {"EXECUTE", "DEFINE"}:
-        raise TransitionDenied("material revision requires EXECUTE or DEFINE")
-    next_state = copy.deepcopy(state)
-    if next_state["lifecycle_state"] == "DEFINE" and not any(
-        item["verdict"] == "SCOPE_CHANGE" and item["subject_revision"] == next_state["active"]["subject_revision"]
-        for item in next_state["active"]["evidence"]
-    ):
-        raise TransitionDenied("DEFINE revision needs a material finding")
-    revision = _required(subject_revision, "subject_revision")
-    if revision == next_state["active"]["subject_revision"]:
-        raise TransitionDenied("material revision must change subject revision")
-    next_state["active"]["subject_revision"] = revision
-    next_state["active"]["candidate_id"] = None
-    next_state["active"]["write_gate"] = "BLOCKED"
+def revise_begin(state: dict) -> dict:
+    next_state = _copy_active(state, {"EXECUTE", "ASSURE"})
     next_state["lifecycle_state"] = "DEFINE"
+    next_state["active"]["critic"] = {"status": "PENDING", "subject_revision": None}
+    _clear_candidate_assurance(next_state["active"])
     validate(next_state)
     return next_state
 
 
-def retry_assurance(state: dict) -> dict:
-    next_state = _active(state, "ASSURE")
+def revise_bind(
+    state: dict,
+    *,
+    planning_revision: str,
+    planning_paths: list[str],
+    implementation_write_set: list[str],
+    coordination_scope: list[str],
+) -> dict:
+    next_state = _copy_active(state, {"DEFINE"})
+    next_state["active"]["planning_subject"] = {"revision": planning_revision, "paths": sorted(planning_paths)}
+    next_state["active"]["implementation_write_set"] = sorted(implementation_write_set)
+    next_state["active"]["coordination_scope"] = sorted(coordination_scope)
+    next_state["active"]["critic"] = {"status": "PENDING", "subject_revision": None}
+    _clear_candidate_assurance(next_state["active"])
+    validate(next_state)
+    return next_state
+
+
+def create_candidate(state: dict, candidate_sha: str, *, git_verified: bool = True) -> dict:
+    next_state = _copy_active(state, {"EXECUTE"})
+    if not git_verified:
+        raise TransitionDenied("candidate Git predicates are not satisfied")
+    _sha(candidate_sha, "candidate_sha")
+    next_state["lifecycle_state"] = "ASSURE"
+    next_state["active"]["source_candidate_sha"] = candidate_sha
+    next_state["active"]["reviewer"] = {"status": "PENDING", "candidate_sha": None}
+    next_state["active"]["verifier"] = {"status": "PENDING", "candidate_sha": None}
+    validate(next_state)
+    return next_state
+
+
+def reviewer_result(state: dict, outcome: str) -> dict:
+    next_state = _copy_active(state, {"ASSURE"})
     active = next_state["active"]
-    if not any(item["role"] == "verifier" and item["verdict"] == "EVIDENCE_PROBLEM"
-               and item["candidate_id"] == active["candidate_id"]
-               for item in active["evidence"][active["assurance_evidence_start"]:]):
-        raise TransitionDenied("unchanged candidate retry requires evidence-only Verifier problem")
-    active["assurance_retry"] = True
+    candidate = active["source_candidate_sha"]
+    if outcome == "ready":
+        active["reviewer"] = {"status": "READY", "candidate_sha": candidate}
+    elif outcome == "rework":
+        next_state["lifecycle_state"] = "EXECUTE"
+        _clear_candidate_assurance(active)
+    elif outcome == "scope-change":
+        next_state["lifecycle_state"] = "DEFINE"
+        active["critic"] = {"status": "PENDING", "subject_revision": None}
+        _clear_candidate_assurance(active)
+    else:
+        raise TransitionDenied("unknown Reviewer outcome")
     validate(next_state)
     return next_state
 
 
-def closeout(state: dict, *, outcome: str, closed_at: str, reason: str) -> dict:
-    validate(state)
-    if state["lifecycle_state"] not in {"DEFINE", "EXECUTE", "ASSURE"}:
-        raise TransitionDenied("closeout requires an active Work Block")
-    if outcome not in {"success", "reporting_only", "cancelled"}:
-        raise TransitionDenied("unknown closeout outcome")
-    active = state["active"]
-    if outcome == "success":
-        if state["lifecycle_state"] != "ASSURE":
-            raise TransitionDenied("success requires ASSURE")
-        from .evidence import require_success
-        require_success(active)
-    elif "success" in reason.lower() or "ready for merge" in reason.lower():
-        raise TransitionDenied("non-success closeout cannot claim success")
-    next_state = copy.deepcopy(state)
-    next_state["history"].append({"outcome": outcome, "work_block": active,
-                                  "closed_at": _required(closed_at, "closed_at"),
-                                  "reason": _required(reason, "reason")})
-    next_state["active"] = None
-    next_state["lifecycle_state"] = "INACTIVE"
+def verifier_result(state: dict, outcome: str) -> dict:
+    next_state = _copy_active(state, {"ASSURE"})
+    active = next_state["active"]
+    candidate = active["source_candidate_sha"]
+    if outcome == "ready":
+        if active["reviewer"] != {"status": "READY", "candidate_sha": candidate}:
+            raise TransitionDenied("Verifier READY requires Reviewer READY for exact candidate")
+        active["verifier"] = {"status": "READY", "candidate_sha": candidate}
+    elif outcome == "evidence-problem":
+        active["verifier"] = {"status": "PENDING", "candidate_sha": None}
+    elif outcome == "rework":
+        next_state["lifecycle_state"] = "EXECUTE"
+        _clear_candidate_assurance(active)
+    elif outcome == "scope-change":
+        next_state["lifecycle_state"] = "DEFINE"
+        active["critic"] = {"status": "PENDING", "subject_revision": None}
+        _clear_candidate_assurance(active)
+    else:
+        raise TransitionDenied("unknown Verifier outcome")
     validate(next_state)
     return next_state
+
+
+def close(state: dict, outcome: str) -> dict:
+    _copy_active(state, {"DEFINE", "EXECUTE", "ASSURE"})
+    if outcome not in {"reporting-only", "cancelled"}:
+        raise TransitionDenied("close supports only reporting-only or cancelled")
+    return copy.deepcopy(INACTIVE)
+
+
+def publish_success(state: dict) -> dict:
+    next_state = _copy_active(state, {"ASSURE"})
+    active = next_state["active"]
+    candidate = active["source_candidate_sha"]
+    expected = {"status": "READY", "candidate_sha": candidate}
+    if active["reviewer"] != expected or active["verifier"] != expected:
+        raise TransitionDenied("publish success requires exact Reviewer and Verifier READY")
+    return copy.deepcopy(INACTIVE)
