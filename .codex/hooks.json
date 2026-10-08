@@ -1,21 +1,26 @@
 {
-  "description": "Project-local Codex guardrails for external Hard Stops, the active Work Block scope, write-set discipline, and subagent context.",
+  "description": "Project-local Codex adapters over the shared SDLC v1 controller and non-lifecycle consequential guard.",
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "^(Bash|apply_patch|Edit|Write)$",
+        "matcher": "^Bash$",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/hard_stop_policy.py\"",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/sdlc-v1-bridge.py\" consequential",
             "timeout": 10,
-            "statusMessage": "Checking external Hard Stop guardrail"
-          },
+            "statusMessage": "Checking consequential external boundaries"
+          }
+        ]
+      },
+      {
+        "matcher": "^(apply_patch|Edit|Write)$",
+        "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/pre_tool_use_policy.py\"",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/sdlc-v1-bridge.py\" runtime --runtime codex",
             "timeout": 10,
-            "statusMessage": "Checking Work Block scope and write-set"
+            "statusMessage": "Checking shared SDLC v1 structured-write authority"
           }
         ]
       }
@@ -26,9 +31,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/subagent_context.py\"",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/sdlc-v1-bridge.py\" subagent-context --runtime codex",
             "timeout": 5,
-            "statusMessage": "Loading Work Block scope for subagent"
+            "statusMessage": "Loading shared SDLC v1 Work Block context"
           }
         ]
       }

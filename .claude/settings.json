@@ -6,17 +6,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .agent/hooks/hard_stop_policy.py",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/sdlc-v1-bridge.py\" consequential",
             "timeout": 5000
           }
         ]
       },
       {
-        "matcher": "Bash|Edit|MultiEdit|Write",
+        "matcher": "Edit|MultiEdit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/work_block_gate.py",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/sdlc-v1-bridge.py\" runtime --runtime claude",
             "timeout": 5000
           }
         ]
@@ -30,17 +30,6 @@
             "type": "command",
             "command": "bash .claude/hooks/typecheck.sh",
             "timeout": 30000
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 .claude/hooks/assurance_gate.py",
-            "timeout": 5000
           }
         ]
       }

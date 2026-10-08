@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+remote="${1:?remote name is required}"
+root="$(git rev-parse --show-toplevel)"
+exec python3 "$root/scripts/sdlc-v1-bridge.py" git-pre-push --root "$root" "$remote"
