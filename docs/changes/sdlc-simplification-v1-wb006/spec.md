@@ -78,19 +78,21 @@ Coordination cannot authorize additional implementation files.
 4. Snapshot tracked preimages and local authority state (existing
    `core.hooksPath`, installation config, Git-private controller state, external
    registry active admissions and cutover-related authority) before mutation.
-5. On a clean disposable worktree use `git apply --check`, then
-   `git apply` **on the exact patch bytes**. Verify exact seven postimages
-   `(mode, blob)` and zero undeclared tracked changes.
-6. Create one exact cutover candidate commit from verified postimage tree;
-   preserve its exact SHA for Reviewer/Verifier. GitHub connector may transfer
-   verified Git objects but cannot substitute a reconstructed/modified patch.
+5. In a separate full-history disposable clone with an independent Git
+   common directory, use `git apply --check` and `git apply` on exact patch
+   bytes; verify seven postimage `(mode, blob)` pairs and full-tree identity.
+6. Create one exact candidate only from verified full postimage tree; require
+   exact parent SHA, entire GitHub committed tree SHA equal to locally verified
+   `git write-tree`, non-force `expected_sha` ref lease and fetch-back equality.
+   Preserve exact candidate SHA for Reviewer/Verifier.
 7. Fail closed on incomplete state, missing Git history, permission/API failure,
    dirty tree, manifest discrepancy or unexpected Git changes.
 
 ## Candidate assurance (isolated only)
 
-- Run future bootstrap install/check on an isolated disposable checkout with
-  a disposable external registry; never install production-host authority here.
+- Run bootstrap/install and rollback ONLY in a full-history disposable CLONE
+  with distinct Git common dir, isolated HOME and external registry. A linked
+  worktree of the installed repository is not an activation test environment.
 - Canonical FIRST for exact frozen replacement SHA:
   `python scripts/verify-sdlc-replacement.py --replacement-candidate e167b6ffbe01f3977ca2b738d8c12a17a4004110`.
 - Require `ACTIVATED`, controller/orchestration/WB5 suites, semantic corpus,
@@ -113,9 +115,11 @@ Because `main` currently trails WB-005 by 212 commits / 98 changed files,
 the recommended precursor is a separate Owner-controlled promotion of the
 previously assured inert stack. It is not authorized by this WB-006 plan.
 
-After assurance, obtain an explicit Owner GO for exact cutover SHA, target ref,
-activation window, operator and rollback instructions. PR publication alone does
-not authorize merge. GitHub merge/deploy is never automatic in baseline mode.
+After assurance and real authenticated GitHub protection-facts review, obtain
+explicit Owner GO for exact SHA, target ref, target-installation inventory,
+maintenance barrier, window and rollback. Owner keeps an exclusive barrier
+through merge, full-tree validation, bootstrap/restart/smoke or rollback.
+PR publication is not merge approval; baseline never auto-merges/deploys.
 
 ## Rollback / failure classification
 
@@ -126,9 +130,11 @@ preimage Git `(mode, blob)`, prior `core.hooksPath`, trusted config and
 Git-private state according to snapshots; reconcile external registry instead
 of blindly overwriting concurrent audit/history. Assert no live dual authority.
 
-Tracked production rollback is an Owner-controlled exact revert of cutover
-commit(s); local authority rollback remains mandatory and separately verified.
-Any failed invariant leaves STOP/ROLLBACK_REQUIRED, never READY.
+Tracked production rollback is an Owner-controlled exact revert after verifying
+actual tip; local authority rollback is conditional on current config/registry/
+controller state still matching the cutover-owned value. Never overwrite
+independently modified state or erase terminal history. Keep the barrier until
+no mixed authority is independently proven. Failure => STOP/ROLLBACK_REQUIRED.
 
 ## Acceptance criteria
 
@@ -142,3 +148,103 @@ Any failed invariant leaves STOP/ROLLBACK_REQUIRED, never READY.
 - Owner approval explicitly gates default-branch merge and operational activation.
 - No WB-006 source/authority change to `main` during plan/critic/implementation
   before Owner GO.
+
+## Architecture Critic supplement — B1/B2/B3/M1 (authoritative)
+
+This section constrains every earlier reference to a disposable worktree,
+checkout, merge, install, or rollback. It neither expands the seven-path
+implementation write set nor authorizes production changes.
+
+### B1: Isolated clone with distinct common Git dir
+
+All simulated installation, bootstrap, native Claude/Codex/Git activation smoke
+and rollback testing MUST occur in a fresh full-history disposable `git clone`
+whose Git common directory is different from the proposed installed repository
+and its linked worktrees. Verify both common-dir identities before mutation.
+Use separate HOME/Git configuration and external registry. Linked worktrees
+share `core.hooksPath`, trusted installation config, and registry authority;
+they are permitted only for read-only inspection or controlled candidate
+construction with no shared authority/config mutations. A linked worktree MUST
+NEVER execute simulated installation/rollback.
+
+### B2: Exclusive Owner maintenance barrier, bounded to installations
+
+Before Owner GO enumerate exact target installation path, Git common dir,
+**all its linked worktrees**, existing Claude/Codex sessions, in-flight
+consequential operations, external registry, responsible operator and snapshots.
+Before the first snapshot, drain/stop all agent sessions and writes/commits/
+pushes/delivery operations; prevent new agents/consequential execution on every
+enumerated worktree. Snapshot seven preimage (mode, blob) pairs, refs/HEAD,
+`core.hooksPath`, Git-common-dir installation config, per-worktree Git-private
+controller state, external active admission bindings and cutover-owned state.
+Immediately BEFORE tracked merge/local mutation recheck active admission
+bindings, local authority, refs and inflight operations. Any unexpected state
+is STOP.
+
+Keep the **same exclusive barrier** through Owner-approved tracked merge,
+post-merge full-tree verification, installation/bootstrap, agent restart and
+native activation smoke, or through verified complete rollback. Old sessions
+must not continue with cached legacy authority while new ones use replacement
+wiring. The authority switch is one supervised operational transaction; no
+atomicity is claimed for unrelated clones/remote installations. Independent
+installations require independent inventory, barrier and Owner decision.
+
+On rollback, hold barrier while terminalizing ONLY cutover-created admissions
+and reverting exact tracked changes after checking tip/ancestry. Restore prior
+`core.hooksPath`, config, controller state or registry values only when CURRENT
+value equals the known cutover-owned post-snapshot value/absence. An independent
+change after snapshot requires STOP and human reconciliation, never blind
+registry replacement, wholesale deletion of bindings or erasure of immutable
+audit/history. Release barrier only after independently proven exact rollback
+and no remaining mixed/live cutover authority.
+
+### B3: Full Git tree identity — local, GitHub, merged main
+
+On exact expected parent SHA verify the seven manifest preimages `(mode, blob)`,
+then apply the EXACT assured patch bytes in B1's isolated clone via
+`git apply --check` and `git apply`. Stage exactly the seven manifest paths.
+Record the complete locally verified `git write-tree` SHA, confirm seven
+postimage blob/mode pairs and that EVERY other path matches parent tree.
+
+When GitHub connector constructs the proposed commit require: (a) exact
+verified parent SHA, (b) connector tree SHA == entire locally verified tree SHA,
+(c) seven exact postimages and unchanged non-write-set paths. If any mismatch,
+STOP before updating branch ref. Advance subject branch only non-force with
+`expected_sha` lease equal to observed current head. Fetch back published
+commit, parent and full tree and require identity. A regenerated or merely
+similar patch is not accepted.
+
+After an independently verified candidate receives a separate Owner GO,
+under B2 maintenance barrier, independently check the resulting
+`main^{tree}` is the EXACT previously approved post-patch Git tree, with
+expected ancestry and seven exact postimages, BEFORE bootstrap/runtime
+activation. Squash, rebase, conflict resolution, concurrency, or any
+transformation yielding unexpected tree/ancestry requires STOP and renewed
+Reviewer/Verifier + Owner approval. Neither successful merge nor apparent
+seven-file equality replaces complete-tree equality.
+
+### M1: Authenticated real GitHub platform facts
+
+Real authenticated branch/ruleset protection, default-branch/ref and
+publication authority facts are required before Owner GO from a trusted
+authorized operator/tool. The connector's observed classic-protection
+HTTP 403 and private-repository ruleset plan limitation mean UNKNOWN,
+not absence of protection. UNKNOWN, inaccessible, malformed or unsupported
+platform facts are an explicit STOP; offline fake-GitHub provider regression
+is not sufficient release evidence. This does not authorize provider changes.
+
+### Inert-stack promotion prerequisite
+
+At Critic review, `main` is an ancestor of WB-005 closeout and trails it by
+212 commits (98 net changed files). Separately Owner-approve and integrate
+the already assured inert WB-0..5 chain, with its own checks and rollback.
+Nothing in WB-006 authorizes that merge. Before cutover, require `main` to
+contain exact closeout `0891bc5ce96149e3494dd2cc4ce0e0195bf5ceae` and
+reconfirm seven manifest preimage `(mode, blob)` pairs, else STOP/replan.
+
+### Supplement acceptance evidence
+
+B1 distinct Git common-dir activation/rollback PASS; B2 continuous barrier and
+conditional restore procedure approved; B3 local/GitHub and post-merge full-tree
+equality; M1 trustworthy actual protection facts known; separate inert-stack
+promotion complete. Architecture Critic must APPROVE before implementation.
