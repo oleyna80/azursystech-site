@@ -10,29 +10,29 @@ DEFAULT_WORK_BLOCK="$ROOT/.agent/active-work-block.default.json"
 
 case "${1:-}" in
   --install-git-hooks)
-    [ -x "$ROOT/.githooks/commit-msg" ] || {
-      echo "FAIL: .githooks/commit-msg is missing or not executable" >&2
-      exit 1
-    }
+    for hook in pre-commit commit-msg pre-push; do
+      [ -x "$ROOT/.githooks/$hook" ] || { echo "FAIL: .githooks/$hook is missing or not executable" >&2; exit 1; }
+    done
     git -C "$ROOT" config core.hooksPath .githooks
-    [ "$(git -C "$ROOT" config --get core.hooksPath)" = ".githooks" ] || {
-      echo "FAIL: could not configure core.hooksPath=.githooks" >&2
-      exit 1
-    }
+    [ "$(git -C "$ROOT" config --get core.hooksPath)" = ".githooks" ] || { echo "FAIL: could not configure core.hooksPath=.githooks" >&2; exit 1; }
     echo "Git hooks installed locally: .githooks"
     exit 0
     ;;
   --check-git-hooks)
-    [ -x "$ROOT/.githooks/commit-msg" ] || {
-      echo "FAIL: .githooks/commit-msg is missing or not executable" >&2
-      exit 1
-    }
-    [ "$(git -C "$ROOT" config --get core.hooksPath || true)" = ".githooks" ] || {
-      echo "FAIL: core.hooksPath is not .githooks" >&2
-      exit 1
-    }
+    for hook in pre-commit commit-msg pre-push; do
+      [ -x "$ROOT/.githooks/$hook" ] || { echo "FAIL: .githooks/$hook is missing or not executable" >&2; exit 1; }
+    done
+    [ "$(git -C "$ROOT" config --get core.hooksPath || true)" = ".githooks" ] || { echo "FAIL: core.hooksPath is not .githooks" >&2; exit 1; }
     echo "Git hooks check passed: .githooks"
     exit 0
+    ;;
+  --install-sdlc-v1)
+    repository="${2:?repository owner/name is required}"
+    registry_path="${3:?absolute external registry path is required}"
+    exec python3 "$ROOT/scripts/sdlc-v1-bootstrap.py" --root "$ROOT" install --repository "$repository" --registry-path "$registry_path"
+    ;;
+  --check-sdlc-v1)
+    exec python3 "$ROOT/scripts/sdlc-v1-bootstrap.py" --root "$ROOT" check
     ;;
 esac
 
