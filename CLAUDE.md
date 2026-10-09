@@ -144,9 +144,17 @@ public/demo/<name>/           →  static images
 
 ## SDLC & Agent Layer
 
-The project uses an Agentic SDLC. Authoritative files:
+The installed Agentic SDLC uses Controller v1 (`.agent/controllers/v1/`). Trusted
+configuration at `<Git common dir>/azursystech/installation.json` selects the
+external active-admission registry; per-worktree schema-v2 state comes from
+`git rev-parse --path-format=absolute --git-path azursystech/active-work-block.json`.
+Missing/corrupt state is not INACTIVE; pre-WB planning uses trusted admission.
+Tracked schema-v3 state and historical gate files neither grant nor deny authority.
+The installed profile remains human-governed, with consequential actions Owner-controlled.
+
+Entry points:
 - `AGENTS.md` — contract: stages, Hard Stops, authority model
-- `.agent/ROSTER.md` — registry of 10 active skills + routing table
+- `.agent/ROSTER.md` — logical roles and skill routing; capability does not grant authority
 - `.claude/agents/` — subagent definitions (scoped-coder, verifier, reviewer, critic, solution-architect, codex-reviewer, gpt-*)
 
 Main chat operating mode:
@@ -154,9 +162,20 @@ Main chat operating mode:
 - Use subagents for implementation, review, fixes, verification, and specialist analysis when the Work Block is non-trivial.
 - Use exactly one write-capable `scoped-coder` for a given write-set.
 - Reviewer, critic, verifier, GPT critic/verifier, and codex-reviewer are read-only for project files unless their agent contract explicitly allows a narrow memory/report artifact.
-- The Orchestrator owns `.agent/critic-gate.md`, `.agent/verification-gate.md`, orchestrator-log updates, scope amendments, and final Owner reporting.
+- The Orchestrator coordinates actual Controller v1 bindings and approved reports.
+  Critic READY binds committed planning in DEFINE → EXECUTE; Reviewer/Verifier
+  bind the exact clean committed source candidate in ASSURE. Scope changes return
+  to DEFINE. Trusted publish verifies the exact remote tip before INACTIVE;
+  failed publication preserves ASSURE. Normal success is not `close --success`.
 
-Hard Stops and verification gate: `.agent/critic-gate.md`, `.agent/verification-gate.md`, `.claude/hooks/`.
+Live invocation wiring is `.claude/settings.json` → `scripts/sdlc-v1-bridge.py`;
+Git-native hooks enforce Git transactions through the same controller contract.
+Legacy `.agent/critic-gate.md`, `.agent/verification-gate.md` and old authority
+hooks are historical only. Retained typecheck is non-authority. A plugin Stop
+review is a client-level restriction, not Controller authority: it cannot mutate
+admission/state, replace mandatory bindings, or promote tracked schema-v3 state.
+Inspect effective plugin configuration and completion recovery in native checks;
+unverified composition or unresolved Stop deadlock blocks native acceptance.
 
 Claude Code local/provider settings:
 - Real API keys, provider credentials, subscription tokens, and model endpoint overrides live outside the repository.

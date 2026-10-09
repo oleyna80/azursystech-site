@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/sdlc-v1-bridge.py\" consequential",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/sdlc-v1-bridge.py\" consequential --runtime codex",
             "timeout": 10,
             "statusMessage": "Checking consequential external boundaries"
           }

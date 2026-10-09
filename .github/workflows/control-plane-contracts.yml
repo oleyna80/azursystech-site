@@ -4,25 +4,7 @@ on:
   push:
     branches:
       - main
-    paths:
-      - ".agent/**"
-      - ".githooks/**"
-      - ".claude/**"
-      - ".codex/**"
-      - "scripts/sdlc-v1-*.py"
-      - "scripts/verify-sdlc-replacement.py"
-      - "scripts/bootstrap.sh"
-      - ".github/workflows/control-plane-contracts.yml"
   pull_request:
-    paths:
-      - ".agent/**"
-      - ".githooks/**"
-      - ".claude/**"
-      - ".codex/**"
-      - "scripts/sdlc-v1-*.py"
-      - "scripts/verify-sdlc-replacement.py"
-      - "scripts/bootstrap.sh"
-      - ".github/workflows/control-plane-contracts.yml"
   workflow_dispatch:
 
 permissions:
@@ -41,5 +23,151 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.14"
-      - name: Verify assured SDLC replacement
-        run: python scripts/verify-sdlc-replacement.py
+      - name: Historical frozen and current candidate assurance
+        shell: bash
+        run: |
+          python - <<'PY'
+          import importlib
+          import importlib.util
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+          import tempfile
+          import warnings
+
+          BASELINE = "be9723c17a27393d01a9769c68ae710529acad94"
+          BASELINE_TREE = "17ba9de3d511a42e5767b35078f2f49e4c804a47"
+          FROZEN_SOURCE = "e167b6ffbe01f3977ca2b738d8c12a17a4004110"
+          ROOT = Path.cwd().resolve()
+          # Isolation precedes the first Git invocation, including checkout identity resolution.
+          for key in tuple(os.environ):
+              if key.startswith("GIT_"):
+                  del os.environ[key]
+          os.environ.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_SYSTEM=os.devnull,
+                            GIT_CONFIG_NOSYSTEM="1", PYTHONWARNINGS="error::ResourceWarning")
+          warnings.simplefilter("error", ResourceWarning)
+          evidence = Path(os.environ["RUNNER_TEMP"]) / "wb007-assurance"
+          evidence.mkdir(parents=True, exist_ok=True)
+          report = {"status": "RUNNING", "commands": [], "tracks": {},
+                    "run_id": os.environ.get("GITHUB_RUN_ID"),
+                    "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
+                    "event": os.environ["GITHUB_EVENT_NAME"]}
+
+          def persist():
+              (evidence / "provenance.json").write_text(json.dumps(report, indent=2) + "\n")
+
+          def run(track, command, cwd=ROOT):
+              result = subprocess.run(command, cwd=cwd, capture_output=True, text=True)
+              ordinal = len(report["commands"])
+              log = evidence / f"{ordinal:02d}-{track}.log"
+              log.write_text(result.stdout + result.stderr)
+              report["commands"].append({"track": track, "command": command, "cwd": str(cwd),
+                                         "returncode": result.returncode, "log": log.name})
+              persist()
+              print(result.stdout, end="", flush=True)
+              print(result.stderr, end="", file=sys.stderr, flush=True)
+              if result.returncode:
+                  report["tracks"][track] = "FAIL"
+                  raise RuntimeError(f"{track} command failed: {command}")
+              return result.stdout.strip()
+
+          def git(*args, cwd=ROOT):
+              return run("identity", ["git", *args], cwd)
+
+          try:
+              with tempfile.TemporaryDirectory(prefix="wb007-ci-") as temporary:
+                  temporary = Path(temporary)
+                  home = temporary / "home"
+                  home.mkdir()
+                  os.environ["HOME"] = str(home)
+                  event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
+                  checkout_sha = git("rev-parse", "HEAD")
+                  checkout_tree = git("rev-parse", "HEAD^{tree}")
+                  checkout_parents = git("show", "-s", "--format=%P", "HEAD").split()
+                  report.update(checkout_sha=checkout_sha, checkout_tree=checkout_tree,
+                                checkout_parents=checkout_parents,
+                                event_ref=os.environ.get("GITHUB_REF"), event_sha=os.environ["GITHUB_SHA"])
+                  if report["event"] == "pull_request":
+                      source_head_sha = event["pull_request"]["head"]["sha"]
+                      event_base_sha = event["pull_request"]["base"]["sha"]
+                      if checkout_sha == source_head_sha:
+                          checkout_kind = "source_head"
+                      elif checkout_parents == [event_base_sha, source_head_sha]:
+                          checkout_kind = "synthetic_merge"
+                      else:
+                          raise RuntimeError("checkout does not match exact PR head or event merge parents")
+                      report.update(source_head_sha=source_head_sha, event_base_sha=event_base_sha,
+                                    checkout_kind=checkout_kind)
+                  elif report["event"] in {"push", "workflow_dispatch"}:
+                      if checkout_sha != os.environ["GITHUB_SHA"]:
+                          raise RuntimeError("checkout differs from event SHA")
+                      if report["event"] == "push" and event["after"] != checkout_sha:
+                          raise RuntimeError("push event after differs from checkout")
+                      report.update(source_head_sha=None, event_base_sha=event.get("before"),
+                                    checkout_kind="event_ref", pr_fields_applicable=False)
+                  else:
+                      raise RuntimeError("unsupported assurance event")
+                  if checkout_sha != os.environ["GITHUB_SHA"]:
+                      raise RuntimeError("actual checkout differs from GitHub event checkout SHA")
+                  persist()
+                  historical = temporary / "historical"
+                  run("historical", ["git", "clone", "--no-hardlinks", "--no-checkout", str(ROOT), str(historical)])
+                  if git("rev-parse", "--is-shallow-repository", cwd=historical) != "false":
+                      raise RuntimeError("historical clone is shallow")
+                  run("historical", ["git", "checkout", "--detach", BASELINE], historical)
+                  if git("rev-parse", "HEAD", cwd=historical) != BASELINE:
+                      raise RuntimeError("historical baseline identity differs")
+                  if git("rev-parse", "HEAD^{tree}", cwd=historical) != BASELINE_TREE:
+                      raise RuntimeError("historical tree identity differs")
+                  report["historical"] = {"baseline_sha": BASELINE, "tree": BASELINE_TREE,
+                                          "replacement_candidate_sha": FROZEN_SOURCE}
+                  run("historical", [sys.executable, "-W", "error::ResourceWarning",
+                                     "scripts/verify-sdlc-replacement.py", "--replacement-candidate", FROZEN_SOURCE], historical)
+                  report["tracks"]["historical"] = "PASS"
+                  persist()
+                  for suite, top in ((".agent/controllers/v1/tests", ".agent/controllers"),
+                                     (".agent/orchestration/tests", ".agent"),
+                                     (".agent/assurance/wb5/tests", ".agent")):
+                      run("current", [sys.executable, "-W", "error::ResourceWarning", "-m", "unittest",
+                                      "discover", "-s", suite, "-t", top, "-v"])
+                  run("current", [sys.executable, "-W", "error::ResourceWarning", "-m", "compileall", "-q",
+                                  ".agent/controllers/v1", ".agent/orchestration", ".agent/assurance/wb5",
+                                  "scripts/sdlc-v1-bridge.py", "scripts/sdlc-v1-bootstrap.py"])
+                  sys.path.insert(0, str(ROOT / ".agent"))
+                  imports = []
+                  for directory in ("controllers/v1", "orchestration", "assurance/wb5"):
+                      for path in sorted((ROOT / ".agent" / directory).glob("*.py")):
+                          relative = path.relative_to(ROOT / ".agent").with_suffix("")
+                          parts = list(relative.parts)
+                          if parts[-1] == "__init__":
+                              parts.pop()
+                          module = ".".join(parts)
+                          importlib.import_module(module)
+                          imports.append(module)
+                  for name in ("sdlc-v1-bridge.py", "sdlc-v1-bootstrap.py", "verify-sdlc-replacement.py"):
+                      spec = importlib.util.spec_from_file_location(name.replace("-", "_").replace(".", "_"), ROOT / "scripts" / name)
+                      module = importlib.util.module_from_spec(spec)
+                      sys.modules[spec.name] = module
+                      spec.loader.exec_module(module)
+                      imports.append(name)
+                  report["production_imports"] = {"count": len(imports), "modules": imports, "outcome": "PASS"}
+                  report["tracks"]["current"] = "PASS"
+                  report["status"] = "PASS"
+                  persist()
+          except Exception as exc:
+              report["status"] = "FAIL"
+              report["error"] = str(exc)
+              persist()
+              print(json.dumps(report, indent=2), file=sys.stderr)
+              raise SystemExit(1)
+          print(json.dumps(report, indent=2))
+          PY
+      - name: Preserve assurance provenance and failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: control-plane-provenance-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/wb007-assurance
+          if-no-files-found: error

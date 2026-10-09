@@ -31,6 +31,21 @@ subject branch. Merge, deployment, release, and other consequential external
 actions remain separate Owner-authority decisions. Authorization of one does
 not imply authorization of another.
 
+## Installed Controller v1 Authority
+
+Controller v1 is the installed runtime authority. Trusted configuration lives at
+`<Git common dir>/azursystech/installation.json` and resolves an external registry.
+Active admission is required for current authority; immutable admission history
+is not reactivated. Repository, branch, base and authority-profile bindings are
+immutable. The installed profile is human-governed; no role or document expands it.
+
+Controller state is schema v2, per worktree, under Git-private metadata resolved
+by `git rev-parse --path-format=absolute --git-path azursystech/active-work-block.json`.
+Missing/corrupt state is not INACTIVE. Pre-WB planning uses the trusted admitted
+path. Tracked schema-v3 `.agent/active-work-block.json`, historical gate records,
+and legacy lifecycle/topology procedures neither grant nor deny current authority.
+Where those documents conflict, this installed v1 contract takes precedence.
+
 ## Stable Logical Roles
 
 | Role | Core responsibility | Default write authority |
@@ -92,22 +107,15 @@ AzurSysTech maps declared runtime isolation to assurance tiers:
 
 A declared isolation level is evidence, not self-authenticating proof.
 
-### Native subagent topology contract
+### Independent assurance and admission
 
-For non-trivial `Managed` and `Assured` Work Blocks, a native capability probe
-must be `available` before topology promotion. The required policy is
-`native-separate-context-required`: admission binds a distinct native Critic
-execution, and successful closeout binds distinct native Critic, Reviewer, and
-Verifier executions. Each binding records the Work Block, role, execution and
-context identifiers, runtime/adapter/version, source or frozen revision,
-repository root, branch, read-only boundary, launch mechanism, topology tier,
-probe event, report, status, and observation time.
-
-Capability states `unknown`, `conditional`, `unavailable`, and `launch_failed`
-remain explicit degraded/blocked outcomes. They never authorize a main-thread
-substitution. Native role separation also does not satisfy
-`independent-readonly-root` or `os-isolated`; those stronger root and OS
-boundaries remain separately evidenced where required.
+The approved Work Block determines required independent contexts and isolation.
+Record actual runtime capability and access boundaries honestly; capability or
+native-topology labels do not create admission. Same-context advisory output
+cannot replace required independent Critic, Reviewer or Verifier evidence.
+Critic READY binds the committed planning revision in DEFINE; Reviewer and
+Verifier bind the exact clean committed source candidate in ASSURE. Stronger
+filesystem or OS isolation remains separately evidenced where required.
 
 ## Autonomous Work Block Execution and Private GitHub Mode
 
@@ -115,46 +123,38 @@ This section is the sole canonical authority source for autonomous execution and
 Owner escalation at AzurSysTech. Workflows, templates, runtime adapters, and
 engineering memory may state operational consequences only and must defer here.
 
-Within one approved, active schema-v3 Work Block, the Orchestrator may complete
-Define, planning, implementation, read-only subagent work, corrective loops,
-tests, documentation, staging, local commits, Review, and Verification without
-routine Owner escalation. Test failures, `CHANGES_REQUIRED`, refactoring, and
-other corrective work remain autonomous while the approved requirement, risk,
-architecture, authority, and write-set boundaries do not change.
+Within one approved Work Block with trusted active external admission, the
+Orchestrator performs planning, scoped implementation, read-only assurance,
+corrective loops, tests, approved documentation, staging and local commits
+without routine Owner escalation. Controller v1 state and immutable bindings
+remain prerequisites. Material requirement, risk, architecture, authority or
+scope changes require Owner control and return to DEFINE; implementation rework
+returns ASSURE to EXECUTE and requires a new exact candidate.
 
-Autonomous remote publication has two distinct subject-candidate paths. An
-assured active candidate requires a frozen, unchanged source candidate and a
-`BLOCKED` source write gate, formal Define-quality evidence where the governance
-profile requires it, a resolved Critic (`READY` with `APPROVE` or `SUPPLEMENT`,
-or explicit `SKIPPED` with a non-empty reason), and separate-context `READY`
-Reviewer and Verifier evidence for that exact frozen candidate. A negative
-Reviewer or Verifier verdict reopens source work and requires a new freeze.
-Its only normal non-force command form pushes
-`HEAD` through `origin` to `refs/heads/<subject_branch>`, where the attached
-non-default branch exactly matches the active Work Block `subject_branch`.
+The schema-v2 lifecycle is INACTIVE, DEFINE, EXECUTE and ASSURE. Trusted open
+binds committed planning in DEFINE; Critic READY atomically moves to EXECUTE.
+Candidate admission requires a clean exact committed SHA. Reviewer and Verifier
+READY must bind that same source_candidate_sha. Missing state is not INACTIVE.
 
-A final terminal closeout candidate uses that same literal command form, but is
-admitted only when committed Git ancestry proves one immediate transition from
-an eligible active parent to a canonical terminal inactive
-child. The parent must carry the matching Work Block, exact subject branch,
-READY formal Define-quality evidence where the governance profile requires it,
-and READY Critic/Review/Verification state. The child must contain
-the exact canonical inactive state, the matching `Work-Block:` commit linkage,
-and only the minimal lifecycle/closeout coordination allowlist. Inactive state
-alone never grants publication authority; arbitrary inactive-state publication
-is denied.
+Normal success uses trusted publish, not `close --success` or legacy terminal
+closeout publication. Publish permits only the exact non-force subject ref
+through trusted origin with Git-derived remote/default facts and a trusted
+branch-protection resolver. Unknown protection fails closed; default/protected
+branches are denied. Post-candidate source/planning changes, deletions, renames
+and merges are denied; only permitted linear coordination changes may form a
+later published tip. The actual Git index/history supplies path authority.
 
-For both paths the push must be the sole shell command; it cannot be coupled to
-a consequential action, wrapper, or shell command substitution. Runtime
-controls fail closed for executable command or process substitutions;
-single-quoted literal prose is not an executable substitution. The explicit
-command prevents the remote destination from being inferred from mutable
-upstream configuration. A successful candidate push is reported to the Owner
-for GitHub architecture and conformance review followed by the final
-`MERGE / REVISION / REJECT` decision. GitHub review is not a prerequisite for
-subject-branch push, and the push is not a merge or deployment authorization.
-Force/default/protected/tag/release/deletion and
-other external hard stops remain Owner-controlled.
+Remote exact-tip verification precedes immutable publication provenance while
+state remains ASSURE. Only successful verified publication reaches INACTIVE;
+failed publication preserves ASSURE. Recorder failure after push is reconciled
+against the existing exact remote tip, not treated as a conflicting new source
+publication. Terminal historical replay is read-only and never recreates active
+admission or changes another worktree/controller.
+
+Report source candidate and exact verified published tip to the Owner for
+`MERGE / REVISION / REJECT`. Subject publication is not merge, deployment or
+higher-autonomy authorization. Force/default/protected/tag/release/deletion and
+other consequential actions remain separately Owner-controlled.
 
 Technical credential presence, a runtime permission prompt, and project-local
 state alone do not create authority. They may enable the narrowly authorized
