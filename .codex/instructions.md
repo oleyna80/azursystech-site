@@ -3,7 +3,7 @@
 > System instructions for Codex CLI. Read alongside `AGENTS.md`.
 > Root `AGENTS.md` is the shared Agentic SDLC contract.
 > This file defines how Codex runs that contract with its own subagents,
-> write gate, context hygiene, and optional handoff to Claude Code.
+> Controller v1 bindings, context hygiene, and optional handoff to Claude Code.
 
 ---
 
@@ -21,24 +21,19 @@ sub-agents automatically when the approved topology requires them. This
 authorization is limited to the approved scope. It does not expand write
 authority, side-effect authority, DB authority, or Hard Stop authority.
 
-Before any non-trivial edit/write action, the first visible Work Block output
-must include `Stage 0 Routing Preflight` with Skill Routing Gate, Subagent
-Topology, side-effect class, DB action mode, Hard Stops, and
-`Write gate: READY` or `Write gate: BLOCKED`. It must also state the Codex
-Critic status: `required-ready`, `degraded`, or `skipped`; `fallback` is never
-an admission-equivalent status.
+Before a non-trivial write, report objective, role, approved write-set, trusted
+active admission, actual Controller v1 lifecycle state and next required gate.
+Resolve trusted installation config from the installed repository's Git common
+dir, its external registry, and per-worktree Git-private schema-v2 state.
+Tracked schema-v3 state and `.codex/write-gate.md` are historical; they neither
+grant nor deny current authority. Missing/corrupt private state is not INACTIVE.
+Pre-WB planning uses its admitted path without fabricating controller state.
 
-After Stage 0 and before Stage 1, run Stage 0.5 Codex Critic Review whenever
-`.codex/critic.md` mandatory triggers match. This is automatic under Work Block
-approval; do not wait for the Owner to ask for the critic separately. For a
-non-trivial `Managed` or `Assured` Work Block with native capability
-`available`, use a separate native read-only Critic. The canonical topology
-also requires separate native read-only Reviewer and Verifier contexts after
-freeze. A same-session Critic, Reviewer, or Verifier pass is advisory/degraded
-only and never satisfies required assurance or admission. If capability is
-`unavailable`, `conditional`, `unknown`, or `launch_failed`, record the
-canonical explicit `DEGRADED`/`BLOCKED` result and do not promote or close
-successfully on a main-thread substitution.
+Independent Critic review binds the committed planning revision in DEFINE;
+Controller v1 Critic READY atomically moves to EXECUTE. Candidate admission
+requires a clean committed exact SHA; Reviewer and Verifier bind that SHA in
+ASSURE. Capability/topology reports are evidence, not admission. Required
+independent assurance cannot be replaced by same-context advisory output.
 
 ### When to spawn sub-agents
 
@@ -48,7 +43,7 @@ successfully on a main-thread substitution.
 | Running tests, lint, type checks, build | Spawn a verifier agent — keeps main context clean |
 | Reading many files for discovery | Spawn a reader agent for each independent area |
 | Expected work is large or multi-domain | Split by independent domain/task |
-| SSOT sync (Stage 3) | Spawn a sync agent to update memory_bank |
+| Coordination / reporting | Use only approved coordination paths; reports do not grant runtime authority |
 
 ### When NOT to spawn
 
@@ -71,15 +66,18 @@ When spawning a sub-agent, always include:
 
 ---
 
-## SDD Stage Mapping
+## Controller v1 Lifecycle Mapping
 
+```text
+DEFINE  · committed planning → independent Critic READY binding
+EXECUTE · scoped implementation → clean exact committed candidate
+ASSURE  · Reviewer + Verifier bind exact candidate → trusted publish
+INACTIVE · reached only after successful verified publication
 ```
-Stage 0 · Plan & Discover  →  Main thread (you)
-Stage 0.5 · Critic Review  →  Separate native Critic when required; advisory/degraded fallback otherwise
-Stage 1 · Implement         →  Spawn sub-agent(s) per task from write-set
-Stage 2 · Verify            →  Separate native Reviewer and Verifier when required; inline only for genuinely trivial Lite work
-Stage 3 · Sync & Report     →  Main thread (you)
-```
+
+Revision and scope changes return to DEFINE; implementation rework returns to
+EXECUTE. Failed publication preserves ASSURE. Normal success cannot use legacy
+Close/finalize helpers or `close --success`.
 
 ## Claude Code Handoff
 
@@ -98,15 +96,15 @@ When delegating:
    external-team delivery, not automatic approval.
 
 When Codex is the mega-orchestrator for a handoff, record the handoff decision
-in `memory_bank/orchestrator-log.md`, read `memory_bank/external-team-log.md`
-if present, and run Stage 0.5 Codex Critic Review before accepting risky or
-multi-file external-team results.
+in approved coordination evidence, read existing external-team logs if relevant,
+and preserve required independent Critic/Reviewer/Verifier bindings before
+accepting risky or multi-file external-team results.
 
 ### Verification tier routing
 
 | Tier | Verifier approach |
 |---|---|
-| Lite | Genuinely trivial work only: run `git diff --check` inline; it never overrides non-trivial `Managed`/`Assured` topology |
+| Lite | Genuinely trivial checks only; never overrides trusted admission or required independent assurance |
 | Standard | Spawn one verifier agent: types + lint + build |
 | Full | Spawn one verifier agent: full check suite |
 
@@ -122,7 +120,7 @@ multi-file external-team results.
 
 ## File Authority
 
-Same as `AGENTS.md § File Write Authority`. Sub-agents inherit your sandbox policy.
+Use root `AGENTS.md` authority, lifecycle and write boundaries. Sub-agents inherit your sandbox policy.
 Constrain each sub-agent's write-set explicitly.
 
 ---
@@ -134,9 +132,10 @@ Read on session start (main thread):
 2. `memory_bank/progress.md`
 3. `memory_bank/decisions.md`
 
-Update only in Stage 3 (Sync & Report), after verification evidence exists.
+Update only approved coordination paths after verification evidence exists.
+Memory and logs never replace external active admission or Git-private state.
 
-Audit logs are written inline during the Work Block:
+Existing audit-log locations (write only if included in approved scope):
 - `memory_bank/orchestrator-log.md` records Codex-Orchestrator decisions,
   including critic skip reasons and responses to critic findings.
 - `memory_bank/review-log.md` records Codex critic, reviewer, verifier, and

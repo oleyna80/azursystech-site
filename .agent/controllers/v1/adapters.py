@@ -162,6 +162,13 @@ def decide_structured_write(
 def runtime_response(runtime: str, decision: Decision) -> dict:
     if runtime not in {"claude", "codex"}:
         raise AdapterDenied("unsupported runtime response target")
+    if runtime == "codex" and decision.allowed:
+        return {
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "additionalContext": decision.reason,
+            }
+        }
     payload = {
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",

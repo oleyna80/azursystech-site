@@ -11,6 +11,7 @@ You are the Orchestrator by default, unless the user explicitly assigns another 
 
 Supported execution roles:
 - Orchestrator
+- Critic
 - Coder
 - Reviewer
 - Verifier
@@ -33,62 +34,37 @@ Core rules:
   Plan → Spec → Implementation → Review → Verification.
 - Use the Agentic Development Lifecycle for non-trivial, risky, multi-domain, architectural, design, security, migration, or production-impacting work.
 - Treat root `AGENTS.md` as the shared SDLC authority model. This file adds
-  Codex-specific execution rules, subagent usage, and write-gate behavior.
+  Codex-specific execution rules and subagent usage; Controller v1 owns runtime authority.
 
 Role rules:
 - Orchestrator plans, assigns scoped subagents, consolidates findings, identifies risks, and proposes next actions.
 - Reviewer is read-only and must not modify files.
-- Verifier is read-only unless explicitly approved to make documentation-only verification updates. Only Verifier issues the formal `READY` or `BLOCKED` gate verdict.
+- Critic is read-only and reviews the committed planning revision before Controller v1 binds `READY` in DEFINE.
+- Verifier is read-only unless explicitly approved for narrow evidence updates. Reviewer and Verifier outcomes bind the exact source candidate SHA; reports do not substitute for bindings.
 - Coder may modify only files within the approved scope.
-- Only one Coder may modify repository files during an implementation stage.
+- Exactly one Coder owns each approved write-set; parallel writers require non-overlapping ownership and the approved isolation.
 - Subagents are read-only by default unless explicitly approved for write-capable work.
 
 Subagent rules:
-- For work other than applicable non-trivial `Managed` or `Assured` Work
-  Blocks, the Orchestrator may assign read-only scoped subagents within an
-  approved objective.
-- For an applicable non-trivial `Managed` or `Assured` Work Block with native
-  capability `available`, the Orchestrator MUST assign required separate native
-  read-only Critic, Reviewer, and Verifier contexts: Critic before Stage 1,
-  then Reviewer and Verifier after freeze.
-- Each subagent assignment must define: role, scope, out of scope, expected output, file-change permission.
-- If native subagent/fork workflow is limited or unavailable, scoped explorer
-  tasks may provide advisory discovery only; they never satisfy required
-  Critic, Reviewer, or Verifier assurance.
-- Subagents inherit the parent session's effective sandbox and approval policy.
-  A role profile can express intended defaults, but it is not a technical
-  read-only boundary. For formal isolated verification, use a separate
-  top-level read-only root or OS-isolated environment as required by the
-  verification gate.
-- Codex subagents are first-class participants in the Codex runtime. They do
-  not make Claude Code mandatory.
-- Do not launch Claude Code from a Codex subagent. The main Codex orchestrator
-  owns external-team delegation through `handoff/`.
+- Assign bounded independent Critic, Reviewer, and Verifier contexts as required
+  by the approved Work Block; exactly one Coder owns each approved write-set.
+- Each assignment defines role, scope, exclusions, expected output and write permission.
+- Capability/topology evidence describes actual isolation; it does not create
+  admission or replace trusted external active-admission authority.
+- Same-context advisory discovery does not substitute for required independent assurance.
+- Subagents inherit the parent session sandbox; declared read-only intent is
+  not proof of an OS or filesystem boundary.
+- Do not launch Claude Code from a Codex subagent. External-team delegation is
+  a separate main-Orchestrator action within approved scope.
 
 Codex critic gate:
-- For a non-trivial `Managed` or `Assured` Work Block with native capability
-  `available`, Stage 0.5 requires a separate native read-only Critic context
-  after Stage 0 and before Stage 1. The canonical topology also requires
-  separate native read-only Reviewer and Verifier contexts after freeze.
-  Consult `.codex/critic.md`; `critic-review` is optional and is not assumed
-  to exist at `.agent/skills/critic-review/SKILL.md`.
-- Owner approval of the Work Block authorizes the Codex-Orchestrator to launch
-  the critic automatically when the mandatory triggers in `.codex/critic.md`
-  match. Do not wait for a separate user request.
-- A main-thread or same-session fallback is advisory/degraded only and never
-  satisfies required assurance or admission. When capability is `unavailable`,
-  `conditional`, `unknown`, or `launch_failed`, record the canonical explicit
-  `DEGRADED`/`BLOCKED` result and defer promotion or successful closeout.
-- Critic findings go to `memory_bank/review-log.md`. Orchestrator decisions and
-  responses to critic findings go to `memory_bank/orchestrator-log.md`.
-- Skip only for valid skip conditions in `.codex/critic.md` or explicit Owner
-  approval, and record the skip reason in both `.codex/write-gate.md` and
-  `memory_bank/orchestrator-log.md`. A skip never overrides the required
-  native topology for an applicable non-trivial `Managed` or `Assured` Work
-  Block with capability `available`.
-- The critic is advisory. The Orchestrator owns final decisions, but every
-  SUPPLEMENT or RECONSIDER verdict requires an explicit logged response before
-  writes begin.
+- Use `.codex/critic.md` for the planning review. Controller v1 binds Critic
+  READY to the committed planning revision and atomically moves DEFINE to EXECUTE.
+- Missing required evidence keeps execution blocked; fallback or a legacy
+  write-gate record cannot satisfy the binding.
+- Resolve material findings through planning correction/revise bind and a new
+  Critic review. Log/report only within approved coordination paths.
+- Reviewer and Verifier subsequently bind the exact committed source candidate.
 
 Approval rules:
 - Any repository file change requires an approved scope.
@@ -98,8 +74,10 @@ Approval rules:
 Autonomous Execution Mode:
 - Once the Owner has approved the Work Block objective, scope, architectural
   constraints, and authority boundary, Codex autonomously performs planning and
-  the remaining lifecycle without asking for confirmation after every small
-  subtask.
+  the remaining lifecycle through Controller v1 without asking for confirmation
+  after every small subtask. Trusted external active admission, Git-private
+  schema-v2 state, immutable profile and approved scope remain prerequisites;
+  tracked schema-v3 state and historical gates neither grant nor deny authority.
 - Stay strictly within the approved scope.
 - After each stage, report: completed stage, files changed, checks run, review/verification result, risks, next stage.
 - Stop and ask for Owner approval if a stop condition occurs.
@@ -122,10 +100,11 @@ Handoff rules:
 - Codex remains responsible for accepting, rejecting, or escalating the returned
   result. Claude Code's internal process is observable evidence, not automatic
   acceptance.
-- When Codex acts as mega-orchestrator for Claude Code handoff, Stage 0.5
-  Codex Critic Review is mandatory unless the Owner explicitly approves a skip.
+- External-team evidence never replaces required Critic/Reviewer/Verifier
+  controller bindings or changes the human-governed Owner boundary.
 
 Small Task Path:
 - For trivial tasks, do not use the full Agentic Lifecycle.
 - Trivial tasks may use: understand → scoped change → check → report.
-- Still follow git safety, scope control, no secrets, and changed-file reporting.
+- Still follow Git safety, scope control, no secrets and changed-file reporting.
+- A small-task label never bypasses installed admission/state or Controller v1 decisions.

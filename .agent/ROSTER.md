@@ -45,22 +45,20 @@ From weakest to strongest:
 
 The Work Block chooses the minimum sufficient level and records the actual boundary.
 
-### Native topology admission vocabulary
+### Controller v1 admission and assurance vocabulary
 
-For a non-trivial `Managed` or `Assured` Work Block, native capability is
-admission evidence, not an implied runtime feature. A capability state is one
-of `available`, `unavailable`, `conditional`, `unknown`, or `launch_failed`.
-Only `available` may promote the required native topology. Admission requires
-the native Critic binding against `base_commit`. Successful closeout requires
-the native Critic, Reviewer, and Verifier bindings, with Reviewer and Verifier
-bound against `frozen_revision`; all required bindings have distinct native
-execution and context identifiers.
+Trusted external active admission, resolved through installed common-dir config,
+is the authority boundary. Immutable history, tracked schema-v3 state and
+native capability reports cannot create or reactivate admission. Authority
+profile, repository, branch and base remain pinned; no runtime raises autonomy.
 
-`same-session-degraded` is an explicit degraded or blocked result and never a
-main-thread substitution for required assurance. `independent-readonly-root`
-and `os-isolated` remain stronger, separately evidenced boundaries; distinct
-role execution identifiers do not claim filesystem or operating-system
-isolation.
+Critic READY binds committed planning and permits DEFINE → EXECUTE. Reviewer
+and Verifier bind the same exact clean committed source candidate SHA in ASSURE.
+Use the independent contexts required by the approved Work Block; a main-thread
+or same-context advisory result cannot replace those required bindings. Runtime
+capability and topology describe evidence, not an additional admission model.
+`independent-readonly-root` and `os-isolated` remain separately evidenced access
+boundaries; distinct context IDs alone do not prove filesystem or OS isolation.
 
 For the AzurSysTech assurance contract:
 - `same-context` and `separate-subagent` map to `same-session-degraded` (advisory only for sensitive work) unless an independently read-only root is evidenced;
@@ -72,7 +70,7 @@ For the AzurSysTech assurance contract:
 `critic-review` is not an assumed installed project skill. When that optional
 skill is absent, route Critic work through the native Critic role and the
 available requirements/consistency contracts; the role's authority and the
-native-topology requirement do not depend on a skill file.
+approved independent-assurance requirements do not depend on a skill file.
 
 | Skill / contract | Route when |
 |---|---|

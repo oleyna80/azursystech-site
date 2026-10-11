@@ -4,6 +4,30 @@ This procedure operationalizes the runtime-neutral Agentic SDLC lifecycle in
 `azursystech`. It is subordinate to `AGENTS.md` and `governance/`; it does not
 grant authority or bypass external security controls.
 
+## Installed Controller v1 Precedence
+
+For the current installation, Controller v1 (`.agent/controllers/v1/`) and
+root `AGENTS.md` define runtime authority: trusted common-dir installation
+config, external active admission, and Git-private per-worktree schema-v2 state.
+Tracked schema-v3 state and historical gate files neither grant nor deny authority.
+Missing/corrupt private state is not INACTIVE; admitted pre-WB planning follows
+the existing trusted path without fabricated state.
+
+Current states are INACTIVE, DEFINE, EXECUTE and ASSURE. Critic READY binds
+committed planning and atomically moves DEFINE → EXECUTE. A clean exact committed
+candidate enters ASSURE; Reviewer/Verifier bind that SHA. Revision/scope change
+returns to DEFINE; implementation rework returns to EXECUTE. Normal success is
+trusted publish with remote verification/provenance before INACTIVE. Failure
+preserves ASSURE; legacy Close/finalize and `close --success` do not substitute.
+Consequential operations remain Owner-controlled under the human-governed profile.
+
+## Historical Procedure Reference (pre-v1, non-authoritative)
+
+The remaining sections preserve earlier operating procedure for historical
+inspection/recovery only. Their tracked state, write gates, topology admission,
+Close and publication mechanics are not instructions for installed Controller v1
+and cannot override the current authority and lifecycle above.
+
 ## State and Authority
 
 Use the lifecycle states in `governance/lifecycle.md`:

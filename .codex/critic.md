@@ -4,29 +4,28 @@ Purpose: give Codex the same decision-check pattern that Claude Code has:
 the Codex-Orchestrator is not the sole unchecked decision maker on
 non-trivial Work Blocks.
 
-The critic is read-only. It challenges the Orchestrator's Stage 0 decisions
+The critic is read-only. It challenges the Orchestrator's DEFINE planning decisions
 before implementation starts, returns findings to the Orchestrator, and gives
 the Owner an audit trail for later review. The Orchestrator records the result
-in `memory_bank/review-log.md`.
+in an approved coordination report; a report alone does not bind authority.
 
 ## Position in the Flow
 
 ```text
-Stage 0: Routing Preflight        Codex-Orchestrator
-Stage 0.5: Codex Critic Review    read-only critic subagent
-Stage 1: Implementation           scoped coder / main thread
-Stage 2: Verification             verifier / checks
-Stage 3: Sync & Report            Codex-Orchestrator
+DEFINE: committed planning revision → independent read-only Critic
+Critic READY binding: Controller v1 atomically transitions DEFINE → EXECUTE
+EXECUTE: scoped implementation → exact committed candidate
+ASSURE: Reviewer and Verifier bind that exact candidate → trusted publish
 ```
 
-Owner approval of a Work Block authorizes the Codex-Orchestrator to run the
-critic automatically when the triggers below match. The Owner does not need to
-ask for the critic separately.
+Owner approval authorizes scoped independent review. Controller v1 and trusted
+external active admission remain authoritative; neither an advisory review nor
+tracked schema-v3/write-gate records open execution.
 
 ## Mandatory Triggers
 
-Run Stage 0.5 Codex Critic Review when Stage 0 is complete and any condition is
-true:
+Use independent Critic planning review before implementation. The following
+risk triggers also identify work needing particular scrutiny:
 
 - Work Block touches 3+ files
 - side-effect class is Production code write or higher
@@ -36,45 +35,17 @@ true:
 - Codex acts as mega-orchestrator for a Claude Code handoff
 - `Subagent-Required` classification is skipped with reason `trivial`
 
-## Valid Skip Conditions
+## Advisory Work and Isolation
 
-Skipping the critic is allowed only for:
+Read-only research and trivial commentary may receive advisory critique without
+opening a Work Block. An advisory skip or same-context fallback cannot replace
+Controller v1's required planning READY binding. Record unmet independent
+assurance as BLOCKED/UNVERIFIED and resolve it before execution.
 
-- trivial single-file typo/comment/docs correction with no logic change
-- pure read-only research with no file writes
-- Owner explicitly approves skipping the critic for the current Work Block
-
-Every skip must be recorded in:
-
-- `.codex/write-gate.md`
-- `memory_bank/orchestrator-log.md`
-
-## Runtime Modes
-
-| Mode | When to use | Required label |
-|---|---|---|
-| Native Codex subagent | Required for applicable non-trivial `Managed`/`Assured` Work Blocks when capability is `available` | `Codex Critic: READY` |
-| Same-session fallback | Advisory critique only when native capability is unavailable or not required | `Codex Critic: FALLBACK` / `DEGRADED` |
-| External critic | Supplementary review for a high-risk WB; it does not replace a required native Critic | `Codex Critic: SUPPLEMENTAL` plus report path |
-| Skipped | Skip condition is valid and recorded | `Codex Critic: SKIPPED` |
-
-The fallback mode must be named honestly. Do not describe a same-session review
-as an independent subagent, `READY` assurance, or admission evidence.
-
-For applicable non-trivial `Managed` and `Assured` Work Blocks, a separate
-native Critic is required when native capability is observed as `available`.
-The canonical topology also requires separate native Reviewer and Verifier
-bindings at closeout; main-thread or same-session work never satisfies those
-required roles. The Critic binding uses policy
-`native-separate-context-required` and records distinct native
-execution/context identifiers plus runtime, adapter version, source revision,
-repository root, branch, read-only boundary, launch mechanism, probe event,
-report, status, topology tier, and observation time. Capability states
-`unknown`, `conditional`, `unavailable`, and `launch_failed` are explicit
-`DEGRADED`/`BLOCKED` outcomes; they defer to canonical degraded/blocked
-semantics and do not permit main-thread substitution. The binding is role
-separation evidence, not proof of an independent read-only root or OS
-isolation.
+Record the actual independent context and read-only boundary required by the
+approved Work Block. Runtime availability, native-topology labels or historic
+schema-v3 bindings do not create trusted admission. Stronger filesystem/OS
+isolation must be evidenced separately where required.
 
 ## Inputs
 
@@ -108,9 +79,9 @@ The critic returns:
 ## Codex Critic Report - [Work Block ID]
 
 **Date:** YYYY-MM-DD
-**Reviewed:** Stage 0 Routing Preflight + Work Block definition
-**Mode:** native-subagent | fallback-same-session | external
-**Verdict:** APPROVE | SUPPLEMENT | RECONSIDER
+**Reviewed:** exact committed planning revision + Work Block definition
+**Mode:** independent context and actual read-only boundary
+**Verdict:** READY | BLOCKED
 
 ### Findings
 | Severity | Dimension | Finding | Evidence | Recommendation |
@@ -123,21 +94,19 @@ The critic returns:
 - [What could not be checked and why]
 ```
 
-The Orchestrator stores full reports in `docs/reports/critic-<work-block-id>.md`
-when the Work Block is non-trivial enough to keep an artifact. Short fallback
-reviews may be logged only in `memory_bank/review-log.md` if the Work Block is
-small.
+The Orchestrator stores evidence only in approved coordination paths. Bind
+READY through Controller v1 to the exact planning revision after addressing
+blocking findings; do not edit private controller state manually.
 
 ## Verdict Semantics
 
 | Verdict | Meaning | Orchestrator action |
 |---|---|---|
-| APPROVE | No material issue found | Proceed to Stage 1 |
-| SUPPLEMENT | Minor gap found | Address or explicitly accept before Stage 1 |
-| RECONSIDER | Material gap found | Re-run Stage 0 before Stage 1 |
+| READY | No blocking planning issue remains | Bind exact planning revision through Controller v1; DEFINE → EXECUTE |
+| BLOCKED | Concrete planning defect or required evidence missing | Correct planning, revise bind committed revision, and repeat independent review |
 
-The critic is advisory, not a write gate owner. The Orchestrator decides, but
-must record the response in `memory_bank/orchestrator-log.md`.
+The Critic judges planning only. Reviewer and Verifier separately assess the
+exact source candidate; a Critic report does not substitute for those bindings.
 
 ## Authority Limits
 
@@ -145,4 +114,5 @@ must record the response in `memory_bank/orchestrator-log.md`.
 - No file writes, commits, pushes, deploys, DB actions, or secret reads.
 - No expansion of the approved Work Block scope.
 - No launching Claude Code from inside a Codex critic subagent.
-- No `READY` or `BLOCKED` gate verdicts; only critic verdicts above.
+- Planning READY/BLOCKED only; no self-binding, manual state mutation, or
+  substitution for Reviewer/Verifier candidate outcomes or Owner approval.

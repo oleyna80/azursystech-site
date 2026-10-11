@@ -15,9 +15,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / ".agent"))
 
-from controllers.v1 import cli, gitfacts, hook
+from controllers.v1 import adapters, cli, gitfacts, hook
 from controllers.v1.consequential import evaluate_command
 from controllers.v1.errors import ControllerError, StopAndPreserve, ValidationError
+from controllers.v1.events import decision
 from controllers.v1.installation import load as load_installation
 from controllers.v1.providers import GitHubCliBranchProtectionResolver
 from orchestration.admission import AdmissionNotFound
@@ -65,15 +66,10 @@ def _runtime(runtime: str) -> int:
     branch = gitfacts.branch(root)
     admission = _active_or_none(registry, config.repository, branch)
     if admission is None:
-        response = {
-            "hookSpecificOutput": {
-                "hookEventName": "PreToolUse",
-                "permissionDecision": "deny",
-                "permissionDecisionReason": (
-                    "no active trusted admission for repository/subject branch"
-                ),
-            }
-        }
+        response = adapters.runtime_response(runtime, decision(
+            "DENY", "ADMISSION_MISSING",
+            "no active trusted admission for repository/subject branch",
+        ))
         print(json.dumps(response, sort_keys=True))
         return 0
     response = hook.runtime_hook_response(
@@ -119,7 +115,7 @@ def _subagent_context(runtime: str) -> int:
     return 0
 
 
-def _consequential() -> int:
+def _consequential(runtime: str) -> int:
     raw = json.load(sys.stdin)
     command = None
     if isinstance(raw, dict) and str(raw.get("tool_name") or "") == "Bash":
@@ -127,13 +123,7 @@ def _consequential() -> int:
         if isinstance(payload, dict):
             command = payload.get("command")
     verdict = evaluate_command(command)
-    response = {
-        "hookSpecificOutput": {
-            "hookEventName": "PreToolUse",
-            "permissionDecision": "allow" if verdict.allowed else "deny",
-            "permissionDecisionReason": verdict.reason,
-        }
-    }
+    response = adapters.runtime_response(runtime, verdict)
     print(json.dumps(response, sort_keys=True))
     return 0
 
@@ -269,7 +259,8 @@ def main(argv=None) -> int:
     context = sub.add_parser("subagent-context")
     context.add_argument("--runtime", choices=["claude", "codex"], required=True)
 
-    sub.add_parser("consequential")
+    consequential = sub.add_parser("consequential")
+    consequential.add_argument("--runtime", choices=["claude", "codex"], default="claude")
 
     for name in ("git-pre-commit", "trusted-publish"):
         item = sub.add_parser(name)
@@ -294,7 +285,7 @@ def main(argv=None) -> int:
         if args.operation == "subagent-context":
             return _subagent_context(args.runtime)
         if args.operation == "consequential":
-            return _consequential()
+            return _consequential(args.runtime)
         if args.operation == "git-pre-commit":
             return _git_pre_commit(args.root)
         if args.operation == "git-commit-msg":
@@ -311,13 +302,9 @@ def main(argv=None) -> int:
         raise ValidationError("unknown bridge operation")
     except (ControllerError, KeyError, OSError, ValueError, TypeError) as exc:
         if getattr(args, "operation", None) == "runtime":
-            response = {
-                "hookSpecificOutput": {
-                    "hookEventName": "PreToolUse",
-                    "permissionDecision": "deny",
-                    "permissionDecisionReason": f"replacement bridge fail-closed: {exc}",
-                }
-            }
+            response = adapters.runtime_response(args.runtime, decision(
+                "DENY", "STATE_INVALID", f"replacement bridge fail-closed: {exc}",
+            ))
             print(json.dumps(response, sort_keys=True))
             return 0
         print(f"STOP: {exc}", file=sys.stderr)

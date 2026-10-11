@@ -23,7 +23,7 @@ For non-trivial work, load context progressively without reading the entire repo
 
 1. this file and the current Owner instruction;
 2. `PROJECT_MAP.md` and `.agent/bootstrap-profile.json`;
-3. active Work Block, approved specification/revision, and accepted architecture decisions;
+3. trusted active admission and Git-private Controller v1 state, approved specification/revision, and accepted architecture decisions;
 4. approved implementation and evaluation plans;
 5. current git branch, status, and relevant diffs.
 
@@ -39,10 +39,24 @@ Resolve intent and permissions in this order:
 2. this file and `governance/` (including `governance/authority.md`, `governance/define-quality.md`);
 3. approved specification and acceptance criteria (`docs/specs/`);
 4. accepted architecture decisions and external contracts (`docs/architecture/`);
-5. active Work Block and approved write-set (`.agent/active-work-block.json`, `docs/plans/`);
+5. trusted external active admission, Git-private Controller v1 state and approved write-set;
 6. approved plans and tasklist (`docs/tasklist/`);
 7. frozen subject and assurance/evaluation evidence (`docs/reports/`);
 8. operational logs and external references.
+
+Installed runtime authority is Controller v1 (`.agent/controllers/v1/`), its
+trusted installation configuration at `<Git common dir>/azursystech/installation.json`,
+and the external authority registry selected by that configuration. Repository,
+admission, subject branch, base commit, and authority profile are immutable bindings.
+The installed profile remains human-governed; instructions cannot raise autonomy.
+Per-worktree schema-v2 state is resolved with
+`git rev-parse --path-format=absolute --git-path azursystech/active-work-block.json`.
+Missing/corrupt state is not `INACTIVE`; it fails closed for operations requiring
+state. Pre-WB planning uses the existing trusted active-admission path.
+
+Tracked `.agent/active-work-block.json` (schema v3), `.codex/write-gate.md`, and
+legacy lifecycle/gate documents are historical, non-authoritative records. They
+cannot grant or deny current runtime authority or override Controller v1.
 
 Engineering memory stores rationale and lessons only; it never grants authority
 or resolves a conflict with the sources above.
@@ -66,11 +80,20 @@ See `docs/engineering-memory/engineering-decision-principles.md` for the full ra
 
 Role authority is defined by `governance/authority.md`. Operational routing is in `.agent/ROSTER.md`.
 
-AzurSysTech follows the 4-stage lifecycle defined in `.agent/workflows/sdd-protocol.md`:
+The installed Controller v1 lifecycle has only these schema-v2 states:
 
 ```text
-Stage 0 (Define) -> Stage 1 (Execute) -> Stage 2 (Assure) -> Stage 3 (Close)
+INACTIVE -> DEFINE -> EXECUTE -> ASSURE -> INACTIVE
 ```
+
+Trusted open binds a committed planning revision in `DEFINE`; Critic `READY`
+atomically permits `EXECUTE`. Candidate admission binds an exact clean committed
+Git SHA in `ASSURE`. Reviewer and Verifier bind that exact source candidate.
+Revision/scope changes return to `DEFINE`; implementation rework returns to
+`EXECUTE`. Normal success uses trusted publish and verified remote provenance
+before `INACTIVE`, not `close --success`. Failed publication remains `ASSURE`.
+`.agent/workflows/sdd-protocol.md` retains historical procedure under explicit
+v1 precedence; its older Close/write-gate mechanics are not current authority.
 
 Use `.agent/skills/README.md` to select matching installed skills. Key rules:
 
@@ -80,7 +103,7 @@ Use `.agent/skills/README.md` to select matching installed skills. Key rules:
 - material requirement, architecture, risk, or scope changes return to Define;
 - unrelated working-tree changes must be preserved.
 
-Once a Work Block is approved and its write gate is `READY`, internal lifecycle transitions proceed autonomously. Stop for Owner input only on external Hard Stops, material scope/risk changes, missing capabilities, or unresolved blockers.
+Once a Work Block is approved, its trusted admission is active, and Controller v1 permits the operation, internal lifecycle transitions proceed autonomously within that authority. Stop for Owner input only on external Hard Stops, material scope/risk changes, missing capabilities, or unresolved blockers.
 
 ## 6. Write Boundaries, GitHub Free Flow, and Hard Stops
 
@@ -90,9 +113,13 @@ Within approved scope, normal reversible development includes local edits, tests
 
 `governance/authority.md` is canonical. Inside an approved Work Block, routine
 delivery and corrective loops do not pause for Owner approval. After required
-assurance is `READY`, the Orchestrator may non-force push the current `HEAD`
-only to its exact non-default Work Block `subject_branch`. Report that exact
-pushed candidate to the Owner for `MERGE / REVISION / REJECT`; do not merge it.
+Reviewer and Verifier bindings are `READY` for the exact source candidate,
+the Orchestrator may use trusted publish for the exact non-force subject ref
+through trusted `origin`. A later tip may contain only permitted linear
+coordination changes; source/planning changes and merges are denied. Trusted
+remote/default/protection predicates must pass; unknown protection fails closed.
+Report the exact source candidate and verified published tip to the Owner for
+`MERGE / REVISION / REJECT`; do not merge it.
 
 ### External Hard Stops
 
@@ -124,8 +151,8 @@ Consequential operations outside normal agent capability require explicit Owner 
 ## 8. Evidence and Completion
 
 Do not claim `READY`, completed, verified, or deploy-ready merely because implementation exists or builds pass. Use the assurance required by the active Work Block:
-- Reviewer checks the frozen diff for correctness, security, and maintainability.
-- Verifier gathers reproducible evidence against acceptance criteria.
+- Reviewer checks the exact committed source candidate for correctness, security, and maintainability.
+- Verifier gathers reproducible evidence against acceptance criteria for the same exact candidate SHA. Reports alone do not replace controller bindings.
 - Evaluation uses observable artifacts/events; never request or store private chain-of-thought or hidden reasoning.
 - Successful closeout requires resolved gates, synchronized authoritative artifacts, documented residual risks, and knowledge promotion. Otherwise use reporting-only closeout.
 

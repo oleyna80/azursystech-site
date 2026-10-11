@@ -155,7 +155,7 @@ class RuntimeAdapterTests(unittest.TestCase):
         )
         self.assertNotIn("continue", response)
 
-    def test_runtime_native_responses_have_same_permission_semantics(self):
+    def test_runtime_native_allow_preserves_decision_without_codex_input_rewrite(self):
         decision = policy.evaluate(
             adapters.normalize_structured_write(
                 "claude",
@@ -165,14 +165,24 @@ class RuntimeAdapterTests(unittest.TestCase):
         )
         claude = adapters.runtime_response("claude", decision)
         codex = adapters.runtime_response("codex", decision)
-        self.assertEqual(
-            claude["hookSpecificOutput"]["permissionDecision"],
-            codex["hookSpecificOutput"]["permissionDecision"],
-        )
-        self.assertEqual(
-            claude["hookSpecificOutput"]["permissionDecisionReason"],
-            codex["hookSpecificOutput"]["permissionDecisionReason"],
-        )
+        self.assertTrue(decision.allowed)
+        self.assertEqual(claude["hookSpecificOutput"]["permissionDecision"], "allow")
+        self.assertEqual(codex, {"hookSpecificOutput": {
+            "hookEventName": "PreToolUse", "additionalContext": decision.reason,
+        }})
+        self.assertEqual(claude["hookSpecificOutput"]["permissionDecisionReason"], decision.reason)
+
+    def test_runtime_native_deny_preserves_claude_and_codex_blocking_semantics(self):
+        denied = policy.evaluate(adapters.normalize_structured_write(
+            "claude", self.raw("Write", {"file_path": "outside.txt"}),
+        ), s.execute())
+        self.assertFalse(denied.allowed)
+        expected = {"hookSpecificOutput": {
+            "hookEventName": "PreToolUse", "permissionDecision": "deny",
+            "permissionDecisionReason": denied.reason,
+        }}
+        for runtime in ("claude", "codex"):
+            self.assertEqual(adapters.runtime_response(runtime, denied), expected)
 
     def test_same_common_repo_linked_worktree_allowed_different_repo_denied(self):
         linked = Path(self.temp.name) / "linked"

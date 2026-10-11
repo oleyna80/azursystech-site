@@ -5,6 +5,10 @@ This map is the primary orientation layer for humans and AI agents entering the
 
 ## Release State
 
+The projection below and migration list are retained historical release evidence,
+not current admission or lifecycle authority. Resolve live state through trusted
+Controller v1 installation/external admission and Git-private per-worktree state.
+
 <!-- release-state
 completed_work_blocks:
   - docs/plans/WB-2026-08-25-shared-analysis-surface.md
@@ -50,8 +54,9 @@ deployment automation, and supporting Agentic SDLC operating files.
 
 The architecture comprises four separable layers:
 
-1. **Governance Core** — `governance/` (authority, lifecycle, artifacts, define-quality,
-   enforcement, decision provenance, release state, runtime capabilities, evaluation).
+1. **Governance Core** — `AGENTS.md`, `governance/authority.md` and installed
+   Controller v1 (`.agent/controllers/v1/`). Legacy lifecycle/gate material in
+   `governance/` is historical where it conflicts with the installed v1 contract.
 2. **Portable Workflow & Memory** — `.agent/workflows/` (SDD protocol, subject-branch candidate flow),
    `.agent/ROSTER.md`, `docs/specs/`, `docs/plans/`, `docs/tasklist/`, `docs/reports/`,
    `docs/engineering-memory/`, and `.agent/skills/`.
@@ -81,14 +86,19 @@ Engineering memory preserves rationale and lessons; it is not an authority sourc
 ### Agent Behavior and Permissions
 1. explicit Owner instruction;
 2. `AGENTS.md` and Governance Core (`governance/`);
-3. active Work Block scope, write-set, and assurance state (`.agent/active-work-block.json`);
-4. canonical SDLC protocol (`.agent/workflows/sdd-protocol.md`, `.agent/workflows/owner-controlled-github-flow.md`);
+3. trusted external active admission and Git-private Controller v1 schema-v2
+   state; tracked `.agent/active-work-block.json` schema-v3 is historical and
+   neither grants nor denies authority;
+4. Controller v1 precedence in `.agent/workflows/sdd-protocol.md`; historical
+   procedures cannot override admission, lifecycle or publication bindings;
 5. installed runtime adapters and skills;
 6. operational logs and generated artifacts.
 
 ## Work Block Profiles
 
-Each Work Block selects independently:
+The trusted admission pins its authority profile; the installed human-governed
+profile cannot be expanded by instructions. The following planning/quality and
+execution dimensions describe evidence, not an alternative admission model:
 - **Governance profile:** Advisory, Controlled, Managed, Assured, Distributed.
 - **Runtime profile:** one installed runtime adapter.
 - **Integration profile:** none or an admitted bridge/tool/transport.
@@ -119,8 +129,8 @@ specification draft
   -> traceable task decomposition + write-set (REQ-*, AC-*, TASK-*)
   -> deterministic traceability validation (scripts/validate-define-traceability.py)
   -> read-only specification/plan/task consistency analysis
-  -> Critic gate
-  -> write gate READY
+  -> committed planning + Controller v1 Critic READY binding
+  -> DEFINE to EXECUTE
 ```
 
 ## Key Paths
@@ -133,11 +143,13 @@ specification draft
 | `governance/` | normative | Runtime-neutral governance core (authority, lifecycle, define-quality, enforcement, etc.). |
 | `governance/enforcement.md` | normative | Runtime-neutral placement of Git, shared-policy, harness, and external controls; durable-memory, reversibility, and poka-yoke rules. |
 | `.agent/bootstrap-profile.json` | generated | Resolved installation profile and path contract. |
-| `.agent/workflows/sdd-protocol.md` | normative | Canonical 4-stage SDD lifecycle and gate semantics. |
+| `.agent/workflows/sdd-protocol.md` | v1 precedence / historical reference | Installed controller precedence; retained historical procedure is non-authoritative. |
 | `.agent/workflows/owner-controlled-github-flow.md` | operational consequence | Subject-branch candidate publication and Owner decision handoff. |
 | `docs/architecture/execution-surface-routing.md` | operational architecture | Chat/plugins-first routing; Codex for local runtime; Work for external computer workflows. |
 | `.agent/ROSTER.md` | normative | Logical roles, skill routing, runtime binding, isolation. |
-| `.agent/active-work-block.json` | operational gate | Active specification, write-set, integrations, assurance. |
+| `.agent/active-work-block.json` | historical / non-authoritative | Tracked legacy schema-v3 record; no current allow/deny authority. |
+| `.agent/controllers/v1/` | installed authority | Shared admission, schema-v2 lifecycle, Git and runtime contract. |
+| `scripts/sdlc-v1-bridge.py` | live adapter | Repository-bound bridge; trusted common-dir config/external registry and Git-private per-worktree state. |
 | `.agent/skills/` | normative skills | Project-local portable and operational skills. |
 | `docs/specs/` | normative | Approved product and technical specifications. |
 | `docs/plans/` | evidence | Work Block plans and execution records. |

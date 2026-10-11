@@ -1,12 +1,41 @@
 # Codex Runtime Adapter
 
-## Status
+## Installed Controller v1 Entry Point
 
-Implemented generated-project baseline for project-scoped logical-role agents,
-Codex hooks, provider-neutral machine gates, and explicit integration admission.
+The installed Codex hooks are configured in `.codex/hooks.json` and invoke
+`scripts/sdlc-v1-bridge.py`; Git-native transaction hooks use the same shared
+Controller v1 contract. Root `AGENTS.md` and `governance/authority.md` govern
+scope and Owner boundaries. Runtime capability does not grant authority.
 
-This adapter implements the Governance Core. It does not redefine authority,
-source-of-truth order, Hard Stops, artifact verdicts, or closeout.
+Trusted config at `<Git common dir>/azursystech/installation.json` pins repository
+identity and external registry. Bridge payload/cwd cannot select a foreign
+installation; linked worktrees share the common-dir identity while keeping
+separate Git-private schema-v2 state. Resolve state using
+`git rev-parse --path-format=absolute --git-path azursystech/active-work-block.json`.
+Missing/corrupt state is not INACTIVE; pre-WB planning uses active trusted admission.
+Tracked schema-v3 state and historical gate files neither grant nor deny authority.
+The installed profile remains human-governed.
+
+Critic READY binds committed planning in DEFINE → EXECUTE. A clean exact source
+candidate enters ASSURE; Reviewer/Verifier bind that SHA. Trusted publish verifies
+the exact remote tip before INACTIVE; failed publication remains ASSURE. No
+legacy finalize/close helper or local approval record substitutes for this flow.
+Installation/bootstrap changes require their separate approved scope; this guide
+does not authorize installation, registry mutation, production merge or deploy.
+
+Codex uses runtime-specific PreToolUse serialization: ordinary ALLOW returns
+additional context without fabricated updatedInput or a tool rewrite; DENY uses
+the supported blocking response. Client permission restrictions remain effective.
+Handled failures must fail closed without malformed protocol stdout. Native
+client execution evidence, not static JSON alone, establishes compatibility.
+
+## Historical Generated-Project Adapter Reference (pre-v1)
+
+All remaining sections retain earlier generated-project procedures and file
+inventories for historical inspection. Their schema-v3 state, legacy hook/gate,
+authorization, topology and activation/validation instructions are non-authoritative
+for the installed Controller v1 and must not be executed as its live lifecycle.
+Use the current entry point above; historical facts do not grant or deny authority.
 
 ## Logical Role Mapping
 

@@ -1,4 +1,10 @@
-# Write Gate Record — WB-2026-09-11-control-plane-recovery-hardening-027
+# Historical Write Gate Record — WB-2026-09-11-control-plane-recovery-hardening-027
+
+> Legacy/non-authoritative record. Installed Controller v1 uses trusted
+> installation config, external active admission and Git-private per-worktree
+> schema-v2 state. This record and tracked schema-v3 state neither grant nor
+> deny current authority. Do not renew this record or invoke legacy lifecycle
+> helpers to satisfy current admission, Critic or publication requirements.
 
 - **Work Block:** `WB-2026-09-11-control-plane-recovery-hardening-027`
 - **Write Gate Status:** `READY` (admission record; active SSOT is `BLOCKED` after freeze)
@@ -14,9 +20,9 @@ The approved source write-set is exactly:
 .codex/scripts/lifecycle.py
 ```
 
-The candidate is in post-implementation assurance. The active lifecycle SSOT
-is authoritative and records the source candidate as frozen with a `BLOCKED`
-write gate. Freeze, Reviewer, Verifier, Drift, Process Feedback, and Closeout
+At the time of this historical Work Block, the candidate was in
+post-implementation assurance and the legacy lifecycle SSOT recorded a frozen
+source candidate with a `BLOCKED` write gate. Freeze, Reviewer, Verifier, Drift, Process Feedback, and Closeout
 remain required before the authorized local commit. This record does not authorize push, force-push,
 default/protected-branch mutation, merge, deployment, tag publication,
 credential changes, database mutation, or destructive cleanup.
