@@ -1469,6 +1469,45 @@ def test_claude_scope_and_closeout() -> None:
         holder.cleanup()
 
 
+def _markdown_hard_break_whitespace_only(diagnostics: str) -> bool:
+    """Allow only the two-space Markdown hard-break form from git diff --check.
+
+    All other whitespace diagnostics, malformed reports, and non-Markdown
+    violations must continue to fail the candidate-diff gate.
+    """
+    lines = diagnostics.splitlines()
+    if not lines or len(lines) % 2 != 0:
+        return False
+    for heading, added in zip(lines[::2], lines[1::2]):
+        parts = heading.rsplit(":", 2)
+        if (
+            len(parts) != 3
+            or not parts[0].endswith(".md")
+            or not parts[1].isdigit()
+            or parts[2] != " trailing whitespace."
+        ):
+            return False
+        if not added.startswith("+") or len(added) - len(added.rstrip(" ")) != 2:
+            return False
+    return True
+
+
+def test_markdown_hard_break_diagnostics() -> None:
+    good = "docs/architecture/sample.md:3: trailing whitespace.\n+Markdown line  \n"
+    assert _markdown_hard_break_whitespace_only(good)
+    assert _markdown_hard_break_whitespace_only(good + good)
+    for bad in (
+        "",
+        "docs/architecture/sample.md:3: trailing whitespace.\n+Markdown line \n",
+        "docs/architecture/sample.md:3: trailing whitespace.\n+Markdown line   \n",
+        "scripts/example.py:3: trailing whitespace.\n+Python line  \n",
+        "docs/architecture/sample.md:3: new blank line at EOF.\n+\n",
+        "docs/architecture/sample.md:3: trailing whitespace.\nnot-added  \n",
+        good + "scripts/example.py:7: trailing whitespace.\n+Python line  \n",
+    ):
+        assert not _markdown_hard_break_whitespace_only(bad), repr(bad)
+
+
 def test_candidate_diff_check() -> None:
     base_branch = os.environ.get("GITHUB_BASE_REF", "").strip()
     if base_branch:
@@ -1499,7 +1538,9 @@ def test_candidate_diff_check() -> None:
             raise AssertionError("cannot resolve repository base for git diff --check")
 
     checked = run(["git", "diff", "--check", base_ref, "HEAD"], ROOT)
-    if checked.returncode != 0:
+    if checked.returncode != 0 and (
+        checked.stderr or not _markdown_hard_break_whitespace_only(checked.stdout)
+    ):
         raise AssertionError(
             f"git diff --check failed for {base_ref}..HEAD:\n{checked.stdout}{checked.stderr}"
         )
@@ -1531,6 +1572,7 @@ TESTS = [
     test_binding_mismatch_coordination_and_repair,
     test_parallel_worktree_isolation,
     test_claude_scope_and_closeout,
+    test_markdown_hard_break_diagnostics,
     test_candidate_diff_check,
     test_opencode_posture,
 ]
