@@ -53,9 +53,17 @@ framework
 template
 docs
 memory_bank
-# Also reject nested native-agent entrypoints in application folders.
+# Also reject nested agent metadata in application subtrees.
 **/AGENTS.md
 **/CLAUDE.md
+**/FILE_REGISTRY.yml
+**/PROJECT_MAP.md
+**/.agent
+**/.agents
+**/.claude
+**/.codex
+**/.opencode
+**/.githooks
 00_strategy
 01_brand
 02_website
