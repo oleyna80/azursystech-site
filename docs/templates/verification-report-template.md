@@ -8,7 +8,9 @@
 - **Required Verifier Isolation:** [same-session-degraded | independent-readonly-root | os-isolated]
 - **Actual Verifier Isolation:** [same-session-degraded | independent-readonly-root | os-isolated]
 - **Isolation Evidence and Residual Limits:** [launch mechanism, frozen diff reference, and boundaries not established]
-- **Authoritative Verdict:** [READY | BLOCKED | UNVERIFIED]
+- **Verifier Verdict (evidence; Controller binding separate):** [READY | BLOCKED | UNVERIFIED]
+- **Exact Committed Source Candidate SHA:** [40-character SHA]
+- **Trusted Controller v1 Verifier Binding:** [matching admission/candidate/evidence reference | not yet bound]
 - **GPT Verifier:** [NOT_REQUIRED | READY | DEGRADED]
 
 ### Changed Files
@@ -35,7 +37,10 @@ This verification remains read-only and cannot promote an observation into a
 systemic change or authorize a governance mutation.
 
 ### Required Next Action
-- [success-closeout | corrective action | resolve dependency and rerun]
+- [trusted publish after exact-candidate assurance | corrective rework | reporting-only/cancelled outcome]
 
-Only `READY` permits successful closeout. `BLOCKED` and `UNVERIFIED` require
-reporting-only Stage 3 and keep the task blocked.
+A Verifier report cannot authorize source writes, publication or a Controller
+transition. Successful v1 completion requires matching exact-candidate Reviewer
+and Verifier `READY` bindings, trusted publish, remote-tip verification and
+immutable provenance. `BLOCKED` or `UNVERIFIED` requires rework or
+reporting-only disposition; Controller v1 has no `Stage 3 Close` state.
