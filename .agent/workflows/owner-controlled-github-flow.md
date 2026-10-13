@@ -20,54 +20,46 @@ documentation, staging, and local commits. Routine test failure,
 Stop and return to Define for a material requirement, architecture, authority,
 security/business/governance decision, risk, or write-set expansion.
 
-## Stage B — Freeze and assure a candidate
+## Stage B — Bind and assure an exact Controller v1 candidate
 
-Before remote publication, record the exact `HEAD`, frozen source candidate,
-required checks, Critic disposition, Reviewer, Verifier, and residual risks in
-repository artifacts. A freeze sets `write_gate: BLOCKED` for source edits and
-resets candidate-specific Reviewer and Verifier evidence. Reviewer and Verifier
-must be READY for the same frozen candidate; formal profiles also require READY
-Define-quality evidence. Critic is resolved by READY with APPROVE/SUPPLEMENT or
-explicit SKIPPED with a nonempty reason. DEGRADED/FALLBACK do not qualify for
-autonomous publication. A corrective source change requires rework, a new
-freeze, and fresh assurance. Repository reports bind execution IDs, WB,
-specification revision, frozen candidate, separate context, and verdict;
-Critic disposition also binds its status and any skip reason. Reports are committed before
-publication without entering their own content-sha256 source hash.
+Use the installed Controller v1 lifecycle, not tracked schema-v3
+`write_gate` state. Trusted admission and a committed planning revision
+precede independent Critic `READY` binding and `DEFINE → EXECUTE`.
+After implementation and checks, commit a clean exact source candidate SHA
+and enter `ASSURE`. Independent Reviewer and Verifier `READY` bindings
+must match **that SHA**. Missing or mismatched bindings block publication;
+reports alone never open authority. Source/planning rework requires renewed
+planning or candidate assurance as dictated by the Controller.
 
-## Stage C — Autonomous exact-subject candidate push
+Only allowed *linear coordination-only* changes may follow the assured
+source candidate. Merges, source/planning changes, or prohibited
+deletions/renames are denied. Preserve both exact source candidate and
+intended published tip in immutable evidence.
 
-The sole autonomous publication form is:
+## Stage C — Trusted Controller v1 subject publication
 
-```text
-git push origin HEAD:refs/heads/<exact subject_branch>
-```
+The Orchestrator uses the **existing trusted Controller v1 publish** entry
+point, subject to `governance/authority.md`. Direct standalone `git push`,
+GitHub `update_ref`, and historical terminal closeout publication are
+**not substitutes** for this transaction.
 
-Source-write permission and candidate-publication permission are separate
-predicates. An active frozen candidate must have the attached non-default
-branch and matching active Work Block `subject_branch`, BLOCKED source write
-gate, unchanged frozen source content committed at HEAD, applicable READY
-Define evidence, resolved Critic, and candidate-bound READY Reviewer and
-Verifier reports committed at HEAD. A terminal candidate must instead be the immediate
-child of that publication-eligible active commit, with the same Work Block and
-subject branch proven from committed parent state and commit trailers; its
-current state must be exact canonical inactive and its commit diff must contain
-only the minimal closeout/coordination allowlist. Inactive state by itself is
-not an allowance. A second commit, source mutation, malformed parent, or any
-missing required evidence removes terminal eligibility. Terminal publication
-is a distinct legacy path and is not required for a frozen subject candidate.
+Trusted publish checks the active `ASSURE` state, exact source candidate,
+trusted origin, non-default/unprotected subject ref, permitted history and
+required external authorization. Unknown branch protection fails closed.
+After an allowed non-force subject push, it verifies the exact remote tip
+and records immutable publication provenance before reaching `INACTIVE`.
+Failure preserves `ASSURE`; Git pre-push hooks alone are insufficient.
+A published tip may differ from the assured source candidate only through
+permitted linear coordination commits.
 
-The exact push is the sole shell command: it cannot be coupled to another
-action. The explicit remote and destination prevent an upstream or arbitrary
-refspec from changing the target. A push retry after a transport failure or a
-corrected assured candidate uses the same bounded form; no local "one push"
-counter is authoritative.
+The trusted publisher must not expose credentials or production authority
+to an untrusted agent-executed shell. Establish actual process/network/secret
+isolation independently where required; this procedure does not prove it.
 
-Do not perform a bare push, alternate-remote/URL push, alternate source or
-destination ref, force/non-fast-forward/delete/mirror/prune/all/tag push,
-default/protected branch update, merge, release, deploy, production workflow
-dispatch, VPS/SSH mutation, live data change, credential/secret change, or
-destructive operation.
+Do not perform alternate remote/URL, force/non-fast-forward, delete/mirror/
+prune/all/tag push, protected/default-branch mutation, merge, release, deploy,
+production workflow dispatch, VPS/SSH mutation, live data/secret changes or
+destructive operations. They require separate Owner/external authority.
 
 ## Stage D — Owner candidate review
 
@@ -92,8 +84,10 @@ own Owner-controlled path.
 
 ## Worktree binding and control limitation
 
-The Work Block must be opened from the intended worktree so its
-`subject_branch`, current branch, and process root agree. Project-local hooks
+A Work Block must be bound to the intended installation and worktree through
+trusted admission and Git-private Controller state. Repository, subject
+branch, base and authority profile must agree with trusted Git facts;
+changing a shell cwd does not change a native client's session authority. Project-local hooks
 are cooperative controls, not substitutes for GitHub branch rules, least-
 privilege credentials, or OS isolation. The local predicate fails closed when
 it cannot identify the configured default branch; it cannot independently prove
