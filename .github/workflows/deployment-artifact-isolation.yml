@@ -58,6 +58,9 @@ jobs:
           mkdir -p web/__artifact_isolation_probe__/.agent admin/__artifact_isolation_probe__/.codex
           printf 'must be ignored\n' > web/__artifact_isolation_probe__/.agent/state.json
           printf 'must be ignored\n' > admin/__artifact_isolation_probe__/.codex/hooks.json
+          mkdir -p scripts/__artifact_isolation_probe__ integrations/__artifact_isolation_probe__
+          printf 'must be ignored\n' > scripts/__artifact_isolation_probe__/sdlc-v1-fixture.py
+          printf 'must be ignored\n' > integrations/__artifact_isolation_probe__/README.md
           docker build --no-cache --file - --tag azursystech-context-isolation:check . <<'DOCKERFILE'
           FROM alpine:3.21
           COPY . /context
@@ -69,12 +72,15 @@ jobs:
                 AGENTS.md CLAUDE.md FILE_REGISTRY.yml PROJECT_MAP.md PRODUCT.md README.md \
                 .agentsignore .codexignore opencode.json .agent .agents .claude .codex \
                 .opencode .githooks governance runtimes framework template docs memory_bank \
+                scripts integrations \
                 00_strategy 01_brand 02_website 03_leads 04_facebook 05_ai 06_seo 07_ops \
                 web/__artifact_isolation_probe__/AGENTS.md \
                 admin/__artifact_isolation_probe__/CLAUDE.md \
                 showcase/__artifact_isolation_probe__/AGENTS.md \
                 web/__artifact_isolation_probe__/.agent \
-                admin/__artifact_isolation_probe__/.codex; do \
+                admin/__artifact_isolation_probe__/.codex \
+                scripts/__artifact_isolation_probe__/sdlc-v1-fixture.py \
+                integrations/__artifact_isolation_probe__/README.md; do \
                   if test -e "/context/$entry"; then \
                     echo "Forbidden item reached Docker build context: $entry" >&2; \
                     exit 1; \
