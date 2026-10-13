@@ -7,6 +7,7 @@ Run --self-test, --check-repo-contract, or --image IMAGE.
 from __future__ import annotations
 
 import argparse
+import io
 import pathlib
 import re
 import subprocess
@@ -158,7 +159,35 @@ def self_test() -> None:
     for path in accepted:
         if forbidden_path(path) is not None:
             raise AssertionError(f"false positive: {path}")
-    print("PASS classifier positive and negative fixtures")
+
+    def synthetic_tar(*names: str) -> io.BytesIO:
+        buffer = io.BytesIO()
+        with tarfile.open(fileobj=buffer, mode="w") as archive:
+            for name in names:
+                member = tarfile.TarInfo(name)
+                member.size = 0
+                archive.addfile(member)
+        buffer.seek(0)
+        return buffer
+
+    clean, server = inspect_tar(synthetic_tar(
+        "./app/server.js", "./app/public/logo.svg",
+        "./app/node_modules/some-package/AGENTS.md",
+    ))
+    if clean or not server:
+        raise AssertionError("clean runtime tar fixture must pass with server.js")
+
+    violations, server = inspect_tar(synthetic_tar(
+        "./app/server.js", "./app/AGENTS.md",
+        "./app/public/docs/AGENTS.md", "./app/.agent/state.json",
+    ))
+    if len(violations) != 3 or not server:
+        raise AssertionError(f"forbidden runtime tar fixture escaped: {violations}")
+
+    _, server = inspect_tar(synthetic_tar("./app/public/logo.svg"))
+    if server:
+        raise AssertionError("runtime fixture with missing standalone server must fail")
+    print("PASS classifier and streamed tar positive/negative fixtures")
 
 
 def main() -> int:
