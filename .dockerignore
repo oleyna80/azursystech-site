@@ -30,10 +30,32 @@ yarn-error.log*
 __pycache__
 *.pyc
 
-# Docs and planning artifacts not required for runtime image
+# SDLC / AI-agent control plane and planning (never build inputs)
+# Keep these in Git for agents and reviews, not in Docker build contexts.
+AGENTS.md
+CLAUDE.md
+FILE_REGISTRY.yml
+PROJECT_MAP.md
+PRODUCT.md
+README.md
+.agentsignore
+.codexignore
+opencode.json
 .agent
+.agents
+.claude
+.codex
+.opencode
+.githooks
+governance
+runtimes
+framework
+template
 docs
 memory_bank
+# Also reject nested native-agent entrypoints in application folders.
+**/AGENTS.md
+**/CLAUDE.md
 00_strategy
 01_brand
 02_website
