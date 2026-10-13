@@ -258,9 +258,14 @@ not a human blocker.
 ### Assured
 
 - Independent review and verification.
-- For non-trivial work, Critic admission evidence must match `base_commit`, and
-  Reviewer and Verifier closeout evidence must match `frozen_revision` at
-  successful closeout.
+- For non-trivial work, Critic `READY` must bind the exact committed
+  `planning_subject.revision`. Reviewer and Verifier `READY` must each bind
+  the identical `source_candidate_sha` in Controller v1 before trusted
+  publication. `base_commit` anchors admission; the legacy
+  `frozen_revision` does not replace these exact v1 bindings.
+- Preserve evidence of independent native execution contexts and actual
+  isolation where required; these are assurance conditions, not extra
+  schema-v2 authority fields.
 - Independent output and observable trajectory evaluation when applicable.
 - Fixed rubric and benchmark revisions.
 - Drift audit.
