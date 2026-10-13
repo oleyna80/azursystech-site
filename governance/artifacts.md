@@ -6,6 +6,15 @@ Artifacts are the interoperability boundary between humans, agent runtimes,
 models, sessions, and machines. A future agent must be able to recover the
 approved state without relying on hidden prompt history.
 
+## Installed Controller v1 precedence
+
+Artifacts, review and process closeout are documentation/evidence functions.
+They never authorize live edits or publication. Installed v1 uses trusted
+external admission and per-worktree Git-private schema-v2 state; exact Critic,
+candidate, Reviewer, Verifier and trusted publish transitions determine runtime
+eligibility. Legacy tracked write gates and inactive schema-v3 templates
+remain historical/repository-CI projections.
+
 ## Normative Chain
 
 ```text
@@ -218,15 +227,13 @@ authority for a systemic implementation or governance mutation.
 
 Otherwise use reporting-only closeout and keep the Work Block blocked.
 
-After either terminal closeout mode, the operational active Work Block record must be
-canonical inactive: it contains no Work Block ID, specification binding, branch
-binding, base commit, or source write set. Cooperative runtime gates may then allow
-only the declared coordination paths for edits, staging, and local commits. The
-canonical list includes the exact release-state projections `FILE_REGISTRY.yml` and
-`PROJECT_MAP.md`, alongside Work Block and evidence artifacts; it must not grant
-repository-root or directory-wildcard authority. This does not reopen source scope;
-a successor Work Block must explicitly establish its branch-bound active record and
-resolved write gate.
+For installed Controller v1, successful completion reaches `INACTIVE`
+only after trusted publication, remote-tip verification and immutable provenance.
+Reporting-only or cancelled outcomes are not successful publication. `INACTIVE`
+does not itself authorize post-closeout writes: any new operation requires the
+applicable trusted admission and Controller write scope. Changes to
+`FILE_REGISTRY.yml` and `PROJECT_MAP.md` still require approved path scope;
+their legacy release-state projections cannot reopen a source write gate.
 
 ## Narrow Deterministic Repair Artifacts
 
