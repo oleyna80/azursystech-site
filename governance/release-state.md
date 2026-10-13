@@ -7,6 +7,16 @@ framework change may be treated as release-ready. It prevents completed Work
 Blocks, navigation maps, machine registries, and closeout evidence from describing
 contradictory states.
 
+## Installed Controller v1 boundary
+
+This document validates **repository release evidence and legacy schema-v3
+compatibility projections**, not installed runtime authority. For v1, trusted
+external admission and per-worktree Git-private schema-v2 Controller state
+are decisive; missing state is not `INACTIVE`. The tracked
+`.agent/active-work-block.json` and its default are historical compatibility
+data. Their validation neither grants nor denies a Controller v1 transition.
+See `AGENTS.md` and `governance/authority.md`.
+
 ## Ownership Boundary
 
 The repository owns and versions:
@@ -37,8 +47,9 @@ copy of later hosting-platform state.
    and active migration Work Blocks.
 3. The machine block and visible `Migration Work` section in `PROJECT_MAP.md` are
    the human-readable projection of the same migration state.
-4. `.agent/active-work-block.json` is the operational Work Block gate state. It
-   records the current branch-bound work, which may be unrelated to migration.
+4. `.agent/active-work-block.json` is the **tracked schema-v3 legacy release
+   projection** checked by CI for historical compatibility; it does not record
+   or authorize installed Controller v1 active work.
 5. Closeout reports provide evidence and classification; they do not override the
    Work Block or registry.
 6. GitHub PR/merge state is external operational evidence and cannot override
@@ -82,17 +93,16 @@ A non-null `active_work_block` must:
 When `active_work_block` is null, that section must explicitly state that there is
 no active implementation Work Block.
 
-### Operational Work Block
+### Tracked schema-v3 compatibility projection (legacy CI contract)
 
-The operational JSON is validated independently of `migration_state` and its
-`PROJECT_MAP.md` projection. An absent operational Work Block requires the full
-canonical inactive template shape, allowing only the closeout mode and lifecycle
-note to differ. An active operational Work Block requires a valid schema and
-authority mode, branch and base identity, write gate and write set, and a
-specification whose path, Work Block ID, and revision match the operational
-record. Applicable native topology checks still run. The operational Work Block
-need not equal `migration_state.active_work_block`; a normal non-migration Work
-Block may be active while migration state has no active Work Block.
+`scripts/validate-release-state.py` still validates tracked
+`.agent/active-work-block.json` independently of `migration_state` and its
+`PROJECT_MAP.md` projection. An empty legacy record retains the canonical
+inactive template; an active historical record requires the corresponding
+legacy schema, branch/base/write-gate/write-set identities and specification.
+Legacy topology checks may still apply. A failed CI projection check blocks
+that repository validation but does not change v1 admission or authority.
+Runtime state is never inferred from this tracked projection.
 
 ### Closeout
 
@@ -173,7 +183,9 @@ validator must reject at least:
 
 ## Enforcement
 
-`scripts/validate-release-state.py` validates repository state.
+`scripts/validate-release-state.py` validates repository-owned release
+projections and legacy schema-v3 compatibility, **not** installed Controller v1
+runtime state.
 `scripts/test-release-state-contracts.py` provides positive and adversarial
 fixtures. `.github/workflows/release-state-contract.yml` runs both on pushes and
 pull requests, while Framework Contracts invokes the same governance validation.
