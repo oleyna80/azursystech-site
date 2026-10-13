@@ -1,6 +1,6 @@
 # Agentic SDLC v1 — P0 Documentation Reconciliation
 
-**Status:** P0 changes implemented as an isolated GitHub-only documentation candidate. **Independent review, native runtime checks and CI NOT VERIFIED.**
+**Status:** P0 revisions implemented; independent review of prior candidate `e53d5fa768b192c29743fd07b9fb1b6633e8b852` returned **REWORK**. Five findings have been addressed in this branch; **fresh independent re-review, native runtime checks and CI remain NOT VERIFIED.**
 
 - Repository: `oleyna80/azursystech-site`
 - Frozen base/main: `49e976aefc29402b2e1578efbe64768dd5c30b41`
@@ -45,3 +45,41 @@ The nine-file change set is these eight files plus this P0 report. No source cod
 ## Remaining risks
 
 This candidate changes normative documentation and registry metadata; its effect on any downstream YAML/schema/CI consumer has not been executed or verified. Any dependency failure requires a bounded revision and renewed review, not weakening Controller authority or silently changing runtime code.
+
+## Independent Reviewer REWORK — delta closure pending re-review
+
+An independent read-only Reviewer rejected exact candidate
+`e53d5fa768b192c29743fd07b9fb1b6633e8b852` with three HIGH and two
+MEDIUM findings. This **source remediation is not itself an assurance verdict**:
+
+- `P0-REV-001` (HIGH): The Work Block template no longer says the first two
+  Hard Stops are autonomous. Production/live DB operations are explicit Owner
+  Hard Stops; allowed local commits and **trusted** assured subject publication
+  are separate normal Git actions. No direct shell push is authorized.
+- `P0-REV-002` (HIGH): The Assured governance profile now binds Critic to
+  `planning_subject.revision` and Reviewer/Verifier to the same
+  `source_candidate_sha`, rather than legacy `base_commit`/
+  `frozen_revision` assurance identities. Independent context evidence
+  remains a separate requirement.
+- `P0-REV-003` (HIGH): Integration evidence no longer requires writing
+  external CLI IDs or admission paths to tracked schema-v3
+  `.agent/active-work-block.json`; trusted Controller v1 admission and
+  approved integration evidence are kept distinct.
+- `P0-REV-004` (MEDIUM): Reviewer/Verifier Controller bindings expose
+  only `PENDING`/`READY`; wider report verdicts are separate fields.
+- `P0-REV-005` (MEDIUM): Managed/Assured/Distributed formal Define requires
+  requirements-quality `READY`, successful deterministic traceability and
+  consistency `READY`, with three nonempty evidence references and no
+  unresolved blockers **before** Critic READY. These are process evidence,
+  not new schema-v2 state fields or an additional controller gate.
+
+**Changed by this rework:** only `governance/lifecycle.md`,
+`governance/define-quality.md`, `docs/templates/work-block-template.md`
+and this implementation report. The nine-file P0 scope is unchanged.
+
+**Acceptance still required:** new exact-SHA read-only Reviewer review of all
+five corrections and unaffected authority/CI boundaries. GitHub-only text
+review cannot certify release-state tests, native hook loading, sandbox
+isolation or effective network/credential boundaries.
+
+No PR, merge, deployment or Controller state mutation was performed.
