@@ -31,13 +31,17 @@
 - **Committed Source Candidate:** [exact SHA | not yet committed]
 - **Reviewer Controller Binding:** [PENDING with candidate_sha=null | READY with exact source_candidate_sha]
 - **Verifier Controller Binding:** [PENDING with candidate_sha=null | READY with exact source_candidate_sha]
-- **Reviewer Report Verdict (separate from binding):** [PENDING | READY | CHANGES_REQUIRED | BLOCKED | UNVERIFIED]
+- **Reviewer Report Verdict (if issued; separate from binding):** [READY | CHANGES_REQUIRED | BLOCKED | UNVERIFIED]
 - **Trusted Publication:** [NOT_STARTED | VERIFIED with remote exact tip and provenance | BLOCKED]
-- **Verification Report Verdict (separate from binding):** [PENDING | READY | BLOCKED | UNVERIFIED]
+- **Verification Report Verdict (if issued; separate from binding):** [READY | BLOCKED | UNVERIFIED]
 - **Evaluation Verdict:** [PENDING | READY | BLOCKED | UNVERIFIED | NOT_REQUIRED]
 - **Drift Gate:** [PENDING | READY | BLOCKED | UNVERIFIED | SKIPPED]
 - **Closeout Mode:** [pending | success-closeout | reporting-only]
 - **Owner Approval Evidence:** [message/reference | not required]
+
+Report verdicts remain **unset** until the corresponding independent report is issued.
+Any report preparation status (e.g. PENDING) is separate tracking evidence, not a
+report verdict or a trusted Controller binding.
 
 ### Define Quality Prerequisite
 
