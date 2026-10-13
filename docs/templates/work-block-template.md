@@ -2,6 +2,12 @@
 
 > Fill this before non-trivial repository mutation. The Work Block binds the
 > runtime-neutral governance contract to one concrete objective.
+>
+> **Installed Controller v1:** The authoritative runtime state is trusted external
+> admission plus per-worktree Git-private schema-v2 Controller state. This
+> Markdown template records planning and assurance evidence; schema-v3 tracked
+> write gates and process Close do not grant runtime authority. See
+> `AGENTS.md` and `governance/authority.md`.
 
 ## Metadata
 
@@ -17,11 +23,15 @@
 
 ## Lifecycle State
 
-- **Current Stage:** [Define | Execute | Assure | Close]
-- **Stage State:** [blocked | ready | in_progress | completed]
-- **Write Gate:** [READY | BLOCKED]
-- **Critic Gate:** [PENDING | READY | BLOCKED | SKIPPED | DEGRADED]
-- **Review Gate:** [PENDING | READY | CHANGES_REQUIRED | BLOCKED | UNVERIFIED | SKIPPED]
+- **Observed Controller v1 State (not set by this document):** [INACTIVE | DEFINE | EXECUTE | ASSURE | ABSENT/UNVERIFIED]
+- **Trusted Active Admission:** [admission ID + verified repository/branch/base/profile | none]
+- **Approved Write Set:** [exact paths or scope reference]
+- **Committed Planning Revision:** [exact SHA | not yet committed]
+- **Critic Binding:** [PENDING | READY | BLOCKED; planning SHA and evidence]
+- **Committed Source Candidate:** [exact SHA | not yet committed]
+- **Reviewer Binding:** [PENDING | READY | CHANGES_REQUIRED | BLOCKED | UNVERIFIED; candidate SHA]
+- **Verifier Binding:** [PENDING | READY | BLOCKED | UNVERIFIED; candidate SHA]
+- **Trusted Publication:** [NOT_STARTED | VERIFIED with remote exact tip and provenance | BLOCKED]
 - **Verification Verdict:** [PENDING | READY | BLOCKED | UNVERIFIED]
 - **Evaluation Verdict:** [PENDING | READY | BLOCKED | UNVERIFIED | NOT_REQUIRED]
 - **Drift Gate:** [PENDING | READY | BLOCKED | UNVERIFIED | SKIPPED]
@@ -36,11 +46,10 @@
 - **Traceability Evidence:** [path/reference | not required]
 - **Consistency Analysis Evidence:** [path/reference | not required]
 
-This is one aggregate evidence prerequisite, not three authority gates. Managed,
-Assured, and Distributed work cannot disable an applicable prerequisite with a
-mutable `Required: no`. Applicable `READY` requires all three non-blank evidence
-bindings. The prerequisite does not replace Critic and never opens the Write Gate
-by itself.
+These entries describe applicable planning-quality evidence, **not** a
+schema-v3 machine aggregate or source-write gate. Required evidence must
+be reviewed before trusted Controller v1 Critic `READY` binds the committed
+plan and allows `DEFINE → EXECUTE`.
 
 ## Objective
 
@@ -60,7 +69,7 @@ repository/runtime state, evidence, documentation, and what must remain clean.]
 
 ## Process Feedback Closeout
 
-At Close, complete the structured Process Feedback block from
+At process closeout (not a Controller v1 `Close` state), complete the structured Process Feedback block from
 `docs/templates/closeout-report-template.md`. Review documentation,
 contracts/invariants, tooling/skills, context/memory, governance/authority,
 environment/setup, validation/tests, and process overhead/repeated work.
@@ -304,7 +313,7 @@ Model/provider/integration names do not define roles or authority.
 
 - **Files to stage:** [explicit paths]
 - **Files to leave unstaged:** [list]
-- **Commit/push approval:** [not requested | requested | approved evidence]
+- **Trusted Controller publication:** [not requested | admissible exact subject ref | blocked/verified evidence]
 - **Release/deploy approval:** [not applicable | required | evidence]
 
 ## Execution Log
@@ -316,7 +325,12 @@ Model/provider/integration names do not define roles or authority.
 Record observable trajectory events or references only. Do not include hidden
 reasoning, private chain-of-thought, model scratchpads, secrets, or protected payloads.
 
-## Closeout
+## Process Closeout (not a Controller v1 state)
+
+Normal success requires Controller v1 trusted publish, remote exact-tip
+verification, immutable provenance and then `INACTIVE`. Failed publication
+remains `ASSURE`; reporting-only/cancelled outcomes are not delivered
+successfully. Process reporting does not authorize runtime transitions.
 
 ### Result
 
