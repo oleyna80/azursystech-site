@@ -259,11 +259,27 @@ Use:
 
 ### Installed Controller v1
 
-For Managed, Assured and Distributed Work Blocks, gather applicable
-requirements-quality, traceability and read-only consistency-analysis evidence
-before the independent Critic decision. Controlled work selects proportionate
-evidence for its risk and scope. Missing required evidence remains a planning
-blocker, **not** an implicit Controller state transition.
+For Managed, Assured and Distributed formal Work Blocks, all three required
+Define-quality functions must be resolved **before the independent Critic
+decision and its Controller `READY` binding**:
+
+- requirements-quality review: confirmed `READY`, with a nonempty evidence reference;
+- deterministic requirement/task traceability: successful validation, with a
+  nonempty evidence reference;
+- read-only specification/architecture/plan/task consistency analysis:
+  confirmed `READY`, with a nonempty evidence reference.
+
+Missing or blank references, unresolved `CHANGES_REQUIRED`, `BLOCKED` or
+`UNVERIFIED` results, and failed traceability validation block progression
+until corrected and rechecked. A fluent report or the Critic's later opinion
+cannot silently waive these required process checks. Controlled work selects
+proportionate evidence based on its approved risk and scope; no selection may
+weaken trusted Controller admission or the Owner's authority.
+
+These are **documented process/evidence prerequisites**, not an additional
+schema-v2 Controller state, a tracked schema-v3 write gate, or permission to
+mutate source. Required evidence is assessed before the committed planning
+revision is submitted for Critic review.
 
 Approved specifications, plans and quality reports retain their own artifact
 statuses. There is no `define_quality` or `write_gate` field in the installed
