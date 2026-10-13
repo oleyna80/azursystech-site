@@ -130,7 +130,8 @@ Typical questions include:
 ### Ownership
 
 - Managed, Assured, and Distributed work with a formal specification require a
-  requirements-quality review before Critic/write-gate completion.
+  requirements-quality review with resolved nonblocking evidence before the
+  independent Critic decision and trusted Controller v1 Critic READY binding.
 - The preferred reviewer is a read-only function distinct from the specification
   author when the selected governance profile expects independence.
 - Controlled work uses the review by risk.
