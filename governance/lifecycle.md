@@ -18,6 +18,18 @@ machine introduced circular bootstrap, replay, H0/H1/H2, expiry, digest, and
 runtime-parity complexity while remaining dependent on project-local hooks that
 are not an OS security boundary.
 
+## Installed Controller v1 — state and precedence
+
+The installed runtime lifecycle is `INACTIVE → DEFINE → EXECUTE → ASSURE → INACTIVE`
+(schema v2). Trusted installation configuration, external active admission and
+per-worktree Git-private Controller state determine executable authority. Missing
+or corrupt state is **not** `INACTIVE`. See `AGENTS.md`,
+`governance/authority.md` and `.agent/controllers/v1/`.
+
+The macro stages below describe *process activities*, not a second runtime
+state machine. Process Close is not a Controller v1 state; tracked schema-v3
+write gates and legacy terminal publication are historical/CI projections only.
+
 ## Macro Stages
 
 ### Stage 0 — Define
@@ -45,14 +57,12 @@ Required outcome:
 
 No implementation write may begin while Stage 0 is blocked.
 
-Generated schema-v3 projects may open the local source scope after these Define
-conditions are satisfied. Managed, Assured, and Distributed Work Blocks must
-record READY requirements-quality review, traceability, and consistency-analysis
-evidence in `define_quality`; Controlled work records whether that aggregate is
-required. Opening local scope does not create production, credential, live-data,
-destructive, protected-branch, or irreversible-publication authority. The one
-autonomous subject-branch candidate push is defined solely by
-`governance/authority.md`.
+For installed v1, requirements-quality, traceability and consistency reports
+remain planning evidence, not schema-v3 source-write gates. With trusted
+admission and a committed planning revision, an independent Critic `READY`
+binding permits `DEFINE → EXECUTE`. No local evidence grants production,
+credential, live-data, destructive, protected-branch or external authority.
+Trusted publication is governed by `governance/authority.md`.
 
 ### Stage 1 — Execute
 
@@ -72,18 +82,19 @@ Required outcome:
 - the diff is frozen or its exact revision is recorded;
 - implementation concerns and unresolved assumptions are reported.
 
-Subject publication has two separate Stage 1 outcomes: an assured active
-candidate may use the active Work Block READY predicate; a final terminal
-candidate may use the terminal predicate only when committed history proves one
-immediate child transition from that publication-eligible active commit to the
-canonical inactive closeout state. The inactive state itself never authorizes
-publication, and terminal diffs remain limited to the canonical closeout /
-coordination allowlist.
+Installed v1 does not publish from a schema-v3 frozen/write-gate predicate
+or a terminal closeout commit. A clean committed candidate enters `ASSURE`;
+independent Reviewer and Verifier `READY` bindings must refer to that exact
+source SHA. Trusted publish of the exact non-force subject ref through origin
+then verifies remote tip and records immutable provenance before `INACTIVE`.
+Only allowed linear coordination-only changes may follow the assured candidate;
+source/planning changes or merges are denied or require renewed assurance.
 
 Within approved scope, ordinary reversible development operations may include
 staging, local commits, and corrective loops. After required assurance is READY,
-the explicit exact-subject candidate push defined by `governance/authority.md`
-is also autonomous. A `CHANGES_REQUIRED` loop stays autonomous only until the
+the trusted Controller exact-subject publication defined by
+`governance/authority.md` is also autonomous within the approved scope and
+external capability boundary. A `CHANGES_REQUIRED` loop stays autonomous only until the
 next candidate again completes its required assurance.
 
 Direct protected/default-branch mutation, force/history-rewriting operations,
@@ -126,36 +137,22 @@ Required outcome:
 - residual risks and inspection gaps;
 - corrective action for blocking findings.
 
-For an applicable non-trivial `Managed`/`Assured` Work Block with available
-native capability, Verifier assurance is a three-step control transition:
+For applicable non-trivial `Managed`/`Assured` work, independent Critic,
+Reviewer and Verifier reports require actual execution evidence and trusted
+Controller bindings. Critic `READY` binds the committed planning revision;
+Reviewer and Verifier `READY` bind the exact clean source candidate in
+`ASSURE`. Missing, provisional, mismatched or `BLOCKED` reports never
+satisfy assurance; reports alone do not create authority.
 
-1. the Orchestrator records the dispatched native execution as a provisional
-   `PENDING` binding after admission and prior required evidence pass;
-2. the separate read-only Verifier independently evaluates the frozen subject
-   and returns `READY` or `BLOCKED` without requiring, self-promoting, or
-   mutating its own completed binding; and
-3. the Orchestrator finalizes the immutable binding only when the execution ID,
-   context, native dispatch reference, runtime tuple, recovery root, branch,
-   frozen revision, and authoritative report all match the actual execution.
-
-Final closeout then validates the completed native Critic, Reviewer, and
-Verifier bindings. A provisional, missing, mismatched, historical, or
-`BLOCKED` Verifier result never satisfies closeout, and main-thread or
-same-session substitution is not required assurance when native capability is
-available. The local `prepare-verifier` and `finalize-verifier` lifecycle
-transitions are Orchestrator-owned coordination operations. The finalization
-interface accepts no caller-supplied role label: a Verifier cannot establish
-Orchestrator authority by passing a string. The project-local helper remains a
-cooperative process-control mechanism, while runtime role separation and
-external controls provide the actual authority boundary; it does not grant the
-Verifier authority to promote itself.
+The old schema-v3 `prepare-verifier` / `finalize-verifier` coordination
+procedure is historical, not an installed Controller v1 transition.
 
 Passing local assurance does not grant an external Hard Stop capability. For
 example, a `READY` verification may prove a deployable artifact while the actual
 production deploy remains unavailable until the external Owner-controlled
 workflow or credential boundary permits it.
 
-### Stage 3 — Close
+### Process closeout and reporting (not a Controller v1 state)
 
 Functions:
 
@@ -176,44 +173,24 @@ Successful process closeout also does not bypass an external repository or
 production control. A protected merge, release, or deploy must still satisfy the
 applicable GitHub/OS/credential boundary.
 
-## Lifecycle State
+## Lifecycle State — installed Controller v1
 
-Track execution state separately from assurance verdict:
+The installed state machine is `INACTIVE | DEFINE | EXECUTE | ASSURE`:
+`INACTIVE → DEFINE → EXECUTE → ASSURE → INACTIVE`. The external admission,
+trusted configuration and Git-private schema-v2 state bind permissions.
+Missing state does not authorize anything. Normal completion requires trusted
+publication, remote-tip verification and immutable provenance. Failure
+preserves `ASSURE`, while reporting-only/cancelled outcomes are separate.
 
-```yaml
-stage: define | execute | assure | close
-execution_state: blocked | ready | in_progress | completed
-verification_verdict: pending | READY | BLOCKED | UNVERIFIED
-evaluation_verdict: pending | READY | BLOCKED | UNVERIFIED | not_required
-closeout_mode: pending | success | reporting_only
-external_capability_state: not_required | unavailable | pending_owner | available | consumed
-```
+## Historical schema-v3 process state (non-authoritative)
 
-A stage may be `completed` because its required activity finished while the
-result remains `BLOCKED` or `UNVERIFIED`.
-
-`external_capability_state` is evidence about a capability controlled outside the
-mutable project. Editing project-local lifecycle state cannot create or expand
-that capability.
-
-## Local Work-Block Scope State
-
-Generated schema-v3 projects use `authority_mode: github_capability`.
-
-The local source gate has two relevant states:
-
-- `BLOCKED`: source implementation is blocked; canonical coordination paths remain
-  available for plans/specifications/evidence and coordination-only commits;
-- `READY`: source mutations are allowed only inside the active write set after
-  required Define/Critic conditions are resolved.
-
-The recorded `base_commit` is the planning/evidence baseline. A normal feature
-commit does not create a cryptographic `STALE`/renew cycle. If requirements,
-scope, architecture, or authority materially change, return to Define and update
-the Work Block explicitly.
-
-Historical signed authorization records may remain for audit/reference. They do
-not create current schema-v3 authority.
+Older generated projects and CI release-state fixtures use tracked fields
+such as `stage: define|execute|assure|close`, `execution_state`,
+`closeout_mode`, `authority_mode: github_capability` and
+`write_gate: READY|BLOCKED`. These are **historical compatibility projections**,
+not installed Controller state. They cannot grant source writes, reopen scope
+or authorize inactive-state coordination. Historical signed approvals likewise
+grant no current authority.
 
 ## Governance Profiles
 
@@ -323,7 +300,7 @@ When a lifecycle function fails:
 - reporting-only closeout may continue;
 - a failed or unavailable review, verification, or evaluation step must not be represented as a pass;
 - a required evaluation with missing observable events remains `BLOCKED` or `UNVERIFIED`;
-- implementation may resume only after the controlling local scope/process gate is reopened through
-  the documented corrective loop;
+- implementation may resume only after the trusted Controller admission, state,
+  write-set and corrective-loop rules permit it;
 - missing external capability remains unavailable regardless of project-local
   text, local gate state, test results, or evaluation scores.
