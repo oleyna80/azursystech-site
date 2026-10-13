@@ -1,0 +1,112 @@
+name: Deployment Artifact Isolation
+
+# Separate release-boundary gate; Showcase remains unchanged and unbuilt.
+on:
+  pull_request:
+    paths:
+      - .dockerignore
+      - Dockerfile
+      - Dockerfile.admin
+      - Dockerfile.showcase
+      - .github/workflows/deploy-vps.yml
+      - .github/workflows/docker-publish.yml
+      - .github/workflows/deployment-artifact-isolation.yml
+      - scripts/verify-runtime-artifact-isolation.py
+      - web/**
+      - admin/**
+  push:
+    branches:
+      - main
+    paths:
+      - .dockerignore
+      - Dockerfile
+      - Dockerfile.admin
+      - Dockerfile.showcase
+      - .github/workflows/deploy-vps.yml
+      - .github/workflows/docker-publish.yml
+      - .github/workflows/deployment-artifact-isolation.yml
+      - scripts/verify-runtime-artifact-isolation.py
+      - web/**
+      - admin/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  context-boundary:
+    name: Docker context and deploy transfer contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify inspector rules and repository/deploy contracts
+        run: |
+          python3 scripts/verify-runtime-artifact-isolation.py --self-test
+          python3 scripts/verify-runtime-artifact-isolation.py --check-repo-contract
+
+      - name: Verify actual Docker context filtering without building applications
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p web/__artifact_isolation_probe__ admin/__artifact_isolation_probe__ showcase/__artifact_isolation_probe__
+          printf 'must be ignored\n' > web/__artifact_isolation_probe__/AGENTS.md
+          printf 'must be ignored\n' > admin/__artifact_isolation_probe__/CLAUDE.md
+          printf 'must be ignored\n' > showcase/__artifact_isolation_probe__/AGENTS.md
+          docker build --no-cache --file - --tag azursystech-context-isolation:check . <<'DOCKERFILE'
+          FROM alpine:3.21
+          COPY . /context
+          RUN set -eu; \
+              test -f /context/web/package.json; \
+              test -f /context/admin/package.json; \
+              test -f /context/showcase/package.json; \
+              for entry in \
+                AGENTS.md CLAUDE.md FILE_REGISTRY.yml PROJECT_MAP.md PRODUCT.md README.md \
+                .agentsignore .codexignore opencode.json .agent .agents .claude .codex \
+                .opencode .githooks governance runtimes framework template docs memory_bank \
+                00_strategy 01_brand 02_website 03_leads 04_facebook 05_ai 06_seo 07_ops \
+                web/__artifact_isolation_probe__/AGENTS.md \
+                admin/__artifact_isolation_probe__/CLAUDE.md \
+                showcase/__artifact_isolation_probe__/AGENTS.md; do \
+                  if test -e "/context/$entry"; then \
+                    echo "Forbidden item reached Docker build context: $entry" >&2; \
+                    exit 1; \
+                  fi; \
+              done
+          DOCKERFILE
+
+  runtime-images:
+    name: Inspect ${{ matrix.project }} runtime filesystem
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: web
+            dockerfile: Dockerfile
+          - project: admin
+            dockerfile: Dockerfile.admin
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build local production image (do not publish)
+        shell: bash
+        env:
+          DOCKERFILE: ${{ matrix.dockerfile }}
+          PROJECT: ${{ matrix.project }}
+        run: |
+          set -euo pipefail
+          docker build --file "${DOCKERFILE}" --tag "azursystech-${PROJECT}-artifact-isolation:ci" .
+
+      - name: Inspect complete image filesystem, without starting container
+        shell: bash
+        env:
+          PROJECT: ${{ matrix.project }}
+        run: |
+          set -euo pipefail
+          python3 scripts/verify-runtime-artifact-isolation.py \
+            --image "azursystech-${PROJECT}-artifact-isolation:ci"
