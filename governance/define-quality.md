@@ -16,6 +16,16 @@ This contract adds three quality functions before implementation:
 These functions refine Define. They do not create new authority roles, a second
 lifecycle, or a new source of truth.
 
+## Installed Controller v1 applicability
+
+Clarification, requirements review, traceability and consistency analysis
+remain approved planning and assurance *methodologies*. Installed Controller v1
+has neither a schema-v3 `define_quality` field nor a tracked write gate.
+Its executable transition requires trusted admission, committed planning and
+the independent Critic `READY` binding. This document cannot grant a separate
+source-write permission or promote evidence into runtime authority; see
+`AGENTS.md` and `governance/authority.md`.
+
 ## Authority and Source of Truth
 
 The existing authority order remains unchanged:
@@ -245,98 +255,36 @@ Use:
 - `BLOCKED` — required evidence/decision is unavailable;
 - `UNVERIFIED` — the analyzer could not inspect required artifacts reliably.
 
-## 5. Executable Define-Quality Prerequisite
+## 5. Define-Quality Evidence — installed v1 and historical compatibility
 
-The three Define-quality functions above remain separate evidence producers, but
-they are represented at the source-transition boundary by **one aggregate
-prerequisite** in the existing schema-v3 active Work Block. This is intentionally
-not three additional gates.
+### Installed Controller v1
 
-Canonical aggregate shape:
+For Managed, Assured and Distributed Work Blocks, gather applicable
+requirements-quality, traceability and read-only consistency-analysis evidence
+before the independent Critic decision. Controlled work selects proportionate
+evidence for its risk and scope. Missing required evidence remains a planning
+blocker, **not** an implicit Controller state transition.
 
-```json
-"define_quality": {
-  "required": false,
-  "status": "PENDING",
-  "requirements_review": "",
-  "traceability": "",
-  "consistency_analysis": ""
-}
-```
+Approved specifications, plans and quality reports retain their own artifact
+statuses. There is no `define_quality` or `write_gate` field in the installed
+schema-v2 Controller state. Trusted admission and Critic `READY` on an exact
+committed planning revision control `DEFINE → EXECUTE`; adapters must enforce
+this real Controller contract, not tracked schema-v3 JSON.
 
-### Applicability
+### Historical schema-v3 prerequisite (not installed authority)
 
-Applicability is derived fail-closed from governance profile where the profile
-already requires formal Define discipline:
+Older scaffolds represented these evidence checks as a single `define_quality`
+aggregate with `required`, `status`, `requirements_review`, `traceability`
+and `consistency_analysis`. In that legacy model, applicable checks required
+`READY` and three nonempty report bindings before the old write gate could
+open. Release-state CI may still validate these **tracked compatibility
+fixtures**. Such checks are not a substitute for trusted Controller v1
+admission, Critic assurance or write-set decisions.
 
-```text
-Managed / Assured / Distributed -> required
-Controlled                       -> selected proportionally by risk/work mode
-Quick Fix / eligible NDR         -> normally not required unless escalated
-```
-
-For Managed, Assured, and Distributed work, mutable `required=false` is a
-configuration contradiction; it cannot disable the prerequisite. A missing or
-malformed aggregate is unresolved and blocks source execution rather than being
-inferred as success.
-
-For Controlled work, `required` remains a proportional selector. Quick Fix and
-NDR retain their existing narrower eligibility and escalation contracts.
-
-### Readiness and evidence binding
-
-When the prerequisite is applicable, source execution requires:
-
-```text
-status == READY
-trim(requirements_review) != ""
-trim(traceability) != ""
-trim(consistency_analysis) != ""
-```
-
-The evidence values are bindings, not authority grants. Hot-path source guards
-validate that the aggregate is well formed, applicable, READY, and bound to
-non-blank evidence. They do not recursively open or semantically re-run the
-referenced reports. Dedicated validators and later assurance remain responsible
-for evidence quality.
-
-### Schema-v3 migration
-
-This is an additive evidence prerequisite inside the existing schema-v3 Work
-Block state. It does not change authority mode, roles, lifecycle, Hard Stops, or
-the source Write Gate, so no schema-v4 bump is required.
-
-Migration is fail-closed:
-
-- new generated schema-v3 defaults contain `define_quality`;
-- malformed aggregate -> `BLOCKED`;
-- Managed/Assured/Distributed with missing aggregate -> `BLOCKED` / migration
-  required;
-- missing aggregate never implies `READY`.
-
-`template/.agent/active-work-block.default.json` is the canonical portable tracked
-default. A generated local `.agent/active-work-block.json` is operational state
-restored only after the canonical default passes installation-profile validation.
-The tracked template compatibility copy must remain aligned with the default at
-scaffold time but does not become a second SSOT.
-
-### Runtime capability boundary
-
-The semantic rule is runtime-neutral: formal source execution is not authorized
-until applicable Define-quality evidence is READY.
-
-Runtime adapters that actually provide source-write interception, such as the
-bundled Codex and Claude adapters, must enforce this prerequisite fail-closed.
-A runtime without equivalent interception must report that capability limitation
-truthfully and must not claim machine-enforced prevention. This contract does not
-justify inventing a universal hook layer merely for surface symmetry.
-
-### Authority boundary
-
-The aggregate is evidence state only. It grants no source-write, Git,
-integration, credential, deployment, publication, external-action, or Hard Stop
-authority. Resolving it never replaces Critic. After it is READY, the existing
-Critic -> Write Gate -> write-set path still applies in full.
+Historical `template/.agent/active-work-block.default.json` migration and
+`Critic → Write Gate → write-set` instructions are preserved for provenance
+only, not as the installed v1 authorization path. No quality report grants
+Git, deployment, publication, credential or external capability.
 
 ## Stage 0 Integration
 
@@ -351,9 +299,10 @@ objective/discovery
   -> traceable task decomposition + write-set
   -> deterministic traceability validation
   -> read-only consistency analysis
-  -> aggregate Define-quality prerequisite READY
-  -> Critic
-  -> write gate READY
+  -> applicable Define-quality evidence reviewed
+  -> committed planning revision
+  -> independent Critic review
+  -> trusted Controller v1 Critic READY binding (DEFINE → EXECUTE)
 ```
 
 A valid smaller path may collapse functions for low-risk Controlled work, but no
@@ -366,7 +315,7 @@ evaluation, assurance, or closeout rules.
 - **Influential source:** `github/spec-kit@bf88c9f9a82fa370c7a7257aa2b3cf10b457b65c`
 - **Local research:** `framework/research/spec-kit-gap-analysis-2026-08-14.md`, `framework/research/spec-kit-clarify-checklist-dry-run-2026-08-14.md`
 - **Material local delta:** evidence-first clarification; bounded batching of
-  independent questions; existing Agentic SDLC authority/write gate retained;
+  independent questions; historical write-gate context retained only for provenance;
   reviewer-owned requirements gate separated from implementation verification;
   deterministic stable-ID traceability added; consistency analysis remains
   read-only and subordinate to specification authority; aggregate Define-quality
