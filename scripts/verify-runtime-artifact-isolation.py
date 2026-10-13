@@ -117,7 +117,7 @@ def forbidden_parts(parts: tuple[str, ...]) -> str | None:
         return "repository/agent control-plane file"
     if any(part in FORBIDDEN_DIRS for part in parts):
         return "repository/agent control-plane directory"
-     if any(part.startswith(FORBIDDEN_SCRIPT_PREFIXES) for part in parts):
+    if any(part.startswith(FORBIDDEN_SCRIPT_PREFIXES) for part in parts):
         return "SDLC helper script"
     return None
 
