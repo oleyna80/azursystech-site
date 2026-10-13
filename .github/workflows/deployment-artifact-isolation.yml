@@ -1,6 +1,8 @@
 name: Deployment Artifact Isolation
 
-# Separate release-boundary gate; Showcase remains unchanged and unbuilt.
+# This independently tests boundaries but does NOT yet gate Docker Publish.
+# Exact-SHA publication enforcement requires separate Owner approval.
+# Showcase remains unchanged and unbuilt.
 on:
   pull_request:
     paths:
