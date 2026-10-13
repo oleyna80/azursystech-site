@@ -55,6 +55,9 @@ jobs:
           printf 'must be ignored\n' > web/__artifact_isolation_probe__/AGENTS.md
           printf 'must be ignored\n' > admin/__artifact_isolation_probe__/CLAUDE.md
           printf 'must be ignored\n' > showcase/__artifact_isolation_probe__/AGENTS.md
+          mkdir -p web/__artifact_isolation_probe__/.agent admin/__artifact_isolation_probe__/.codex
+          printf 'must be ignored\n' > web/__artifact_isolation_probe__/.agent/state.json
+          printf 'must be ignored\n' > admin/__artifact_isolation_probe__/.codex/hooks.json
           docker build --no-cache --file - --tag azursystech-context-isolation:check . <<'DOCKERFILE'
           FROM alpine:3.21
           COPY . /context
@@ -69,7 +72,9 @@ jobs:
                 00_strategy 01_brand 02_website 03_leads 04_facebook 05_ai 06_seo 07_ops \
                 web/__artifact_isolation_probe__/AGENTS.md \
                 admin/__artifact_isolation_probe__/CLAUDE.md \
-                showcase/__artifact_isolation_probe__/AGENTS.md; do \
+                showcase/__artifact_isolation_probe__/AGENTS.md \
+                web/__artifact_isolation_probe__/.agent \
+                admin/__artifact_isolation_probe__/.codex; do \
                   if test -e "/context/$entry"; then \
                     echo "Forbidden item reached Docker build context: $entry" >&2; \
                     exit 1; \
