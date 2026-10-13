@@ -47,6 +47,10 @@ opencode.json
 .codex
 .opencode
 .githooks
+# First-party SDLC orchestration, verifier and connector implementations.
+# None are Dockerfile inputs; application source remains web/, admin/, showcase/.
+scripts
+integrations
 governance
 runtimes
 framework
