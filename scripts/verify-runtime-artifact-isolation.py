@@ -34,7 +34,7 @@ FORBIDDEN_FILES = frozenset({
 FORBIDDEN_DIRS = frozenset({
     ".git", ".github", ".agent", ".agents", ".claude", ".codex", ".opencode",
     ".githooks", "governance", "docs", "runtimes", "framework", "template",
-    "integrations", "memory_bank", "00_strategy", "01_brand", "02_website",
+    "integrations", "scripts", "memory_bank", "00_strategy", "01_brand",
     "03_leads", "04_facebook", "05_ai", "06_seo", "07_ops",
 })
 # scripts/ is not a universal forbidden name: real sites may serve scripts.
@@ -117,13 +117,7 @@ def forbidden_parts(parts: tuple[str, ...]) -> str | None:
         return "repository/agent control-plane file"
     if any(part in FORBIDDEN_DIRS for part in parts):
         return "repository/agent control-plane directory"
-    if parts[0] == "app" and len(parts) >= 3:
-        roots = parts[1:]
-        if roots[0] in PROJECT_NAMES:
-            roots = roots[1:]
-        if roots and roots[0] == "scripts":
-            return "first-party scripts directory"
-    if any(part.startswith(FORBIDDEN_SCRIPT_PREFIXES) for part in parts):
+     if any(part.startswith(FORBIDDEN_SCRIPT_PREFIXES) for part in parts):
         return "SDLC helper script"
     return None
 
@@ -250,28 +244,29 @@ def docker_instructions(filename: str) -> list[str]:
     return logical
 
 
+def check_dockerfile_sources(filename: str, instructions: list[str]) -> None:
+    """Reject anything outside the exact reviewed context and stage COPY set."""
+    observed: list[str] = []
+    for line in instructions:
+        tokens = shlex.split(line)
+        if not tokens:
+            continue
+        instruction = tokens[0].upper()
+        if instruction in {"ADD", "ONBUILD"}:
+            raise RuntimeError(f"{filename}: unsupported context/stage operation: {line}")
+        if instruction == "RUN" and re.search(r"--mount(?:=|\s)", line):
+            raise RuntimeError(f"{filename}: unreviewed RUN bind mount: {line}")
+        if instruction == "COPY":
+            observed.append(" ".join(tokens))
+    expected = list(EXPECTED_COPIES[filename])
+    if observed != expected:
+        raise RuntimeError(f"{filename}: COPY contract drift: expected {expected!r}, got {observed!r}")
+
+
 def verify_repo_contract() -> None:
     """Exact allowed Dockerfile COPY statements and managed VPS SCP boundary."""
-    for filename, expected in EXPECTED_COPIES.items():
-        observed: list[str] = []
-        instructions = docker_instructions(filename)
-        for line in instructions:
-            tokens = shlex.split(line)
-            if not tokens:
-                continue
-            instruction = tokens[0].upper()
-            if instruction in {"ADD", "ONBUILD"}:
-                raise RuntimeError(f"{filename}: unsupported context/stage operation: {line}")
-            if instruction == "RUN" and re.search(r"--mount(?:=|\s)", line):
-                raise RuntimeError(f"{filename}: unreviewed RUN bind mount: {line}")
-            if instruction == "COPY":
-                # Match the entire normalized instruction. Reject external stages,
-                # added options, JSON COPY, extra sources and unsupported forms.
-                observed.append(" ".join(tokens))
-        if observed != list(expected):
-            raise RuntimeError(
-                f"{filename}: COPY contract drift: expected {expected!r}, got {observed!r}"
-            )
+    for filename in EXPECTED_COPIES:
+        check_dockerfile_sources(filename, docker_instructions(filename))
 
     deploy = (ROOT / ".github/workflows/deploy-vps.yml").read_text(encoding="utf-8")
     sources = re.findall(r'^\s*source:\s*"([^"]+)"\s*$', deploy, flags=re.MULTILINE)
@@ -307,7 +302,7 @@ def self_test() -> None:
         "app/public/node_modules/AGENTS.md",
         "app/.agent/node_modules/state.json", "app/web/governance/authority.md",
         "workspace/.agent/state.json", "srv/project/integrations/mcp/README.md",
-        "app/scripts/sdlc-v1-bridge.py",
+        "app/scripts/sdlc-v1-bridge.py", "scripts/agent-runtime-doctor.sh",
     )
     okay_paths = (
         "app/server.js", "app/public/logo.svg", "app/.next/server/page.js",
@@ -352,7 +347,23 @@ def self_test() -> None:
     missing, server = inspect_tar(synthetic_tar(("app/public/logo.svg", "regular", "")))
     if server or missing:
         raise AssertionError("missing standalone fixture incorrect")
-    print("PASS path normalization, first-party classification and TAR negative fixtures")
+    # Negative source-contract fixtures: no added context inputs, external
+    # COPY stage, bind-context access, or ADD can evade the static gate.
+    baseline = list(EXPECTED_COPIES["Dockerfile"])
+    check_dockerfile_sources("Dockerfile", baseline)
+    for unauthorized in (
+        "COPY . /app",
+        "COPY --from=untrusted /etc/passwd /app/passwd",
+        "ADD . /app",
+        "RUN --mount=type=bind,source=.,target=/context ls /context",
+    ):
+        try:
+            check_dockerfile_sources("Dockerfile", baseline + [unauthorized])
+        except RuntimeError:
+            pass
+        else:
+            raise AssertionError(f"Dockerfile drift accepted: {unauthorized}")
+    print("PASS TAR negative fixtures and Dockerfile source-contract drift tests")
 
 
 def main() -> int:
