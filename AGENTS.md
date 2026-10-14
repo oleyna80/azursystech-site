@@ -22,10 +22,11 @@ Detailed architecture and contracts belong in `docs/architecture/` and `docs/spe
 For non-trivial work, load context progressively without reading the entire repository:
 
 1. this file and the current Owner instruction;
-2. `PROJECT_MAP.md` and `.agent/bootstrap-profile.json`;
-3. trusted active admission and Git-private Controller v1 state, approved specification/revision, and accepted architecture decisions;
-4. approved implementation and evaluation plans;
-5. current git branch, status, and relevant diffs.
+2. for SDLC architecture, governance, Controller, autonomy, agent permissions, or Git workspace work: `docs/engineering-memory/sdlc-existing-architecture-map.md` and its relevant canonical references, **before proposing new mechanisms**;
+3. `PROJECT_MAP.md` and `.agent/bootstrap-profile.json`;
+4. trusted active admission and Git-private Controller v1 state, approved specification/revision, and accepted architecture decisions;
+5. approved implementation and evaluation plans;
+6. current git branch, status, and relevant diffs.
 
 Use `docs/session-bootstrap.md` for full preflight procedures. Read `governance/`, runtime adapters, skills, engineering memory, and reports conditionally.
 
