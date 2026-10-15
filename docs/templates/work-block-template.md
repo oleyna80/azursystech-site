@@ -2,6 +2,12 @@
 
 > Fill this before non-trivial repository mutation. The Work Block binds the
 > runtime-neutral governance contract to one concrete objective.
+>
+> **Installed Controller v1:** The authoritative runtime state is trusted external
+> admission plus per-worktree Git-private schema-v2 Controller state. This
+> Markdown template records planning and assurance evidence; schema-v3 tracked
+> write gates and process Close do not grant runtime authority. See
+> `AGENTS.md` and `governance/authority.md`.
 
 ## Metadata
 
@@ -17,16 +23,25 @@
 
 ## Lifecycle State
 
-- **Current Stage:** [Define | Execute | Assure | Close]
-- **Stage State:** [blocked | ready | in_progress | completed]
-- **Write Gate:** [READY | BLOCKED]
-- **Critic Gate:** [PENDING | READY | BLOCKED | SKIPPED | DEGRADED]
-- **Review Gate:** [PENDING | READY | CHANGES_REQUIRED | BLOCKED | UNVERIFIED | SKIPPED]
-- **Verification Verdict:** [PENDING | READY | BLOCKED | UNVERIFIED]
+- **Observed Controller v1 State (not set by this document):** [INACTIVE | DEFINE | EXECUTE | ASSURE | ABSENT/UNVERIFIED]
+- **Trusted Active Admission:** [admission ID + verified repository/branch/base/profile | none]
+- **Approved Write Set:** [exact paths or scope reference]
+- **Committed Planning Revision:** [exact SHA | not yet committed]
+- **Critic Binding:** [PENDING | READY | BLOCKED; planning SHA and evidence]
+- **Committed Source Candidate:** [exact SHA | not yet committed]
+- **Reviewer Controller Binding:** [PENDING with candidate_sha=null | READY with exact source_candidate_sha]
+- **Verifier Controller Binding:** [PENDING with candidate_sha=null | READY with exact source_candidate_sha]
+- **Reviewer Report Verdict (if issued; separate from binding):** [READY | CHANGES_REQUIRED | BLOCKED | UNVERIFIED]
+- **Trusted Publication:** [NOT_STARTED | VERIFIED with remote exact tip and provenance | BLOCKED]
+- **Verification Report Verdict (if issued; separate from binding):** [READY | BLOCKED | UNVERIFIED]
 - **Evaluation Verdict:** [PENDING | READY | BLOCKED | UNVERIFIED | NOT_REQUIRED]
 - **Drift Gate:** [PENDING | READY | BLOCKED | UNVERIFIED | SKIPPED]
 - **Closeout Mode:** [pending | success-closeout | reporting-only]
 - **Owner Approval Evidence:** [message/reference | not required]
+
+Report verdicts remain **unset** until the corresponding independent report is issued.
+Any report preparation status (e.g. PENDING) is separate tracking evidence, not a
+report verdict or a trusted Controller binding.
 
 ### Define Quality Prerequisite
 
@@ -36,11 +51,13 @@
 - **Traceability Evidence:** [path/reference | not required]
 - **Consistency Analysis Evidence:** [path/reference | not required]
 
-This is one aggregate evidence prerequisite, not three authority gates. Managed,
-Assured, and Distributed work cannot disable an applicable prerequisite with a
-mutable `Required: no`. Applicable `READY` requires all three non-blank evidence
-bindings. The prerequisite does not replace Critic and never opens the Write Gate
-by itself.
+For Managed/Assured/Distributed formal work, required requirements-quality
+review and consistency analysis must be `READY`, and deterministic
+traceability validation must pass. All three evidence references must be
+nonempty; missing, failed, `CHANGES_REQUIRED`, `BLOCKED` or `UNVERIFIED`
+results prevent Critic progression. These are **process prerequisites**, not
+a schema-v3 machine aggregate or source-write gate. Trusted Controller v1
+Critic `READY` on committed planning controls `DEFINE → EXECUTE`.
 
 ## Objective
 
@@ -60,7 +77,7 @@ repository/runtime state, evidence, documentation, and what must remain clean.]
 
 ## Process Feedback Closeout
 
-At Close, complete the structured Process Feedback block from
+At process closeout (not a Controller v1 `Close` state), complete the structured Process Feedback block from
 `docs/templates/closeout-report-template.md`. Review documentation,
 contracts/invariants, tooling/skills, context/memory, governance/authority,
 environment/setup, validation/tests, and process overhead/repeated work.
@@ -141,21 +158,31 @@ separately from implementation files when applying Quick-Fix and trigger thresho
 - [ ] Live DB migration or live-data mutation
 - [ ] Credential/token/secret change
 - [ ] Destructive git/filesystem/database operation
-- [ ] Local commit (not a Hard Stop when the approved Work Block permits it)
-- [ ] Ordinary non-force candidate push to the exact non-default subject branch
 - [ ] Force push, branch deletion, tag/release publication, or push to a default/protected branch
 - [ ] Public release/publication
 - [ ] Client/user communication
 - [ ] Payment/order/stock/CRM/external consequential mutation
 - [ ] Material specification, evaluation-plan, or scope expansion
 
-For each checked item, record approval state and evidence. Evaluation cannot open
-or waive a Hard Stop. The first two entries are autonomous only when the active
-Work Block, `governance/authority.md`, and the runtime policy agree: the branch
-is the active subject branch, the destination is exactly
-`origin HEAD:refs/heads/<subject-branch>`, and all required assurance gates are
-`READY`. They never authorize a merge, deployment, release, force push, remote
-deletion, or publication to another ref.
+For each checked Hard Stop, record its **separate Owner/external authorization**
+and evidence. Neither a Work Block, Controller state, runtime permission prompt,
+nor an evaluation verdict independently authorizes production deployment, live
+database mutation or any other Hard Stop.
+
+### Permitted routine Git actions (not Hard Stops)
+
+- **Local commits** may proceed inside the approved Work Block, exact write set,
+  trusted active admission and applicable Controller state.
+- **Ordinary subject-branch publication** may proceed only through the existing
+  **trusted Controller v1 publish transaction**, after exact-candidate Reviewer
+  and Verifier `READY` bindings and all origin/default/protection predicates.
+  It is limited to an authorized non-force push of the exact non-default subject
+  ref followed by remote-tip verification and immutable provenance.
+
+A standalone shell `git push` or GitHub ref update is **not** a replacement
+for trusted publish. Neither routine action authorizes merge, deployment,
+live database writes, tags/releases, forced or protected-branch updates,
+remote deletion or publication to another destination.
 
 ## Runtime Capability Snapshot
 
@@ -175,8 +202,8 @@ deletion, or publication to another ref.
 ## Integration Profile and Admission
 
 - **Integration Profile:** [none | official plugin | MCP | file handoff | hosted connector | direct runtime CLI | manual handoff]
-- **Approved Integration IDs:** [none | stable IDs matching machine Work Block]
-- **Admission Records:** [none | paths based on integration-admission-template.md]
+- **Approved Integration IDs:** [none | stable IDs of approved integration evidence]
+- **Admission Records:** [none | approved integration admission IDs/paths, separate from trusted Work Block admission]
 - **Logical Functions Served:** [none | Critic/Reviewer/Verifier/Evaluator/etc.]
 - **From / To Boundary:** [runtime/service endpoints]
 - **Exact Tools / Actions:** [none | list]
@@ -193,8 +220,12 @@ Rules:
 - generated projects default to `none`;
 - availability does not imply permission;
 - every automated non-`none` integration requires an admission record;
-- external runtime CLI IDs and admission paths must also be present in
-  `.agent/active-work-block.json`;
+- record external runtime CLI IDs and approved integration-admission paths in
+  the appropriate Work Block and integration evidence; **never** use tracked
+  schema-v3 `.agent/active-work-block.json` as current authority;
+- any installed v1 Work Block execution still requires the **existing trusted
+  external admission and Git-private schema-v2 Controller bindings**; do not
+  invent additional Controller state fields for integrations;
 - integration access does not expand the bound logical role or write-set.
 
 ## Function Bindings
@@ -304,7 +335,7 @@ Model/provider/integration names do not define roles or authority.
 
 - **Files to stage:** [explicit paths]
 - **Files to leave unstaged:** [list]
-- **Commit/push approval:** [not requested | requested | approved evidence]
+- **Trusted Controller publication:** [not requested | admissible exact subject ref | blocked/verified evidence]
 - **Release/deploy approval:** [not applicable | required | evidence]
 
 ## Execution Log
@@ -316,7 +347,12 @@ Model/provider/integration names do not define roles or authority.
 Record observable trajectory events or references only. Do not include hidden
 reasoning, private chain-of-thought, model scratchpads, secrets, or protected payloads.
 
-## Closeout
+## Process Closeout (not a Controller v1 state)
+
+Normal success requires Controller v1 trusted publish, remote exact-tip
+verification, immutable provenance and then `INACTIVE`. Failed publication
+remains `ASSURE`; reporting-only/cancelled outcomes are not delivered
+successfully. Process reporting does not authorize runtime transitions.
 
 ### Result
 

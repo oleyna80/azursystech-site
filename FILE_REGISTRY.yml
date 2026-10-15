@@ -52,8 +52,9 @@ authority_order:
     - explicit_owner_instruction
     - AGENTS.md
     - governance_core
-    - active_work_block_scope_write_set_and_assurance_state
-    - canonical_sdlc_protocol
+    - trusted_external_active_admission_and_git_private_controller_v1_state
+    - installed_controller_v1_contract
+    - sdd_protocol_v1_precedence_and_historical_reference
     - installed_runtime_adapters
     - admitted_integration_adapters
     - operational_logs_and_generated_artifacts
@@ -224,23 +225,23 @@ entries:
     owner: architect
 
   .agent/workflows/sdd-protocol.md:
-    role: canonical_define_execute_assure_close_contract
-    status: normative
+    role: controller_v1_precedence_and_historical_pre_v1_sdd_reference
+    status: derived
     owner: architect
 
   .agent/workflows/owner-controlled-github-flow.md:
-    role: subject_branch_candidate_publication_operational_workflow
+    role: controller_v1_trusted_subject_branch_publication_operational_workflow
     status: derived
     owner: architect
 
   .agent/active-work-block.json:
-    role: operational_gate_state
-    status: derived
+    role: tracked_schema_v3_legacy_release_projection_not_controller_authority
+    status: operational_log
     owner: orchestrator
 
   .agent/active-work-block.default.json:
-    role: portable_fail_closed_default_gate_state
-    status: normative
+    role: tracked_schema_v3_legacy_default_compatibility_fixture
+    status: derived
     owner: architect
 
   docs/session-bootstrap.md:
