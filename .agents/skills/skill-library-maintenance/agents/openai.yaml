@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Library Maintenance"
+  short_description: "Review and safely adapt GitHub skills"
+  default_prompt: "Use $skill-library-maintenance to check tracked GitHub skill sources and propose safe adaptations."

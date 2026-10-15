@@ -1,28 +1,3 @@
-# Node
-node_modules/
-dist/
-.next/
-.nuxt/
-.output/
-
-# Python
-__pycache__/
-*.pyc
-.venv/
-venv/
-env/
-
-# Env files
-.env
-.env.*
-
-# Logs
-*.log
-logs/
-05_ai/runs/*.json
-05_ai/runs/*.approval.md
-data/*.csv
-
 # Model/indexing noise
 .git/
 .agent/
@@ -108,10 +83,6 @@ codex-orchestration-skills/
 !.codex/hooks/
 !.codex/hooks/**
 
-# Local/deferred skill candidates are curated in a separate Work Block. They can
-# be added explicitly with `git add -f` after exact skill paths are approved.
-.agent/skills/**
-
 # Claude Code project control layer is committed: settings.json, hooks/,
 # agents/, security guidance, agent-memory MEMORY.md indexes.
 # Private/local/heavy Claude state stays ignored.
@@ -119,11 +90,7 @@ codex-orchestration-skills/
 .claude/agent-memory/**
 !.claude/agent-memory/*/
 !.claude/agent-memory/*/MEMORY.md
-# Skills remain a separate curated scope: approve exact paths per Work Block
-# and add with `git add -f` (already-tracked legacy skill files stay tracked).
-.claude/skills/**
 .codex/agents/**
-.opencode/skills/**
 
 # Local browser-automation artifacts (Playwright MCP snapshots).
 .playwright-mcp/
@@ -170,3 +137,29 @@ Thumbs.db
 ai_studio_chek/
 private_evidence/
 .artifacts/
+
+# Keep common exclusions after directory allow rules so they remain effective.
+# Node
+node_modules/
+dist/
+.next/
+.nuxt/
+.output/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# Env files
+.env
+.env.*
+
+# Logs
+*.log
+logs/
+05_ai/runs/*.json
+05_ai/runs/*.approval.md
+data/*.csv
